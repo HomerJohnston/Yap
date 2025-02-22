@@ -2,13 +2,16 @@
 // This work is MIT-licensed. Feel free to use it however you wish, within the confines of the MIT license. 
 
 #pragma once
+
 #include "GameplayTagContainer.h"
+#include "YapConversation.h"
 #include "YapCharacterComponent.h"
 #include "YapBroker.h"
 #include "YapPromptHandle.h"
 #include "Enums/YapMaturitySetting.h"
-#include "Yap/YapDialogueHandle.h"
+#include "Yap/YapRunningFragment.h"
 #include "Yap/YapBitReplacement.h"
+#include "Yap/YapDataStructures.h"
 
 #include "YapSubsystem.generated.h"
 
@@ -24,47 +27,6 @@ enum class EYapMaturitySetting : uint8;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FFlowYapConversationEvent, FName, ConversationName);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FFlowYapDialogueEvent, FName, ConversationName, const FYapBit&, DialogueInfo);
-
-// ================================================================================================
-
-USTRUCT(BlueprintType)
-struct FYapActiveConversation
-{
-	GENERATED_BODY()
-
-	FYapActiveConversation();
-
-public:
-	UPROPERTY(Transient)
-	UFlowAsset* FlowAsset;
-
-	UPROPERTY(Transient)
-	TOptional<FGameplayTag> Conversation;
-
-public:
-	TDelegate<void(const FGameplayTag&)> OnConversationOpens;
-	
-	TDelegate<void(const FGameplayTag&)> OnConversationCloses;
-
-public:
-	bool OpenConversation(UFlowAsset* InOwningAsset, const FGameplayTag& InName);
-
-	bool CloseConversation();
-
-	bool IsConversationInProgress() const { return Conversation.IsSet(); };
-
-	const FGameplayTag& GetCurrentConversationName() const { return Conversation.Get(FGameplayTag::EmptyTag); }
-};
-
-// ================================================================================================
-
-USTRUCT()
-struct FYapFragmentActivationCount
-{
-	GENERATED_BODY()
-	
-	TMap<uint8, int32> Counts;
-};
 
 // ================================================================================================
 
@@ -86,20 +48,13 @@ public:
 	// STATE
 	// =========================================
 public:
-	TMulticastDelegate<void()> ConversationOpenTrigger;
+	TMulticastDelegate<void()> AdvanceIntoConversation;
 	
 protected:
-	
+
+	/**  */
 	static TWeakObjectPtr<UWorld> World;
 	
-	// TODO I should have a queue system???... otherwise I'll have odd race conditions if there are multiple conversation requests!
-	//UPROPERTY(Transient)
-	//TArray<FName> ConversationQueue;
-	
-	/** The current active conversation. */
-	UPROPERTY(Transient)
-	FYapActiveConversation ActiveConversation;
-
 	/** All registered conversation handlers. It is assumed developers will only have one or two of these at a time, no need for fast lookup. Calling order will be preserved in order of registration. */
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UObject>> ConversationHandlers;
@@ -111,6 +66,13 @@ protected:
 	/** The broker object. Active only during play. Editor work uses the CDO instead. */
 	UPROPERTY(Transient)
 	TObjectPtr<UYapBroker> Broker;
+
+	UPROPERTY(Transient)
+	FGameplayTag ActiveConversationName;
+	
+	/** Queue of conversations. The top one is always going to be "active". If two "Open Conversation" nodes run, the second one will wait in this queue until the first one closes. */
+	UPROPERTY(Transient)
+	TArray<FYapConversation> ConversationQueue;
 	
 	/** Stores the tag of a fragment and the owning dialogue node where that fragment can be found */
 	UPROPERTY(Transient)
@@ -130,11 +92,17 @@ protected:
 
 	// Running dialogue instances. Since only one fragment of a dialogue node can be running at any time, we don't need handles to map to individual fragments.
 	UPROPERTY(Transient)
-	TMap<FYapDialogueHandleRef, TWeakObjectPtr<UFlowNode_YapDialogue>> GuidDialogueMap;
+	TMap<FYapFragmentHandle, TWeakObjectPtr<UFlowNode_YapDialogue>> GuidDialogueMap;
 
+	/** A skip command will flush all of these. We use a stack because Yap allows multiple fragments to run simulataneously (through negative padding). */
+	UPROPERTY(Transient)
+	TMap<FYapFragmentHandle, FYapRunningFragment> RunningFragments;
+
+	TMap<FYapFragmentHandle, FYapRunningSpeech> RunningSpeech;
+	
 	static bool bGetGameMaturitySettingWarningIssued;
 
-	static FYapDialogueHandle InvalidHandle;
+	static FYapRunningFragment InvalidHandle;
 	
 	// =========================================
 	// PUBLIC API - Your game should use these
@@ -190,38 +158,45 @@ protected:  // TODO should some of these be public?
 	void RegisterTaggedFragment(const FGameplayTag& FragmentTag, UFlowNode_YapDialogue* DialogueNode);
 
 	/**  */
-	bool OpenConversation(UFlowAsset* OwningAsset, const FGameplayTag& ConversationName); // Called by Open Conversation node
+	void EnqueueConversation(UFlowAsset* OwningAsset, const FGameplayTag& ConversationName); // Called by Open Conversation node
 
+	void DequeueConversation(const FGameplayTag& ConversationName);
+	
+	void OpenConversation(FYapConversation& Conversation);
 	/**  */
-	void CloseConversation(); // Called by Close Conversation node
+	void CloseConversation(const FGameplayTag& ConversationName); // Called by Close Conversation node
 
+	void UpdateCurrentConversation();
+	
 	/**  */
 	FYapPromptHandle BroadcastPrompt(UFlowNode_YapDialogue* Dialogue, uint8 FragmentIndex);
 
 	/**  */
 	void OnFinishedBroadcastingPrompts();
+
+public:
+	/**  */
+	UFUNCTION(BlueprintCallable)
+	FYapFragmentHandle RunSpeech(const FYapData_SpeechBegins& SpeechData);
 	
 	/**  */
-	void BroadcastDialogueStart(UFlowNode_YapDialogue* Dialogue, uint8 FragmentIndex); // Called by Dialogue node, 2nd output pin 
-
+	FGameplayTag GetConversation(UFlowAsset* FlowAsset);
+	
 	/**  */
-	void BroadcastDialogueEnd(const UFlowNode_YapDialogue* Dialogue, uint8 FragmentIndex); // Called by Dialogue node, 1st output pin
-
-	/**  */
-	void BroadcastPaddingTimeOver(const UFlowNode_YapDialogue* Dialogue, uint8 FragmentIndex);
-
+	static FYapConversation& GetConversation(FYapConversationHandle Handle);
+	
 public:
 	// TODO should I make a ref struct for FYapPromptHandle too?
 	/** The prompt handle will call this function, passing in itself. */
 	static bool RunPrompt(const FYapPromptHandle& Handle);
 
 	/**  */
-	static bool SkipDialogue(const FYapDialogueHandleRef& Handle);
+	static bool SkipDialogue(const FYapFragmentHandle& Handle);
 
 	/**  */ // TODO: ability to instantly playback/skip through multiple nodes until some sort of target point is hit, maybe a custom node? (imagine skipping an entire cutscene)
 	// static bool SkipDialogueTo(???);
 
-	static FYapDialogueHandle& GetDialogueHandle(FYapDialogueHandleRef HandleRef);
+	static FYapRunningFragment& GetFragmentHandle(FYapFragmentHandle HandleRef);
 
 public:
 	/**  */
@@ -247,6 +222,10 @@ protected:
 	/**  */
 	void OnConversationCloses_Internal(const FGameplayTag& Name);
 
+	void OnSpeechComplete(FYapFragmentHandle Handle);
+
+	void OnFragmentComplete(FYapFragmentHandle Handle);
+	
 	/**  */
 	bool DoesSupportWorldType(const EWorldType::Type WorldType) const override;
 

@@ -1,63 +1,81 @@
 // Copyright Ghost Pepper Games, Inc. All Rights Reserved.
 // This work is MIT-licensed. Feel free to use it however you wish, within the confines of the MIT license. 
 
-#include "Yap/YapDialogueHandle.h"
+#include "Yap/YapRunningFragment.h"
 
 #include "Yap/YapBlueprintFunctionLibrary.h"
 #include "Yap/Interfaces/IYapHandleReactor.h"
+#include "Yap/Nodes/FlowNode_YapDialogue.h"
 
 #define LOCTEXT_NAMESPACE "Yap"
 
 // ------------------------------------------------------------------------------------------------
 
-FYapDialogueHandle FYapDialogueHandle::_InvalidHandle;
+FYapRunningFragment FYapRunningFragment::_InvalidHandle;
 
 // ================================================================================================
 // FYapDialogueHandleRef
 // ================================================================================================
 
-bool FYapDialogueHandleRef::SkipDialogue()
+FYapFragmentHandle::FYapFragmentHandle()
+{
+}
+
+FYapFragmentHandle::FYapFragmentHandle(const FYapRunningFragment& RunningFragment)
+{
+	Guid = RunningFragment.GetGuid();
+}
+
+bool FYapFragmentHandle::SkipDialogue()
 {
 	return UYapBlueprintFunctionLibrary::SkipDialogue(*this);
 }
 
 // ------------------------------------------------------------------------------------------------
 
-void FYapDialogueHandleRef::AddReactor(UObject* Reactor)
+void FYapFragmentHandle::AddReactor(UObject* Reactor)
 {
 	UYapBlueprintFunctionLibrary::AddReactor(*this, Reactor);
 }
 
 // ------------------------------------------------------------------------------------------------
 
-const TArray<FInstancedStruct>& FYapDialogueHandleRef::GetFragmentData()
+const TArray<FInstancedStruct>& FYapFragmentHandle::GetFragmentData()
 {
 	return UYapBlueprintFunctionLibrary::GetFragmentData(*this);
 }
 
 // ------------------------------------------------------------------------------------------------
 
-bool FYapDialogueHandleRef::operator==(const FYapDialogueHandleRef& Other) const
+bool FYapFragmentHandle::operator==(const FYapFragmentHandle& Other) const
 {
 	return Guid == Other.Guid;
+}
+
+FYapRunningFragment::FYapRunningFragment()
+{
+	Guid = FGuid::NewGuid();
+}
+
+FYapRunningFragment::~FYapRunningFragment()
+{
 }
 
 // ================================================================================================
 // FYapDialogueHandle
 // ================================================================================================
 
-FYapDialogueHandle::FYapDialogueHandle(UFlowNode_YapDialogue* InDialogueNode, uint8 InFragmentIndex)
-{
-	DialogueNode = InDialogueNode;
-	FragmentIndex = InFragmentIndex;
-
-	Guid = FGuid::NewGuid();
-}
 
 // ------------------------------------------------------------------------------------------------
 
-void FYapDialogueHandle::OnSpeakingEnds() const
+const FYapFragment& FYapRunningFragment::GetFragment() const
 {
+	return DialogueNode->GetFragment(FragmentIndex);
+}
+
+void FYapRunningFragment::OnSpeakingEnds() const
+{
+	/*
 	for (TWeakObjectPtr<UObject> Reactor : Reactors)
 	{
 		if (Reactor.IsValid())
@@ -65,12 +83,16 @@ void FYapDialogueHandle::OnSpeakingEnds() const
 			IYapHandleReactor::Execute_K2_OnSpeakingEnds(Reactor.Get());
 		}
 	}
+	*/
 }
 
 // ------------------------------------------------------------------------------------------------
 
-void FYapDialogueHandle::Invalidate()
+void FYapRunningFragment::Invalidate()
 {
+	Guid.Invalidate();
+	
+	/*
 	for (TWeakObjectPtr<UObject> Reactor : Reactors)
 	{
 		if (Reactor.IsValid())
@@ -79,25 +101,35 @@ void FYapDialogueHandle::Invalidate()
 		}
 	}
 	
-	DialogueNode = nullptr;
-	FragmentIndex = INDEX_NONE;
-	Guid.Invalidate();
 	Reactors.Empty();
+	*/
+}
+
+void FYapRunningFragment::SetSpeechTimerHandle(FTimerHandle InSpeechTimerHandle)
+{
+	SpeechTimerHandle = InSpeechTimerHandle;
+}
+
+void FYapRunningFragment::SetFragmentTimerHandle(FTimerHandle InFragmentTimerHandle)
+{
+	FragmentTimerHandle = InFragmentTimerHandle;
 }
 
 // ------------------------------------------------------------------------------------------------
 
-void FYapDialogueHandle::AddReactor(UObject* Reactor)
+/*
+void FYapRunningFragment::AddReactor(UObject* Reactor)
 {
 	if (ensureMsgf(Reactor->Implements<UYapHandleReactor>(), TEXT("FYapDialogueHandle::AddReactor(...) failed: object does not implement IYapHandleReactor! [%s]"), *Reactor->GetName()))
 	{
 		Reactors.Add(Reactor);
 	}
 }
+*/
 
 // ------------------------------------------------------------------------------------------------
 
-bool FYapDialogueHandle::operator==(const FYapDialogueHandle& Other) const
+bool FYapRunningFragment::operator==(const FYapRunningFragment& Other) const
 {
 	return Guid == Other.Guid;
 }

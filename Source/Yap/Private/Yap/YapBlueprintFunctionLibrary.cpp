@@ -8,7 +8,6 @@
 #endif
 
 #include "Yap/YapCharacter.h"
-#include "Yap/YapDialogueHandle.h"
 #include "Yap/YapLog.h"
 #include "Yap/YapPromptHandle.h"
 #include "Yap/YapSubsystem.h"
@@ -41,7 +40,7 @@ float UYapBlueprintFunctionLibrary::GetSoundLength(USoundBase* Sound)
 
 // ------------------------------------------------------------------------------------------------
 
-bool UYapBlueprintFunctionLibrary::SkipDialogue(const FYapDialogueHandleRef& Handle)
+bool UYapBlueprintFunctionLibrary::SkipDialogue(const FYapFragmentHandle& Handle)
 {
 	if (Handle.IsValid())
 	{
@@ -60,8 +59,10 @@ bool UYapBlueprintFunctionLibrary::SkipDialogue(const FYapDialogueHandleRef& Han
 
 // ------------------------------------------------------------------------------------------------
 
-bool UYapBlueprintFunctionLibrary::CanSkipCurrently(const FYapDialogueHandleRef& Handle)
+bool UYapBlueprintFunctionLibrary::CanSkipCurrently(const FYapFragmentHandle& Handle)
 {
+	return true;
+	/*
 	if (!Handle.IsValid())
 	{
 		return false;
@@ -71,10 +72,11 @@ bool UYapBlueprintFunctionLibrary::CanSkipCurrently(const FYapDialogueHandleRef&
 
 	if (DialogueNode)
 	{
-		return DialogueNode->CanSkipCurrentFragment();
+		return DialogueNode->CanSkip();
 	}
 
 	return false;
+	*/
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -86,9 +88,10 @@ bool UYapBlueprintFunctionLibrary::RunPrompt(const FYapPromptHandle& Handle)
 
 // ------------------------------------------------------------------------------------------------
 
-void UYapBlueprintFunctionLibrary::AddReactor(FYapDialogueHandleRef& HandleRef, UObject* Reactor)
+void UYapBlueprintFunctionLibrary::AddReactor(FYapFragmentHandle& HandleRef, UObject* Reactor)
 {
-	FYapDialogueHandle& Handle = UYapSubsystem::GetDialogueHandle(HandleRef);
+	/*
+	FYapRunningFragment& Handle = UYapSubsystem::GetDialogueHandle(HandleRef);
 
 	if (Handle.IsValid())
 	{
@@ -98,11 +101,12 @@ void UYapBlueprintFunctionLibrary::AddReactor(FYapDialogueHandleRef& HandleRef, 
 	{
 		UE_LOG(LogYap, Warning, TEXT("Could not find valid handle to add reactor to!"))
 	}
+	*/
 }
 
-const TArray<FInstancedStruct>& UYapBlueprintFunctionLibrary::GetFragmentData(const FYapDialogueHandleRef& HandleRef)
+const TArray<FInstancedStruct>& UYapBlueprintFunctionLibrary::GetFragmentData(const FYapFragmentHandle& HandleRef)
 {
-	const FYapDialogueHandle& Handle = UYapSubsystem::GetDialogueHandle(HandleRef);
+	const FYapRunningFragment& Handle = UYapSubsystem::GetFragmentHandle(HandleRef);
 
 	const UFlowNode_YapDialogue* DialogueNode = Handle.GetDialogueNode();
 
@@ -165,9 +169,9 @@ AActor* UYapBlueprintFunctionLibrary::FindYapCharacterActor(const UYapCharacter*
 
 // ------------------------------------------------------------------------------------------------
 
-void UYapBlueprintFunctionLibrary::TriggerConversationOpen()
+void UYapBlueprintFunctionLibrary::AdvanceIntoConversation()
 {
-	UYapSubsystem::Get()->ConversationOpenTrigger.Broadcast();
+	UYapSubsystem::Get()->AdvanceIntoConversation.Broadcast();
 }
 
 // ------------------------------------------------------------------------------------------------

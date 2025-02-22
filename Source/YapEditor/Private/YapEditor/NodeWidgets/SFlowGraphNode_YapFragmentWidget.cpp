@@ -364,7 +364,7 @@ EVisibility SFlowGraphNode_YapFragmentWidget::Visibility_FragmentHighlight() con
 		return EVisibility::HitTestInvisible;
 	}
 	
-	if (GetDialogueNode()->GetActivationState() != EFlowNodeState::Active && GetDialogueNode()->ActivationLimitsMet())
+	if (GetDialogueNode()->GetActivationState() != EFlowNodeState::Active && GetDialogueNode()->CheckActivationLimits())
 	{
 		return EVisibility::HitTestInvisible;
 	}
@@ -384,7 +384,7 @@ FSlateColor SFlowGraphNode_YapFragmentWidget::BorderBackgroundColor_FragmentHigh
 		return YapColor::Red_Glass;
 	}
 	
-	if (GetDialogueNode()->GetActivationState() != EFlowNodeState::Active && GetDialogueNode()->ActivationLimitsMet())
+	if (GetDialogueNode()->GetActivationState() != EFlowNodeState::Active && GetDialogueNode()->CheckActivationLimits())
 	{
 		return YapColor::Red_Glass;
 	}
@@ -407,16 +407,16 @@ void SFlowGraphNode_YapFragmentWidget::OnTextCommitted_FragmentActivationLimit(c
 TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateUpperFragmentBar()
 {
 	TOptional<bool>* SkippableSettingRaw = &GetFragmentMutable().Skippable;
-	const TAttribute<bool> SkippableDefaultAttr = TAttribute<bool>::CreateLambda( [this] () { return GetDialogueNodeMutable()->GetSkippable(); });
+	const TAttribute<bool> SkippableDefaultAttr = TAttribute<bool>::CreateLambda( [this] () { return GetDialogueNode()->GetSkippable(); });
 	const TAttribute<bool> SkippableEvaluatedAttr = TAttribute<bool>::CreateLambda( [this, SkippableDefaultAttr] ()
 	{
 		return GetFragment().GetSkippable(SkippableDefaultAttr.Get());
 	});
 	TOptional<bool>* AutoAdvanceSettingRaw = &GetFragmentMutable().AutoAdvance;
-	const TAttribute<bool> AutoAdvanceDefaultAttr = TAttribute<bool>::CreateLambda( [this] () { return GetDialogueNodeMutable()->GetAutoAdvance(); });
+	const TAttribute<bool> AutoAdvanceDefaultAttr = TAttribute<bool>::CreateLambda( [this] () { return GetDialogueNode()->GetNodeAutoAdvance(); });
 	const TAttribute<bool> AutoAdvanceEvaluatedAttr = TAttribute<bool>::CreateLambda( [this, AutoAdvanceDefaultAttr] ()
 	{
-		return GetFragment().GetAutoAdvance(AutoAdvanceDefaultAttr.Get());
+		return GetDialogueNode()->GetFragmentAutoAdvance(FragmentIndex);
 	});
 
 	TSharedRef<SWidget> ProgressionPopupButton = MakeProgressionPopupButton(SkippableSettingRaw, SkippableEvaluatedAttr, AutoAdvanceSettingRaw, AutoAdvanceEvaluatedAttr);
@@ -1012,11 +1012,11 @@ bool CheckAudioAssetUsesAudioID(const UFlowNode_YapDialogue* Node, int32 Fragmen
 	{
 		FString ID = RegexMatcher.GetCaptureGroup(0);
 
-		FString AudioID = ID.LeftChop(FragmentIDLen + 1);
+		FString AudioID = ID.LeftChop(FragmentIDLen + 1); // TODO lots of duplicated code running around, centralize it all so this mechanism is consistent everywhere
 				
 		int32 IDInt = FCString::Atoi(*ID.RightChop(AudioIDLen + 1));
 
-		if (AudioID == Node->GetAudioID() && IDInt - 1 == FragmentIndex)
+		if (AudioID == Node->GetAudioID() && IDInt == FragmentIndex)
 		{
 			bCorrectMatch = true;
 		}
@@ -1573,14 +1573,14 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::BuildPaddingSettings_Expan
 					.ToolTipText(LOCTEXT("UseDefault_Button", "Use Default"))
 					.OnClicked_Lambda( [this] ()
 					{
-						if (GetFragmentMutable().PaddingToNextFragment < 0)
+						if (!GetFragmentMutable().Padding.IsSet())
 						{
-							float CurrentPadding_Default = GetFragmentMutable().GetPaddingToNextFragment();
-							GetFragmentMutable().SetPaddingToNextFragment(CurrentPadding_Default);
+							TOptional<float> CurrentPadding_Default = GetFragmentMutable().GetPadding();
+							GetFragmentMutable().SetPaddingToNextFragment(CurrentPadding_Default.Get(0.0f));
 						}
 						else
 						{
-							GetFragmentMutable().SetPaddingToNextFragment(-1);
+							GetFragmentMutable().Padding.Reset();
 						}
 						return FReply::Handled();
 					})// TODO transactions
@@ -1608,10 +1608,9 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::BuildPaddingSettings_Expan
 						.AllowSpin(true)
 						.Delta(0.01f)
 						.MaxSliderValue(UYapProjectSettings::GetFragmentPaddingSliderMax())
-						.MinValue(0)
 						.ToolTipText(LOCTEXT("FragmentTimeEntry_Tooltip", "Time this dialogue fragment will play for"))
 						.Justification(ETextJustify::Center)
-						.Value_Lambda( [this] () { return GetFragmentMutable().GetPaddingToNextFragment(); } )
+						.Value_Lambda( [this] () { return GetFragmentMutable().GetPadding(); } )
 						.OnValueChanged_Lambda( [this] (float NewValue) { GetFragmentMutable().SetPaddingToNextFragment(NewValue); } )
 						.OnValueCommitted_Lambda( [this] (float NewValue, ETextCommit::Type) { GetFragmentMutable().SetPaddingToNextFragment(NewValue); } ) // TODO transactions
 					]
@@ -1686,7 +1685,7 @@ TOptional<float> SFlowGraphNode_YapFragmentWidget::Percent_FragmentTime() const
 {
 	const float MaxTimeSetting = UYapProjectSettings::GetDialogueTimeSliderMax();
 
-	const TOptional<float> FragmentTimeIn = GetFragment().GetTime(GetDisplayMaturitySetting(), EYapLoadContext::AsyncEditorOnly);
+	const TOptional<float> FragmentTimeIn = GetFragment().GetSpeechTime(GetDisplayMaturitySetting(), EYapLoadContext::AsyncEditorOnly);
 
 	if (!FragmentTimeIn.IsSet())
 	{
@@ -1710,7 +1709,7 @@ TOptional<float> SFlowGraphNode_YapFragmentWidget::Percent_FragmentTime() const
 			}
 		}
 
-		if (GetFragment().GetRunState() != EYapFragmentRunState::Running && GetFragment().GetLastCompletionState() != EYapFragmentCurrentStateFlags::NeverRan)// GetDialogueNode()->GetFinishedFragments().Contains(&GetFragment()))
+		if (GetFragment().GetRunState() != EYapFragmentRunState::Running && GetFragment().GetLastEntryState() != EYapFragmentEntryStateFlags::NeverRan)// GetDialogueNode()->GetFinishedFragments().Contains(&GetFragment()))
 		{
 			return 0.0;
 		}
@@ -1722,8 +1721,9 @@ TOptional<float> SFlowGraphNode_YapFragmentWidget::Percent_FragmentTime() const
 TOptional<float> SFlowGraphNode_YapFragmentWidget::Percent_FragmentTimePadding() const
 {	
 	const float MaxPaddedSetting = UYapProjectSettings::GetFragmentPaddingSliderMax();
-	const float FragmentPadding = GetFragment().GetPaddingToNextFragment();
+	const TOptional<float> FragmentPadding = GetFragment().GetPadding();
 
+	/*
 	if (GEditor->PlayWorld)
 	{
 		if (FragmentIsRunning())
@@ -1739,13 +1739,13 @@ TOptional<float> SFlowGraphNode_YapFragmentWidget::Percent_FragmentTimePadding()
 			}
 		}
 
-		if (GetFragment().GetRunState() != EYapFragmentRunState::Running && GetFragment().GetLastCompletionState() != EYapFragmentCurrentStateFlags::NeverRan)// GetDialogueNode()->GetFinishedFragments().Contains(&GetFragment()))
+		if (GetFragment().GetRunState() != EYapFragmentRunState::Running && GetFragment().GetLastEntryState() != EYapFragmentEntryStateFlags::NeverRan)// GetDialogueNode()->GetFinishedFragments().Contains(&GetFragment()))
 		{
 			return 0.0;
 		}
 	}
-
-	return FragmentPadding / MaxPaddedSetting;		
+	*/
+	return FragmentPadding.Get(0.0f) / MaxPaddedSetting;		
 }
 
 FSlateColor SFlowGraphNode_YapFragmentWidget::FillColorAndOpacity_FragmentTimeIndicatorBars() const
@@ -2418,7 +2418,7 @@ FSlateColor SFlowGraphNode_YapFragmentWidget::ButtonColorAndOpacity_UseTimeMode(
 
 FSlateColor SFlowGraphNode_YapFragmentWidget::ButtonColorAndOpacity_PaddingButton() const
 {
-	if (GetFragment().PaddingToNextFragment < 0)
+	if (!GetFragment().Padding.IsSet())
 	{
 		return YapColor::Green;
 	}
@@ -2777,7 +2777,8 @@ bool SFlowGraphNode_YapFragmentWidget::HasCompleteChildSafeData() const
 
 bool SFlowGraphNode_YapFragmentWidget::FragmentIsRunning() const
 {
-	return FragmentIndex == GetDialogueNode()->GetRunningFragmentIndex();
+	return false;
+	//return FragmentIndex == GetDialogueNode()->GetRunningFragmentIndex();
 }
 
 bool SFlowGraphNode_YapFragmentWidget::IsDroppedAsset_YapCharacter(TArrayView<FAssetData> AssetDatas) const

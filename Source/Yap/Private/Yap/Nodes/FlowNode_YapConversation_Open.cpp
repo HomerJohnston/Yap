@@ -33,11 +33,11 @@ void UFlowNode_YapConversation_Open::OnActivate()
 		return;
 	}
 	
-	GetWorld()->GetSubsystem<UYapSubsystem>()->OpenConversation(GetFlowAsset(), Conversation);
+	GetWorld()->GetSubsystem<UYapSubsystem>()->EnqueueConversation(GetFlowAsset(), Conversation);
 	
-	if (UYapProjectSettings::GetOpenConversationRequiresTrigger())
+	if (UYapProjectSettings::GetConversationsRequireAdvanceTriggerToStart())
 	{
-		UYapSubsystem::Get()->ConversationOpenTrigger.AddUObject(this, &ThisClass::OnConversationOpenTrigger);
+		UYapSubsystem::Get()->AdvanceIntoConversation.AddUObject(this, &ThisClass::OnConversationOpenTrigger);
 		bTriggerFlop = true;
 	}
 }

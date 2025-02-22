@@ -2,11 +2,18 @@
 // This work is MIT-licensed. Feel free to use it however you wish, within the confines of the MIT license. 
 
 #pragma once
-#include "GameplayTagContainer.h"
-#include "Yap/YapRunningFragment.h"
-#include "Yap/YapCharacter.h"
 
-#include "IYapFreeSpeechHandler.generated.h"
+#include "GameplayTagContainer.h"
+
+class UYapCharacter;
+struct FYapPromptHandle;
+struct FYapRunningFragment;
+struct FYapBit;
+
+#include "Yap/YapPromptHandle.h"
+#include "Yap/YapRunningFragment.h"
+
+#include "YapDataStructures.generated.h"
 
 #define LOCTEXT_NAMESPACE "Yap"
 
@@ -16,8 +23,22 @@
 // ------------------------------------------------------------------------------------------------
 
 /** Struct containing all the data for this event. */
-USTRUCT(BlueprintType, DisplayName = "Yap Free Dialogue Node Entered")
-struct FYapData_TalkDialogueNodeEntered
+USTRUCT(BlueprintType, DisplayName = "Yap Conversation Opened")
+struct FYapData_ConversationOpened
+{
+	GENERATED_BODY()
+
+	/** Conversation name. */
+	UPROPERTY(BlueprintReadOnly)
+	FGameplayTag Conversation;
+};
+
+// ------------------------------------------------------------------------------------------------
+
+#if 0
+/** Struct containing all the data for this event. */
+USTRUCT(BlueprintType, DisplayName = "Yap Dialogue Node Entered")
+struct FYapData_DialogueNodeEntered
 {
 	GENERATED_BODY()
 
@@ -27,12 +48,14 @@ struct FYapData_TalkDialogueNodeEntered
 	UPROPERTY(BlueprintReadOnly)
 	FGameplayTag DialogueTag;
 };
+#endif
 
 // ------------------------------------------------------------------------------------------------
 
+#if 0
 /** Struct containing all the data for this event. */
-USTRUCT(BlueprintType, DisplayName = "Yap Free Dialogue Node Exited")
-struct FYapData_TalkDialogueNodeExited
+USTRUCT(BlueprintType, DisplayName = "Yap Dialogue Node Exited")
+struct FYapData_DialogueNodeExited
 {
 	GENERATED_BODY()
 
@@ -42,12 +65,14 @@ struct FYapData_TalkDialogueNodeExited
 	UPROPERTY(BlueprintReadOnly)
 	FGameplayTag DialogueTag;
 };
+#endif
 
 // ------------------------------------------------------------------------------------------------
 
+#if 0
 /** Struct containing all the data for this event. */
-USTRUCT(BlueprintType, DisplayName = "Yap Free Dialogue Node Bypassed")
-struct FYapData_TalkDialogueNodeBypassed
+USTRUCT(BlueprintType, DisplayName = "Yap Dialogue Node Bypassed")
+struct FYapData_DialogueNodeBypassed
 {
 	GENERATED_BODY()
 	
@@ -57,18 +82,19 @@ struct FYapData_TalkDialogueNodeBypassed
 	UPROPERTY(BlueprintReadOnly)
 	FGameplayTag DialogueTag;
 };
+#endif
 
 // ------------------------------------------------------------------------------------------------
 
 /** Struct containing all the data for this event. */
-USTRUCT(BlueprintType, DisplayName = "Yap Free Speech Begins")
-struct FYapData_TalkSpeechBegins
+USTRUCT(BlueprintType, DisplayName = "Yap Speech Begins")
+struct FYapData_SpeechBegins
 {
 	GENERATED_BODY()
 
-	/** Dialogue handle, can be used for interrupting or identifying dialogue. */
+	/** Conversation name. This will be empty for speech occurring outside of a conversation. */
 	UPROPERTY(BlueprintReadOnly)
-	FYapFragmentHandle DialogueHandleRef;
+	FGameplayTag Conversation;
 
 	/** Who is being speaked towards. */
 	UPROPERTY(BlueprintReadOnly)
@@ -96,7 +122,7 @@ struct FYapData_TalkSpeechBegins
 
 	/** Delay after this dialogue completes before carrying on. */
 	UPROPERTY(BlueprintReadOnly)
-	float PaddedTime = 0;
+	float FragmentTime = 0;
 
 	/** Audio asset, you are responsible to cast to your proper type to use. */
 	UPROPERTY(BlueprintReadOnly)
@@ -109,82 +135,94 @@ struct FYapData_TalkSpeechBegins
 
 // ------------------------------------------------------------------------------------------------
 
+#if 0
 /** Struct containing all the data for this event. */
-USTRUCT(BlueprintType, DisplayName = "Yap Free Speech Ends")
-struct FYapData_TalkSpeechEnds
+USTRUCT(BlueprintType, DisplayName = "Yap Speech Ends")
+struct FYapData_SpeechEnds
 {
 	GENERATED_BODY()
 
+	/** Conversation name. This will be empty for speech occurring outside of a conversation. */
+	UPROPERTY(BlueprintReadOnly)
+	FGameplayTag Conversation;
+
 	/** Dialogue handle, can be used for interrupting or identifying dialogue. */
 	UPROPERTY(BlueprintReadOnly)
-	FYapFragmentHandle DialogueHandleRef;
+	FYapRunningFragmentHandle DialogueHandleRef;
 
+	/** If the fragment speech time is greater than zero (even a tiny number) this will be true. Otherwise, false. */
+	UPROPERTY(BlueprintReadOnly)
+	bool bWasTimed = false;
+	
 	/** How long it is expected to wait before moving on to the next fragment or Flow Graph node. */
 	UPROPERTY(BlueprintReadOnly)
 	float PaddedTime = 0;
+};
+#endif
+
+// ------------------------------------------------------------------------------------------------
+
+/** Struct containing all the data for this event. */
+USTRUCT(BlueprintType, DisplayName = "Yap Player Prompt Created")
+struct FYapData_PlayerPromptCreated
+{
+	GENERATED_BODY()
+
+	/** Conversation name. */
+	UPROPERTY(BlueprintReadOnly)
+	FGameplayTag Conversation;
+
+	/** Dialogue handle, can be used for interrupting or identifying dialogue. */
+	UPROPERTY(BlueprintReadOnly)
+	FYapPromptHandle Handle;
+
+	/** Who will be spoken to. */
+	UPROPERTY(BlueprintReadOnly)
+	TObjectPtr<const UYapCharacter> DirectedAt;
+
+	/** Who is going to speak. */
+	UPROPERTY(BlueprintReadOnly)
+	TObjectPtr<const UYapCharacter> Speaker;
+
+	/** Mood of the speaker. */
+	UPROPERTY(BlueprintReadOnly)
+	FGameplayTag MoodTag;
+	 
+	/** Text that will be spoken. */
+	UPROPERTY(BlueprintReadOnly)
+	FText DialogueText;
+
+	/** Optional title text representing the dialogue. */
+	UPROPERTY(BlueprintReadOnly)
+	FText TitleText;
 };
 
 // ------------------------------------------------------------------------------------------------
 
 /** Struct containing all the data for this event. */
-USTRUCT(BlueprintType, DisplayName = "Yap Free Speech Padding Ends")
-struct FYapData_TalkSpeechPaddingEnds
+USTRUCT(BlueprintType, DisplayName = "Yap Player Prompts Ready")
+struct FYapData_PlayerPromptsReady
 {
 	GENERATED_BODY()
-	
-	/** Dialogue handle, can be used for interrupting or identifying dialogue. */
+
+	/** Conversation name. */
 	UPROPERTY(BlueprintReadOnly)
-	FYapFragmentHandle DialogueHandleRef;
+	FGameplayTag Conversation;
+};
 
-	/** Will manual advancement be required to progress? */
+// ------------------------------------------------------------------------------------------------
+
+/** Struct containing all the data for this event. */
+USTRUCT(BlueprintType, DisplayName = "Yap Player Prompt Chosen")
+struct FYapData_PlayerPromptChosen
+{
+	GENERATED_BODY()
+
+	/** Conversation name. */
 	UPROPERTY(BlueprintReadOnly)
-	bool bManualAdvance = false;
+	FGameplayTag Conversation;
 };
 
-// ================================================================================================
-
-UINTERFACE(MinimalAPI, Blueprintable)
-class UYapFreeSpeechHandler : public UInterface
-{
-    GENERATED_BODY()
-};
-
-class IYapFreeSpeechHandler
-{
-    GENERATED_BODY()
-
-protected:
-    UFUNCTION(BlueprintImplementableEvent, DisplayName = "Talk Dialogue Node Entered")
-    void K2_TalkDialogueNodeEntered(FYapData_TalkDialogueNodeEntered In);
-    
-    UFUNCTION(BlueprintImplementableEvent, DisplayName = "Talk Dialogue Node Exited")
-    void K2_TalkDialogueNodeExited(FYapData_TalkDialogueNodeExited In);
-    
-    UFUNCTION(BlueprintImplementableEvent, DisplayName = "Talk Dialogue Node Bypassed")
-    void K2_TalkDialogueNodeBypassed(FYapData_TalkDialogueNodeBypassed In);
-    
-    UFUNCTION(BlueprintImplementableEvent, DisplayName = "Talk Speech Begins")
-    void K2_TalkSpeechBegins(FYapData_TalkSpeechBegins In);
-    
-    UFUNCTION(BlueprintImplementableEvent, DisplayName = "Talk Speech Ends")
-    void K2_TalkSpeechEnds(FYapData_TalkSpeechEnds In);
-    
-    UFUNCTION(BlueprintImplementableEvent, DisplayName = "Talk Speech Padding Ends")
-    void K2_TalkSpeechPaddingEnds(FYapData_TalkSpeechPaddingEnds In);
-    
-public:
-    virtual void OnTalkDialogueNodeEntered(FYapData_TalkDialogueNodeEntered Event) { }
-
-    virtual void OnTalkDialogueNodeExited(FYapData_TalkDialogueNodeExited Event) { }
-
-    virtual void OnTalkDialogueNodeBypassed(FYapData_TalkDialogueNodeBypassed Event) { }
-
-    virtual void OnTalkSpeechBegins(FYapData_TalkSpeechBegins Event) { }
-
-    virtual void OnTalkSpeechEnds(FYapData_TalkSpeechEnds Event) { }
-
-    virtual void OnTalkSpeechPaddingEnds(FYapData_TalkSpeechPaddingEnds Event) { }
-
-};
+// ------------------------------------------------------------------------------------------------
 
 #undef LOCTEXT_NAMESPACE

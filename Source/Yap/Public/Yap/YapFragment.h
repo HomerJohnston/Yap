@@ -29,7 +29,7 @@ enum class EYapFragmentRunState : uint8
 // ================================================================================================
 
 UENUM()
-enum class EYapFragmentCurrentStateFlags : uint8
+enum class EYapFragmentEntryStateFlags : uint8
 {
 	NeverRan =	0,
 	Failed =	1 << 0,
@@ -37,9 +37,9 @@ enum class EYapFragmentCurrentStateFlags : uint8
 	Skipped =	1 << 2,
 };
 
-inline EYapFragmentCurrentStateFlags operator|(EYapFragmentCurrentStateFlags Left, EYapFragmentCurrentStateFlags Right)
+inline EYapFragmentEntryStateFlags operator|(EYapFragmentEntryStateFlags Left, EYapFragmentEntryStateFlags Right)
 {
-	return static_cast<EYapFragmentCurrentStateFlags>(static_cast<uint8>(Left) | static_cast<uint8>(Right));
+	return static_cast<EYapFragmentEntryStateFlags>(static_cast<uint8>(Left) | static_cast<uint8>(Right));
 }
 
 // ================================================================================================
@@ -56,10 +56,6 @@ struct YAP_API FYapFragment
 
 public:
 	FYapFragment();
-	
-	bool CheckConditions() const;
-	void ResetOptionalPins();
-	void PreloadContent(EYapMaturitySetting MaturitySetting, EYapLoadContext LoadContext);
 
 #if WITH_EDITOR
 	friend class SFlowGraphNode_YapDialogueWidget;
@@ -94,9 +90,9 @@ protected:
 	UPROPERTY()
 	FGameplayTag FragmentTag;
 
-	/** Padding is idle time to wait after the fragment finishes running. A value of -1 will use project defaults. */
+	/** Padding is idle time to wait after the fragment finishes running. An unset value will use project defaults. */
 	UPROPERTY()
-	float PaddingToNextFragment = -1;
+	TOptional<float> Padding;
 	
 	/**  */
 	UPROPERTY()
@@ -150,29 +146,60 @@ protected:
 	UPROPERTY()
 	FFlowPin EndPin;
 
-	UPROPERTY()
+	UPROPERTY(Transient)
 	EYapFragmentRunState RunState = EYapFragmentRunState::Idle;
 
-	UPROPERTY()
-	EYapFragmentCurrentStateFlags LastCompletionState = EYapFragmentCurrentStateFlags::NeverRan;
+	UPROPERTY(Transient)
+	EYapFragmentEntryStateFlags LastEntryState = EYapFragmentEntryStateFlags::NeverRan;
 
 	/** When was the current running fragment started? */
-	UPROPERTY() 
+	UPROPERTY(Transient)
 	double StartTime = -1;
 
 	/** When did the most recently ran fragment finish? */
-	UPROPERTY()
+	UPROPERTY(Transient)
 	double EndTime = -1;
+
+	/**  */
+	UPROPERTY(Transient)
+	bool bRunning = false;
+	
+	/**  */
+	UPROPERTY(Transient)
+	bool bFragmentAwaitingManualAdvance = false;
+
+public:
+	/**  */
+	UPROPERTY(Transient)
+	FTimerHandle SpeechTimerHandle;
+
+	/**  */
+	UPROPERTY(Transient)
+	FTimerHandle ProgressionTimerHandle;
 	
 	// ASSET LOADING
 protected:
+	
 	TSharedPtr<FStreamableHandle> SpeakerHandle;
 	
 	TSharedPtr<FStreamableHandle> DirectedAtHandle;
+
+	// EDITOR
+#if WITH_EDITOR
+protected:
+#endif
 	
 	// ==========================================
 	// API
 public:
+	bool CanRun() const;
+	
+	bool CheckConditions() const;
+	
+	void ResetOptionalPins();
+	
+	void PreloadContent(EYapMaturitySetting MaturitySetting, EYapLoadContext LoadContext);
+	
 	const UYapCharacter* GetSpeaker(EYapLoadContext LoadContext); // Non-const because of async loading handle
 
 	const UYapCharacter* GetDirectedAt(EYapLoadContext LoadContext); // Non-const because of async loading handle
@@ -190,13 +217,15 @@ public:
 	
 	EYapFragmentRunState GetRunState() const { return RunState; }
 
-	void SetCompletionState(EYapFragmentCurrentStateFlags NewStateFlags) { LastCompletionState = (EYapFragmentCurrentStateFlags)NewStateFlags; }
+	void SetEntryState(EYapFragmentEntryStateFlags NewStateFlags) { LastEntryState = (EYapFragmentEntryStateFlags)NewStateFlags; }
 	
-	EYapFragmentCurrentStateFlags GetLastCompletionState() const { return LastCompletionState; }
+	EYapFragmentEntryStateFlags GetLastEntryState() const { return LastEntryState; }
 	
 	int32 GetActivationLimit() const { return ActivationLimit; }
 
-	bool IsActivationLimitMet() const { if (ActivationLimit <= 0) return false; return (ActivationCount >= ActivationLimit); }
+	bool CheckActivationLimit() const { if (ActivationLimit <= 0) return true; return ActivationCount < ActivationLimit; }
+
+	bool IsActivationLimitMet() const { if (ActivationLimit <= 0) return false; return ActivationCount >= ActivationLimit; }
 
 	const FText& GetDialogueText(EYapMaturitySetting MaturitySetting) const;
 	
@@ -216,7 +245,7 @@ public:
 
 	FYapBit& GetChildSafeBitMutable() { return ChildSafeBit; }
 
-	TOptional<float> GetTime() const;
+	TOptional<float> GetSpeechTime() const;
 
 	double GetStartTime() const { return StartTime; }
 
@@ -225,13 +254,19 @@ public:
 	double GetEndTime() const { return EndTime; }
 
 	void SetEndTime(double InTime) { EndTime = InTime; }
-	
+
+	bool GetIsAwaitingManualAdvance() const { return bFragmentAwaitingManualAdvance; };
+
+	void SetAwaitingManualAdvance() { bFragmentAwaitingManualAdvance = true; };
+
 protected:
-	TOptional<float> GetTime(EYapMaturitySetting MaturitySetting, EYapLoadContext LoadContext) const;
+	TOptional<float> GetSpeechTime(EYapMaturitySetting MaturitySetting, EYapLoadContext LoadContext) const;
 
 public:
-	float GetPaddingToNextFragment() const;
+	TOptional<float> GetPadding() const;
 
+	float GetProgressionTime() const;
+	
 	void IncrementActivations();
 
 	const FGameplayTag& GetFragmentTag() const { return FragmentTag; } 
@@ -269,8 +304,6 @@ public:
 	
 	/** Gets the evaluated skippable setting to be used for this fragment (incorporating project default settings and fallbacks) */
 	bool GetSkippable(bool Default) const;
-
-	bool GetAutoAdvance(bool Default) const;
 	
 	/** Gets the evaluated time mode to be used for this bit (incorporating project default settings and fallbacks) */
 	EYapTimeMode GetTimeMode() const;
@@ -297,7 +330,7 @@ public:
 	
 	static void OnGetCategoriesMetaFromPropertyHandle(TSharedPtr<IPropertyHandle> PropertyHandle, FString& String);
 	
-	void SetPaddingToNextFragment(float NewValue) { PaddingToNextFragment = NewValue; }
+	void SetPaddingToNextFragment(float NewValue) { Padding = NewValue; }
 
 	TArray<TObjectPtr<UYapCondition>>& GetConditionsMutable() { return Conditions; }
 

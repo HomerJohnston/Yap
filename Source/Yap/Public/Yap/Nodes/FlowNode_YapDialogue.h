@@ -4,7 +4,7 @@
 #pragma once
 
 #include "Nodes/FlowNode.h"
-#include "Yap/YapDialogueHandle.h"
+#include "Yap/YapRunningFragment.h"
 #include "Yap/YapFragment.h"
 #include "Yap/YapPromptHandle.h"
 
@@ -37,6 +37,29 @@ enum class EYapDialogueNodeType : uint8
 	COUNT				UMETA(Hidden)
 };
 
+USTRUCT()
+struct FYapFragmentRunData
+{
+	GENERATED_BODY()
+	
+	FYapFragmentRunData() {}
+
+	FYapFragmentRunData(uint8 InFragmentIndex, FTimerHandle InSpeechTimerHandle, FTimerHandle InPaddingTimerHandle)
+		: FragmentIndex(InFragmentIndex)
+		, SpeechTimerHandle(InSpeechTimerHandle)
+		, PaddingTimerHandle(InPaddingTimerHandle)
+	{}
+
+	UPROPERTY(Transient)
+	int32 FragmentIndex = INDEX_NONE;
+
+	UPROPERTY(Transient)
+	FTimerHandle SpeechTimerHandle;
+	
+	UPROPERTY(Transient)
+	FTimerHandle PaddingTimerHandle;
+};
+
 // ------------------------------------------------------------------------------------------------
 /**
  * Emits Dialogue through UYapSubsystem.
@@ -59,6 +82,11 @@ class YAP_API UFlowNode_YapDialogue : public UFlowNode
 public:
 	UFlowNode_YapDialogue();
 
+	// TODO constexpr?
+	static FName OutputPinName;
+	
+	static FName BypassPinName;
+	
 	// ============================================================================================
 	// SETTINGS
 	// ============================================================================================
@@ -109,28 +137,9 @@ protected:
 	UPROPERTY(Transient, BlueprintReadOnly)
 	int32 NodeActivationCount = 0;
 
+	/**  */
 	UPROPERTY(Transient)
-	int32 RunningFragmentIndex = INDEX_NONE;
-	
-	UPROPERTY(Transient)
-	bool bFragmentAwaitingManualAdvance = false;
-	
-	/** Timer handle, used internally for fragment runs. */
-	UPROPERTY(Transient)
-	FTimerHandle FragmentTimerHandle;
-
-	UPROPERTY(Transient)
-	FTimerHandle PaddingTimerHandle;
-
-	UPROPERTY(Transient)
-	FYapDialogueHandle DialogueHandle;
-
-	UPROPERTY(Transient)
-	FYapPromptHandle PromptHandle;
-	
-	static FName OutputPinName;
-	
-	static FName BypassPinName;
+	int32 RunningFragmentIndex;
 	
 	// ============================================================================================
 	// PUBLIC API
@@ -149,6 +158,8 @@ public:
 	/** How many times is this dialogue node allowed to successfully run? */
 	int32 GetNodeActivationLimit() const { return NodeActivationLimit; }
 
+	const FYapFragment& GetFragment(uint8 FragmentIndex) const;
+	
 	/** Dialogue fragments getter. */
 	const TArray<FYapFragment>& GetFragments() const { return Fragments; }
 
@@ -158,22 +169,24 @@ public:
 	/** Is dialogue from this node skippable by default? */
 	bool GetSkippable() const;
 
-	bool GetAutoAdvance() const;
+	bool GetNodeAutoAdvance() const;
+	
+	bool GetFragmentAutoAdvance(uint8 FragmentIndex) const;
 	
 	// TODO this sucks can I register the fragments some other way instead
 	/** Finds the first fragment on this dialogue containing a tag. */
 	FYapFragment* FindTaggedFragment(const FGameplayTag& Tag);
 
-	bool SkipCurrent();
-	
-	bool CanSkipCurrentFragment() const;
-
-	FString GetAudioID() const { return AudioID; }
-
-	FYapDialogueHandle& GetDialogueHandle() { return DialogueHandle; }
+	bool Skip();
 
 protected:
-	bool ActivationLimitsMet() const;
+	bool CanSkip() const;
+
+public:
+	FString GetAudioID() const { return AudioID; }
+
+protected:
+	bool CheckActivationLimits() const;
 
 #if WITH_EDITOR
 private:
@@ -207,28 +220,32 @@ protected:
 	// ============================================================================================
 	
 protected:
+	bool CanEnterNode();
+
 	bool CheckConditions();
 	
-	void BroadcastPrompts();
+	bool TryBroadcastPrompts();
 
 	void RunPrompt(uint8 Uint8);
 	
-	void FindStartingFragment();
+	bool TryStartFragments();
 
 	bool RunFragment(uint8 FragmentIndex);
 
-	void OnSpeakingComplete();
+	void OnSpeechComplete(uint8 FragmentIndex);
 
-	void OnPaddingComplete();
+	void OnProgressionComplete();
 
 	void AdvanceFromFragment(uint8 FragmentIndex);
 	
 	bool IsBypassPinRequired() const;
 
+	bool IsOutputConnectedToPromptNode() const;
+	
 	int16 FindFragmentIndex(const FGuid& InFragmentGuid) const;
 
 protected:
-	bool TryBroadcastFragment(uint8 FragmentIndex);
+	bool FragmentCanRun(uint8 FragmentIndex);
 	
 	const FYapFragment& GetFragmentByIndex(uint8 Index) const;
 	
@@ -268,7 +285,9 @@ private:
 	void SwapFragments(uint8 IndexA, uint8 IndexB);
 	
 public:
-	const int32 GetRunningFragmentIndex() const { return RunningFragmentIndex; }
+	bool IsFragmentRunning(uint8 FragmentIndex) const;
+
+	bool IsFragmentSpeaking(uint8 FragmentIndex) const;
 
 	FString GetNodeDescription() const override;
 

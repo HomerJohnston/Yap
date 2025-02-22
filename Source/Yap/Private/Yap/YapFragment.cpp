@@ -21,6 +21,11 @@ FYapFragment::FYapFragment()
 	TimeMode = EYapTimeMode::Default;
 }
 
+bool FYapFragment::CanRun() const
+{
+	return CheckActivationLimit() && CheckConditions();
+}
+
 bool FYapFragment::CheckConditions() const
 {
 	for (TObjectPtr<UYapCondition> Condition : Conditions)
@@ -184,30 +189,43 @@ const FYapBit& FYapFragment::GetBit(EYapMaturitySetting MaturitySetting) const
 	return MatureBit;
 }
 
-TOptional<float> FYapFragment::GetTime() const
+TOptional<float> FYapFragment::GetSpeechTime() const
 {
-	return GetTime(UYapSubsystem::GetCurrentMaturitySetting(), EYapLoadContext::Sync);
+	return GetSpeechTime(UYapSubsystem::GetCurrentMaturitySetting(), EYapLoadContext::Sync);
 }
 
-TOptional<float> FYapFragment::GetTime(EYapMaturitySetting MaturitySetting, EYapLoadContext LoadContext) const
+TOptional<float> FYapFragment::GetSpeechTime(EYapMaturitySetting MaturitySetting, EYapLoadContext LoadContext) const
 {
 	EYapTimeMode EffectiveTimeMode = GetTimeMode(MaturitySetting);
-	return GetBit(MaturitySetting).GetTime(EffectiveTimeMode, LoadContext);
+	return GetBit(MaturitySetting).GetSpeechTime(EffectiveTimeMode, LoadContext);
 }
 
-float FYapFragment::GetPaddingToNextFragment() const
+TOptional<float> FYapFragment::GetPadding() const
 {
 	if (IsTimeModeNone())
 	{
 		return 0;
 	}
 	
-	if (PaddingToNextFragment < 0)
+	if (Padding.IsSet())
 	{
-		return UYapProjectSettings::GetDefaultFragmentPaddingTime();
+		return Padding.GetValue();
 	}
 	
-	return FMath::Max(PaddingToNextFragment, 0);
+	return UYapProjectSettings::GetDefaultFragmentPaddingTime();
+}
+
+float FYapFragment::GetProgressionTime() const
+{
+	if (Padding.IsSet())
+	{
+		float PaddingTime = Padding.GetValue();
+		float SpeechTime = GetSpeechTime().Get(0.0f);
+
+		return FMath::Max(PaddingTime + SpeechTime, 0.0);
+	}
+
+	return GetSpeechTime().Get(0.0);
 }
 
 void FYapFragment::IncrementActivations()
@@ -283,16 +301,6 @@ void FYapFragment::ResolveMaturitySetting(EYapMaturitySetting& MaturitySetting) 
 bool FYapFragment::GetSkippable(bool Default) const
 {
 	return Skippable.Get(Default);
-}
-
-bool FYapFragment::GetAutoAdvance(bool Default) const
-{
-	if (TimeMode == EYapTimeMode::None || (TimeMode == EYapTimeMode::Default && UYapProjectSettings::GetDefaultTimeModeSetting() == EYapTimeMode::None))
-	{
-		return false;
-	}
-	
-	return AutoAdvance.Get(Default);
 }
 
 EYapTimeMode FYapFragment::GetTimeMode() const

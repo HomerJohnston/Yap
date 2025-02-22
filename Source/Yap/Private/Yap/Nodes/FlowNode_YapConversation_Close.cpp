@@ -16,7 +16,7 @@ UFlowNode_YapConversation_Close::UFlowNode_YapConversation_Close()
 
 void UFlowNode_YapConversation_Close::ExecuteInput(const FName& PinName)
 {
-	GetWorld()->GetSubsystem<UYapSubsystem>()->CloseConversation();
+	GetWorld()->GetSubsystem<UYapSubsystem>()->CloseConversation(Conversation);
 
 	TriggerFirstOutput(true);
 }

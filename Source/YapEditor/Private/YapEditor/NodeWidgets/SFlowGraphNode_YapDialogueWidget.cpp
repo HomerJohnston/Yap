@@ -359,7 +359,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapDialogueWidget::CreateTitleWidget(TSharedP
 	TOptional<bool>* AutoAdvanceSettingRaw = &GetFlowYapDialogueNodeMutable()->AutoAdvance;
 	const TAttribute<bool> AutoAdvanceEvaluatedAttr = TAttribute<bool>::CreateLambda( [this] ()
 	{
-		return GetFlowYapDialogueNode()->GetAutoAdvance();
+		return GetFlowYapDialogueNode()->GetNodeAutoAdvance();
 	});
 	
 	TSharedRef<SWidget> Widget = SNew(SBox)
@@ -473,7 +473,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapDialogueWidget::CreateNodeContentArea()
 // ------------------------------------------------------------------------------------------------
 FSlateColor SFlowGraphNode_YapDialogueWidget::ColorAndOpacity_NodeHeaderButton() const
 {
-	if (GetFlowYapDialogueNode()->ActivationLimitsMet() && GetFlowYapDialogueNode()->GetActivationState() != EFlowNodeState::Active)
+	if (GetFlowYapDialogueNode()->CheckActivationLimits() && GetFlowYapDialogueNode()->GetActivationState() != EFlowNodeState::Active)
 	{
 		return YapColor::Red;
 	}

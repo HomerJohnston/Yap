@@ -4,13 +4,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "YapDialogueHandle.h"
+#include "YapRunningFragment.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "YapBlueprintFunctionLibrary.generated.h"
 
 class UYapCharacter;
 struct FInstancedStruct;
-struct FYapDialogueHandleRef;
+struct FYapFragmentHandle;
 
 #define LOCTEXT_NAMESPACE "Yap"
 
@@ -35,19 +35,19 @@ public:
 	static float GetSoundLength(USoundBase* Sound);
 
 	UFUNCTION(BlueprintCallable, Category = "Yap")
-	static bool SkipDialogue(const FYapDialogueHandleRef& Handle);
+	static bool SkipDialogue(const FYapFragmentHandle& Handle);
 
 	UFUNCTION(BlueprintCallable, Category = "Yap")
-	static bool CanSkipCurrently(const FYapDialogueHandleRef& Handle);
+	static bool CanSkipCurrently(const FYapFragmentHandle& Handle);
 	
 	UFUNCTION(BlueprintCallable, Category = "Yap")
 	static bool RunPrompt(const FYapPromptHandle& Handle);
 
 	UFUNCTION(BlueprintCallable, Category = "Yap")
-	static void AddReactor(UPARAM(ref) FYapDialogueHandleRef& HandleRef, UObject* Reactor);
+	static void AddReactor(UPARAM(ref) FYapFragmentHandle& HandleRef, UObject* Reactor);
 
 	UFUNCTION(BlueprintCallable, Category = "Yap")
-	static const TArray<FInstancedStruct>& GetFragmentData(const FYapDialogueHandleRef& HandleRef);
+	static const TArray<FInstancedStruct>& GetFragmentData(const FYapFragmentHandle& HandleRef);
 
 	UFUNCTION(BlueprintCallable, Category = "Yap")
 	static void RegisterConversationHandler(UObject* NewHandler);
@@ -65,7 +65,7 @@ public:
 	static AActor* FindYapCharacterActor(const UYapCharacter* Character);
 
 	UFUNCTION(BlueprintCallable, Category = "Yap")
-	static void TriggerConversationOpen();
+	static void AdvanceIntoConversation();
 };
 
 

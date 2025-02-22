@@ -2,6 +2,7 @@
 // This work is MIT-licensed. Feel free to use it however you wish, within the confines of the MIT license. 
 
 #pragma once
+
 #include "GameplayTagContainer.h"
 
 #include "YapEntity.generated.h"

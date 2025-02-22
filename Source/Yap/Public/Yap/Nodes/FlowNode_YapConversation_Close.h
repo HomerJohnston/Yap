@@ -12,8 +12,8 @@ class YAP_API UFlowNode_YapConversation_Close : public UFlowNode
 {
 	GENERATED_BODY()
 
-	UPROPERTY()
-	FName ConversationName;
+	UPROPERTY(EditAnywhere)
+	FGameplayTag Conversation;
 	
 public:
 	UFlowNode_YapConversation_Close();

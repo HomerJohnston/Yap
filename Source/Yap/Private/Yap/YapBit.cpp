@@ -33,7 +33,7 @@ bool FYapBit::HasAudioAsset() const
 
 // --------------------------------------------------------------------------------------------
 
-TOptional<float> FYapBit::GetTime(EYapTimeMode TimeMode, EYapLoadContext LoadContext) const
+TOptional<float> FYapBit::GetSpeechTime(EYapTimeMode TimeMode, EYapLoadContext LoadContext) const
 {
 	// TODO clamp minimums from project settings?
 	TOptional<float> Time;
@@ -57,7 +57,7 @@ TOptional<float> FYapBit::GetTime(EYapTimeMode TimeMode, EYapLoadContext LoadCon
 		}
 		default:
 		{
-			Time = TOptional<float>();
+			Time = NullOpt;
 		}
 	}
 

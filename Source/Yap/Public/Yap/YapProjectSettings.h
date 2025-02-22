@@ -118,9 +118,9 @@ protected:
 	UPROPERTY(Config, EditAnywhere, Category = "Dialogue Playback")
 	EYapTimeMode DefaultTimeModeSetting;
 
-	/** If set, the Open Convo. node will not advance until Yap is notified to continue. Use this if you want to wait for a conversation opening animation. */
+	/** If set, the Open Convo. node will pause flow graph execution. Yap must be notified to continue. Use this if you want to wait for a conversation opening animation. */
 	UPROPERTY(Config, EditAnywhere, Category = "Dialogue Playback", meta = (ClampMin = 0.0, UIMin = 0.0, UIMax = 2.0, Delta = 0.01))
-	bool bOpenConversationRequiresTrigger = false;
+	bool bConversationsRequireAdvanceTriggerToStart = false;
 	
 	/** If set, dialogue will be non-skippable by default and must play for its entire duration. */
 	UPROPERTY(Config, EditAnywhere, Category = "Dialogue Playback")
@@ -130,13 +130,24 @@ protected:
 	UPROPERTY(Config, EditAnywhere, Category = "Dialogue Playback")
 	bool bManualAdvanceOnly = false;
 
-	/** By default, the player prompt node will auto-select the prompt if only one is displayed. This setting prevents that. */
+	/** If set, Manual Advance Only will be ignored for the last fragment of any talk nodes which are connected to a prompt node. */
+	UPROPERTY(Config, EditAnywhere, Category = "Dialogue Playback", DisplayName = " >>> Auto Advance To Prompt Nodes", meta = (EditCondition = "bManualAdvanceOnly", EditConditionHides))
+	bool bAutoAdvanceToPromptNodes = false;
+
+	/**
+	 * If set, the *last* fragment of an auto-advancing talk node will check if the fragment is playing into a player prompt node. If it is, it will immediately advance into the player prompt node after starting speech.
+	 * WARNING: This setting cause all activation conditions of the last fragment of any talk nodes which flow into player prompt nodes to be ignored! This ensures consistent game behavior.
+	 */
+	UPROPERTY(Config, EditAnywhere, Category = "Dialogue Playback")
+	bool bAdvanceImmediatelyIntoPromptNodes = false;
+	
+	/** By default, a player prompt node will auto-select the prompt when only one is displayed. This setting prevents that. */
 	UPROPERTY(Config, EditAnywhere, Category = "Dialogue Playback")
 	bool bPreventAutoSelectLastPrompt = false;
 	
 	/** After each dialogue is finished being spoken, a brief extra pause can be inserted before moving onto the next node. This is the default value. Can be overridden by individual fragments. */
-	UPROPERTY(Config, EditAnywhere, Category = "Dialogue Playback", meta = (Units = "s", UIMin = 0.0, UIMax = 5.0, Delta = 0.01))
-	float DefaultFragmentPaddingTime = 0.25f;
+	UPROPERTY(Config, EditAnywhere, Category = "Dialogue Playback", meta = (UIMin = 0.0, UIMax = 5.0, Delta = 0.01))
+	TOptional<float> DefaultFragmentPaddingTime = 0.25f;
 
 	/** Controls how fast dialogue plays. Only useful for text-based speaking time. */
 	UPROPERTY(Config, EditAnywhere, Category = "Dialogue Playback", meta = (ClampMin = 1, ClampMax = 1000, UIMin = 60, UIMax = 180, Delta = 5))
@@ -151,7 +162,7 @@ protected:
 	float MinimumAutoAudioTimeLength = 0.5;
 
 	/** Total minimum speaking time for any fragment. Should be fairly low; intended mostly to only handle accidental "0" time values. */
-	UPROPERTY(Config, EditAnywhere, Category = "Dialogue Playback", meta = (ClampMin = 0.1, UIMin = 0.1, UIMax = 5.0, Delta = 0.01))
+	UPROPERTY(Config, EditAnywhere, Category = "Dialogue Playback", meta = (ClampMin = 0.0, UIMin = 0.0, UIMax = 5.0, Delta = 0.01))
 	float MinimumSpeakingTime = 0.25;
 
 	/** When dialogue is set to audo-advance, skip requests will be ignored if the total remaining playback time (speech time + padding time) is less than this. This should normally be left at zero.*/
@@ -161,7 +172,7 @@ protected:
 	/** Skip requests will be ignored if the total elapsed time (speech time + padding time) is less than this. This should normally be a small number. */
 	UPROPERTY(Config, EditAnywhere, Category = "Dialogue Playback", meta = (ClampMin = 0.0, UIMin = 0.0, UIMax = 2.0, Delta = 0.01))
 	float MinimumTimeElapsedToAllowSkip = 0.25;
-	
+
 	// - - - - - EDITOR - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	
 	/** Normally, when assigning dialogue text, Yap will parse the text and attempt to cache a word count to use for determine text time length. Set this to prevent that. */
@@ -307,13 +318,16 @@ public:
 
 	static float GetMinimumTimeElapsedToAllowSkip() { return Get().MinimumTimeElapsedToAllowSkip; }
 
-	static bool GetOpenConversationRequiresTrigger() { return Get().bOpenConversationRequiresTrigger; }
+	static bool GetAutoAdvanceToPromptNodes() { return Get().bAutoAdvanceToPromptNodes; }
+
+	//
+	static bool GetConversationsRequireAdvanceTriggerToStart() { return Get().bConversationsRequireAdvanceTriggerToStart; }
 	
 	static bool CacheFragmentWordCountAutomatically() { return !Get().bPreventCachingWordCount; }
 	
 	static bool CacheFragmentAudioLengthAutomatically() { return !Get().bPreventCachingAudioLength; }
 	
-	static float GetDefaultFragmentPaddingTime() { return Get().DefaultFragmentPaddingTime; }
+	static TOptional<float> GetDefaultFragmentPaddingTime() { return Get().DefaultFragmentPaddingTime; }
 	
 	static EYapMissingAudioErrorLevel GetMissingAudioBehavior() { return Get().MissingAudioErrorLevel; }
 

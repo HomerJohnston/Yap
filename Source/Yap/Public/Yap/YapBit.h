@@ -111,7 +111,7 @@ public:
 	void LoadContent(EYapLoadContext LoadContext) const;
 	
 	/** Gets the evaluated time duration to be used for this bit (incorporating project default settings and fallbacks) */
-	TOptional<float> GetTime(EYapTimeMode TimeMode, EYapLoadContext LoadContext) const;
+	TOptional<float> GetSpeechTime(EYapTimeMode TimeMode, EYapLoadContext LoadContext) const;
 
 	// --------------------------------------------------------------------------------------------
 	// INTERNAL API

@@ -19,48 +19,55 @@ UFlowNode_YapConversation_Open::UFlowNode_YapConversation_Open()
 #endif
 }
 
-void UFlowNode_YapConversation_Open::InitializeInstance()
-{
-	Super::InitializeInstance();
-
-	TArray<UFlowNode*> ConnectedNodes;
-}
-
 void UFlowNode_YapConversation_Open::OnActivate()
 {
-	if (bTriggerFlop)
+	EYapOpenConversationResult Result = GetWorld()->GetSubsystem<UYapSubsystem>()->OpenOrEnqueueConversation(Conversation);
+
+	if (Result == EYapOpenConversationResult::Opened)
 	{
-		return;
+		OpenConversation();
 	}
-	
-	GetWorld()->GetSubsystem<UYapSubsystem>()->EnqueueConversation(GetFlowAsset(), Conversation);
-	
-	if (UYapProjectSettings::GetConversationsRequireAdvanceTriggerToStart())
+	if (Result == EYapOpenConversationResult::Queued)
 	{
-		UYapSubsystem::Get()->AdvanceIntoConversation.AddUObject(this, &ThisClass::OnConversationOpenTrigger);
-		bTriggerFlop = true;
+		UE_LOG(LogYap, Verbose, TEXT("Conversation Queued: %s"), *Conversation.GetTagName().ToString());
+		UYapSubsystem::Get()->OnOpenConversation.AddDynamic(this, &ThisClass::OnOpenConversationTrigger);
 	}
 }
 
-void UFlowNode_YapConversation_Open::ExecuteInput(const FName& PinName)
+void UFlowNode_YapConversation_Open::Finish()
 {
-	Super::ExecuteInput(PinName);
-
-	if (!bTriggerFlop)
-	{
-		TriggerFirstOutput(true);
-	}
+	Super::Finish();
+	
+	UE_LOG(LogYap, Verbose, TEXT("CONVERSATION CLOSING: %s"), *Conversation.GetTagName().ToString());
+	
+	UYapSubsystem::Get()->OnConversationFinishedOpening.Unbind();
 }
 
-void UFlowNode_YapConversation_Open::OnConversationOpenTrigger()
+void UFlowNode_YapConversation_Open::OnOpenConversationTrigger(const FGameplayTag& TriggeredConversation)
 {
-	if (!bTriggerFlop)
+	if (Conversation != TriggeredConversation)
 	{
 		return;
 	}
-	
+
+	OpenConversation();
+}
+
+void UFlowNode_YapConversation_Open::OnConversationFinishedOpening()
+{
+	UYapSubsystem::Get()->OnConversationFinishedOpening.Unbind();
 	TriggerFirstOutput(true);
-	bTriggerFlop = false;
+}
+
+void UFlowNode_YapConversation_Open::OpenConversation()
+{
+	UE_LOG(LogYap, Verbose, TEXT("CONVERSATION OPENING: %s"), *Conversation.GetTagName().ToString());
+
+	UYapSubsystem::Get()->OnOpenConversation.RemoveDynamic(this, &ThisClass::OnOpenConversationTrigger);
+
+	// This conversation is becoming active. However, we don't actually open yet in case there is a lock.
+	// We will let the subsystem or conversation struct inform us when to actually progress the flow graph.
+	UYapSubsystem::Get()->OnConversationFinishedOpening.BindDynamic(this, &ThisClass::OnConversationFinishedOpening);
 }
 
 #if WITH_EDITOR

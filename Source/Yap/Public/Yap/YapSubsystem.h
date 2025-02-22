@@ -27,6 +27,18 @@ enum class EYapMaturitySetting : uint8;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FFlowYapConversationEvent, FName, ConversationName);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FFlowYapDialogueEvent, FName, ConversationName, const FYapBit&, DialogueInfo);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FFlowYapOpenConversation, const FGameplayTag&, ConversationName);
+DECLARE_DYNAMIC_DELEGATE(FFlowYapConversationFinishedOpening);
+
+// ================================================================================================
+
+UENUM()
+enum class EYapOpenConversationResult : uint8
+{
+	Undefined,
+	Opened,
+	Queued,
+};
 
 // ================================================================================================
 
@@ -36,8 +48,6 @@ class YAP_API UYapSubsystem : public UWorldSubsystem
 	GENERATED_BODY()
 
 friend class UFlowNode_YapDialogue;
-friend class UFlowNode_YapConversation_Open;
-friend class UFlowNode_YapConversation_Close;
 friend struct FYapFragment;
 friend struct FYapPromptHandle;
 	
@@ -48,7 +58,11 @@ public:
 	// STATE
 	// =========================================
 public:
-	TMulticastDelegate<void()> AdvanceIntoConversation;
+	FFlowYapOpenConversation OnOpenConversation;
+
+	FFlowYapConversationFinishedOpening OnConversationFinishedOpening;
+	
+	FFlowYapConversationFinishedOpening OnConversationFinishedClosing;
 	
 protected:
 
@@ -157,16 +171,19 @@ protected:  // TODO should some of these be public?
 	/**  */
 	void RegisterTaggedFragment(const FGameplayTag& FragmentTag, UFlowNode_YapDialogue* DialogueNode);
 
+public:
 	/**  */
-	void EnqueueConversation(UFlowAsset* OwningAsset, const FGameplayTag& ConversationName); // Called by Open Conversation node
+	EYapOpenConversationResult OpenOrEnqueueConversation(const FGameplayTag& ConversationName); // Called by Open Conversation node
 
 	void DequeueConversation(const FGameplayTag& ConversationName);
-	
+
+protected:
 	void OpenConversation(FYapConversation& Conversation);
 	/**  */
 	void CloseConversation(const FGameplayTag& ConversationName); // Called by Close Conversation node
 
-	void UpdateCurrentConversation();
+	void CheckIfActiveConversationChanged();
+	
 	
 	/**  */
 	FYapPromptHandle BroadcastPrompt(UFlowNode_YapDialogue* Dialogue, uint8 FragmentIndex);
@@ -184,7 +201,7 @@ public:
 	
 	/**  */
 	static FYapConversation& GetConversation(FYapConversationHandle Handle);
-	
+
 public:
 	// TODO should I make a ref struct for FYapPromptHandle too?
 	/** The prompt handle will call this function, passing in itself. */
@@ -216,12 +233,6 @@ public:
 	void OnWorldBeginPlay(UWorld& InWorld) override;
 	
 protected:
-	/**  */
-	void OnConversationOpens_Internal(const FGameplayTag& ConversationName);
-
-	/**  */
-	void OnConversationCloses_Internal(const FGameplayTag& Name);
-
 	void OnSpeechComplete(FYapFragmentHandle Handle);
 
 	void OnFragmentComplete(FYapFragmentHandle Handle);

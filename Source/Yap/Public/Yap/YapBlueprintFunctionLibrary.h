@@ -63,9 +63,6 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Yap")
 	static AActor* FindYapCharacterActor(const UYapCharacter* Character);
-
-	UFUNCTION(BlueprintCallable, Category = "Yap")
-	static void AdvanceIntoConversation();
 };
 
 

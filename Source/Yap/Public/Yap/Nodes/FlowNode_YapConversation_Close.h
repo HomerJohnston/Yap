@@ -19,6 +19,9 @@ public:
 	UFlowNode_YapConversation_Close();
 
 	void ExecuteInput(const FName& PinName) override;
+
+	void Finish() override;
+	
 #if WITH_EDITOR
 	FText GetNodeTitle() const override;
 #endif

@@ -16,9 +16,16 @@ UFlowNode_YapConversation_Close::UFlowNode_YapConversation_Close()
 
 void UFlowNode_YapConversation_Close::ExecuteInput(const FName& PinName)
 {
-	GetWorld()->GetSubsystem<UYapSubsystem>()->CloseConversation(Conversation);
+	GetWorld()->GetSubsystem<UYapSubsystem>()->DequeueConversation(Conversation);
 
 	TriggerFirstOutput(true);
+}
+
+void UFlowNode_YapConversation_Close::Finish()
+{
+	Super::Finish();
+
+	
 }
 
 #if WITH_EDITOR

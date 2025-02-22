@@ -21,3 +21,17 @@ void UYapConversationHandleBlueprintFunctionLibrary::BindToConversationClose(FYa
 
     Conversation.OnConversationClosed.Add(Delegate);
 }
+
+void UYapConversationHandleBlueprintFunctionLibrary::SetOpenLock(FYapConversationHandle Handle)
+{
+    FYapConversation& Conversation = UYapSubsystem::GetConversation(Handle);
+
+    Conversation.SetOpenLock();
+}
+
+void UYapConversationHandleBlueprintFunctionLibrary::RemoveOpenLock(FYapConversationHandle Handle)
+{
+    FYapConversation& Conversation = UYapSubsystem::GetConversation(Handle);
+
+    Conversation.RemoveOpenLockAndAdvance();
+}

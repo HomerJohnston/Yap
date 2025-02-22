@@ -6,6 +6,7 @@
 #include "Yap/YapConversation.h"
 
 #include "Yap/YapRunningFragment.h"
+#include "Yap/YapSubsystem.h"
 
 // ------------------------------------------------------------------------------------------------
 
@@ -15,9 +16,8 @@ FYapConversation::FYapConversation()
 
 // ------------------------------------------------------------------------------------------------
 
-FYapConversation::FYapConversation(UFlowAsset* InFlowAsset, const FGameplayTag& InConversationName)
-    : FlowAsset(InFlowAsset)
-    , ConversationName(InConversationName)
+FYapConversation::FYapConversation(const FGameplayTag& InConversationName)
+    : ConversationName(InConversationName)
 {
     Guid = FGuid::NewGuid();
 }
@@ -39,6 +39,17 @@ void FYapConversation::RemoveRunningFragment(FYapFragmentHandle FragmentHandle)
     check(RunningFragments.Contains(FragmentHandle));
 
     RunningFragments.Remove(FragmentHandle);
+}
+
+void FYapConversation::SetOpenLock()
+{
+    bOpenLock = true;
+}
+
+void FYapConversation::RemoveOpenLockAndAdvance()
+{
+    bOpenLock = false;
+    (void) UYapSubsystem::Get()->OnConversationFinishedOpening.ExecuteIfBound();
 }
 
 void FYapConversation::ExecuteSkip()

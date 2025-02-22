@@ -28,22 +28,24 @@ public:
 	// STATE
 	// ==========================================
 protected:
-	
-	//* Prevents this open conversation node from triggering accidentally. */ 
-	bool bTriggerFlop = false;
 
 	// ==========================================
 	// API
 	// ==========================================
 public:
-	void InitializeInstance() override;
-
 	void OnActivate() override;
 
-	void ExecuteInput(const FName& PinName) override;
+	void Finish() override;
 
 protected:
-	void OnConversationOpenTrigger();
+	UFUNCTION()
+	void OnOpenConversationTrigger(const FGameplayTag& TriggeredConversation);
+	
+	UFUNCTION()
+	void OnConversationFinishedOpening();
+
+protected:
+	void OpenConversation();
 	
 #if WITH_EDITOR
 public:

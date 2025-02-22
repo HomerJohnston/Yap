@@ -8,7 +8,6 @@
 
 #include "YapConversation.generated.h"
 
-class UFlowAsset;
 struct FGameplayTag;
 
 // ================================================================================================
@@ -20,17 +19,14 @@ struct FYapConversation
 
     FYapConversation();
 
-    FYapConversation(UFlowAsset* InFlowAsset, const FGameplayTag& InConversationName);
+    FYapConversation(const FGameplayTag& InConversationName);
 
     ~FYapConversation();
-    
+
     // ==========================================
     // STATE
     // ==========================================
 protected:
-
-    UPROPERTY(Transient)
-    TObjectPtr<UFlowAsset> FlowAsset = nullptr;
 
     UPROPERTY(Transient)
     FGameplayTag ConversationName;
@@ -40,18 +36,18 @@ protected:
 
     UPROPERTY(Transient)
     FGuid Guid;
-    
+
+    UPROPERTY(Transient)
+    bool bOpenLock = false;    
+
 public:
     UPROPERTY(Transient)
     FYapOnConversationClosed_Multi OnConversationClosed;
-
 
     // ==========================================
     // API
     // ==========================================
 public:
-    const UFlowAsset* GetFlowAsset() const { return FlowAsset; }
-
     const FGameplayTag& GetConversationName() const { return ConversationName; }
 
     const TArray<FYapFragmentHandle>& GetRunningFragments() const { return RunningFragments; }
@@ -62,5 +58,11 @@ public:
 
     void RemoveRunningFragment(FYapFragmentHandle Handle);
 
+    void SetOpenLock();;
+
+    bool IsOpenLocked() { return bOpenLock; }
+
+    void RemoveOpenLockAndAdvance();
+    
     void ExecuteSkip();
 };

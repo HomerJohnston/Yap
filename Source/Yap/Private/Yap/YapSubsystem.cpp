@@ -173,15 +173,21 @@ FYapFragment* UYapSubsystem::FindTaggedFragment(const FGameplayTag& FragmentTag)
 
 // ------------------------------------------------------------------------------------------------
 
-void UYapSubsystem::EnqueueConversation(UFlowAsset* OwningAsset, const FGameplayTag& ConversationName)
+EYapOpenConversationResult UYapSubsystem::OpenOrEnqueueConversation(const FGameplayTag& ConversationName)
 {
 	// Conversation structs will usually be small, a few bytes. Using arrays as queues for easier serialization.
-	FYapConversation NewConversation(OwningAsset, ConversationName);
-	
-	ConversationQueue.EmplaceAt(0, FYapConversation(OwningAsset, ConversationName));
+	ConversationQueue.EmplaceAt(0, FYapConversation(ConversationName));
 
-	UpdateCurrentConversation();
+	if (ConversationQueue.Num() == 1)
+	{
+		OpenConversation(ConversationQueue[0]);
+		return EYapOpenConversationResult::Opened;
+	}
+
+	return EYapOpenConversationResult::Queued;
 }
+
+// ------------------------------------------------------------------------------------------------
 
 void UYapSubsystem::DequeueConversation(const FGameplayTag& ConversationName)
 {
@@ -192,21 +198,30 @@ void UYapSubsystem::DequeueConversation(const FGameplayTag& ConversationName)
 
 	ConversationQueue.RemoveAll(Match);
 
-	UpdateCurrentConversation();
+	CheckIfActiveConversationChanged();
 }
 
-void UYapSubsystem::UpdateCurrentConversation()
-{
-	FYapConversation& TopConversation = ConversationQueue[ConversationQueue.Num() - 1];
-	
-	if (TopConversation.GetConversationName() == ActiveConversationName)
-	{
-		return;
-	}
-	
-	CloseConversation(ActiveConversationName);
+// ------------------------------------------------------------------------------------------------
 
-	OpenConversation(TopConversation);
+void UYapSubsystem::CheckIfActiveConversationChanged()
+{
+	if (ConversationQueue.Num() == 0)
+	{
+		CloseConversation(ActiveConversationName);
+	}
+	else
+	{
+		FYapConversation& NewTopConversation = ConversationQueue[ConversationQueue.Num() - 1];
+		
+		if (NewTopConversation.GetConversationName() == ActiveConversationName)
+		{
+			return;
+		}
+		
+		CloseConversation(ActiveConversationName);
+
+		OpenConversation(NewTopConversation);	
+	}
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -217,16 +232,22 @@ void UYapSubsystem::OpenConversation(FYapConversation& Conversation)
 	{
 		return;
 	}
-
+	
 	ActiveConversationName = Conversation.GetConversationName();
 	
 	FYapData_ConversationOpened Data;
-	
 	Data.Conversation = ActiveConversationName;
-	
-	FYapConversationHandle Handle(Conversation.GetGuid());
 
+	FYapConversationHandle Handle(Conversation.GetGuid());
+	
+	OnOpenConversation.Broadcast(ActiveConversationName);
+	
 	BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapConversationHandler, OnConversationOpened, Execute_K2_ConversationOpened)>(ConversationHandlers, Data, Handle);
+
+	if (!Conversation.IsOpenLocked())
+	{
+		Conversation.RemoveOpenLockAndAdvance();
+	}
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -354,11 +375,18 @@ FYapConversation& UYapSubsystem::GetConversation(FYapConversationHandle Handle)
 		return Conversation.GetGuid() == Handle.Guid;
 	};
 
+	auto& Queue = Get()->ConversationQueue;
+	
 	FYapConversation* ConversationPtr = Get()->ConversationQueue.FindByPredicate(Find);
 
-	check(ConversationPtr);
+	if (ConversationPtr)
+	{
+		return *ConversationPtr;
+	}
 
-	return *ConversationPtr;
+	static FYapConversation NullConversation;
+
+	return NullConversation;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -612,21 +640,6 @@ void UYapSubsystem::OnWorldBeginPlay(UWorld& InWorld)
 }
 
 // ------------------------------------------------------------------------------------------------
-
-void UYapSubsystem::OnConversationOpens_Internal(const FGameplayTag& ConversationName)
-{
-	FYapData_ConversationOpened Data;
-	Data.Conversation = ConversationName;
-	
-	//BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapConversationHandler, OnConversationOpened, Execute_K2_ConversationOpened)>(ConversationHandlers, Data);
-}
-
-// ------------------------------------------------------------------------------------------------
-
-void UYapSubsystem::OnConversationCloses_Internal(const FGameplayTag& ConversationName)
-{
-	
-}
 
 void UYapSubsystem::OnSpeechComplete(FYapFragmentHandle Handle)
 {

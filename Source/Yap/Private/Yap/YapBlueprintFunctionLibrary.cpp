@@ -169,11 +169,4 @@ AActor* UYapBlueprintFunctionLibrary::FindYapCharacterActor(const UYapCharacter*
 
 // ------------------------------------------------------------------------------------------------
 
-void UYapBlueprintFunctionLibrary::AdvanceIntoConversation()
-{
-	UYapSubsystem::Get()->AdvanceIntoConversation.Broadcast();
-}
-
-// ------------------------------------------------------------------------------------------------
-
 #undef LOCTEXT_NAMESPACE

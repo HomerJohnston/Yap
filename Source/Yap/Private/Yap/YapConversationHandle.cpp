@@ -1,7 +1,7 @@
 // Copyright Ghost Pepper Games, Inc. All Rights Reserved.
 // This work is MIT-licensed. Feel free to use it however you wish, within the confines of the MIT license. 
 
-#include "Yap/YapConversationHandle.h"
+#include "Yap/Handles/YapConversationHandle.h"
 #include "Yap/YapConversation.h"
 #include "Yap/YapSubsystem.h"
 
@@ -18,6 +18,7 @@ FYapConversationHandle::FYapConversationHandle(const FGuid& InGuid)
 void UYapConversationHandleBlueprintFunctionLibrary::BindToConversationOpening(FYapConversationHandle Handle, FYapConversationDelegate Delegate)
 {
     FYapConversation& Conversation = UYapSubsystem::GetConversation(Handle);
+    Conversation.OnConversationOpening.Add(Delegate);
 }
 
 void UYapConversationHandleBlueprintFunctionLibrary::BindToConversationOpened(FYapConversationHandle Handle, FYapConversationDelegate Delegate)
@@ -38,27 +39,27 @@ void UYapConversationHandleBlueprintFunctionLibrary::BindToConversationClosed(FY
     Conversation.OnConversationClosed.Add(Delegate);
 }
 
-void UYapConversationHandleBlueprintFunctionLibrary::AddOpeningLock(FYapConversationHandle Handle, UObject* Lock)
+void UYapConversationHandleBlueprintFunctionLibrary::ApplyOpeningInterlock(FYapConversationHandle Handle, UObject* LockObject)
 {
     FYapConversation& Conversation = UYapSubsystem::GetConversation(Handle);
-    Conversation.AddOpeningLock(Lock);
+    Conversation.ApplyOpeningInterlock(LockObject);
 }
 
-void UYapConversationHandleBlueprintFunctionLibrary::RemoveOpenLock(FYapConversationHandle Handle, UObject* Lock)
+void UYapConversationHandleBlueprintFunctionLibrary::ReleaseOpeningInterlock(FYapConversationHandle Handle, UObject* LockObject)
 {
     FYapConversation& Conversation = UYapSubsystem::GetConversation(Handle);
-    Conversation.RemoveOpeningLock(Lock);
+    Conversation.ReleaseOpeningInterlock(LockObject);
 }
 
-void UYapConversationHandleBlueprintFunctionLibrary::SetClosingLock(FYapConversationHandle Handle, UObject* Lock)
+void UYapConversationHandleBlueprintFunctionLibrary::ApplyClosingInterlock(FYapConversationHandle Handle, UObject* LockObject)
 {
     FYapConversation& Conversation = UYapSubsystem::GetConversation(Handle);
-    Conversation.AddClosingLock(Lock);
+    Conversation.ApplyClosingInterlock(LockObject);
 }
 
-void UYapConversationHandleBlueprintFunctionLibrary::RemoveClosingLock(FYapConversationHandle Handle, UObject* Lock)
+void UYapConversationHandleBlueprintFunctionLibrary::ReleaseClosingInterlock(FYapConversationHandle Handle, UObject* LockObject)
 {
     FYapConversation& Conversation = UYapSubsystem::GetConversation(Handle);
-    Conversation.RemoveClosingLock(Lock);
+    Conversation.ReleaseClosingInterlock(LockObject);
 }
 

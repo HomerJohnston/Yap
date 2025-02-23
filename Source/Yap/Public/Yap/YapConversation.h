@@ -3,8 +3,9 @@
 
 #pragma once
 #include "GameplayTagContainer.h"
-#include "YapConversationHandle.h"
-#include "Yap/YapRunningFragment.h"
+#include "Yap/Handles/YapConversationHandle.h"
+#include "Yap/Handles/YapSpeechHandle.h"
+#include "Yap/Handles/YapRunningFragment.h"
 
 #include "YapConversation.generated.h"
 
@@ -45,7 +46,7 @@ protected:
     FGameplayTag ConversationName;
 
     UPROPERTY(Transient)
-    TArray<FYapFragmentHandle> RunningFragments;
+    TArray<FYapSpeechHandle> RunningFragments;
 
     UPROPERTY(Transient)
     FGuid Guid;
@@ -66,7 +67,8 @@ protected:
     bool bWantsToClose = false;
     
 public:
-    // No point in having an Opening event?
+    UPROPERTY(Transient)
+    FYapConversationEvent OnConversationOpening;
     
     UPROPERTY(Transient)
     FYapConversationEvent OnConversationOpened;
@@ -83,31 +85,31 @@ public:
 public:
     const FGameplayTag& GetConversationName() const { return ConversationName; }
 
-    const TArray<FYapFragmentHandle>& GetRunningFragments() const { return RunningFragments; }
+    const TArray<FYapSpeechHandle>& GetRunningFragments() const { return RunningFragments; }
 
     const FGuid& GetGuid() const { return Guid; }
 
     const EYapConversationState GetState() const { return State; }
     
-    void AddRunningFragment(FYapFragmentHandle Handle);
+    void AddRunningFragment(FYapSpeechHandle Handle);
 
-    void RemoveRunningFragment(FYapFragmentHandle Handle);
+    void RemoveRunningFragment(FYapSpeechHandle Handle);
 
     // -----
     
     void StartOpening();
     
-    void AddOpeningLock(UObject* Object);
+    void ApplyOpeningInterlock(UObject* Object);
 
-    void RemoveOpeningLock(UObject* Object);
+    void ReleaseOpeningInterlock(UObject* Object);
     
     // -----
     
     void StartClosing();
 
-    void AddClosingLock(UObject* Object);
+    void ApplyClosingInterlock(UObject* Object);
 
-    void RemoveClosingLock(UObject* Object);
+    void ReleaseClosingInterlock(UObject* Object);
 
     // -----
     

@@ -364,7 +364,7 @@ EVisibility SFlowGraphNode_YapFragmentWidget::Visibility_FragmentHighlight() con
 		return EVisibility::HitTestInvisible;
 	}
 	
-	if (GetDialogueNode()->GetActivationState() != EFlowNodeState::Active && GetDialogueNode()->CheckActivationLimits())
+	if (GetDialogueNode()->GetActivationState() != EFlowNodeState::Active && !GetDialogueNode()->CheckActivationLimits())
 	{
 		return EVisibility::HitTestInvisible;
 	}
@@ -384,7 +384,7 @@ FSlateColor SFlowGraphNode_YapFragmentWidget::BorderBackgroundColor_FragmentHigh
 		return YapColor::Red_Glass;
 	}
 	
-	if (GetDialogueNode()->GetActivationState() != EFlowNodeState::Active && GetDialogueNode()->CheckActivationLimits())
+	if (GetDialogueNode()->GetActivationState() != EFlowNodeState::Active && !GetDialogueNode()->CheckActivationLimits())
 	{
 		return YapColor::Red_Glass;
 	}

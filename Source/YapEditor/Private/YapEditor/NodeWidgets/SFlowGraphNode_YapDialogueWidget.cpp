@@ -473,7 +473,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapDialogueWidget::CreateNodeContentArea()
 // ------------------------------------------------------------------------------------------------
 FSlateColor SFlowGraphNode_YapDialogueWidget::ColorAndOpacity_NodeHeaderButton() const
 {
-	if (GetFlowYapDialogueNode()->CheckActivationLimits() && GetFlowYapDialogueNode()->GetActivationState() != EFlowNodeState::Active)
+	if (!GetFlowYapDialogueNode()->CheckActivationLimits() && GetFlowYapDialogueNode()->GetActivationState() != EFlowNodeState::Active)
 	{
 		return YapColor::Red;
 	}

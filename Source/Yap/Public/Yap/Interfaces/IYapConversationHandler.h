@@ -3,7 +3,8 @@
 
 #pragma once
 
-#include "Yap/YapConversationHandle.h"
+#include "Yap/Handles/YapConversationHandle.h"
+#include "Yap/Handles/YapSpeechHandle.h"
 
 class UYapCharacter;
 struct FYapPromptHandle;
@@ -11,7 +12,7 @@ struct FYapRunningFragment;
 struct FYapBit;
 
 #include "Yap/YapDataStructures.h"
-#include "Yap/YapRunningFragment.h"
+#include "Yap/Handles/YapRunningFragment.h"
 
 #include "IYapConversationHandler.generated.h"
 
@@ -43,7 +44,7 @@ protected:
 	
 	/** Code to run when a piece of dialogue (speech) begins. Do NOT call Parent when overriding. */
 	UFUNCTION(BlueprintImplementableEvent, DisplayName = "Conv. Speech Begins")
-	void K2_ConversationSpeechBegins(FYapData_SpeechBegins Data, FYapFragmentHandle Handle);
+	void K2_ConversationSpeechBegins(FYapData_SpeechBegins Data, FYapSpeechHandle Handle);
 
 	/** Code to run when a single player prompt entry is emitted (for example, to add a button/text widget to a list). Do NOT call Parent when overriding. */
 	UFUNCTION(BlueprintImplementableEvent, DisplayName = "Conv. Player Prompt Created")
@@ -65,7 +66,7 @@ public:
 	};
 	
 	/** Code to run when a piece of dialogue (speech) begins. Do NOT call Super when overriding. */
-	virtual void OnConversationSpeechBegins(FYapData_SpeechBegins Data, FYapFragmentHandle Handle)
+	virtual void OnConversationSpeechBegins(FYapData_SpeechBegins Data, FYapSpeechHandle Handle)
 	{
 		K2_ConversationSpeechBegins(Data, Handle);
 	}

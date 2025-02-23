@@ -5,10 +5,10 @@
 
 #include "Components/AudioComponent.h"
 #include "Internationalization/BreakIterator.h"
-#include "Yap/YapRunningFragment.h"
+#include "Yap/Handles/YapRunningFragment.h"
 #include "Yap/YapLog.h"
 #include "Yap/YapProjectSettings.h"
-#include "Yap/YapPromptHandle.h"
+#include "Yap/Handles/YapPromptHandle.h"
 #include "Yap/Enums/YapMaturitySetting.h"
 
 #define LOCTEXT_NAMESPACE "Yap"

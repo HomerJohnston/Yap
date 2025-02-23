@@ -944,11 +944,15 @@ void UFlowNode_YapDialogue::OnFilterGameplayTagChildren(const FString& String, T
 
 bool UFlowNode_YapDialogue::CheckActivationLimits() const
 {
+	bool bCanRunAnything = true;
+	
+	// Make sure entire node has not hit limits
 	if (GetNodeActivationLimit() > 0 && GetNodeActivationCount() >= GetNodeActivationLimit())
 	{
-		return true;
+		return false;
 	}
 
+	// If even one fragment has not met activation limits, we're OK
 	for (int i = 0; i < Fragments.Num(); ++i)
 	{
 		int32 ActivationLimit = Fragments[i].GetActivationLimit();
@@ -956,11 +960,11 @@ bool UFlowNode_YapDialogue::CheckActivationLimits() const
 
 		if (ActivationLimit == 0 || ActivationCount < ActivationLimit)
 		{
-			return false;
+			return true;
 		}
 	}
 
-	return true;
+	return false;
 }
 
 // ------------------------------------------------------------------------------------------------

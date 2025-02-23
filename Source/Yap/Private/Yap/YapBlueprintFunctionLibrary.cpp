@@ -9,7 +9,7 @@
 
 #include "Yap/YapCharacter.h"
 #include "Yap/YapLog.h"
-#include "Yap/YapPromptHandle.h"
+#include "Yap/Handles/YapPromptHandle.h"
 #include "Yap/YapSubsystem.h"
 #include "Yap/Nodes/FlowNode_YapDialogue.h"
 
@@ -40,7 +40,7 @@ float UYapBlueprintFunctionLibrary::GetSoundLength(USoundBase* Sound)
 
 // ------------------------------------------------------------------------------------------------
 
-bool UYapBlueprintFunctionLibrary::SkipDialogue(const FYapFragmentHandle& Handle)
+bool UYapBlueprintFunctionLibrary::SkipDialogue(const FYapSpeechHandle& Handle)
 {
 	if (Handle.IsValid())
 	{
@@ -59,7 +59,7 @@ bool UYapBlueprintFunctionLibrary::SkipDialogue(const FYapFragmentHandle& Handle
 
 // ------------------------------------------------------------------------------------------------
 
-bool UYapBlueprintFunctionLibrary::CanSkipCurrently(const FYapFragmentHandle& Handle)
+bool UYapBlueprintFunctionLibrary::CanSkipCurrently(const FYapSpeechHandle& Handle)
 {
 	return true;
 	/*
@@ -88,7 +88,7 @@ bool UYapBlueprintFunctionLibrary::RunPrompt(const FYapPromptHandle& Handle)
 
 // ------------------------------------------------------------------------------------------------
 
-void UYapBlueprintFunctionLibrary::AddReactor(FYapFragmentHandle& HandleRef, UObject* Reactor)
+void UYapBlueprintFunctionLibrary::AddReactor(FYapSpeechHandle& HandleRef, UObject* Reactor)
 {
 	/*
 	FYapRunningFragment& Handle = UYapSubsystem::GetDialogueHandle(HandleRef);
@@ -104,7 +104,7 @@ void UYapBlueprintFunctionLibrary::AddReactor(FYapFragmentHandle& HandleRef, UOb
 	*/
 }
 
-const TArray<FInstancedStruct>& UYapBlueprintFunctionLibrary::GetFragmentData(const FYapFragmentHandle& HandleRef)
+const TArray<FInstancedStruct>& UYapBlueprintFunctionLibrary::GetFragmentData(const FYapSpeechHandle& HandleRef)
 {
 	const FYapRunningFragment& Handle = UYapSubsystem::GetFragmentHandle(HandleRef);
 

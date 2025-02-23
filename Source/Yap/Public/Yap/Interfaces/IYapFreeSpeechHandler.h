@@ -3,8 +3,9 @@
 
 #pragma once
 #include "GameplayTagContainer.h"
-#include "Yap/YapRunningFragment.h"
+#include "Yap/Handles/YapRunningFragment.h"
 #include "Yap/YapCharacter.h"
+#include "Yap/Handles/YapSpeechHandle.h"
 
 #include "IYapFreeSpeechHandler.generated.h"
 
@@ -68,7 +69,7 @@ struct FYapData_TalkSpeechBegins
 
 	/** Dialogue handle, can be used for interrupting or identifying dialogue. */
 	UPROPERTY(BlueprintReadOnly)
-	FYapFragmentHandle DialogueHandleRef;
+	FYapSpeechHandle DialogueHandleRef;
 
 	/** Who is being speaked towards. */
 	UPROPERTY(BlueprintReadOnly)
@@ -117,7 +118,7 @@ struct FYapData_TalkSpeechEnds
 
 	/** Dialogue handle, can be used for interrupting or identifying dialogue. */
 	UPROPERTY(BlueprintReadOnly)
-	FYapFragmentHandle DialogueHandleRef;
+	FYapSpeechHandle DialogueHandleRef;
 
 	/** How long it is expected to wait before moving on to the next fragment or Flow Graph node. */
 	UPROPERTY(BlueprintReadOnly)
@@ -134,7 +135,7 @@ struct FYapData_TalkSpeechPaddingEnds
 	
 	/** Dialogue handle, can be used for interrupting or identifying dialogue. */
 	UPROPERTY(BlueprintReadOnly)
-	FYapFragmentHandle DialogueHandleRef;
+	FYapSpeechHandle DialogueHandleRef;
 
 	/** Will manual advancement be required to progress? */
 	UPROPERTY(BlueprintReadOnly)

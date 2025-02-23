@@ -4,9 +4,9 @@
 #pragma once
 
 #include "Nodes/FlowNode.h"
-#include "Yap/YapRunningFragment.h"
+#include "Yap/Handles/YapRunningFragment.h"
 #include "Yap/YapFragment.h"
-#include "Yap/YapPromptHandle.h"
+#include "Yap/Handles/YapPromptHandle.h"
 
 #include "FlowNode_YapDialogue.generated.h"
 

@@ -9,9 +9,9 @@
 #include "Yap/YapFragment.h"
 #include "Yap/YapLog.h"
 #include "Yap/Interfaces/IYapConversationHandler.h"
-#include "Yap/YapRunningFragment.h"
+#include "Yap/Handles/YapRunningFragment.h"
 #include "Yap/YapProjectSettings.h"
-#include "Yap/YapPromptHandle.h"
+#include "Yap/Handles/YapPromptHandle.h"
 #include "Yap/Enums/YapLoadContext.h"
 #include "Yap/Interfaces/IYapFreeSpeechHandler.h"
 #include "Yap/Nodes/FlowNode_YapDialogue.h"
@@ -368,11 +368,11 @@ void UYapSubsystem::OnFinishedBroadcastingPrompts()
 
 // ------------------------------------------------------------------------------------------------
 
-FYapFragmentHandle UYapSubsystem::RunSpeech(const FYapData_SpeechBegins& SpeechData)
+FYapSpeechHandle UYapSubsystem::RunSpeech(const FYapData_SpeechBegins& SpeechData)
 {
 	FYapRunningFragment RunningFragment;
 
-	FYapFragmentHandle FragmentHandle(RunningFragment);
+	FYapSpeechHandle FragmentHandle(RunningFragment);
 	
 	if (SpeechData.SpeechTime > 0)
 	{
@@ -396,7 +396,7 @@ FYapFragmentHandle UYapSubsystem::RunSpeech(const FYapData_SpeechBegins& SpeechD
 	}
 	else
 	{
-		//BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapFreeSpeechHandler, OnTalkSpeechBegins, Execute_K2_TalkSpeechBegins)>(FreeSpeechHandlers, SpeechData, FragmentHandle);
+		BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapFreeSpeechHandler, OnTalkSpeechBegins, Execute_K2_TalkSpeechBegins)>(FreeSpeechHandlers, SpeechData, FragmentHandle);
 	}
 
 	return FragmentHandle;
@@ -613,7 +613,7 @@ bool UYapSubsystem::RunPrompt(const FYapPromptHandle& Handle)
 
 // ------------------------------------------------------------------------------------------------
 
-bool UYapSubsystem::SkipDialogue(const FYapFragmentHandle& Handle)
+bool UYapSubsystem::SkipDialogue(const FYapSpeechHandle& Handle)
 {
 	return false;
 	/*
@@ -631,7 +631,7 @@ bool UYapSubsystem::SkipDialogue(const FYapFragmentHandle& Handle)
 
 // ------------------------------------------------------------------------------------------------
 
-FYapRunningFragment& UYapSubsystem::GetFragmentHandle(FYapFragmentHandle HandleRef)
+FYapRunningFragment& UYapSubsystem::GetFragmentHandle(FYapSpeechHandle HandleRef)
 {
 	return Get()->RunningFragments.FindChecked(HandleRef);
 }
@@ -697,12 +697,12 @@ void UYapSubsystem::OnWorldBeginPlay(UWorld& InWorld)
 
 // ------------------------------------------------------------------------------------------------
 
-void UYapSubsystem::OnSpeechComplete(FYapFragmentHandle Handle)
+void UYapSubsystem::OnSpeechComplete(FYapSpeechHandle Handle)
 {
 	RunningSpeech.Remove(Handle);
 }
 
-void UYapSubsystem::OnFragmentComplete(FYapFragmentHandle Handle)
+void UYapSubsystem::OnFragmentComplete(FYapSpeechHandle Handle)
 {
 	RunningFragments.Remove(Handle);
 }

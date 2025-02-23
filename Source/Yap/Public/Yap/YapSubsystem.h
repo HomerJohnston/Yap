@@ -7,9 +7,9 @@
 #include "YapConversation.h"
 #include "YapCharacterComponent.h"
 #include "YapBroker.h"
-#include "YapPromptHandle.h"
+#include "Yap/Handles/YapPromptHandle.h"
 #include "Enums/YapMaturitySetting.h"
-#include "Yap/YapRunningFragment.h"
+#include "Yap/Handles/YapRunningFragment.h"
 #include "Yap/YapBitReplacement.h"
 #include "Yap/YapDataStructures.h"
 
@@ -100,13 +100,13 @@ protected:
 
 	// Running dialogue instances. Since only one fragment of a dialogue node can be running at any time, we don't need handles to map to individual fragments.
 	UPROPERTY(Transient)
-	TMap<FYapFragmentHandle, TWeakObjectPtr<UFlowNode_YapDialogue>> GuidDialogueMap;
+	TMap<FYapSpeechHandle, TWeakObjectPtr<UFlowNode_YapDialogue>> GuidDialogueMap;
 
 	/** A skip command will flush all of these. We use a stack because Yap allows multiple fragments to run simulataneously (through negative padding). */
 	UPROPERTY(Transient)
-	TMap<FYapFragmentHandle, FYapRunningFragment> RunningFragments;
+	TMap<FYapSpeechHandle, FYapRunningFragment> RunningFragments;
 
-	TMap<FYapFragmentHandle, FYapRunningSpeech> RunningSpeech;
+	TMap<FYapSpeechHandle, FYapRunningSpeech> RunningSpeech;
 	
 	static bool bGetGameMaturitySettingWarningIssued;
 
@@ -191,7 +191,7 @@ protected:
 public:
 	/**  */
 	UFUNCTION(BlueprintCallable)
-	FYapFragmentHandle RunSpeech(const FYapData_SpeechBegins& SpeechData);
+	FYapSpeechHandle RunSpeech(const FYapData_SpeechBegins& SpeechData);
 	
 	/**  */
 	FGameplayTag GetConversation(UFlowAsset* FlowAsset);
@@ -207,12 +207,12 @@ public:
 	static bool RunPrompt(const FYapPromptHandle& Handle);
 
 	/**  */
-	static bool SkipDialogue(const FYapFragmentHandle& Handle);
+	static bool SkipDialogue(const FYapSpeechHandle& Handle);
 
 	/**  */ // TODO: ability to instantly playback/skip through multiple nodes until some sort of target point is hit, maybe a custom node? (imagine skipping an entire cutscene)
 	// static bool SkipDialogueTo(???);
 
-	static FYapRunningFragment& GetFragmentHandle(FYapFragmentHandle HandleRef);
+	static FYapRunningFragment& GetFragmentHandle(FYapSpeechHandle HandleRef);
 
 public:
 	/**  */
@@ -232,9 +232,9 @@ public:
 	void OnWorldBeginPlay(UWorld& InWorld) override;
 	
 protected:
-	void OnSpeechComplete(FYapFragmentHandle Handle);
+	void OnSpeechComplete(FYapSpeechHandle Handle);
 
-	void OnFragmentComplete(FYapFragmentHandle Handle);
+	void OnFragmentComplete(FYapSpeechHandle Handle);
 	
 	/**  */
 	bool DoesSupportWorldType(const EWorldType::Type WorldType) const override;

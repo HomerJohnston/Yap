@@ -10,8 +10,8 @@ struct FYapPromptHandle;
 struct FYapRunningFragment;
 struct FYapBit;
 
-#include "Yap/YapPromptHandle.h"
-#include "Yap/YapRunningFragment.h"
+#include "Yap/Handles/YapPromptHandle.h"
+#include "Yap/Handles/YapRunningFragment.h"
 
 #include "YapDataStructures.generated.h"
 
@@ -32,57 +32,6 @@ struct FYapData_ConversationOpened
 	UPROPERTY(BlueprintReadOnly)
 	FGameplayTag Conversation;
 };
-
-// ------------------------------------------------------------------------------------------------
-
-#if 0
-/** Struct containing all the data for this event. */
-USTRUCT(BlueprintType, DisplayName = "Yap Dialogue Node Entered")
-struct FYapData_DialogueNodeEntered
-{
-	GENERATED_BODY()
-
-	UPROPERTY(BlueprintReadOnly)
-	TObjectPtr<const UFlowNode_YapDialogue> DialogueNode;
-
-	UPROPERTY(BlueprintReadOnly)
-	FGameplayTag DialogueTag;
-};
-#endif
-
-// ------------------------------------------------------------------------------------------------
-
-#if 0
-/** Struct containing all the data for this event. */
-USTRUCT(BlueprintType, DisplayName = "Yap Dialogue Node Exited")
-struct FYapData_DialogueNodeExited
-{
-	GENERATED_BODY()
-
-	UPROPERTY(BlueprintReadOnly)
-	TObjectPtr<const UFlowNode_YapDialogue> DialogueNode = nullptr;
-	
-	UPROPERTY(BlueprintReadOnly)
-	FGameplayTag DialogueTag;
-};
-#endif
-
-// ------------------------------------------------------------------------------------------------
-
-#if 0
-/** Struct containing all the data for this event. */
-USTRUCT(BlueprintType, DisplayName = "Yap Dialogue Node Bypassed")
-struct FYapData_DialogueNodeBypassed
-{
-	GENERATED_BODY()
-	
-	UPROPERTY(BlueprintReadOnly)
-	TObjectPtr<const UFlowNode_YapDialogue> DialogueNode = nullptr;
-	
-	UPROPERTY(BlueprintReadOnly)
-	FGameplayTag DialogueTag;
-};
-#endif
 
 // ------------------------------------------------------------------------------------------------
 
@@ -132,33 +81,6 @@ struct FYapData_SpeechBegins
 	UPROPERTY(BlueprintReadOnly)
 	bool bSkippable = false;
 };
-
-// ------------------------------------------------------------------------------------------------
-
-#if 0
-/** Struct containing all the data for this event. */
-USTRUCT(BlueprintType, DisplayName = "Yap Speech Ends")
-struct FYapData_SpeechEnds
-{
-	GENERATED_BODY()
-
-	/** Conversation name. This will be empty for speech occurring outside of a conversation. */
-	UPROPERTY(BlueprintReadOnly)
-	FGameplayTag Conversation;
-
-	/** Dialogue handle, can be used for interrupting or identifying dialogue. */
-	UPROPERTY(BlueprintReadOnly)
-	FYapRunningFragmentHandle DialogueHandleRef;
-
-	/** If the fragment speech time is greater than zero (even a tiny number) this will be true. Otherwise, false. */
-	UPROPERTY(BlueprintReadOnly)
-	bool bWasTimed = false;
-	
-	/** How long it is expected to wait before moving on to the next fragment or Flow Graph node. */
-	UPROPERTY(BlueprintReadOnly)
-	float PaddedTime = 0;
-};
-#endif
 
 // ------------------------------------------------------------------------------------------------
 

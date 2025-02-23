@@ -5,7 +5,7 @@
 
 #include "Yap/YapConversation.h"
 
-#include "Yap/YapRunningFragment.h"
+#include "Yap/Handles/YapRunningFragment.h"
 #include "Yap/YapSubsystem.h"
 
 // ------------------------------------------------------------------------------------------------
@@ -24,7 +24,7 @@ FYapConversation::FYapConversation(const FGameplayTag& InConversationName)
 
 // ------------------------------------------------------------------------------------------------
 
-void FYapConversation::AddRunningFragment(FYapFragmentHandle FragmentHandle)
+void FYapConversation::AddRunningFragment(FYapSpeechHandle FragmentHandle)
 {
     check(!RunningFragments.Contains(FragmentHandle));
 
@@ -33,7 +33,7 @@ void FYapConversation::AddRunningFragment(FYapFragmentHandle FragmentHandle)
 
 // ------------------------------------------------------------------------------------------------
 
-void FYapConversation::RemoveRunningFragment(FYapFragmentHandle FragmentHandle)
+void FYapConversation::RemoveRunningFragment(FYapSpeechHandle FragmentHandle)
 {
     check(RunningFragments.Contains(FragmentHandle));
 
@@ -48,6 +48,8 @@ void FYapConversation::StartOpening()
     bWantsToClose = false;
     State = EYapConversationState::Opening;
 
+    OnConversationOpening.Broadcast();
+    
     if (OpeningLocks.Num() == 0)
     {
         FinishOpening();
@@ -56,14 +58,14 @@ void FYapConversation::StartOpening()
 
 // ------------------------------------------------------------------------------------------------
 
-void FYapConversation::AddOpeningLock(UObject* LockingObject)
+void FYapConversation::ApplyOpeningInterlock(UObject* LockingObject)
 {
     OpeningLocks.AddUnique(LockingObject);
 }
 
 // ------------------------------------------------------------------------------------------------
 
-void FYapConversation::RemoveOpeningLock(UObject* Object)
+void FYapConversation::ReleaseOpeningInterlock(UObject* Object)
 {
     OpeningLocks.Remove(Object);
 
@@ -91,14 +93,14 @@ void FYapConversation::StartClosing()
 
 // ------------------------------------------------------------------------------------------------
 
-void FYapConversation::AddClosingLock(UObject* LockingObject)
+void FYapConversation::ApplyClosingInterlock(UObject* LockingObject)
 {
     ClosingLocks.AddUnique(LockingObject);
 }
 
 // ------------------------------------------------------------------------------------------------
 
-void FYapConversation::RemoveClosingLock(UObject* Object)
+void FYapConversation::ReleaseClosingInterlock(UObject* Object)
 {
     ClosingLocks.Remove(Object);
 

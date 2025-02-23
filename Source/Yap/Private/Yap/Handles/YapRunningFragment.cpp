@@ -1,7 +1,7 @@
 // Copyright Ghost Pepper Games, Inc. All Rights Reserved.
 // This work is MIT-licensed. Feel free to use it however you wish, within the confines of the MIT license. 
 
-#include "Yap/YapRunningFragment.h"
+#include "Yap/Handles/YapRunningFragment.h"
 
 #include "Yap/YapBlueprintFunctionLibrary.h"
 #include "Yap/Interfaces/IYapHandleReactor.h"
@@ -13,44 +13,6 @@
 
 FYapRunningFragment FYapRunningFragment::_InvalidHandle;
 
-// ================================================================================================
-// FYapDialogueHandleRef
-// ================================================================================================
-
-FYapFragmentHandle::FYapFragmentHandle()
-{
-}
-
-FYapFragmentHandle::FYapFragmentHandle(const FYapRunningFragment& RunningFragment)
-{
-	Guid = RunningFragment.GetGuid();
-}
-
-bool FYapFragmentHandle::SkipDialogue()
-{
-	return UYapBlueprintFunctionLibrary::SkipDialogue(*this);
-}
-
-// ------------------------------------------------------------------------------------------------
-
-void FYapFragmentHandle::AddReactor(UObject* Reactor)
-{
-	UYapBlueprintFunctionLibrary::AddReactor(*this, Reactor);
-}
-
-// ------------------------------------------------------------------------------------------------
-
-const TArray<FInstancedStruct>& FYapFragmentHandle::GetFragmentData()
-{
-	return UYapBlueprintFunctionLibrary::GetFragmentData(*this);
-}
-
-// ------------------------------------------------------------------------------------------------
-
-bool FYapFragmentHandle::operator==(const FYapFragmentHandle& Other) const
-{
-	return Guid == Other.Guid;
-}
 
 FYapRunningFragment::FYapRunningFragment()
 {

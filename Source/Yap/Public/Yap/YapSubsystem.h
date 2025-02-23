@@ -173,11 +173,14 @@ public:
 
 protected:
 	void StartOpeningConversation(FYapConversation& Conversation);
+	
 	/**  */
 	EYapCloseConversationResult StartClosingConversation(const FGameplayTag& ConversationName); // Called by Close Conversation node
 
 	void StartNextQueuedConversation();
-	
+
+	UFUNCTION()
+	void OnActiveConversationClosed();
 	
 	/**  */
 	FYapPromptHandle BroadcastPrompt(UFlowNode_YapDialogue* Dialogue, uint8 FragmentIndex);

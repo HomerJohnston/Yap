@@ -242,6 +242,7 @@ void UYapSubsystem::StartNextQueuedConversation()
 	}
 }
 
+
 // ------------------------------------------------------------------------------------------------
 
 void UYapSubsystem::StartOpeningConversation(FYapConversation& Conversation)
@@ -275,20 +276,33 @@ EYapCloseConversationResult UYapSubsystem::StartClosingConversation(const FGamep
 		return Conversation.GetConversationName() == ConversationName;
 	};
 
-	ActiveConversationName = FGameplayTag::EmptyTag;
-
 	FYapConversation& Conversation = GetConversation(ConversationName);
 
 	Conversation.StartClosing();
 
 	if (Conversation.GetState() == EYapConversationState::Closed)
 	{
+		ActiveConversationName = FGameplayTag::EmptyTag;
 		ConversationQueue.RemoveAll(Find);
 		StartNextQueuedConversation();
 		return EYapCloseConversationResult::Closed;
 	}
 
+	Conversation.OnConversationClosed.AddDynamic(this, &UYapSubsystem::OnActiveConversationClosed);
+	
 	return EYapCloseConversationResult::Closing;
+}
+
+void UYapSubsystem::OnActiveConversationClosed()
+{
+	auto Find = [this] (const FYapConversation& Conversation)
+	{
+		return Conversation.GetConversationName() == ActiveConversationName;
+	};
+	
+	ConversationQueue.RemoveAll(Find);
+	ActiveConversationName = FGameplayTag::EmptyTag;
+	StartNextQueuedConversation();
 }
 
 // ------------------------------------------------------------------------------------------------

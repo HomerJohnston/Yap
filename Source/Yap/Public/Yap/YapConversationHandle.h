@@ -38,15 +38,15 @@ class UYapConversationHandleBlueprintFunctionLibrary : public UBlueprintFunction
     UFUNCTION(BlueprintCallable)
     static void BindToConversationClosed(FYapConversationHandle Handle, FYapConversationDelegate Delegate);
 
-    UFUNCTION(BlueprintCallable)
+    UFUNCTION(BlueprintCallable, meta = (DefaultToSelf = "Lock"))
     static void AddOpeningLock(FYapConversationHandle Handle, UObject* Lock);
 
-    UFUNCTION(BlueprintCallable)
+    UFUNCTION(BlueprintCallable, meta = (DefaultToSelf = "Lock"))
     static void RemoveOpenLock(FYapConversationHandle Handle, UObject* Lock);
 
-    UFUNCTION(BlueprintCallable)
+    UFUNCTION(BlueprintCallable, meta = (DefaultToSelf = "Lock"))
     static void SetClosingLock(FYapConversationHandle Handle, UObject* Lock);
     
-    UFUNCTION(BlueprintCallable)
+    UFUNCTION(BlueprintCallable, meta = (DefaultToSelf = "Lock"))
     static void RemoveClosingLock(FYapConversationHandle Handle, UObject* Lock);
 };

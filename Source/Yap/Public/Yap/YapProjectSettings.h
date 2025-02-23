@@ -147,7 +147,7 @@ protected:
 	
 	/** After each dialogue is finished being spoken, a brief extra pause can be inserted before moving onto the next node. This is the default value. Can be overridden by individual fragments. */
 	UPROPERTY(Config, EditAnywhere, Category = "Dialogue Playback", meta = (UIMin = 0.0, UIMax = 5.0, Delta = 0.01))
-	TOptional<float> DefaultFragmentPaddingTime = 0.25f;
+	float DefaultFragmentPaddingTime = 0.25f;
 
 	/** Controls how fast dialogue plays. Only useful for text-based speaking time. */
 	UPROPERTY(Config, EditAnywhere, Category = "Dialogue Playback", meta = (ClampMin = 1, ClampMax = 1000, UIMin = 60, UIMax = 180, Delta = 5))
@@ -327,7 +327,7 @@ public:
 	
 	static bool CacheFragmentAudioLengthAutomatically() { return !Get().bPreventCachingAudioLength; }
 	
-	static TOptional<float> GetDefaultFragmentPaddingTime() { return Get().DefaultFragmentPaddingTime; }
+	static float GetDefaultFragmentPaddingTime() { return Get().DefaultFragmentPaddingTime; }
 	
 	static EYapMissingAudioErrorLevel GetMissingAudioBehavior() { return Get().MissingAudioErrorLevel; }
 

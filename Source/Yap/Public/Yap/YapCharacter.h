@@ -14,7 +14,7 @@ enum class EFlowYapCharacterMood : uint8;
 // TODO data validation - on packaging make sure the portraits key tags list matches project settings
 // TODO add validation warning to the details customization
 // TODO add a "skip warning" bool to portrait entries, to make it allowable for them to be unset (on packaging, any unset textures should, by default, log a warning message)
-UCLASS(meta = (DataAssetCategory = "LOLBALLS"))
+UCLASS(meta = (DataAssetCategory = "TODO"))
 class YAP_API UYapCharacter : public UYapEntity
 {
 #if WITH_EDITOR
@@ -56,3 +56,26 @@ public:
 };
 
 #undef LOCTEXT_NAMESPACE
+
+
+
+UCLASS(Blueprintable)
+class ATestActor : public AActor
+{
+	GENERATED_BODY()
+	
+	UPROPERTY(EditAnywhere)
+	FString String1;
+
+	UPROPERTY(EditAnywhere)
+	FString String2;
+
+	UFUNCTION(CallInEditor)
+	void Flip()
+	{
+		FString Temp = String2;
+		String2 = String1;
+		String1 = Temp;
+		Modify();
+	}
+};

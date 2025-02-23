@@ -200,7 +200,7 @@ TOptional<float> FYapFragment::GetSpeechTime(EYapMaturitySetting MaturitySetting
 	return GetBit(MaturitySetting).GetSpeechTime(EffectiveTimeMode, LoadContext);
 }
 
-TOptional<float> FYapFragment::GetPadding() const
+float FYapFragment::GetPaddingValue() const
 {
 	if (IsTimeModeNone())
 	{
@@ -217,15 +217,19 @@ TOptional<float> FYapFragment::GetPadding() const
 
 float FYapFragment::GetProgressionTime() const
 {
+	float SpeechTime = GetSpeechTime().Get(0.0f);
+	float PaddingTime = 0.0f;
+	
 	if (Padding.IsSet())
 	{
-		float PaddingTime = Padding.GetValue();
-		float SpeechTime = GetSpeechTime().Get(0.0f);
-
-		return FMath::Max(PaddingTime + SpeechTime, 0.0);
+		PaddingTime = Padding.GetValue();
+	}
+	else
+	{
+		PaddingTime = UYapProjectSettings::GetDefaultFragmentPaddingTime();
 	}
 
-	return GetSpeechTime().Get(0.0);
+	return SpeechTime + PaddingTime;
 }
 
 void FYapFragment::IncrementActivations()

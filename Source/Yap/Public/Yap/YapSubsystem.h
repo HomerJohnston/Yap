@@ -19,7 +19,6 @@ class UYapConversationHandler;
 class UYapBroker;
 class UFlowNode_YapDialogue;
 struct FYapPromptHandle;
-class UFlowAsset;
 class IYapConversationHandler;
 struct FYapBit;
 class UYapCharacterComponent;
@@ -167,7 +166,7 @@ protected:  // TODO should some of these be public?
 
 public:
 	/**  */
-	FYapConversation& OpenConversation(const FGameplayTag& ConversationName); // Called by Open Conversation node
+	FYapConversation& OpenConversation(const FGameplayTag& ConversationName, UObject* ConversationOwner); // Called by Open Conversation node
 
 	EYapCloseConversationResult RequestCloseConversation(const FGameplayTag& ConversationName);
 
@@ -192,13 +191,17 @@ public:
 	/**  */
 	UFUNCTION(BlueprintCallable)
 	FYapSpeechHandle RunSpeech(const FYapData_SpeechBegins& SpeechData);
+
+	// TODO I hate this thing
+	static FYapConversation NullConversation;
 	
 	/**  */
-	FGameplayTag GetConversation(UFlowAsset* FlowAsset);
+	static FYapConversation& GetConversation(UObject* ConversationOwner);
 	
 	/**  */
 	static FYapConversation& GetConversation(FYapConversationHandle Handle);
 
+	/**  */
 	static FYapConversation& GetConversation(const FGameplayTag& ConversationName);
 	
 public:

@@ -16,8 +16,9 @@ FYapConversation::FYapConversation()
 
 // ------------------------------------------------------------------------------------------------
 
-FYapConversation::FYapConversation(const FGameplayTag& InConversationName)
+FYapConversation::FYapConversation(const FGameplayTag& InConversationName, UObject* ConversationOwner)
     : ConversationName(InConversationName)
+    , Owner(ConversationOwner)
 {
     Guid = FGuid::NewGuid();
 }

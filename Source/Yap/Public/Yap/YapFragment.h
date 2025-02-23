@@ -263,7 +263,9 @@ protected:
 	TOptional<float> GetSpeechTime(EYapMaturitySetting MaturitySetting, EYapLoadContext LoadContext) const;
 
 public:
-	TOptional<float> GetPadding() const;
+	TOptional<float> GetPaddingSetting() const { return Padding; };
+	
+	float GetPaddingValue() const;
 
 	float GetProgressionTime() const;
 	

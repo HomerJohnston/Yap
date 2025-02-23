@@ -22,6 +22,7 @@
 
 TWeakObjectPtr<UWorld> UYapSubsystem::World = nullptr;
 bool UYapSubsystem::bGetGameMaturitySettingWarningIssued = false;
+FYapConversation UYapSubsystem::NullConversation;
 
 // ------------------------------------------------------------------------------------------------
 
@@ -173,7 +174,7 @@ FYapFragment* UYapSubsystem::FindTaggedFragment(const FGameplayTag& FragmentTag)
 
 // ------------------------------------------------------------------------------------------------
 
-FYapConversation& UYapSubsystem::OpenConversation(const FGameplayTag& ConversationName)
+FYapConversation& UYapSubsystem::OpenConversation(const FGameplayTag& ConversationName, UObject* ConversationOwner)
 {
 	// Return existing conversation by same name
 	auto Match = [&ConversationName] (const FYapConversation& Conversation)
@@ -189,7 +190,7 @@ FYapConversation& UYapSubsystem::OpenConversation(const FGameplayTag& Conversati
 	}
 	
 	// Conversation structs will usually be small, a few bytes. Using arrays as queues for easier serialization.
-	ConversationQueue.EmplaceAt(0, FYapConversation(ConversationName));
+	ConversationQueue.EmplaceAt(0, FYapConversation(ConversationName, ConversationOwner));
 
 	if (ConversationQueue.Num() == 1)
 	{
@@ -404,9 +405,17 @@ FYapSpeechHandle UYapSubsystem::RunSpeech(const FYapData_SpeechBegins& SpeechDat
 
 // ------------------------------------------------------------------------------------------------
 
-FGameplayTag UYapSubsystem::GetConversation(UFlowAsset* FlowAsset)
+FYapConversation& UYapSubsystem::GetConversation(UObject* ConversationOwner)
 {
-	return FGameplayTag::EmptyTag;
+	for (FYapConversation& Conversation : Get()->ConversationQueue)
+	{
+		if (Conversation.GetOwner() == ConversationOwner)
+		{
+			return Conversation;
+		}
+	}
+
+	return NullConversation;
 }
 
 FYapConversation& UYapSubsystem::GetConversation(FYapConversationHandle Handle)
@@ -425,7 +434,6 @@ FYapConversation& UYapSubsystem::GetConversation(FYapConversationHandle Handle)
 		return *ConversationPtr;
 	}
 
-	static FYapConversation NullConversation;
 	return NullConversation;
 }
 
@@ -441,7 +449,6 @@ FYapConversation& UYapSubsystem::GetConversation(const FGameplayTag& Conversatio
 		}
 	}
 
-	static FYapConversation NullConversation;
 	return NullConversation;	
 }
 

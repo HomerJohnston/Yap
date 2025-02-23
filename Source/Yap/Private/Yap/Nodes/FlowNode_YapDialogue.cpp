@@ -486,7 +486,7 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 	UYapSubsystem* Subsystem = GetWorld()->GetSubsystem<UYapSubsystem>();
 
 	FYapData_SpeechBegins Data;
-	Data.Conversation = Subsystem->GetConversation(GetFlowAsset());
+	Data.Conversation = Subsystem->GetConversation(GetFlowAsset()).GetConversationName();
 	Data.DirectedAt = Fragment.GetDirectedAt(EYapLoadContext::Sync);
 	Data.Speaker = Fragment.GetSpeaker(EYapLoadContext::Sync);
 	Data.MoodTag = Fragment.GetMoodTag();
@@ -515,6 +515,8 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 	{
 		float SpeechTime = Fragment.GetSpeechTime().Get(0.0f);
 		
+		UE_LOG(LogYap, VeryVerbose, TEXT("Speech time: %f"), SpeechTime);
+		
 		if (SpeechTime > 0)
 		{
 			GetWorld()->GetTimerManager().SetTimer(Fragment.SpeechTimerHandle, FTimerDelegate::CreateUObject(this, &ThisClass::OnSpeechComplete, FragmentIndex), SpeechTime, false);
@@ -527,6 +529,8 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 
 	float ProgressionTime = Fragment.GetProgressionTime();
 
+	UE_LOG(LogYap, VeryVerbose, TEXT("Progression time: %f"), ProgressionTime);
+	
 	if (ProgressionTime > 0)
 	{
 		GetWorld()->GetTimerManager().SetTimer(Fragment.ProgressionTimerHandle, FTimerDelegate::CreateUObject(this, &ThisClass::OnProgressionComplete), ProgressionTime, false);
@@ -543,6 +547,8 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 
 void UFlowNode_YapDialogue::OnSpeechComplete(uint8 FragmentIndex)
 {
+	UE_LOG(LogYap, Verbose, TEXT("OnSpeechComplete"));
+
 	/*
 	FYapFragment& Fragment = Fragments[FragmentIndex];
 	
@@ -564,14 +570,15 @@ void UFlowNode_YapDialogue::OnSpeechComplete(uint8 FragmentIndex)
 
 void UFlowNode_YapDialogue::OnProgressionComplete()
 {
-	/*
+	UE_LOG(LogYap, Verbose, TEXT("OnProgressionComplete"));
+	
 	uint8 FinishedFragmentIndex = RunningFragmentIndex;
 	FYapFragment& Fragment = Fragments[RunningFragmentIndex];
 
-	
-	GetWorld()->GetTimerManager().ClearTimer(Fragment.ProgressionTimerHandle);
-	
-	GetWorld()->GetSubsystem<UYapSubsystem>()->BroadcastFragmentComplete(this, FinishedFragmentIndex);
+	if (Fragment.ProgressionTimerHandle.IsValid())
+	{
+		GetWorld()->GetTimerManager().ClearTimer(Fragment.ProgressionTimerHandle);
+	}
 	
 	if (GetFragmentAutoAdvance(FinishedFragmentIndex))
 	{
@@ -582,7 +589,6 @@ void UFlowNode_YapDialogue::OnProgressionComplete()
 	{
 		Fragment.SetAwaitingManualAdvance();
 	}
-	*/
 }
 
 // ------------------------------------------------------------------------------------------------

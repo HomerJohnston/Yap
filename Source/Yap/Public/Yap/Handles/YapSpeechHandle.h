@@ -4,6 +4,7 @@
 #pragma once
 
 #include "Yap/Handles/YapRunningFragment.h"
+#include "YapSpeechHandle.generated.h"
 
 /** Since I can't store handles in structs by ref, I pass around a simpler version of it containing only the GUID and look up the actual handle (which could become "large" with more data) from the subsystem as needed. */
 USTRUCT(BlueprintType)
@@ -50,3 +51,27 @@ FORCEINLINE uint32 GetTypeHash(const FYapSpeechHandle& Struct)
 {
     return GetTypeHash(Struct.GetGuid());
 }
+
+
+/**
+ * 
+ */
+UCLASS()
+class YAP_API UYapSpeechHandleBFL : public UBlueprintFunctionLibrary
+{
+    GENERATED_BODY()
+
+public:
+    UFUNCTION(BlueprintCallable, Category = "Yap")
+    static bool SkipDialogue(const FYapSpeechHandle& Handle);
+
+    UFUNCTION(BlueprintCallable, Category = "Yap")
+    static bool CanSkipCurrently(const FYapSpeechHandle& Handle);
+
+    UFUNCTION(BlueprintCallable, Category = "Yap")
+    static void AddReactor(UPARAM(ref) FYapSpeechHandle& HandleRef, UObject* Reactor);
+
+    UFUNCTION(BlueprintCallable, Category = "Yap")
+    static const TArray<FInstancedStruct>& GetFragmentData(const FYapSpeechHandle& HandleRef);
+};
+

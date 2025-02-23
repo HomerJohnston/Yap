@@ -1575,7 +1575,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::BuildPaddingSettings_Expan
 					{
 						if (!GetFragmentMutable().Padding.IsSet())
 						{
-							TOptional<float> CurrentPadding_Default = GetFragmentMutable().GetPadding();
+							TOptional<float> CurrentPadding_Default = GetFragmentMutable().GetPaddingSetting();
 							GetFragmentMutable().SetPaddingToNextFragment(CurrentPadding_Default.Get(0.0f));
 						}
 						else
@@ -1610,7 +1610,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::BuildPaddingSettings_Expan
 						.MaxSliderValue(UYapProjectSettings::GetFragmentPaddingSliderMax())
 						.ToolTipText(LOCTEXT("FragmentTimeEntry_Tooltip", "Time this dialogue fragment will play for"))
 						.Justification(ETextJustify::Center)
-						.Value_Lambda( [this] () { return GetFragmentMutable().GetPadding(); } )
+						.Value_Lambda( [this] () { return GetFragmentMutable().GetPaddingValue(); } )
 						.OnValueChanged_Lambda( [this] (float NewValue) { GetFragmentMutable().SetPaddingToNextFragment(NewValue); } )
 						.OnValueCommitted_Lambda( [this] (float NewValue, ETextCommit::Type) { GetFragmentMutable().SetPaddingToNextFragment(NewValue); } ) // TODO transactions
 					]
@@ -1721,7 +1721,7 @@ TOptional<float> SFlowGraphNode_YapFragmentWidget::Percent_FragmentTime() const
 TOptional<float> SFlowGraphNode_YapFragmentWidget::Percent_FragmentTimePadding() const
 {	
 	const float MaxPaddedSetting = UYapProjectSettings::GetFragmentPaddingSliderMax();
-	const TOptional<float> FragmentPadding = GetFragment().GetPadding();
+	const TOptional<float> FragmentPadding = GetFragment().GetPaddingSetting();
 
 	/*
 	if (GEditor->PlayWorld)

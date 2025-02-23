@@ -35,7 +35,7 @@ struct FYapConversation
 
     FYapConversation();
 
-    FYapConversation(const FGameplayTag& InConversationName);
+    FYapConversation(const FGameplayTag& InConversationName, UObject* ConversationOwner);
 
     // ==========================================
     // STATE
@@ -65,6 +65,10 @@ protected:
 
     UPROPERTY(Transient)
     bool bWantsToClose = false;
+
+    /** What created this conversation? Typically this is going to be a flow graph asset. */
+    UPROPERTY(Transient)
+    TObjectPtr<UObject> Owner;
     
 public:
     UPROPERTY(Transient)
@@ -90,6 +94,8 @@ public:
     const FGuid& GetGuid() const { return Guid; }
 
     const EYapConversationState GetState() const { return State; }
+
+    const UObject* GetOwner() const { return Owner; }
     
     void AddRunningFragment(FYapSpeechHandle Handle);
 

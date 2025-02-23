@@ -23,7 +23,7 @@ void UFlowNode_YapConversation_Open::OnActivate()
 {
 	Super::OnActivate();
 	
-	FYapConversation& NewConversation = UYapSubsystem::Get()->OpenConversation(ConversationName);
+	FYapConversation& NewConversation = UYapSubsystem::Get()->OpenConversation(ConversationName, GetFlowAsset());
 
 	if (NewConversation.GetState() == EYapConversationState::Open)
 	{

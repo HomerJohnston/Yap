@@ -14,18 +14,36 @@ UFlowNode_YapConversation_Close::UFlowNode_YapConversation_Close()
 #endif
 }
 
-void UFlowNode_YapConversation_Close::ExecuteInput(const FName& PinName)
+void UFlowNode_YapConversation_Close::OnActivate()
 {
-	GetWorld()->GetSubsystem<UYapSubsystem>()->DequeueConversation(Conversation);
+	Super::OnActivate();
 
-	TriggerFirstOutput(true);
+	EYapCloseConversationResult Result = UYapSubsystem::Get()->RequestCloseConversation(Conversation);
+
+	if (Result == EYapCloseConversationResult::Closed)
+	{
+		UE_LOG(LogYap, Verbose, TEXT("Conversation closed: %s"), *Conversation.GetTagName().ToString());
+		FinishNode();
+	}
+	else
+	{
+		FYapConversation& ExistingConversation = UYapSubsystem::GetConversation(Conversation);
+		ExistingConversation.OnConversationClosed.AddDynamic(this, &ThisClass::FinishNode);
+	}
 }
 
 void UFlowNode_YapConversation_Close::Finish()
 {
 	Super::Finish();
-
 	
+	UE_LOG(LogYap, Verbose, TEXT("CONVERSATION CLOSING: %s"), *Conversation.GetTagName().ToString());
+
+	UYapSubsystem::GetConversation(Conversation).OnConversationClosed.RemoveAll(this);
+}
+
+void UFlowNode_YapConversation_Close::FinishNode()
+{
+	TriggerFirstOutput(true);
 }
 
 #if WITH_EDITOR

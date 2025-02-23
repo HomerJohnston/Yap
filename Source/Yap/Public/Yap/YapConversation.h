@@ -9,6 +9,21 @@
 #include "YapConversation.generated.h"
 
 struct FGameplayTag;
+struct FYapConversation;
+
+UDELEGATE()
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FYapConversationEvent);
+
+// ================================================================================================
+
+UENUM()
+enum class EYapConversationState : uint8
+{
+    Opening,
+    Open,
+    Closing,
+    Closed,
+};
 
 // ================================================================================================
 
@@ -20,8 +35,6 @@ struct FYapConversation
     FYapConversation();
 
     FYapConversation(const FGameplayTag& InConversationName);
-
-    ~FYapConversation();
 
     // ==========================================
     // STATE
@@ -38,12 +51,32 @@ protected:
     FGuid Guid;
 
     UPROPERTY(Transient)
-    bool bOpenLock = false;    
+    TArray<TWeakObjectPtr<UObject>> OpeningLocks;   
 
-public:
     UPROPERTY(Transient)
-    FYapOnConversationClosed_Multi OnConversationClosed;
+    TArray<TWeakObjectPtr<UObject>> ClosingLocks;
 
+    UPROPERTY(Transient)
+    EYapConversationState State = EYapConversationState::Closed;
+
+    UPROPERTY(Transient)
+    bool bWantsToOpen = false;
+
+    UPROPERTY(Transient)
+    bool bWantsToClose = false;
+    
+public:
+    // No point in having an Opening event?
+    
+    UPROPERTY(Transient)
+    FYapConversationEvent OnConversationOpened;
+    
+    UPROPERTY(Transient)
+    FYapConversationEvent OnConversationClosing;
+    
+    UPROPERTY(Transient)
+    FYapConversationEvent OnConversationClosed;
+    
     // ==========================================
     // API
     // ==========================================
@@ -53,16 +86,35 @@ public:
     const TArray<FYapFragmentHandle>& GetRunningFragments() const { return RunningFragments; }
 
     const FGuid& GetGuid() const { return Guid; }
+
+    const EYapConversationState GetState() const { return State; }
     
     void AddRunningFragment(FYapFragmentHandle Handle);
 
     void RemoveRunningFragment(FYapFragmentHandle Handle);
 
-    void SetOpenLock();;
+    // -----
+    
+    void StartOpening();
+    
+    void AddOpeningLock(UObject* Object);
 
-    bool IsOpenLocked() { return bOpenLock; }
+    void RemoveOpeningLock(UObject* Object);
+    
+    // -----
+    
+    void StartClosing();
 
-    void RemoveOpenLockAndAdvance();
+    void AddClosingLock(UObject* Object);
+
+    void RemoveClosingLock(UObject* Object);
+
+    // -----
     
     void ExecuteSkip();
+
+private:
+    void FinishOpening();
+    
+    void FinishClosing();
 };

@@ -6,10 +6,7 @@
 #include "YapConversationHandle.generated.h"
 
 UDELEGATE()
-DECLARE_DYNAMIC_DELEGATE(FYapOnConversationClosed);
-
-UDELEGATE()
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FYapOnConversationClosed_Multi);
+DECLARE_DYNAMIC_DELEGATE(FYapConversationDelegate);
 
 USTRUCT(BlueprintType)
 struct FYapConversationHandle
@@ -30,11 +27,26 @@ class UYapConversationHandleBlueprintFunctionLibrary : public UBlueprintFunction
     GENERATED_BODY()
 
     UFUNCTION(BlueprintCallable)
-    static void BindToConversationClose(FYapConversationHandle Handle, FYapOnConversationClosed Delegate);
+    static void BindToConversationOpening(FYapConversationHandle Handle, FYapConversationDelegate Delegate);
+    
+    UFUNCTION(BlueprintCallable)
+    static void BindToConversationOpened(FYapConversationHandle Handle, FYapConversationDelegate Delegate);
+    
+    UFUNCTION(BlueprintCallable)
+    static void BindToConversationClosing(FYapConversationHandle Handle, FYapConversationDelegate Delegate);
 
     UFUNCTION(BlueprintCallable)
-    static void SetOpenLock(FYapConversationHandle Handle);
+    static void BindToConversationClosed(FYapConversationHandle Handle, FYapConversationDelegate Delegate);
 
     UFUNCTION(BlueprintCallable)
-    static void RemoveOpenLock(FYapConversationHandle Handle);
+    static void AddOpeningLock(FYapConversationHandle Handle, UObject* Lock);
+
+    UFUNCTION(BlueprintCallable)
+    static void RemoveOpenLock(FYapConversationHandle Handle, UObject* Lock);
+
+    UFUNCTION(BlueprintCallable)
+    static void SetClosingLock(FYapConversationHandle Handle, UObject* Lock);
+    
+    UFUNCTION(BlueprintCallable)
+    static void RemoveClosingLock(FYapConversationHandle Handle, UObject* Lock);
 };

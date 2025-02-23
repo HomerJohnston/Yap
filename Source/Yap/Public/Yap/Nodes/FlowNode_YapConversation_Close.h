@@ -18,9 +18,12 @@ class YAP_API UFlowNode_YapConversation_Close : public UFlowNode
 public:
 	UFlowNode_YapConversation_Close();
 
-	void ExecuteInput(const FName& PinName) override;
-
+	void OnActivate() override;
+	
 	void Finish() override;
+
+	UFUNCTION()
+	void FinishNode();
 	
 #if WITH_EDITOR
 	FText GetNodeTitle() const override;

@@ -22,10 +22,7 @@ FYapConversation::FYapConversation(const FGameplayTag& InConversationName)
     Guid = FGuid::NewGuid();
 }
 
-FYapConversation::~FYapConversation()
-{
-    OnConversationClosed.Broadcast();
-}
+// ------------------------------------------------------------------------------------------------
 
 void FYapConversation::AddRunningFragment(FYapFragmentHandle FragmentHandle)
 {
@@ -34,6 +31,8 @@ void FYapConversation::AddRunningFragment(FYapFragmentHandle FragmentHandle)
     RunningFragments.Add(FragmentHandle);
 }
 
+// ------------------------------------------------------------------------------------------------
+
 void FYapConversation::RemoveRunningFragment(FYapFragmentHandle FragmentHandle)
 {
     check(RunningFragments.Contains(FragmentHandle));
@@ -41,16 +40,99 @@ void FYapConversation::RemoveRunningFragment(FYapFragmentHandle FragmentHandle)
     RunningFragments.Remove(FragmentHandle);
 }
 
-void FYapConversation::SetOpenLock()
+// ------------------------------------------------------------------------------------------------
+
+void FYapConversation::StartOpening()
 {
-    bOpenLock = true;
+    bWantsToOpen = true;
+    bWantsToClose = false;
+    State = EYapConversationState::Opening;
+
+    if (OpeningLocks.Num() == 0)
+    {
+        FinishOpening();
+    }
 }
 
-void FYapConversation::RemoveOpenLockAndAdvance()
+// ------------------------------------------------------------------------------------------------
+
+void FYapConversation::AddOpeningLock(UObject* LockingObject)
 {
-    bOpenLock = false;
-    (void) UYapSubsystem::Get()->OnConversationFinishedOpening.ExecuteIfBound();
+    OpeningLocks.AddUnique(LockingObject);
 }
+
+// ------------------------------------------------------------------------------------------------
+
+void FYapConversation::RemoveOpeningLock(UObject* Object)
+{
+    OpeningLocks.Remove(Object);
+
+    if (bWantsToOpen && OpeningLocks.Num() == 0)
+    {
+        FinishOpening();
+    }
+}
+
+// ------------------------------------------------------------------------------------------------
+
+void FYapConversation::StartClosing()
+{
+    State = EYapConversationState::Closing;
+    bWantsToOpen = false;
+    bWantsToClose = true;
+    
+    OnConversationClosing.Broadcast();
+
+    if (ClosingLocks.Num() == 0)
+    {
+        FinishClosing();
+    }
+}
+
+// ------------------------------------------------------------------------------------------------
+
+void FYapConversation::AddClosingLock(UObject* LockingObject)
+{
+    ClosingLocks.AddUnique(LockingObject);
+}
+
+// ------------------------------------------------------------------------------------------------
+
+void FYapConversation::RemoveClosingLock(UObject* Object)
+{
+    ClosingLocks.Remove(Object);
+
+    if (bWantsToClose && ClosingLocks.Num() == 0)
+    {
+        FinishClosing();
+    }
+}
+
+// ------------------------------------------------------------------------------------------------
+
+void FYapConversation::FinishOpening()
+{
+    bWantsToOpen = false;
+    bWantsToClose = false;
+    
+    State = EYapConversationState::Open;
+    
+    OnConversationOpened.Broadcast();
+}
+
+// ------------------------------------------------------------------------------------------------
+
+void FYapConversation::FinishClosing()
+{
+    bWantsToOpen = false;
+    bWantsToClose = false;
+    
+    State = EYapConversationState::Closed;
+    
+    OnConversationClosed.Broadcast();
+}
+
+// ------------------------------------------------------------------------------------------------
 
 void FYapConversation::ExecuteSkip()
 {
@@ -61,3 +143,4 @@ void FYapConversation::ExecuteSkip()
 }
 
 // ------------------------------------------------------------------------------------------------
+

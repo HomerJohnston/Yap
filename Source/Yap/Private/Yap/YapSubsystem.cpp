@@ -173,86 +173,102 @@ FYapFragment* UYapSubsystem::FindTaggedFragment(const FGameplayTag& FragmentTag)
 
 // ------------------------------------------------------------------------------------------------
 
-EYapOpenConversationResult UYapSubsystem::OpenOrEnqueueConversation(const FGameplayTag& ConversationName)
+FYapConversation& UYapSubsystem::OpenConversation(const FGameplayTag& ConversationName)
 {
+	// Return existing conversation by same name
+	auto Match = [&ConversationName] (const FYapConversation& Conversation)
+	{
+		return Conversation.GetConversationName() == ConversationName;
+	};
+	
+	int32 Index = ConversationQueue.IndexOfByPredicate(Match);
+	if (Index != INDEX_NONE)
+	{
+		UE_LOG(LogYap, Display, TEXT("Tried to start a new conversation but converation was already open or in queue!"), *ConversationName.ToString());
+		return ConversationQueue[Index];
+	}
+	
 	// Conversation structs will usually be small, a few bytes. Using arrays as queues for easier serialization.
 	ConversationQueue.EmplaceAt(0, FYapConversation(ConversationName));
 
 	if (ConversationQueue.Num() == 1)
 	{
-		OpenConversation(ConversationQueue[0]);
-		return EYapOpenConversationResult::Opened;
+		StartOpeningConversation(ConversationQueue[0]);
 	}
 
-	return EYapOpenConversationResult::Queued;
+	return ConversationQueue[0];
 }
 
 // ------------------------------------------------------------------------------------------------
 
-void UYapSubsystem::DequeueConversation(const FGameplayTag& ConversationName)
+EYapCloseConversationResult UYapSubsystem::RequestCloseConversation(const FGameplayTag& ConversationName)
 {
+	if (ConversationQueue.Num() == 0)
+	{
+		return EYapCloseConversationResult::Failed;
+	}
+
 	auto Match = [&ConversationName] (const FYapConversation& Conversation)
 	{
 		return Conversation.GetConversationName() == ConversationName;
 	};
+	
+	int32 ConversationIndex = ConversationQueue.IndexOfByPredicate(Match);
 
-	ConversationQueue.RemoveAll(Match);
-
-	CheckIfActiveConversationChanged();
-}
-
-// ------------------------------------------------------------------------------------------------
-
-void UYapSubsystem::CheckIfActiveConversationChanged()
-{
-	if (ConversationQueue.Num() == 0)
+	if (ActiveConversationName == ConversationName)
 	{
-		CloseConversation(ActiveConversationName);
+		// Don't remove it from the queue yet, let it actually finish
+		return StartClosingConversation(ConversationName);
 	}
 	else
 	{
-		FYapConversation& NewTopConversation = ConversationQueue[ConversationQueue.Num() - 1];
-		
-		if (NewTopConversation.GetConversationName() == ActiveConversationName)
-		{
-			return;
-		}
-		
-		CloseConversation(ActiveConversationName);
-
-		OpenConversation(NewTopConversation);	
+		// Just remove this conversation from queues.
+		ConversationQueue.RemoveAll(Match);
+		return EYapCloseConversationResult::Closed;
 	}
 }
 
 // ------------------------------------------------------------------------------------------------
 
-void UYapSubsystem::OpenConversation(FYapConversation& Conversation)
+void UYapSubsystem::StartNextQueuedConversation()
 {
-	if (ActiveConversationName == Conversation.GetConversationName())
+	if (ConversationQueue.Num() == 0)
 	{
 		return;
 	}
-	
+	else
+	{
+		StartOpeningConversation(ConversationQueue[ConversationQueue.Num() - 1]);	
+	}
+}
+
+// ------------------------------------------------------------------------------------------------
+
+void UYapSubsystem::StartOpeningConversation(FYapConversation& Conversation)
+{
+	if (ActiveConversationName == Conversation.GetConversationName())
+	{
+		UE_LOG(LogYap, Display, TEXT("Tried to start a new conversation but converation was already active!"), *Conversation.GetConversationName().ToString());
+		return;
+	}
+
+	UE_LOG(LogYap, Display, TEXT("Subsystem: Starting conversation %s!"), *Conversation.GetConversationName().ToString());
 	ActiveConversationName = Conversation.GetConversationName();
 	
 	FYapData_ConversationOpened Data;
 	Data.Conversation = ActiveConversationName;
 
 	FYapConversationHandle Handle(Conversation.GetGuid());
-	
-	OnOpenConversation.Broadcast(ActiveConversationName);
-	
+
+	// Game code may add opening locks to the conversation here
 	BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapConversationHandler, OnConversationOpened, Execute_K2_ConversationOpened)>(ConversationHandlers, Data, Handle);
 
-	if (!Conversation.IsOpenLocked())
-	{
-		Conversation.RemoveOpenLockAndAdvance();
-	}
+	Conversation.StartOpening();
 }
 
 // ------------------------------------------------------------------------------------------------
 
-void UYapSubsystem::CloseConversation(const FGameplayTag& ConversationName)
+EYapCloseConversationResult UYapSubsystem::StartClosingConversation(const FGameplayTag& ConversationName)
 {
 	auto Find = [&ConversationName] (const FYapConversation& Conversation)
 	{
@@ -260,8 +276,19 @@ void UYapSubsystem::CloseConversation(const FGameplayTag& ConversationName)
 	};
 
 	ActiveConversationName = FGameplayTag::EmptyTag;
-	
-	ConversationQueue.RemoveAll(Find);
+
+	FYapConversation& Conversation = GetConversation(ConversationName);
+
+	Conversation.StartClosing();
+
+	if (Conversation.GetState() == EYapConversationState::Closed)
+	{
+		ConversationQueue.RemoveAll(Find);
+		StartNextQueuedConversation();
+		return EYapCloseConversationResult::Closed;
+	}
+
+	return EYapCloseConversationResult::Closing;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -385,8 +412,23 @@ FYapConversation& UYapSubsystem::GetConversation(FYapConversationHandle Handle)
 	}
 
 	static FYapConversation NullConversation;
-
 	return NullConversation;
+}
+
+FYapConversation& UYapSubsystem::GetConversation(const FGameplayTag& ConversationName)
+{
+	TArray<FYapConversation>& Conversations = Get()->ConversationQueue;
+	
+	for (int32 i = 0; i < Conversations.Num(); ++i)
+	{
+		if (Conversations[i].GetConversationName() == ConversationName)
+		{
+			return Conversations[i];
+		}
+	}
+
+	static FYapConversation NullConversation;
+	return NullConversation;	
 }
 
 // ------------------------------------------------------------------------------------------------

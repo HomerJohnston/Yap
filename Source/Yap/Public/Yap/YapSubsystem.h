@@ -33,11 +33,12 @@ DECLARE_DYNAMIC_DELEGATE(FFlowYapConversationFinishedOpening);
 // ================================================================================================
 
 UENUM()
-enum class EYapOpenConversationResult : uint8
+enum class EYapCloseConversationResult : uint8
 {
 	Undefined,
-	Opened,
-	Queued,
+	Failed,
+	Closing,
+	Closed,
 };
 
 // ================================================================================================
@@ -57,13 +58,6 @@ public:
 	// =========================================
 	// STATE
 	// =========================================
-public:
-	FFlowYapOpenConversation OnOpenConversation;
-
-	FFlowYapConversationFinishedOpening OnConversationFinishedOpening;
-	
-	FFlowYapConversationFinishedOpening OnConversationFinishedClosing;
-	
 protected:
 
 	/**  */
@@ -173,16 +167,16 @@ protected:  // TODO should some of these be public?
 
 public:
 	/**  */
-	EYapOpenConversationResult OpenOrEnqueueConversation(const FGameplayTag& ConversationName); // Called by Open Conversation node
+	FYapConversation& OpenConversation(const FGameplayTag& ConversationName); // Called by Open Conversation node
 
-	void DequeueConversation(const FGameplayTag& ConversationName);
+	EYapCloseConversationResult RequestCloseConversation(const FGameplayTag& ConversationName);
 
 protected:
-	void OpenConversation(FYapConversation& Conversation);
+	void StartOpeningConversation(FYapConversation& Conversation);
 	/**  */
-	void CloseConversation(const FGameplayTag& ConversationName); // Called by Close Conversation node
+	EYapCloseConversationResult StartClosingConversation(const FGameplayTag& ConversationName); // Called by Close Conversation node
 
-	void CheckIfActiveConversationChanged();
+	void StartNextQueuedConversation();
 	
 	
 	/**  */
@@ -202,6 +196,8 @@ public:
 	/**  */
 	static FYapConversation& GetConversation(FYapConversationHandle Handle);
 
+	static FYapConversation& GetConversation(const FGameplayTag& ConversationName);
+	
 public:
 	// TODO should I make a ref struct for FYapPromptHandle too?
 	/** The prompt handle will call this function, passing in itself. */

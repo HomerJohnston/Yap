@@ -7,6 +7,7 @@
 #include "Yap/Handles/YapRunningFragment.h"
 #include "Yap/YapFragment.h"
 #include "Yap/Handles/YapPromptHandle.h"
+#include "Yap/Handles/YapSpeechHandle.h"
 
 #include "FlowNode_YapDialogue.generated.h"
 
@@ -144,6 +145,10 @@ protected:
 	/**  */
 	UPROPERTY(Transient)
 	TMap<FYapPromptHandle, uint8> PromptIndices;
+
+	/**  */
+	UPROPERTY(Transient)
+	FYapSpeechHandle RunningSpeechHandle;
 	
 	// ============================================================================================
 	// PUBLIC API
@@ -183,10 +188,8 @@ public:
 	/** Finds the first fragment on this dialogue containing a tag. */
 	FYapFragment* FindTaggedFragment(const FGameplayTag& Tag);
 
-	bool Skip();
-
 protected:
-	bool CanSkip() const;
+	bool CanSkip(FYapSpeechHandle Handle) const;
 
 public:
 	FString GetAudioID() const { return AudioID; }
@@ -240,7 +243,7 @@ protected:
 
 	void OnSpeechComplete(uint8 FragmentIndex);
 
-	void OnProgressionComplete();
+	void OnProgressionComplete(uint8 FragmentIndex);
 
 	void AdvanceFromFragment(uint8 FragmentIndex);
 	
@@ -257,6 +260,9 @@ protected:
 	
 	UFUNCTION()
 	void OnPromptChosen(FYapPromptHandle Handle);
+	
+	UFUNCTION()
+	void OnSkipAction(FYapSpeechHandle Handle);
 	
 #if WITH_EDITOR
 public:

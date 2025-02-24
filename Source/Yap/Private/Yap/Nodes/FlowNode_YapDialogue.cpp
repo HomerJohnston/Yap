@@ -80,58 +80,51 @@ FYapFragment* UFlowNode_YapDialogue::FindTaggedFragment(const FGameplayTag& Tag)
 	return nullptr;
 }
 
-bool UFlowNode_YapDialogue::Skip()
+void UFlowNode_YapDialogue::OnSkipAction(FYapSpeechHandle Handle)
 {
-	if (!CanSkip())
+	if (!CanSkip(Handle))
 	{
-		return false;
+		return;
 	}
 
-	/*
-	for (const FYapFragmentRunData& RunData : RunningFragmentHandles)
+	int32 SkippedRunningFragmentIndex = RunningFragmentIndex;
+	
+	for (uint8 i = 0; i <= SkippedRunningFragmentIndex; ++i)
 	{
-		if (RunData.SpeechTimerHandle.IsValid())
+		FYapFragment& Fragment = Fragments[i];
+		
+		if (Fragment.SpeechTimerHandle.IsValid())
 		{
-			OnSpeechComplete(RunData.FragmentIndex);
+			OnSpeechComplete(i);
 		}
 
-		if (RunData.PaddingTimerHandle.IsValid())
+		if (Fragment.ProgressionTimerHandle.IsValid())
 		{
-			OnPaddedTimeComplete(RunData.FragmentIndex);
+			OnProgressionComplete(i);
+		}
+
+		if (Fragment.GetIsAwaitingManualAdvance())
+		{
+			AdvanceFromFragment(i);
 		}
 	}
 	
-	if (FragmentTimerHandle.IsValid())
-	{
-		OnSpeechComplete();
-	}
-
-	if (PaddingTimerHandle.IsValid())
-	{
-		OnPaddedTimeComplete();
-	}
-
-	// TODO should this be a project setting? Skip can advance past manual advancement?
-	if (bFragmentAwaitingManualAdvance)
-	{
-		bFragmentAwaitingManualAdvance = false;
-		AdvanceFromFragment(RunningFragmentIndex);
-	}
-	*/
-	return true;
+	return;
 }
 
-bool UFlowNode_YapDialogue::CanSkip() const
+bool UFlowNode_YapDialogue::CanSkip(FYapSpeechHandle Handle) const
 {
-	/*
-	if (RunningFragmentHandles.IsEmpty())
+	if (!RunningSpeechHandle.IsValid())
 	{
 		return false;
 	}
 
-	const FYapFragmentRunData& RunData = RunningFragmentHandles[RunningFragmentHandles.Num() - 1];
-	
-	const FYapFragment& Fragment = Fragments[RunData.FragmentIndex];
+	if (RunningSpeechHandle != Handle)
+	{
+		return false;
+	}
+
+	const FYapFragment& Fragment = Fragments[RunningFragmentIndex];
 	
 	// The fragment is finished running, and this feature is only being used for manual advance
 	if (Fragment.GetIsAwaitingManualAdvance())
@@ -146,8 +139,6 @@ bool UFlowNode_YapDialogue::CanSkip() const
 	{
 		return false;
 	}
-	*/
-
 		
 	/*
 	bool bWillAutoAdvance = GetFragmentAutoAdvance(RunningFragmentIndex);
@@ -516,8 +507,9 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 	Data.DialogueAudioAsset = Bit.GetAudioAsset<UObject>();
 	Data.bSkippable = Fragment.GetSkippable(GetSkippable());
 	
-	Subsystem->RunSpeech(Data);
-
+	RunningSpeechHandle = Subsystem->RunSpeech(Data);
+	Subsystem->OnSkipAction.AddDynamic(this, &ThisClass::OnSkipAction);
+	
 	Fragment.IncrementActivations();
 
 	if (Fragment.UsesStartPin())
@@ -552,11 +544,11 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 	
 	if (ProgressionTime > 0)
 	{
-		GetWorld()->GetTimerManager().SetTimer(Fragment.ProgressionTimerHandle, FTimerDelegate::CreateUObject(this, &ThisClass::OnProgressionComplete), ProgressionTime, false);
+		GetWorld()->GetTimerManager().SetTimer(Fragment.ProgressionTimerHandle, FTimerDelegate::CreateUObject(this, &ThisClass::OnProgressionComplete, FragmentIndex), ProgressionTime, false);
 	}
 	else
 	{
-		OnProgressionComplete();
+		OnProgressionComplete(FragmentIndex);
 	}
 
 	return true;
@@ -568,32 +560,30 @@ void UFlowNode_YapDialogue::OnSpeechComplete(uint8 FragmentIndex)
 {
 	UE_LOG(LogYap, Verbose, TEXT("OnSpeechComplete"));
 
-	/*
 	FYapFragment& Fragment = Fragments[FragmentIndex];
 	
 	GetWorld()->GetTimerManager().ClearTimer(Fragment.SpeechTimerHandle);
 	
-	GetWorld()->GetSubsystem<UYapSubsystem>()->BroadcastDialogueEnd(this, FragmentIndex);
-
 	if (Fragment.UsesEndPin())
 	{
 		const FFlowPin EndPin = Fragment.GetEndPin();
 		TriggerOutput(EndPin.PinName, false);
 	}
 
-	Fragment.SetEndTime(GetWorld()->GetTimeSeconds());
-	*/
+	//Fragment.SetEndTime(GetWorld()->GetTimeSeconds());
 }
 
 // ------------------------------------------------------------------------------------------------
 
-void UFlowNode_YapDialogue::OnProgressionComplete()
+void UFlowNode_YapDialogue::OnProgressionComplete(uint8 FragmentIndex)
 {
 	UE_LOG(LogYap, Verbose, TEXT("OnProgressionComplete"));
 	
 	uint8 FinishedFragmentIndex = RunningFragmentIndex;
 	FYapFragment& Fragment = Fragments[RunningFragmentIndex];
 
+	UYapSubsystem::Get()->OnSkipAction.RemoveDynamic(this, &ThisClass::OnSkipAction);
+	
 	if (Fragment.ProgressionTimerHandle.IsValid())
 	{
 		GetWorld()->GetTimerManager().ClearTimer(Fragment.ProgressionTimerHandle);

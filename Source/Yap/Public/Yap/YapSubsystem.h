@@ -28,7 +28,7 @@ UDELEGATE()
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FYapPromptChosen, FYapPromptHandle, Handle);
 
 UDELEGATE()
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FYapSkipOrAdvance, FYapSpeechHandle, Handle);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FYapSkipAction, FYapSpeechHandle, Handle);
 
 // ================================================================================================
 
@@ -112,7 +112,11 @@ protected:
 	static FYapRunningFragment InvalidHandle;
 
 public:
+	UPROPERTY(Transient)
 	FYapPromptChosen OnPromptChosenEvent;
+
+	UPROPERTY(Transient)
+	FYapSkipAction OnSkipAction;
 	
 	// =========================================
 	// PUBLIC API - Your game should use these
@@ -214,7 +218,7 @@ public:
 public:
 	// TODO should I make a ref struct for FYapPromptHandle too?
 	/** The prompt handle will call this function, passing in itself. */
-	bool RunPrompt(const FYapPromptHandle& Handle);
+	static bool RunPrompt(const FYapPromptHandle& Handle);
 
 	/**  */
 	static bool SkipSpeech(const FYapSpeechHandle& Handle);
@@ -251,7 +255,7 @@ protected:
 
 	// Thanks to Blue Man for template help
 	template<typename TUInterface, typename TIInterface, auto TFunction, auto TExecFunction, typename... TArgs>
-	void BroadcastEventHandlerFunc(TArray<TObjectPtr<UObject>>& HandlersArray, TArgs&&... Args)
+	static void BroadcastEventHandlerFunc(TArray<TObjectPtr<UObject>>& HandlersArray, TArgs&&... Args)
 	{
 		bool bHandled = false;
 	

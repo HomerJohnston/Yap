@@ -440,14 +440,13 @@ FGameplayTag UYapSubsystem::GetActiveConversation()
 bool UYapSubsystem::RunPrompt(const FYapPromptHandle& Handle)
 {
 	// TODO handle invalid handles gracefully
-	
-	FYapData_PlayerPromptChosen Data;
 
 	// Broadcast to Yap systems
-	OnPromptChosenEvent.Broadcast(Handle);
+	Get()->OnPromptChosenEvent.Broadcast(Handle);
 
 	// Broadcast to game listeners
-	BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapConversationHandler, OnConversationPlayerPromptChosen, Execute_K2_ConversationPlayerPromptChosen)>(ConversationHandlers, Data, Handle);
+	FYapData_PlayerPromptChosen Data;
+	BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapConversationHandler, OnConversationPlayerPromptChosen, Execute_K2_ConversationPlayerPromptChosen)>(Get()->ConversationHandlers, Data, Handle);
 
 	return true;
 }
@@ -457,14 +456,14 @@ bool UYapSubsystem::RunPrompt(const FYapPromptHandle& Handle)
 bool UYapSubsystem::SkipSpeech(const FYapSpeechHandle& Handle)
 {
 	// TODO handle invalid handles gracefully
-	TWeakObjectPtr<UFlowNode_YapDialogue>* DialogueWeak = Get()->GuidDialogueMap.Find(Handle);
+	
+	// Broadcast to Yap systems
+	Get()->OnSkipAction.Broadcast(Handle);
 
-	if (DialogueWeak)
-	{
-		return (*DialogueWeak)->Skip();
-	}
-
-	return false;
+	// Broadcast to game listeners
+	// TODO
+	
+	return true;
 }
 
 // ------------------------------------------------------------------------------------------------

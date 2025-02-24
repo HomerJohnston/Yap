@@ -48,6 +48,7 @@ public:
    // const TArray<FInstancedStruct>& GetFragmentData();
 	
     bool operator== (const FYapSpeechHandle& Other) const;
+    
 };
 
 FORCEINLINE uint32 GetTypeHash(const FYapSpeechHandle& Struct)
@@ -88,5 +89,9 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Yap")
     static const TArray<FInstancedStruct>& GetFragmentData(const FYapSpeechHandle& HandleRef);
     */
+    
+    /** Returns true if the values are equal (A == B) */
+    UFUNCTION(BlueprintPure, meta=(DisplayName="Equal (YapSpeechHandle)", CompactNodeTitle="==", BlueprintThreadSafe), Category="Yap")
+    static bool EqualEqual_YapSpeechHandle( FYapSpeechHandle A, FYapSpeechHandle B );
 };
 

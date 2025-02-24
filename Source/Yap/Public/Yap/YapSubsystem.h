@@ -106,16 +106,16 @@ protected:
 	static FYapRunningFragment InvalidHandle;
 
 public:
-	UPROPERTY(Transient)
+	UPROPERTY(BlueprintAssignable, Transient)
 	FYapPromptChosen OnPromptChosenEvent;
 
-	UPROPERTY(Transient)
+	UPROPERTY(BlueprintAssignable, Transient)
 	FYapSpeechHandleEvent OnSkipAction;
 
-	UPROPERTY(Transient)
+	UPROPERTY(BlueprintAssignable, Transient)
 	FYapSpeechHandleEvent OnSpeechCompleteEvent;
 
-	UPROPERTY(Transient)
+	UPROPERTY(BlueprintAssignable, Transient)
 	FYapSpeechHandleEvent OnFragmentCompleteEvent;
 	
 	// =========================================

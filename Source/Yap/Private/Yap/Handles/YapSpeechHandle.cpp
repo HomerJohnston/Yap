@@ -127,6 +127,11 @@ void UYapSpeechHandleBFL::AddReactor(FYapSpeechHandle& HandleRef, UObject* React
 	*/
 }
 
+bool UYapSpeechHandleBFL::EqualEqual_YapSpeechHandle(FYapSpeechHandle A, FYapSpeechHandle B)
+{
+	return A.GetGuid() == B.GetGuid();
+}
+
 /*
 const TArray<FInstancedStruct>& UYapSpeechHandleBFL::GetFragmentData(const FYapSpeechHandle& HandleRef)
 {

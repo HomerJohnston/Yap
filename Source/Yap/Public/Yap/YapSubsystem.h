@@ -28,7 +28,7 @@ UDELEGATE()
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FYapPromptChosen, FYapPromptHandle, Handle);
 
 UDELEGATE()
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FYapSkipAction, FYapSpeechHandle, Handle);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FYapSpeechHandleEvent, FYapSpeechHandle, Handle);
 
 // ================================================================================================
 
@@ -101,12 +101,6 @@ protected:
 	UPROPERTY(Transient)
 	TSet<TObjectPtr<AActor>> RegisteredYapCharacterActors;
 
-	/** A skip command will flush all of these. We use a stack because Yap allows multiple fragments to run simulataneously (through negative padding). */
-	UPROPERTY(Transient)
-	TMap<FYapSpeechHandle, FYapRunningFragment> RunningFragments;
-
-	TMap<FYapSpeechHandle, FYapRunningSpeech> RunningSpeech;
-
 	static bool bGetGameMaturitySettingWarningIssued;
 
 	static FYapRunningFragment InvalidHandle;
@@ -116,7 +110,13 @@ public:
 	FYapPromptChosen OnPromptChosenEvent;
 
 	UPROPERTY(Transient)
-	FYapSkipAction OnSkipAction;
+	FYapSpeechHandleEvent OnSkipAction;
+
+	UPROPERTY(Transient)
+	FYapSpeechHandleEvent OnSpeechCompleteEvent;
+
+	UPROPERTY(Transient)
+	FYapSpeechHandleEvent OnFragmentCompleteEvent;
 	
 	// =========================================
 	// PUBLIC API - Your game should use these
@@ -226,8 +226,10 @@ public:
 	/**  */ // TODO: ability to instantly playback/skip through multiple nodes until some sort of target point is hit, maybe a custom node? (imagine skipping an entire cutscene)
 	// static bool SkipDialogueTo(???);
 
+	/*
 	static FYapRunningFragment& GetFragmentHandle(FYapSpeechHandle HandleRef);
-
+	*/
+	
 public:
 	/**  */
 	void RegisterCharacterComponent(UYapCharacterComponent* YapCharacterComponent);

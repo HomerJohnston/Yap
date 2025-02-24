@@ -6,6 +6,9 @@
 #include "Yap/Handles/YapRunningFragment.h"
 #include "YapSpeechHandle.generated.h"
 
+UDELEGATE()
+DECLARE_DYNAMIC_DELEGATE(FYapSpeechEventDelegate);
+
 /** Since I can't store handles in structs by ref, I pass around a simpler version of it containing only the GUID and look up the actual handle (which could become "large" with more data) from the subsystem as needed. */
 USTRUCT(BlueprintType)
 struct YAP_API FYapSpeechHandle
@@ -42,7 +45,7 @@ public:
 
     void AddReactor(UObject* Reactor);
 	
-    const TArray<FInstancedStruct>& GetFragmentData();
+   // const TArray<FInstancedStruct>& GetFragmentData();
 	
     bool operator== (const FYapSpeechHandle& Other) const;
 };
@@ -62,6 +65,16 @@ class YAP_API UYapSpeechHandleBFL : public UBlueprintFunctionLibrary
     GENERATED_BODY()
 
 public:
+    
+    UFUNCTION(BlueprintCallable)
+    static void BindToOnSpeechComplete(FYapSpeechHandle Handle, FYapSpeechEventDelegate Delegate);
+
+    UFUNCTION(BlueprintCallable)
+    static void UnbindToOnSpeechComplete(FYapSpeechHandle Handle, FYapSpeechEventDelegate Delegate);
+    
+    UFUNCTION(BlueprintCallable)
+    static void BindToOnFragmentComplete(FYapSpeechHandle Handle, FYapSpeechEventDelegate Delegate);
+    
     UFUNCTION(BlueprintCallable, Category = "Yap")
     static bool SkipDialogue(const FYapSpeechHandle& Handle);
 
@@ -71,7 +84,9 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Yap")
     static void AddReactor(UPARAM(ref) FYapSpeechHandle& HandleRef, UObject* Reactor);
 
+    /*
     UFUNCTION(BlueprintCallable, Category = "Yap")
     static const TArray<FInstancedStruct>& GetFragmentData(const FYapSpeechHandle& HandleRef);
+    */
 };
 

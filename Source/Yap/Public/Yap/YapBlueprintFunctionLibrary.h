@@ -43,9 +43,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Yap")
 	static void AddReactor(UPARAM(ref) FYapSpeechHandle& HandleRef, UObject* Reactor);
 
+	/*
 	UFUNCTION(BlueprintCallable, Category = "Yap")
 	static const TArray<FInstancedStruct>& GetFragmentData(const FYapSpeechHandle& HandleRef);
-
+	*/	
+	
 	UFUNCTION(BlueprintCallable, Category = "Yap")
 	static void RegisterConversationHandler(UObject* NewHandler);
 	

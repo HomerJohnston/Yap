@@ -530,6 +530,7 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 		
 		if (SpeechTime > 0)
 		{
+			// TODO the subsystem is running a timer too. I need to get rid of this one and slave to the subsystem's progression.
 			GetWorld()->GetTimerManager().SetTimer(Fragment.SpeechTimerHandle, FTimerDelegate::CreateUObject(this, &ThisClass::OnSpeechComplete, FragmentIndex), SpeechTime, false);
 		}
 		else
@@ -544,6 +545,7 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 	
 	if (ProgressionTime > 0)
 	{
+		// TODO the subsystem is running a timer too. I need to get rid of this one and slave to the subsystem's progression.
 		GetWorld()->GetTimerManager().SetTimer(Fragment.ProgressionTimerHandle, FTimerDelegate::CreateUObject(this, &ThisClass::OnProgressionComplete, FragmentIndex), ProgressionTime, false);
 	}
 	else

@@ -15,25 +15,25 @@ FYapConversationHandle::FYapConversationHandle(const FGuid& InGuid)
 {
 }
 
-void UYapConversationHandleBlueprintFunctionLibrary::BindToConversationOpening(FYapConversationHandle Handle, FYapConversationDelegate Delegate)
+void UYapConversationHandleBlueprintFunctionLibrary::BindToConversationOpening(FYapConversationHandle Handle, FYapConversationEventDelegate Delegate)
 {
     FYapConversation& Conversation = UYapSubsystem::GetConversation(Handle);
     Conversation.OnConversationOpening.Add(Delegate);
 }
 
-void UYapConversationHandleBlueprintFunctionLibrary::BindToConversationOpened(FYapConversationHandle Handle, FYapConversationDelegate Delegate)
+void UYapConversationHandleBlueprintFunctionLibrary::BindToConversationOpened(FYapConversationHandle Handle, FYapConversationEventDelegate Delegate)
 {
     FYapConversation& Conversation = UYapSubsystem::GetConversation(Handle);
     Conversation.OnConversationOpened.Add(Delegate);
 }
 
-void UYapConversationHandleBlueprintFunctionLibrary::BindToConversationClosing(FYapConversationHandle Handle, FYapConversationDelegate Delegate)
+void UYapConversationHandleBlueprintFunctionLibrary::BindToConversationClosing(FYapConversationHandle Handle, FYapConversationEventDelegate Delegate)
 {
     FYapConversation& Conversation = UYapSubsystem::GetConversation(Handle);
     Conversation.OnConversationClosing.Add(Delegate);
 }
 
-void UYapConversationHandleBlueprintFunctionLibrary::BindToConversationClosed(FYapConversationHandle Handle, FYapConversationDelegate Delegate)
+void UYapConversationHandleBlueprintFunctionLibrary::BindToConversationClosed(FYapConversationHandle Handle, FYapConversationEventDelegate Delegate)
 {
     FYapConversation& Conversation = UYapSubsystem::GetConversation(Handle);
     Conversation.OnConversationClosed.Add(Delegate);

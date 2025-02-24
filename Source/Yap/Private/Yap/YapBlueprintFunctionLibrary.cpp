@@ -97,6 +97,7 @@ void UYapBlueprintFunctionLibrary::AddReactor(FYapSpeechHandle& HandleRef, UObje
 	*/
 }
 
+/*
 const TArray<FInstancedStruct>& UYapBlueprintFunctionLibrary::GetFragmentData(const FYapSpeechHandle& HandleRef)
 {
 	const FYapRunningFragment& Handle = UYapSubsystem::GetFragmentHandle(HandleRef);
@@ -107,6 +108,7 @@ const TArray<FInstancedStruct>& UYapBlueprintFunctionLibrary::GetFragmentData(co
 	
 	return Fragment.GetData();
 }
+*/
 
 // ------------------------------------------------------------------------------------------------
 

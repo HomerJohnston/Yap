@@ -344,14 +344,15 @@ void UYapSubsystem::OnFinishedBroadcastingPrompts(const FYapData_PlayerPromptsRe
 
 FYapSpeechHandle UYapSubsystem::RunSpeech(const FYapData_SpeechBegins& SpeechData)
 {
+	// TODO see if I can get rid of this shit
 	FYapRunningFragment RunningFragment;
 
-	FYapSpeechHandle FragmentHandle(RunningFragment);
+	FYapSpeechHandle SpeechHandle(RunningFragment);
 	
 	if (SpeechData.SpeechTime > 0)
 	{
 		FTimerHandle SpeechTimerHandle;
-		FTimerDelegate Delegate = FTimerDelegate::CreateUObject(this, &ThisClass::OnSpeechComplete, FragmentHandle);
+		FTimerDelegate Delegate = FTimerDelegate::CreateUObject(this, &ThisClass::OnSpeechComplete, SpeechHandle);
 		GetWorld()->GetTimerManager().SetTimer(SpeechTimerHandle, Delegate, SpeechData.SpeechTime, false);
 		RunningFragment.SetSpeechTimerHandle(SpeechTimerHandle);
 	}
@@ -359,21 +360,21 @@ FYapSpeechHandle UYapSubsystem::RunSpeech(const FYapData_SpeechBegins& SpeechDat
 	if (SpeechData.FragmentTime > 0)
 	{
 		FTimerHandle FragmentTimerHandle;
-		FTimerDelegate Delegate = FTimerDelegate::CreateUObject(this, &ThisClass::OnFragmentComplete, FragmentHandle);
+		FTimerDelegate Delegate = FTimerDelegate::CreateUObject(this, &ThisClass::OnFragmentComplete, SpeechHandle);
 		GetWorld()->GetTimerManager().SetTimer(FragmentTimerHandle, Delegate, SpeechData.SpeechTime, false);
 		RunningFragment.SetFragmentTimerHandle(FragmentTimerHandle);
 	}
 	
 	if (SpeechData.Conversation.IsValid())
 	{
-		BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapConversationHandler, OnConversationSpeechBegins, Execute_K2_ConversationSpeechBegins)>(ConversationHandlers, SpeechData, FragmentHandle);
+		BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapConversationHandler, OnConversationSpeechBegins, Execute_K2_ConversationSpeechBegins)>(ConversationHandlers, SpeechData, SpeechHandle);
 	}
 	else
 	{
-		BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapFreeSpeechHandler, OnTalkSpeechBegins, Execute_K2_TalkSpeechBegins)>(FreeSpeechHandlers, SpeechData, FragmentHandle);
+		BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapFreeSpeechHandler, OnTalkSpeechBegins, Execute_K2_TalkSpeechBegins)>(FreeSpeechHandlers, SpeechData, SpeechHandle);
 	}
 
-	return FragmentHandle;
+	return SpeechHandle;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -468,10 +469,12 @@ bool UYapSubsystem::SkipSpeech(const FYapSpeechHandle& Handle)
 
 // ------------------------------------------------------------------------------------------------
 
+/*
 FYapRunningFragment& UYapSubsystem::GetFragmentHandle(FYapSpeechHandle HandleRef)
 {
 	return Get()->RunningFragments.FindChecked(HandleRef);
 }
+*/
 
 // ------------------------------------------------------------------------------------------------
 
@@ -536,12 +539,12 @@ void UYapSubsystem::OnWorldBeginPlay(UWorld& InWorld)
 
 void UYapSubsystem::OnSpeechComplete(FYapSpeechHandle Handle)
 {
-	RunningSpeech.Remove(Handle);
+	OnSpeechCompleteEvent.Broadcast(Handle);
 }
 
 void UYapSubsystem::OnFragmentComplete(FYapSpeechHandle Handle)
 {
-	RunningFragments.Remove(Handle);
+	OnFragmentCompleteEvent.Broadcast(Handle);
 }
 
 // ------------------------------------------------------------------------------------------------

@@ -6,7 +6,7 @@
 #include "YapConversationHandle.generated.h"
 
 UDELEGATE()
-DECLARE_DYNAMIC_DELEGATE(FYapConversationDelegate);
+DECLARE_DYNAMIC_DELEGATE(FYapConversationEventDelegate);
 
 USTRUCT(BlueprintType)
 struct FYapConversationHandle
@@ -27,16 +27,16 @@ class UYapConversationHandleBlueprintFunctionLibrary : public UBlueprintFunction
     GENERATED_BODY()
 
     UFUNCTION(BlueprintCallable)
-    static void BindToConversationOpening(FYapConversationHandle Handle, FYapConversationDelegate Delegate);
+    static void BindToConversationOpening(FYapConversationHandle Handle, FYapConversationEventDelegate Delegate);
     
     UFUNCTION(BlueprintCallable)
-    static void BindToConversationOpened(FYapConversationHandle Handle, FYapConversationDelegate Delegate);
+    static void BindToConversationOpened(FYapConversationHandle Handle, FYapConversationEventDelegate Delegate);
     
     UFUNCTION(BlueprintCallable)
-    static void BindToConversationClosing(FYapConversationHandle Handle, FYapConversationDelegate Delegate);
+    static void BindToConversationClosing(FYapConversationHandle Handle, FYapConversationEventDelegate Delegate);
 
     UFUNCTION(BlueprintCallable)
-    static void BindToConversationClosed(FYapConversationHandle Handle, FYapConversationDelegate Delegate);
+    static void BindToConversationClosed(FYapConversationHandle Handle, FYapConversationEventDelegate Delegate);
 
     /**
      * Apply an interlock once a conversation starts opening to prevent the conversation from actually opening.

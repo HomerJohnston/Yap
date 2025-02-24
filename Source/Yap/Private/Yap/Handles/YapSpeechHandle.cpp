@@ -35,16 +35,37 @@ void FYapSpeechHandle::AddReactor(UObject* Reactor)
 
 // ------------------------------------------------------------------------------------------------
 
+/*
 const TArray<FInstancedStruct>& FYapSpeechHandle::GetFragmentData()
 {
     return UYapSpeechHandleBFL::GetFragmentData(*this);
 }
+*/
 
 // ------------------------------------------------------------------------------------------------
 
 bool FYapSpeechHandle::operator==(const FYapSpeechHandle& Other) const
 {
     return Guid == Other.Guid;
+}
+
+// ------------------------------------------------------------------------------------------------
+
+void UYapSpeechHandleBFL::BindToOnSpeechComplete(FYapSpeechHandle Handle, FYapSpeechEventDelegate Delegate)
+{
+	UYapSubsystem::Get()->OnSpeechCompleteEvent.Add(Delegate);
+}
+
+void UYapSpeechHandleBFL::UnbindToOnSpeechComplete(FYapSpeechHandle Handle, FYapSpeechEventDelegate Delegate)
+{
+	UYapSubsystem::Get()->OnSpeechCompleteEvent.Remove(Delegate);
+}
+
+// ------------------------------------------------------------------------------------------------
+
+void UYapSpeechHandleBFL::BindToOnFragmentComplete(FYapSpeechHandle Handle, FYapSpeechEventDelegate Delegate)
+{
+	UYapSubsystem::Get()->OnFragmentCompleteEvent.Add(Delegate);
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -106,6 +127,7 @@ void UYapSpeechHandleBFL::AddReactor(FYapSpeechHandle& HandleRef, UObject* React
 	*/
 }
 
+/*
 const TArray<FInstancedStruct>& UYapSpeechHandleBFL::GetFragmentData(const FYapSpeechHandle& HandleRef)
 {
 	const FYapRunningFragment& Handle = UYapSubsystem::GetFragmentHandle(HandleRef);
@@ -116,7 +138,8 @@ const TArray<FInstancedStruct>& UYapSpeechHandleBFL::GetFragmentData(const FYapS
 	
 	return Fragment.GetData();
 }
-
+*/
+	
 // ------------------------------------------------------------------------------------------------
 
 #undef LOCTEXT_NAMESPACE

@@ -214,8 +214,6 @@ EYapCloseConversationResult UYapSubsystem::RequestCloseConversation(const FGamep
 		return Conversation.GetConversationName() == ConversationName;
 	};
 	
-	int32 ConversationIndex = ConversationQueue.IndexOfByPredicate(Match);
-
 	if (ActiveConversationName == ConversationName)
 	{
 		// Don't remove it from the queue yet, let it actually finish
@@ -308,63 +306,38 @@ void UYapSubsystem::OnActiveConversationClosed()
 
 // ------------------------------------------------------------------------------------------------
 
-FYapPromptHandle UYapSubsystem::BroadcastPrompt(UFlowNode_YapDialogue* Dialogue, uint8 FragmentIndex)
+FYapPromptHandle UYapSubsystem::BroadcastPrompt(const FYapData_PlayerPromptCreated& Data)
 {
-	/*
-	// TODO not sure if there's a clean way to avoid const_cast. The problem is that GetDirectedAt and GetSpeaker (used below) are mutable, because they forcefully load assets.
-	FYapFragment& Fragment = const_cast<FYapFragment&>(Dialogue->GetFragmentByIndex(FragmentIndex));
-	FYapBit& Bit = const_cast<FYapBit&>(Fragment.GetBit()); 
-
-	FGameplayTag ConversationName;
-
-	if (ActiveConversationName.FlowAsset == Dialogue->GetFlowAsset())
+	if (Data.Conversation.IsValid())
 	{
-		ConversationName = ActiveConversationName.Conversation.GetValue();
-	}
+		FSetElementId Elem = ActivePromptHandles.Emplace({});
+		
+		BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapConversationHandler, OnConversationPlayerPromptCreated, Execute_K2_ConversationPlayerPromptCreated)>(ConversationHandlers, Data, ActivePromptHandles[Elem]);
 
-	FYapPromptHandle Handle(Dialogue, FragmentIndex);
-
-	if (ConversationName.IsValid())
-	{
-		FYapData_ConversationPlayerPromptCreated Data;
-		Data.Conversation = ConversationName;
-		Data.Handle = Handle;
-		Data.DirectedAt = Fragment.GetDirectedAt(EYapLoadContext::Sync);
-		Data.Speaker = Fragment.GetSpeaker(EYapLoadContext::Sync);
-		Data.MoodTag = Fragment.GetMoodTag();
-		Data.DialogueText = Bit.GetDialogueText();
-		Data.TitleText = Bit.GetTitleText();
-
-		BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapConversationHandler, OnConversationPlayerPromptCreated, Execute_K2_ConversationPlayerPromptCreated)>(ConversationHandlers, Data);
+		return ActivePromptHandles[Elem];
 	}
 	else
 	{
 		UE_LOG(LogYap, Error, TEXT("Tried to create a player prompt, but there is no active conversation!"));
 	}
 
-	*/
-	return FYapPromptHandle();
+	static FYapPromptHandle NullHandle;
+	NullHandle.Invalidate();
+	return NullHandle;
 }
 
 // ------------------------------------------------------------------------------------------------
 
-void UYapSubsystem::OnFinishedBroadcastingPrompts()
+void UYapSubsystem::OnFinishedBroadcastingPrompts(const FYapData_PlayerPromptsReady& Data)
 {
-	/*
-	FGameplayTag ConversationName = ActiveConversation.IsConversationInProgress() ? ActiveConversation.Conversation.GetValue() : FGameplayTag::EmptyTag;
-
-	if (ConversationName.IsValid())
+	if (Data.Conversation.IsValid())
 	{
-		FYapData_ConversationPlayerPromptsReady Data;
-		Data.Conversation = ConversationName;
-	
 		BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapConversationHandler, OnConversationPlayerPromptsReady, Execute_K2_ConversationPlayerPromptsReady)>(ConversationHandlers, Data);
 	}
 	else
 	{
 		UE_LOG(LogYap, Error, TEXT("Tried to broadcast player prompts created, but there is no active conversation!"));
 	}
-	*/
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -418,34 +391,30 @@ FYapConversation& UYapSubsystem::GetConversation(UObject* ConversationOwner)
 	return NullConversation;
 }
 
+// ------------------------------------------------------------------------------------------------
+
 FYapConversation& UYapSubsystem::GetConversation(FYapConversationHandle Handle)
 {
-	auto Find = [Handle] (const FYapConversation& Conversation)
+	for (FYapConversation& Conversation : Get()->ConversationQueue)
 	{
-		return Conversation.GetGuid() == Handle.Guid;
-	};
-
-	auto& Queue = Get()->ConversationQueue;
-	
-	FYapConversation* ConversationPtr = Get()->ConversationQueue.FindByPredicate(Find);
-
-	if (ConversationPtr)
-	{
-		return *ConversationPtr;
+		if (Conversation.GetGuid() == Handle.Guid)
+		{
+			return Conversation;
+		}
 	}
 
 	return NullConversation;
 }
 
+// ------------------------------------------------------------------------------------------------
+
 FYapConversation& UYapSubsystem::GetConversation(const FGameplayTag& ConversationName)
 {
-	TArray<FYapConversation>& Conversations = Get()->ConversationQueue;
-	
-	for (int32 i = 0; i < Conversations.Num(); ++i)
+	for (FYapConversation& Conversation : Get()->ConversationQueue)
 	{
-		if (Conversations[i].GetConversationName() == ConversationName)
+		if (Conversation.GetConversationName() == ConversationName)
 		{
-			return Conversations[i];
+			return Conversation;
 		}
 	}
 
@@ -454,176 +423,39 @@ FYapConversation& UYapSubsystem::GetConversation(const FGameplayTag& Conversatio
 
 // ------------------------------------------------------------------------------------------------
 
-/*
-void UYapSubsystem::BroadcastDialogueStart(UFlowNode_YapDialogue* Dialogue, uint8 FragmentIndex)
+FGameplayTag UYapSubsystem::GetActiveConversation()
 {
-	// TODO not sure if there's a clean way to avoid const_cast. The problem is that GetDirectedAt and GetSpeaker (used below) are mutable, because they forcefully load assets.
-	FYapFragment& Fragment = const_cast<FYapFragment&>(Dialogue->GetFragmentByIndex(FragmentIndex));
-	FYapBit& Bit = const_cast<FYapBit&>(Fragment.GetBit());
-	FYapRunningFragmentHandle FragmentHandleRef(Dialogue->DialogueHandle.GetGuid());
-	GuidDialogueMap.Add(FragmentHandleRef, Dialogue);
-	FGameplayTag ConversationName;
+	UYapSubsystem* Subsystem = Get();
+	
+	if (Subsystem->ConversationQueue.IsEmpty())
+	{
+		return FGameplayTag::EmptyTag;
+	}
 
-	if (ActiveConversation.FlowAsset == Dialogue->GetFlowAsset())
-	{
-		ConversationName = ActiveConversation.Conversation.GetValue();
-	}
-	
-	TOptional<float> Time = Fragment.GetSpeechTime();
-
-	float EffectiveTime;
-	
-	if (Time.IsSet())
-	{
-		EffectiveTime = Time.GetValue();
-	}
-	else
-	{
-		EffectiveTime = UYapProjectSettings::GetMinimumFragmentTime();
-	}
-	
-	
-	if (ConversationName.IsValid())
-	{
-		FYapData_ConversationSpeechBegins Data;
-		Data.Conversation = ConversationName;
-		Data.DialogueHandleRef = FragmentHandleRef;
-		Data.DirectedAt = Fragment.GetDirectedAt(EYapLoadContext::Sync);
-		Data.Speaker = Fragment.GetSpeaker(EYapLoadContext::Sync);
-		Data.MoodTag = Fragment.GetMoodTag();
-		Data.DialogueText = Bit.GetDialogueText();
-		Data.TitleText = Bit.GetTitleText();
-		Data.SpeechTime = EffectiveTime;
-		Data.PaddedTime = Fragment.GetProgressionTime(); 
-		Data.DialogueAudioAsset = Bit.GetAudioAsset<UObject>();
-		Data.bSkippable = Fragment.GetSkippable(Dialogue->GetSkippable());
-	
-		BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapConversationHandler, OnConversationSpeechBegins, Execute_K2_ConversationSpeechBegins)>(ConversationHandlers, Data);
-	}
-	else
-	{
-		FYapData_TalkSpeechBegins Data;
-		Data.DialogueHandleRef = FragmentHandleRef;
-		Data.DirectedAt = Fragment.GetDirectedAt(EYapLoadContext::Sync);
-		Data.Speaker = Fragment.GetSpeaker(EYapLoadContext::Sync);
-		Data.MoodTag = Fragment.GetMoodTag();
-		Data.DialogueText = Bit.GetDialogueText();
-		Data.TitleText = Bit.GetTitleText();
-		Data.SpeechTime = EffectiveTime;
-		Data.PaddedTime = Fragment.GetProgressionTime(); 
-		Data.DialogueAudioAsset = Bit.GetAudioAsset<UObject>();
-		Data.bSkippable = Fragment.GetSkippable(Dialogue->GetSkippable());
-	
-		BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapFreeSpeechHandler, OnTalkSpeechBegins, Execute_K2_TalkSpeechBegins)>(FreeSpeechHandlers, Data);
-	}
+	return Subsystem->ConversationQueue[Subsystem->ConversationQueue.Num() - 1].GetConversationName();
 }
-*/
-
-// ------------------------------------------------------------------------------------------------
-
-/*
-void UYapSubsystem::BroadcastDialogueEnd(const UFlowNode_YapDialogue* Dialogue, uint8 FragmentIndex)
-{
-	FGameplayTag ConversationName;
-	const FYapFragment& Fragment = Dialogue->GetFragmentByIndex(FragmentIndex);
-	FYapRunningFragmentHandle DialogueHandleRef(Dialogue->DialogueHandle.GetGuid());
-
-	if (ActiveConversation.FlowAsset == Dialogue->GetFlowAsset())
-	{
-		ConversationName = ActiveConversation.Conversation.GetValue();
-	}
-
-	if (ConversationName.IsValid())
-	{
-		FYapData_ConversationSpeechEnds Data;
-		Data.Conversation = ConversationName;
-		Data.DialogueHandleRef = DialogueHandleRef;
-		Data.bWasTimed = Fragment.GetSpeechTime() != 0.0f;
-		Data.PaddedTime = Fragment.GetProgressionTime();
-	
-		BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapConversationHandler, OnConversationSpeechEnds, Execute_K2_ConversationSpeechEnds)>(ConversationHandlers, Data);
-	}
-	else
-	{
-		FYapData_TalkSpeechEnds Data;
-		Data.DialogueHandleRef = DialogueHandleRef;
-		Data.PaddedTime = Fragment.GetProgressionTime();
-		
-		BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapFreeSpeechHandler, OnTalkSpeechEnds, Execute_K2_TalkSpeechEnds)>(FreeSpeechHandlers, Data);
-	}	
-}
-*/
-
-// ------------------------------------------------------------------------------------------------
-
-/*
-void UYapSubsystem::BroadcastFragmentComplete(const UFlowNode_YapDialogue* Dialogue, uint8 FragmentIndex)
-{
-	FGameplayTag ConversationName;
-	const FYapFragment& Fragment = Dialogue->GetFragmentByIndex(FragmentIndex);
-	FYapRunningFragmentHandle DialogueHandleRef(Dialogue->DialogueHandle.GetGuid());
-
-	if (ActiveConversation.FlowAsset == Dialogue->GetFlowAsset())
-	{
-		ConversationName = ActiveConversation.Conversation.GetValue();
-	}
-
-	if (ConversationName.IsValid())
-	{
-		FYapData_ConversationSpeechPaddingEnds Data;
-		Data.Conversation = ConversationName;
-		Data.DialogueHandleRef = FYapRunningFragmentHandle(Dialogue->DialogueHandle.GetGuid());
-		Data.bManualAdvance = !Dialogue->GetFragmentAutoAdvance(FragmentIndex);
-	
-		BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapConversationHandler, OnConversationSpeechPaddingEnds, Execute_K2_ConversationSpeechPaddingEnds)>(ConversationHandlers, Data);
-	}
-	else
-	{
-		FYapData_TalkSpeechPaddingEnds Data;
-		Data.DialogueHandleRef = FYapRunningFragmentHandle(Dialogue->DialogueHandle.GetGuid());
-		Data.bManualAdvance = !Dialogue->GetFragmentAutoAdvance(FragmentIndex);
-		
-		BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapFreeSpeechHandler, OnTalkSpeechPaddingEnds, Execute_K2_TalkSpeechPaddingEnds)>(FreeSpeechHandlers, Data);
-	}
-
-	GuidDialogueMap.Remove(DialogueHandleRef);
-}
-*/
 
 // ------------------------------------------------------------------------------------------------
 
 bool UYapSubsystem::RunPrompt(const FYapPromptHandle& Handle)
 {
-	return false;
-	/*
-	UYapSubsystem* This = Get();
-	check(This);
-	
 	// TODO handle invalid handles gracefully
-	Handle.GetDialogueNode()->RunPrompt(Handle.GetFragmentIndex());
-
-	FGameplayTag ConversationName;
-
-	if (This->ActiveConversation.FlowAsset == Handle.GetDialogueNode()->GetFlowAsset())
-	{
-		ConversationName = This->ActiveConversation.Conversation.GetValue();
-	}
 	
-	FYapData_ConversationPlayerPromptChosen Data;
-	Data.Conversation = ConversationName;
-	
-	This->BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapConversationHandler, OnConversationPlayerPromptChosen, Execute_K2_ConversationPlayerPromptChosen)>(This->ConversationHandlers, Data);
+	FYapData_PlayerPromptChosen Data;
+
+	// Broadcast to Yap systems
+	OnPromptChosenEvent.Broadcast(Handle);
+
+	// Broadcast to game listeners
+	BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapConversationHandler, OnConversationPlayerPromptChosen, Execute_K2_ConversationPlayerPromptChosen)>(ConversationHandlers, Data, Handle);
 
 	return true;
-	*/
 }
 
 // ------------------------------------------------------------------------------------------------
 
-bool UYapSubsystem::SkipDialogue(const FYapSpeechHandle& Handle)
+bool UYapSubsystem::SkipSpeech(const FYapSpeechHandle& Handle)
 {
-	return false;
-	/*
 	// TODO handle invalid handles gracefully
 	TWeakObjectPtr<UFlowNode_YapDialogue>* DialogueWeak = Get()->GuidDialogueMap.Find(Handle);
 
@@ -633,7 +465,6 @@ bool UYapSubsystem::SkipDialogue(const FYapSpeechHandle& Handle)
 	}
 
 	return false;
-	*/
 }
 
 // ------------------------------------------------------------------------------------------------

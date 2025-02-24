@@ -217,7 +217,7 @@ void UFlowNode_YapDialogue::ExecuteInput(const FName& PinName)
 
 	if (bStartedSuccessfully)
 	{
-		NodeActivationCount++;
+		++NodeActivationCount;
 	}
 	else
 	{
@@ -377,8 +377,9 @@ void UFlowNode_YapDialogue::InvalidateFragmentTags()
 
 bool UFlowNode_YapDialogue::TryBroadcastPrompts()
 {
-	TArray<uint8> BroadcastedFragments;
-	FYapPromptHandle LastHandle;
+	PromptIndices.Empty(Fragments.Num());
+	
+	UYapSubsystem* Subsystem = GetWorld()->GetSubsystem<UYapSubsystem>();
 	
  	for (uint8 i = 0; i < Fragments.Num(); ++i)
 	{
@@ -394,26 +395,46 @@ bool UFlowNode_YapDialogue::TryBroadcastPrompts()
 			continue;
 		}
 
-		LastHandle = GetWorld()->GetSubsystem<UYapSubsystem>()->BroadcastPrompt(this, i);
+ 		const FYapBit& Bit = Fragment.GetBit();
+
+ 		const FYapConversation& Conversation = Subsystem->GetConversation(GetFlowAsset()); 
  		
-		BroadcastedFragments.Add(i);
+ 		FYapData_PlayerPromptCreated Data;
+ 		Data.Conversation = Conversation.GetConversationName();
+ 		Data.DirectedAt = Fragment.GetDirectedAt(EYapLoadContext::Sync);
+ 		Data.Speaker = Fragment.GetSpeaker(EYapLoadContext::Sync);
+ 		Data.MoodTag = Fragment.GetMoodTag();
+ 		Data.DialogueText = Bit.GetDialogueText();
+ 		Data.TitleText = Bit.GetTitleText();
+ 		
+		FYapPromptHandle PromptHandle = Subsystem->BroadcastPrompt(Data);
+
+ 		PromptIndices.Add(PromptHandle, i);
 	}
 
-	GetWorld()->GetSubsystem<UYapSubsystem>()->OnFinishedBroadcastingPrompts();
+	{
+		FYapData_PlayerPromptsReady Data;
+		Data.Conversation = Subsystem->GetConversation(GetFlowAsset()).GetConversationName();
+		Subsystem->OnFinishedBroadcastingPrompts(Data);
+	}
 
-	if (BroadcastedFragments.Num() == 0)
+	Subsystem->OnPromptChosenEvent.AddDynamic(this, &ThisClass::OnPromptChosen);
+	
+	// TODO
+	/*
+	if (PromptFragmentIndices.Num() == 0)
 	{
 		return false;
 	}
 
-	if (BroadcastedFragments.Num() == 1)
+	if (PromptFragmentIndices.Num() == 1)
 	{
 		if (UYapProjectSettings::GetAutoSelectLastPromptSetting())
 		{
 			LastHandle.RunPrompt(this);
 		}
 	}
-
+	*/
 	return true;
 }
 
@@ -426,8 +447,6 @@ void UFlowNode_YapDialogue::RunPrompt(uint8 FragmentIndex)
 		RunningFragmentIndex = INDEX_NONE;
 		TriggerOutput(BypassPinName, true);
 	}
-
-	++NodeActivationCount;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -710,6 +729,13 @@ const FYapFragment& UFlowNode_YapDialogue::GetFragmentByIndex(uint8 Index) const
 	check(Fragments.IsValidIndex(Index));
 
 	return Fragments[Index];
+}
+
+void UFlowNode_YapDialogue::OnPromptChosen(FYapPromptHandle Handle)
+{
+	UYapSubsystem::Get()->OnPromptChosenEvent.RemoveDynamic(this, &ThisClass::OnPromptChosen);
+	
+	RunPrompt(PromptIndices[Handle]);
 }
 
 // ------------------------------------------------------------------------------------------------

@@ -10,6 +10,8 @@
 class UObject;
 class UFlowNode_YapDialogue;
 
+DECLARE_DYNAMIC_DELEGATE(FYapPromptHandleChosen);
+
 USTRUCT(BlueprintType)
 struct YAP_API FYapPromptHandle
 {
@@ -19,15 +21,9 @@ struct YAP_API FYapPromptHandle
 	// STATE
 
 protected:
-	UPROPERTY(Transient)
-	TObjectPtr<UFlowNode_YapDialogue> DialogueNode;
-
-	UPROPERTY(Transient)
-	uint8 FragmentIndex;
-
 	UPROPERTY(Transient, BlueprintReadOnly, meta = (AllowPrivateAccess, IgnoreForMemberInitializationTest))
 	FGuid Guid;
-	
+
 	// ------------------------------------------
 	// PUBLIC API - Your game should use these
 
@@ -40,15 +36,9 @@ public:
 public:
 	FYapPromptHandle();
 
-	FYapPromptHandle(UFlowNode_YapDialogue* InDialogueNode, uint8 InFragmentIndex);
-
 	void Invalidate();
 	
 	bool IsValid() { return Guid.IsValid(); }
-	
-	UFlowNode_YapDialogue* GetDialogueNode() const { return DialogueNode; }
-
-	uint8 GetFragmentIndex() const { return FragmentIndex; }
 
 	FGuid GetGuid() const { return Guid; }
 	
@@ -56,4 +46,25 @@ public:
 	{
 		return Guid == Other.Guid;
 	}
+};
+
+FORCEINLINE uint32 GetTypeHash(const FYapPromptHandle& Struct)
+{
+	return GetTypeHash(Struct.GetGuid());
+}
+
+/**
+ * 
+ */
+UCLASS()
+class YAP_API UYapPromptHandleBFL : public UBlueprintFunctionLibrary
+{
+	GENERATED_BODY()
+
+public:
+	UFUNCTION(BlueprintCallable, Category = "Yap")
+	static bool RunPrompt(const FYapPromptHandle& Handle);
+
+	UFUNCTION(BlueprintCallable, Category = "Yap")
+	static bool Subscribe(const FYapPromptHandle& Handle, FYapPromptHandleChosen Delegate);
 };

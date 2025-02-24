@@ -53,7 +53,7 @@ bool UYapSpeechHandleBFL::SkipDialogue(const FYapSpeechHandle& Handle)
 {
 	if (Handle.IsValid())
 	{
-		if (!UYapSubsystem::SkipDialogue(Handle))
+		if (!UYapSubsystem::SkipSpeech(Handle))
 		{
 			UE_LOG(LogYap, Display, TEXT("Failed to skip dialogue!"))
 		}

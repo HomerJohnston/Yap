@@ -18,16 +18,18 @@ void UFlowNode_YapConversation_Close::OnActivate()
 {
 	Super::OnActivate();
 
-	EYapCloseConversationResult Result = UYapSubsystem::Get()->RequestCloseConversation(Conversation);
+	FGameplayTag ConversationToClose = Conversation.IsValid() ? Conversation : UYapSubsystem::GetActiveConversation();
+	
+	EYapCloseConversationResult Result = UYapSubsystem::Get()->RequestCloseConversation(ConversationToClose);
 
 	if (Result == EYapCloseConversationResult::Closed)
 	{
-		UE_LOG(LogYap, Verbose, TEXT("Conversation closed: %s"), *Conversation.GetTagName().ToString());
+		UE_LOG(LogYap, Verbose, TEXT("Conversation closed: %s"), *ConversationToClose.GetTagName().ToString());
 		FinishNode();
 	}
 	else
 	{
-		FYapConversation& ExistingConversation = UYapSubsystem::GetConversation(Conversation);
+		FYapConversation& ExistingConversation = UYapSubsystem::GetConversation(ConversationToClose);
 		ExistingConversation.OnConversationClosed.AddDynamic(this, &ThisClass::FinishNode);
 	}
 }

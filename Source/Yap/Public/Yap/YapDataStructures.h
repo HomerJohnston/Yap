@@ -94,10 +94,6 @@ struct FYapData_PlayerPromptCreated
 	UPROPERTY(BlueprintReadOnly)
 	FGameplayTag Conversation;
 
-	/** Dialogue handle, can be used for interrupting or identifying dialogue. */
-	UPROPERTY(BlueprintReadOnly)
-	FYapPromptHandle Handle;
-
 	/** Who will be spoken to. */
 	UPROPERTY(BlueprintReadOnly)
 	TObjectPtr<const UYapCharacter> DirectedAt;

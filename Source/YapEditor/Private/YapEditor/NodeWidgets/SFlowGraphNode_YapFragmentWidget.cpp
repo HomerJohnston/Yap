@@ -1721,7 +1721,7 @@ TOptional<float> SFlowGraphNode_YapFragmentWidget::Percent_FragmentTime() const
 TOptional<float> SFlowGraphNode_YapFragmentWidget::Percent_FragmentTimePadding() const
 {	
 	const float MaxPaddedSetting = UYapProjectSettings::GetFragmentPaddingSliderMax();
-	const TOptional<float> FragmentPadding = GetFragment().GetPaddingSetting();
+	float FragmentPadding = GetFragment().GetPaddingValue();
 
 	/*
 	if (GEditor->PlayWorld)
@@ -1745,7 +1745,7 @@ TOptional<float> SFlowGraphNode_YapFragmentWidget::Percent_FragmentTimePadding()
 		}
 	}
 	*/
-	return FragmentPadding.Get(0.0f) / MaxPaddedSetting;		
+	return FragmentPadding / MaxPaddedSetting;		
 }
 
 FSlateColor SFlowGraphNode_YapFragmentWidget::FillColorAndOpacity_FragmentTimeIndicatorBars() const
@@ -2777,8 +2777,7 @@ bool SFlowGraphNode_YapFragmentWidget::HasCompleteChildSafeData() const
 
 bool SFlowGraphNode_YapFragmentWidget::FragmentIsRunning() const
 {
-	return false;
-	//return FragmentIndex == GetDialogueNode()->GetRunningFragmentIndex();
+	return FragmentIndex == GetDialogueNode()->GetRunningFragmentIndex();
 }
 
 bool SFlowGraphNode_YapFragmentWidget::IsDroppedAsset_YapCharacter(TArrayView<FAssetData> AssetDatas) const

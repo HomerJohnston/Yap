@@ -8,24 +8,21 @@
 
 #define LOCTEXT_NAMESPACE "Yap"
 
+// ------------------------------------------------------------------------------------------------
+
 FYapPromptHandle::FYapPromptHandle()
 {
-	DialogueNode = nullptr;
-	FragmentIndex = 0;
+	Guid = FGuid::NewGuid();
 }
 
-FYapPromptHandle::FYapPromptHandle(UFlowNode_YapDialogue* InDialogueNode, uint8 InFragmentIndex)
-{
-	DialogueNode = InDialogueNode;
-	FragmentIndex = InFragmentIndex;
-}
+// ------------------------------------------------------------------------------------------------
 
 void FYapPromptHandle::Invalidate()
 {
-	DialogueNode = nullptr;
-	FragmentIndex = INDEX_NONE;
 	Guid.Invalidate();
 }
+
+// ------------------------------------------------------------------------------------------------
 
 void FYapPromptHandle::RunPrompt(UObject* WorldContextObject)
 {
@@ -37,8 +34,20 @@ void FYapPromptHandle::RunPrompt(UObject* WorldContextObject)
 	}
 	
 	UYapSubsystem* Subsystem = World->GetSubsystem<UYapSubsystem>();
-
+	
 	Subsystem->RunPrompt(*this);
+}
+
+// ------------------------------------------------------------------------------------------------
+
+bool UYapPromptHandleBFL::RunPrompt(const FYapPromptHandle& Handle)
+{
+	return UYapSubsystem::Get()->RunPrompt(Handle);
+}
+
+bool UYapPromptHandleBFL::Subscribe(const FYapPromptHandle& Handle, FYapPromptHandleChosen Delegate)
+{
+	return true;
 }
 
 #undef LOCTEXT_NAMESPACE

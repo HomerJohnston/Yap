@@ -3,6 +3,7 @@
 
 #pragma once
 #include "GameplayTagContainer.h"
+#include "Handles/YapPromptHandle.h"
 #include "Yap/Handles/YapConversationHandle.h"
 #include "Yap/Handles/YapSpeechHandle.h"
 #include "Yap/Handles/YapRunningFragment.h"
@@ -49,6 +50,9 @@ protected:
     TArray<FYapSpeechHandle> RunningFragments;
 
     UPROPERTY(Transient)
+    TArray<FYapPromptHandle> OpenPrompts;
+
+    UPROPERTY(Transient)
     FGuid Guid;
 
     UPROPERTY(Transient)
@@ -82,6 +86,9 @@ public:
     
     UPROPERTY(Transient)
     FYapConversationEvent OnConversationClosed;
+
+    UPROPERTY(Transient)
+    FYapPromptHandleChosen OnPromptHandleChosen;
     
     // ==========================================
     // API
@@ -101,6 +108,8 @@ public:
 
     void RemoveRunningFragment(FYapSpeechHandle Handle);
 
+    void AddPrompt(FYapPromptHandle Handle);
+    
     // -----
     
     void StartOpening();

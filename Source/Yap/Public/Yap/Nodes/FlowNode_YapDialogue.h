@@ -139,7 +139,11 @@ protected:
 
 	/**  */
 	UPROPERTY(Transient)
-	int32 RunningFragmentIndex;
+	int32 RunningFragmentIndex = INDEX_NONE;
+
+	/**  */
+	UPROPERTY(Transient)
+	TMap<FYapPromptHandle, uint8> PromptIndices;
 	
 	// ============================================================================================
 	// PUBLIC API
@@ -172,6 +176,8 @@ public:
 	bool GetNodeAutoAdvance() const;
 	
 	bool GetFragmentAutoAdvance(uint8 FragmentIndex) const;
+
+	int32 GetRunningFragmentIndex() const { return RunningFragmentIndex; }
 	
 	// TODO this sucks can I register the fragments some other way instead
 	/** Finds the first fragment on this dialogue containing a tag. */
@@ -223,7 +229,7 @@ protected:
 	bool CanEnterNode();
 
 	bool CheckConditions();
-	
+
 	bool TryBroadcastPrompts();
 
 	void RunPrompt(uint8 Uint8);
@@ -248,6 +254,9 @@ protected:
 	bool FragmentCanRun(uint8 FragmentIndex);
 	
 	const FYapFragment& GetFragmentByIndex(uint8 Index) const;
+	
+	UFUNCTION()
+	void OnPromptChosen(FYapPromptHandle Handle);
 	
 #if WITH_EDITOR
 public:

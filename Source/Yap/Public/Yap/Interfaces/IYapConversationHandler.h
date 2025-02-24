@@ -56,7 +56,7 @@ protected:
 
 	/** Code to run when a player prompt is ran. Do NOT call Parent when overriding. */
 	UFUNCTION(BlueprintImplementableEvent, DisplayName = "Conv. Player Prompt Chosen")
-	void K2_ConversationPlayerPromptChosen(FYapData_PlayerPromptChosen Data);
+	void K2_ConversationPlayerPromptChosen(FYapData_PlayerPromptChosen Data, FYapPromptHandle Handle);
 	
 public:
 	/** Code to run when a conversation begins. Do NOT call Super when overriding. */
@@ -84,9 +84,9 @@ public:
 	}
 	
 	/** Code to run when a player prompt is ran. Do NOT call Super when overriding. */
-	virtual void OnConversationPlayerPromptChosen(FYapData_PlayerPromptChosen Data)
+	virtual void OnConversationPlayerPromptChosen(FYapData_PlayerPromptChosen Data, FYapPromptHandle Handle)
 	{
-		K2_ConversationPlayerPromptChosen(Data);
+		K2_ConversationPlayerPromptChosen(Data, Handle);
 	}
 };
 

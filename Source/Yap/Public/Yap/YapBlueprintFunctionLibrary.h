@@ -41,9 +41,6 @@ public:
 	static bool CanSkipCurrently(const FYapSpeechHandle& Handle);
 	
 	UFUNCTION(BlueprintCallable, Category = "Yap")
-	static bool RunPrompt(const FYapPromptHandle& Handle);
-
-	UFUNCTION(BlueprintCallable, Category = "Yap")
 	static void AddReactor(UPARAM(ref) FYapSpeechHandle& HandleRef, UObject* Reactor);
 
 	UFUNCTION(BlueprintCallable, Category = "Yap")

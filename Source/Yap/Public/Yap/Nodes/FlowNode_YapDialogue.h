@@ -316,7 +316,7 @@ public:
 	
 	virtual void PostEditImport() override;
 	
-	virtual bool CanRefreshContextPinsOnLoad() const { return true; }
+	virtual bool CanRefreshContextPinsDuringLoad() const { return true; }
 	
 	FText GetNodeToolTip() const override { return FText::GetEmpty(); };
 

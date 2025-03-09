@@ -49,23 +49,43 @@ bool FYapSpeechHandle::operator==(const FYapSpeechHandle& Other) const
     return Guid == Other.Guid;
 }
 
+void FYapSpeechHandle::BindToOnSpeechComplete(FYapSpeechEventDelegate Delegate) const
+{
+	FYapSpeechEvent* Event = UYapSubsystem::Get()->SpeechCompleteEvents.Find(*this);
+
+	if (Event)
+	{
+		(*Event).Add(Delegate);
+	}
+}
+
+void FYapSpeechHandle::UnbindToOnSpeechComplete(FYapSpeechEventDelegate Delegate) const
+{
+	FYapSpeechEvent* Event = UYapSubsystem::Get()->SpeechCompleteEvents.Find(*this);
+
+	if (Event)
+	{
+		(*Event).Remove(Delegate);
+	}
+}
+
 // ------------------------------------------------------------------------------------------------
 
 void UYapSpeechHandleBFL::BindToOnSpeechComplete(FYapSpeechHandle Handle, FYapSpeechEventDelegate Delegate)
 {
-	UYapSubsystem::Get()->OnSpeechCompleteEvent.Add(Delegate);
+	Handle.BindToOnSpeechComplete(Delegate);
 }
 
 void UYapSpeechHandleBFL::UnbindToOnSpeechComplete(FYapSpeechHandle Handle, FYapSpeechEventDelegate Delegate)
 {
-	UYapSubsystem::Get()->OnSpeechCompleteEvent.Remove(Delegate);
+	Handle.UnbindToOnSpeechComplete(Delegate);
 }
 
 // ------------------------------------------------------------------------------------------------
 
 void UYapSpeechHandleBFL::BindToOnFragmentComplete(FYapSpeechHandle Handle, FYapSpeechEventDelegate Delegate)
 {
-	UYapSubsystem::Get()->OnFragmentCompleteEvent.Add(Delegate);
+	//UYapSubsystem::Get()->OnFragmentCompleteEvent.Add(Delegate);
 }
 
 // ------------------------------------------------------------------------------------------------

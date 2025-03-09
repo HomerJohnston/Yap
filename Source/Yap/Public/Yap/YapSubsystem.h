@@ -28,7 +28,10 @@ UDELEGATE()
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FYapPromptChosen, FYapPromptHandle, Handle);
 
 UDELEGATE()
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FYapSpeechHandleEvent, FYapSpeechHandle, Handle);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FYapSpeechEvent);
+
+UDELEGATE()
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FYapSkipEvent, FYapSpeechHandle, Handle);
 
 // ================================================================================================
 
@@ -106,18 +109,22 @@ protected:
 	static FYapRunningFragment InvalidHandle;
 
 public:
-	UPROPERTY(BlueprintAssignable, Transient)
-	FYapPromptChosen OnPromptChosenEvent;
-
-	UPROPERTY(BlueprintAssignable, Transient)
-	FYapSpeechHandleEvent OnSkipAction;
-
-	UPROPERTY(BlueprintAssignable, Transient)
-	FYapSpeechHandleEvent OnSpeechCompleteEvent;
-
-	UPROPERTY(BlueprintAssignable, Transient)
-	FYapSpeechHandleEvent OnFragmentCompleteEvent;
+	UPROPERTY(Transient)
+	TMap<FYapSpeechHandle, FYapSpeechEvent> SpeechCompleteEvents;
 	
+	UPROPERTY(Transient)
+	TMap<FYapSpeechHandle, FYapSpeechEvent> FragmentCompleteEvents;
+
+	UPROPERTY(Transient)
+	FYapPromptChosen OnPromptChosen;
+
+	UPROPERTY(Transient)
+	FYapSkipEvent OnSkip;
+	
+	/*
+	UPROPERTY(BlueprintAssignable, Transient)
+	FYapSpeechEvent OnSkipAction;
+	*/
 	// =========================================
 	// PUBLIC API - Your game should use these
 	// =========================================

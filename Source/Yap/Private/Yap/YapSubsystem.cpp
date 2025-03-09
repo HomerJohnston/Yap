@@ -348,6 +348,9 @@ FYapSpeechHandle UYapSubsystem::RunSpeech(const FYapData_SpeechBegins& SpeechDat
 	FYapRunningFragment RunningFragment;
 
 	FYapSpeechHandle SpeechHandle(RunningFragment);
+
+	SpeechCompleteEvents.Add(SpeechHandle);
+	FragmentCompleteEvents.Add(SpeechHandle);
 	
 	if (SpeechData.SpeechTime > 0)
 	{
@@ -443,7 +446,7 @@ bool UYapSubsystem::RunPrompt(const FYapPromptHandle& Handle)
 	// TODO handle invalid handles gracefully
 
 	// Broadcast to Yap systems
-	Get()->OnPromptChosenEvent.Broadcast(Handle);
+	Get()->OnPromptChosen.Broadcast(Handle);
 
 	// Broadcast to game listeners
 	FYapData_PlayerPromptChosen Data;
@@ -459,7 +462,7 @@ bool UYapSubsystem::SkipSpeech(const FYapSpeechHandle& Handle)
 	// TODO handle invalid handles gracefully
 	
 	// Broadcast to Yap systems
-	Get()->OnSkipAction.Broadcast(Handle);
+	Get()->OnSkip.Broadcast(Handle);
 
 	// Broadcast to game listeners
 	// TODO
@@ -539,12 +542,14 @@ void UYapSubsystem::OnWorldBeginPlay(UWorld& InWorld)
 
 void UYapSubsystem::OnSpeechComplete(FYapSpeechHandle Handle)
 {
-	OnSpeechCompleteEvent.Broadcast(Handle);
+	SpeechCompleteEvents[Handle].Broadcast();
+	SpeechCompleteEvents.Remove(Handle);
 }
 
 void UYapSubsystem::OnFragmentComplete(FYapSpeechHandle Handle)
 {
-	OnFragmentCompleteEvent.Broadcast(Handle);
+	FragmentCompleteEvents[Handle].Broadcast();
+	FragmentCompleteEvents.Remove(Handle);
 }
 
 // ------------------------------------------------------------------------------------------------

@@ -402,14 +402,14 @@ bool UFlowNode_YapDialogue::TryBroadcastPrompts()
 
  		PromptIndices.Add(PromptHandle, i);
 	}
-
+	
 	{
 		FYapData_PlayerPromptsReady Data;
 		Data.Conversation = Subsystem->GetConversation(GetFlowAsset()).GetConversationName();
 		Subsystem->OnFinishedBroadcastingPrompts(Data);
 	}
-
-	Subsystem->OnPromptChosenEvent.AddDynamic(this, &ThisClass::OnPromptChosen);
+	
+	Subsystem->OnPromptChosen.AddDynamic(this, &ThisClass::OnPromptChosen);
 	
 	// TODO
 	/*
@@ -508,7 +508,7 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 	Data.bSkippable = Fragment.GetSkippable(GetSkippable());
 	
 	RunningSpeechHandle = Subsystem->RunSpeech(Data);
-	Subsystem->OnSkipAction.AddDynamic(this, &ThisClass::OnSkipAction);
+	Subsystem->OnSkip.AddDynamic(this, &ThisClass::OnSkipAction);
 	
 	Fragment.IncrementActivations();
 
@@ -584,7 +584,7 @@ void UFlowNode_YapDialogue::OnProgressionComplete(uint8 FragmentIndex)
 	uint8 FinishedFragmentIndex = RunningFragmentIndex;
 	FYapFragment& Fragment = Fragments[RunningFragmentIndex];
 
-	UYapSubsystem::Get()->OnSkipAction.RemoveDynamic(this, &ThisClass::OnSkipAction);
+	UYapSubsystem::Get()->OnSkip.RemoveDynamic(this, &ThisClass::OnSkipAction);
 	
 	if (Fragment.ProgressionTimerHandle.IsValid())
 	{
@@ -725,7 +725,7 @@ const FYapFragment& UFlowNode_YapDialogue::GetFragmentByIndex(uint8 Index) const
 
 void UFlowNode_YapDialogue::OnPromptChosen(FYapPromptHandle Handle)
 {
-	UYapSubsystem::Get()->OnPromptChosenEvent.RemoveDynamic(this, &ThisClass::OnPromptChosen);
+	UYapSubsystem::Get()->OnPromptChosen.RemoveDynamic(this, &ThisClass::OnPromptChosen);
 	
 	RunPrompt(PromptIndices[Handle]);
 }

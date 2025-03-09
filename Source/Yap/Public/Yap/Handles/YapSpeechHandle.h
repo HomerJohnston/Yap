@@ -48,7 +48,10 @@ public:
    // const TArray<FInstancedStruct>& GetFragmentData();
 	
     bool operator== (const FYapSpeechHandle& Other) const;
-    
+
+    void BindToOnSpeechComplete(FYapSpeechEventDelegate Delegate) const;
+
+    void UnbindToOnSpeechComplete(FYapSpeechEventDelegate Delegate) const;
 };
 
 FORCEINLINE uint32 GetTypeHash(const FYapSpeechHandle& Struct)

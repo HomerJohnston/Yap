@@ -33,20 +33,6 @@ public:
 	/** Built-in simple helper function to retrieve the length of an Unreal sound. */
 	UFUNCTION(BlueprintCallable, Category = "Yap")
 	static float GetSoundLength(USoundBase* Sound);
-
-	UFUNCTION(BlueprintCallable, Category = "Yap")
-	static bool SkipDialogue(const FYapSpeechHandle& Handle);
-
-	UFUNCTION(BlueprintCallable, Category = "Yap")
-	static bool CanSkipCurrently(const FYapSpeechHandle& Handle);
-	
-	UFUNCTION(BlueprintCallable, Category = "Yap")
-	static void AddReactor(UPARAM(ref) FYapSpeechHandle& HandleRef, UObject* Reactor);
-
-	/*
-	UFUNCTION(BlueprintCallable, Category = "Yap")
-	static const TArray<FInstancedStruct>& GetFragmentData(const FYapSpeechHandle& HandleRef);
-	*/	
 	
 	UFUNCTION(BlueprintCallable, Category = "Yap")
 	static void RegisterConversationHandler(UObject* NewHandler);

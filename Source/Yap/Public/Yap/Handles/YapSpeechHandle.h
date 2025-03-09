@@ -70,7 +70,7 @@ class YAP_API UYapSpeechHandleBFL : public UBlueprintFunctionLibrary
 
 public:
     
-    UFUNCTION(BlueprintCallable)
+    UFUNCTION(BlueprintCallable, Category = "Yap Speech Handle")
     static void BindToOnSpeechComplete(FYapSpeechHandle Handle, FYapSpeechEventDelegate Delegate);
 
     UFUNCTION(BlueprintCallable)
@@ -84,9 +84,6 @@ public:
 
     UFUNCTION(BlueprintCallable, Category = "Yap")
     static bool CanSkipCurrently(const FYapSpeechHandle& Handle);
-
-    UFUNCTION(BlueprintCallable, Category = "Yap")
-    static void AddReactor(UPARAM(ref) FYapSpeechHandle& HandleRef, UObject* Reactor);
 
     /*
     UFUNCTION(BlueprintCallable, Category = "Yap")

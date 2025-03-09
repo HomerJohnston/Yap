@@ -28,13 +28,6 @@ bool FYapSpeechHandle::SkipDialogue()
 
 // ------------------------------------------------------------------------------------------------
 
-void FYapSpeechHandle::AddReactor(UObject* Reactor)
-{
-    UYapSpeechHandleBFL::AddReactor(*this, Reactor);
-}
-
-// ------------------------------------------------------------------------------------------------
-
 /*
 const TArray<FInstancedStruct>& FYapSpeechHandle::GetFragmentData()
 {
@@ -73,12 +66,18 @@ void FYapSpeechHandle::UnbindToOnSpeechComplete(FYapSpeechEventDelegate Delegate
 
 void UYapSpeechHandleBFL::BindToOnSpeechComplete(FYapSpeechHandle Handle, FYapSpeechEventDelegate Delegate)
 {
-	Handle.BindToOnSpeechComplete(Delegate);
+	if (ensureAlwaysMsgf(Handle.IsValid(), TEXT("Null/unset Yap Speech Handle!")))
+	{
+		Handle.BindToOnSpeechComplete(Delegate);
+	}
 }
 
 void UYapSpeechHandleBFL::UnbindToOnSpeechComplete(FYapSpeechHandle Handle, FYapSpeechEventDelegate Delegate)
 {
-	Handle.UnbindToOnSpeechComplete(Delegate);
+	if (ensureAlwaysMsgf(Handle.IsValid(), TEXT("Null/unset Yap Speech Handle!")))
+	{
+		Handle.UnbindToOnSpeechComplete(Delegate);
+	}
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -130,22 +129,6 @@ bool UYapSpeechHandleBFL::CanSkipCurrently(const FYapSpeechHandle& Handle)
 }
 
 // ------------------------------------------------------------------------------------------------
-
-void UYapSpeechHandleBFL::AddReactor(FYapSpeechHandle& HandleRef, UObject* Reactor)
-{
-	/*
-	FYapRunningFragment& Handle = UYapSubsystem::GetDialogueHandle(HandleRef);
-
-	if (Handle.IsValid())
-	{
-		Handle.AddReactor(Reactor);
-	}
-	else
-	{
-		UE_LOG(LogYap, Warning, TEXT("Could not find valid handle to add reactor to!"))
-	}
-	*/
-}
 
 bool UYapSpeechHandleBFL::EqualEqual_YapSpeechHandle(FYapSpeechHandle A, FYapSpeechHandle B)
 {

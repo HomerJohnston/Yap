@@ -42,6 +42,7 @@
 #include "YapEditor/GraphNodes/FlowGraphNode_YapDialogue.h"
 #include "YapEditor/Helpers/ProgressionSettingWidget.h"
 #include "YapEditor/SlateWidgets/SYapGameplayTagTypedPicker.h"
+#include "YapEditor/SlateWidgets/SYapTimeProgressionWidget.h"
 
 FSlateFontInfo SFlowGraphNode_YapFragmentWidget::DialogueTextFont;
 
@@ -617,119 +618,138 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateFragmentWidget()
 		.Padding(0, 0, 0, 0)
 		.AutoHeight()
 		[
-			SNew(SHorizontalBox)
-			+ SHorizontalBox::Slot()
-			.AutoWidth()
-			.VAlign(VAlign_Center)
+			SNew(SOverlay)
+			+ SOverlay::Slot()
 			[
-				SNew(SBox)
-				.WidthOverride(32)
+				SNew(SHorizontalBox)
+				+ SHorizontalBox::Slot()
+				.AutoWidth()
+				.VAlign(VAlign_Center)
 				[
-					SNew(SVerticalBox)
-					+ SVerticalBox::Slot()
-					.AutoHeight()
-					.HAlign(HAlign_Center)
-					.Padding(0, 0, 0, 2)
+					SNew(SBox)
+					.WidthOverride(32)
 					[
-						SNew(SBox)
-						.WidthOverride(22)
-						.HeightOverride(22)
+						SNew(SVerticalBox)
+						+ SVerticalBox::Slot()
+						.AutoHeight()
+						.HAlign(HAlign_Center)
+						.Padding(0, 0, 0, 2)
 						[
-							SNew(SAssetDropTarget)
-							.bSupportsMultiDrop(false)
-							.OnAreAssetsAcceptableForDrop(this, &ThisClass::OnAreAssetsAcceptableForDrop_ChildSafeButton)
-							.OnAssetsDropped(this, &ThisClass::OnAssetsDropped_ChildSafeButton)
+							SNew(SBox)
+							.WidthOverride(22)
+							.HeightOverride(22)
 							[
-								SAssignNew(ChildSafeCheckBox, SCheckBox)
-								.Cursor(EMouseCursor::Default)
-								.Style(FYapEditorStyle::Get(), YapStyles.CheckBoxStyle_Skippable)
-								.Padding(FMargin(0, 0))
-								.CheckBoxContentUsesAutoWidth(true)
-								.ToolTip(nullptr) // Don't show a tooltip, it's distracting
-								.IsChecked(this, &ThisClass::IsChecked_ChildSafeSettings)
-								.OnCheckStateChanged(this, &ThisClass::OnCheckStateChanged_MaturitySettings)
-								.Content()
+								SNew(SAssetDropTarget)
+								.bSupportsMultiDrop(false)
+								.OnAreAssetsAcceptableForDrop(this, &ThisClass::OnAreAssetsAcceptableForDrop_ChildSafeButton)
+								.OnAssetsDropped(this, &ThisClass::OnAssetsDropped_ChildSafeButton)
 								[
-									SNew(SBox)
-									.WidthOverride(20)
-									.HeightOverride(20)
-									.HAlign(HAlign_Center)
-									.VAlign(VAlign_Center)
+									SAssignNew(ChildSafeCheckBox, SCheckBox)
+									.Cursor(EMouseCursor::Default)
+									.Style(FYapEditorStyle::Get(), YapStyles.CheckBoxStyle_Skippable)
+									.Padding(FMargin(0, 0))
+									.CheckBoxContentUsesAutoWidth(true)
+									.ToolTip(nullptr) // Don't show a tooltip, it's distracting
+									.IsChecked(this, &ThisClass::IsChecked_ChildSafeSettings)
+									.OnCheckStateChanged(this, &ThisClass::OnCheckStateChanged_MaturitySettings)
+									.Content()
 									[
-										SNew(SImage)
-										.Image(FYapEditorStyle::GetImageBrush(YapBrushes.Icon_Baby))
-										.DesiredSizeOverride(FVector2D(16, 16))
-										.ColorAndOpacity(this, &ThisClass::ColorAndOpacity_ChildSafeSettingsCheckBox)
+										SNew(SBox)
+										.WidthOverride(20)
+										.HeightOverride(20)
+										.HAlign(HAlign_Center)
+										.VAlign(VAlign_Center)
+										[
+											SNew(SImage)
+											.Image(FYapEditorStyle::GetImageBrush(YapBrushes.Icon_Baby))
+											.DesiredSizeOverride(FVector2D(16, 16))
+											.ColorAndOpacity(this, &ThisClass::ColorAndOpacity_ChildSafeSettingsCheckBox)
+										]
 									]
 								]
 							]
 						]
+						+ SVerticalBox::Slot()
+						.AutoHeight()
+						.HAlign(HAlign_Center)
+						.Padding(0, 2, 0, 0)
+						[
+							SNew(SBox)
+							.WidthOverride(22)
+							.HeightOverride(22)
+							[
+								CreateMoodTagSelectorWidget()
+							]
+						]
 					]
-					+ SVerticalBox::Slot()
-					.AutoHeight()
-					.HAlign(HAlign_Center)
-					.Padding(0, 2, 0, 0)
+				]
+				+ SHorizontalBox::Slot()
+				.HAlign(HAlign_Fill)
+				[
+					SAssignNew(FragmentTextOverlay, SOverlay)
+					+ SOverlay::Slot()
 					[
 						SNew(SBox)
-						.WidthOverride(22)
-						.HeightOverride(22)
+						.HeightOverride(PortraitSize + 2 * PortraitBorder)
 						[
-							CreateMoodTagSelectorWidget()
+							SNew(SHorizontalBox)
+							+ SHorizontalBox::Slot()
+							.HAlign(HAlign_Center)
+							.VAlign(VAlign_Top)
+							.AutoWidth()
+							.Padding(0, 0, 2, 0)
+							[
+								SNew(SOverlay)
+								+ SOverlay::Slot()
+								[
+									CreateSpeakerWidget()
+								]
+								+ SOverlay::Slot()
+								.VAlign(VAlign_Top)
+								.HAlign(HAlign_Right)
+								.Padding(-2)
+								[
+									CreateDirectedAtWidget()
+								]
+							]
+							+ SHorizontalBox::Slot()
+							.HAlign(HAlign_Fill)
+							.VAlign(VAlign_Fill)
+							.FillWidth(1.0f)
+							.Padding(2, 0, 0, 0)
+							[
+								CreateCentreTextDisplayWidget()
+							]
 						]
 					]
+					+ SOverlay::Slot()
+					[
+						CreateFragmentHighlightWidget()
+					]
 				]
-			]
-			+ SHorizontalBox::Slot()
-			.HAlign(HAlign_Fill)
-			[
-				SAssignNew(FragmentTextOverlay, SOverlay)
-				+ SOverlay::Slot()
+				+SHorizontalBox::Slot()
+				.AutoWidth()
 				[
 					SNew(SBox)
-					.HeightOverride(PortraitSize + 2 * PortraitBorder)
+					.WidthOverride(32)
 					[
-						SNew(SHorizontalBox)
-						+ SHorizontalBox::Slot()
-						.HAlign(HAlign_Center)
-						.VAlign(VAlign_Top)
-						.AutoWidth()
-						.Padding(0, 0, 2, 0)
-						[
-							SNew(SOverlay)
-							+ SOverlay::Slot()
-							[
-								CreateSpeakerWidget()
-							]
-							+ SOverlay::Slot()
-							.VAlign(VAlign_Top)
-							.HAlign(HAlign_Right)
-							.Padding(-2)
-							[
-								CreateDirectedAtWidget()
-							]
-						]
-						+ SHorizontalBox::Slot()
-						.HAlign(HAlign_Fill)
-						.VAlign(VAlign_Fill)
-						.FillWidth(1.0f)
-						.Padding(2, 0, 0, 0)
-						[
-							CreateCentreTextDisplayWidget()
-						]
+						CreateRightFragmentPane()
 					]
 				]
-				+ SOverlay::Slot()
-				[
-					CreateFragmentHighlightWidget()
-				]
 			]
-			+SHorizontalBox::Slot()
-			.AutoWidth()
+			+ SOverlay::Slot()
+			.Padding(32, 0, 32, -8)
+			.VAlign(EVerticalAlignment::VAlign_Bottom)
 			[
 				SNew(SBox)
-				.WidthOverride(32)
+				.HeightOverride(3)
 				[
-					CreateRightFragmentPane()
+					SNew(SYapTimeProgressionWidget)
+					.BarColor(this, &ThisClass::ColorAndOpacity_FragmentTimeIndicator)
+					.SpeechTime_Lambda( [this] () { return GetFragment().GetSpeechTime(GetDisplayMaturitySetting(), EYapLoadContext::AsyncEditorOnly); })
+					.PaddingTime_Lambda( [this] () { return GetFragment().GetPaddingValue(); } )
+					.MaxDisplayTime_Lambda( [this] () { return UYapProjectSettings::GetDialogueTimeSliderMax(); } )
+					.PlaybackTime_Lambda( [this] () { return Percent_FragmentTime(); } )
 				]
 			]
 		]
@@ -1151,13 +1171,6 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateDialogueDisplayWidge
 					]
 				]
 			]
-		]
-		+ SOverlay::Slot()
-		.VAlign(VAlign_Bottom)
-		.HAlign(HAlign_Fill)
-		.Padding(TimerSliderPadding)
-		[
-			CreateFragmentTimeIndicatorWidget(TimeSliderSize)
 		]
 		+ SOverlay::Slot()
 		.VAlign(VAlign_Top)
@@ -1607,6 +1620,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::BuildPaddingSettings_Expan
 						.IsEnabled(true)
 						.AllowSpin(true)
 						.Delta(0.01f)
+						.MinSliderValue(-1.0f)
 						.MaxSliderValue(UYapProjectSettings::GetFragmentPaddingSliderMax())
 						.ToolTipText(LOCTEXT("FragmentTimeEntry_Tooltip", "Time this dialogue fragment will play for"))
 						.Justification(ETextJustify::Center)
@@ -1683,6 +1697,26 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateFragmentTimeProgress
 
 TOptional<float> SFlowGraphNode_YapFragmentWidget::Percent_FragmentTime() const
 {
+	if (!GEditor->IsPlaySessionInProgress())
+	{
+		return NullOpt;
+	}
+
+	if (!FragmentIsRunning())
+	{
+		return NullOpt;
+	}
+	
+	if (GetFragment().GetStartTime() >= GetFragment().GetEndTime())
+	{
+		return GEditor->PlayWorld->GetTimeSeconds() - GetFragment().GetStartTime();
+	}
+	else
+	{
+		return 0.0;
+	}
+	
+	
 	const float MaxTimeSetting = UYapProjectSettings::GetDialogueTimeSliderMax();
 
 	const TOptional<float> FragmentTimeIn = GetFragment().GetSpeechTime(GetDisplayMaturitySetting(), EYapLoadContext::AsyncEditorOnly);
@@ -1765,14 +1799,25 @@ FSlateColor SFlowGraphNode_YapFragmentWidget::FillColorAndOpacity_FragmentTimeIn
 
 FSlateColor SFlowGraphNode_YapFragmentWidget::ColorAndOpacity_FragmentTimeIndicator() const
 {
+	FLinearColor Color;
+	
 	EYapTimeMode TimeMode = GetFragment().GetTimeModeSetting();
 
 	if (TimeMode == EYapTimeMode::Default)
 	{
-		return YapColor::DimGray;
+		Color = YapColor::DimGray;
 	}
+	else
+	{
+		Color = TimeModeButtonColors[GetFragment().GetTimeModeSetting()];
+	}		
 	
-	return TimeModeButtonColors[GetFragment().GetTimeModeSetting()];
+	if (GEditor->IsPlaySessionInProgress() && !FragmentIsRunning())
+	{
+		Color *= YapColor::Gray;
+	}
+
+	return Color;
 }
 
 // ---------------------------------------------------

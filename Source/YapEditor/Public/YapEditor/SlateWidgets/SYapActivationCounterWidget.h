@@ -7,6 +7,9 @@
 
 #define LOCTEXT_NAMESPACE "YapEditor"
 
+/**
+ * 
+ */
 class SYapActivationCounterWidget : public SCompoundWidget
 {
 public:

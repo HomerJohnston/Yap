@@ -133,6 +133,7 @@ void FYapEditorStyle::Initialize()
 	// BRUSHES
 	// ============================================================================================
 	YAP_DEFINE_BRUSH(FSlateImageBrush,			Icon_AudioTime,					"DialogueNodeIcons/AudioTime", ".png",	FVector2f(16, 16));
+	YAP_DEFINE_BRUSH(FSlateImageBrush,			Icon_PlaybackTimeHandle,		"Icon_PlaybackTimeHandle", ".png",	FVector2f(3, 5));
 	YAP_DEFINE_BRUSH(FSlateVectorImageBrush,	Icon_Baby,						"Icon_Baby", ".svg",					FVector2f(16, 16));
 	YAP_DEFINE_BRUSH(FSlateVectorImageBrush,	Icon_MoodTag_Missing,			"Icon_MoodTag_Missing", ".svg",			FVector2f(16, 16));
 	YAP_DEFINE_BRUSH(FSlateImageBrush,			Icon_Delete,					"Icon_Delete", ".png",					FVector2f(16, 16));
@@ -159,6 +160,9 @@ void FYapEditorStyle::Initialize()
 	YAP_DEFINE_BRUSH(FSlateVectorImageBrush,	Icon_Unreconciled,				"Icon_Unreconciled", ".svg",			FVector2f(16, 16));
 	
 	YAP_DEFINE_BRUSH(FSlateBoxBrush,			Icon_IDTag,						"Icon_IDTag", ".png",					FMargin(0.5, 0.5, 0.0, 0.0));
+
+	YAP_DEFINE_BRUSH(FSlateImageBrush,			Bar_NegativePadding,			"Bar_NegativePadding", ".png",			FVector2f(5, 3), FLinearColor::White, ESlateBrushTileType::Horizontal);
+	YAP_DEFINE_BRUSH(FSlateImageBrush,			Bar_PositivePadding,			"Bar_PositivePadding", ".png",			FVector2f(3, 3), FLinearColor::White, ESlateBrushTileType::Horizontal);
 	
 	YAP_DEFINE_BRUSH(FSlateBorderBrush, 		Border_SharpSquare,				"Border_Sharp", ".png",					FMargin(4.0/8.0));
 	YAP_DEFINE_BRUSH(FSlateBorderBrush, 		Border_DeburredSquare,			"Border_Deburred", ".png",				FMargin(4.0/8.0));

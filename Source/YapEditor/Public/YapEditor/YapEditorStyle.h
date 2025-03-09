@@ -51,6 +51,11 @@ struct FYapBrushes
 	
 	FName Icon_Reconciled;
 	FName Icon_Unreconciled;
+
+	FName Icon_PlaybackTimeHandle;
+
+	FName Bar_NegativePadding;
+	FName Bar_PositivePadding;
 	
 	FName Border_DeburredSquare;
 	FName Border_RoundedSquare;

@@ -1649,52 +1649,6 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::BuildPaddingSettings_Expan
 // ================================================================================================
 // FRAGMENT TIME PADDING WIDGET
 // ------------------------------------------------------------------------------------------------
-TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateFragmentTimeIndicatorWidget(int32 TimeSliderSize)
-{
-	return SNew(SHorizontalBox)
-	+ SHorizontalBox::Slot()
-	.FillWidth(0.50)
-	.VAlign(VAlign_Center)
-	[
-		CreateFragmentTimeProgressBar(EProgressBarFillType::RightToLeft, {TAttribute<TOptional<float>>::CreateSP(this, &ThisClass::Percent_FragmentTime)})
-	]
-	+ SHorizontalBox::Slot()
-	.AutoWidth()
-	[
-		SNew(SBox)
-		.HeightOverride(TimeSliderSize)
-		.WidthOverride(TimeSliderSize)
-		.Padding(0)
-		.ToolTip(nullptr)
-		[
-			SNew(SImage)
-			.Image(FYapEditorStyle::GetImageBrush(YapBrushes.Icon_FilledCircle))
-			.ColorAndOpacity(this, &ThisClass::ColorAndOpacity_FragmentTimeIndicator)
-		]
-	]
-	+ SHorizontalBox::Slot()
-	.FillWidth(0.50)
-	.VAlign(VAlign_Center)
-	[
-		CreateFragmentTimeProgressBar(EProgressBarFillType::LeftToRight, {TAttribute<TOptional<float>>::CreateSP(this, &ThisClass::Percent_FragmentTimePadding)})
-	];
-}
-
-TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateFragmentTimeProgressBar(EProgressBarFillType::Type FillType, TAttribute<TOptional<float>> PercentAttribute)
-{
-	return SNew(SBox)
-	.HeightOverride(2)
-	.Visibility(EVisibility::HitTestInvisible)
-	[
-		SNew(SProgressBar)
-		.BorderPadding(0)
-		.Percent(PercentAttribute)
-		.Style(FYapEditorStyle::Get(), YapStyles.ProgressBarStyle_FragmentTimePadding)
-		.FillColorAndOpacity(this, &ThisClass::FillColorAndOpacity_FragmentTimeIndicatorBars)
-		.BarFillType(FillType)
-	];
-}
-
 TOptional<float> SFlowGraphNode_YapFragmentWidget::Percent_FragmentTime() const
 {
 	if (!GEditor->IsPlaySessionInProgress())
@@ -1715,89 +1669,9 @@ TOptional<float> SFlowGraphNode_YapFragmentWidget::Percent_FragmentTime() const
 	{
 		return 0.0;
 	}
-	
-	
-	const float MaxTimeSetting = UYapProjectSettings::GetDialogueTimeSliderMax();
-
-	const TOptional<float> FragmentTimeIn = GetFragment().GetSpeechTime(GetDisplayMaturitySetting(), EYapLoadContext::AsyncEditorOnly);
-
-	if (!FragmentTimeIn.IsSet())
-	{
-		return 0;
-	}
-
-	const float FragmentTime = FragmentTimeIn.GetValue();
-	
-	if (GEditor->PlayWorld)
-	{
-		if (FragmentIsRunning())
-		{
-			if (GetFragment().GetStartTime() >= GetFragment().GetEndTime())
-			{
-				double ElapsedPaddingTime = GEditor->PlayWorld->GetTimeSeconds() - GetFragment().GetStartTime();
-				return (1 - (ElapsedPaddingTime / FragmentTime)) * (FragmentTime / MaxTimeSetting);
-			}
-			else
-			{
-				return 0.0;
-			}
-		}
-
-		if (GetFragment().GetRunState() != EYapFragmentRunState::Running && GetFragment().GetLastEntryState() != EYapFragmentEntryStateFlags::NeverRan)// GetDialogueNode()->GetFinishedFragments().Contains(&GetFragment()))
-		{
-			return 0.0;
-		}
-	}
-
-	return FragmentTime / MaxTimeSetting;		
 }
 
-TOptional<float> SFlowGraphNode_YapFragmentWidget::Percent_FragmentTimePadding() const
-{	
-	const float MaxPaddedSetting = UYapProjectSettings::GetFragmentPaddingSliderMax();
-	float FragmentPadding = GetFragment().GetPaddingValue();
-
-	/*
-	if (GEditor->PlayWorld)
-	{
-		if (FragmentIsRunning())
-		{
-			if (GetFragment().GetStartTime() < GetFragment().GetEndTime())
-			{
-				double ElapsedPaddingTime = GEditor->PlayWorld->GetTimeSeconds() - GetFragment().GetEndTime();
-				return (1 - (ElapsedPaddingTime / FragmentPadding)) * (FragmentPadding / MaxPaddedSetting);
-			}
-			else
-			{
-				return FragmentPadding / MaxPaddedSetting;
-			}
-		}
-
-		if (GetFragment().GetRunState() != EYapFragmentRunState::Running && GetFragment().GetLastEntryState() != EYapFragmentEntryStateFlags::NeverRan)// GetDialogueNode()->GetFinishedFragments().Contains(&GetFragment()))
-		{
-			return 0.0;
-		}
-	}
-	*/
-	return FragmentPadding / MaxPaddedSetting;		
-}
-
-FSlateColor SFlowGraphNode_YapFragmentWidget::FillColorAndOpacity_FragmentTimeIndicatorBars() const
-{
-	if (GEditor->PlayWorld)
-	{
-		if (FragmentIsRunning())
-		{
-			return YapColor::White_Trans;
-		}
-
-		return YapColor::DarkGray_Trans;
-	}
-		
-	return YapColor::DimGray_Trans;
-}
-
-FSlateColor SFlowGraphNode_YapFragmentWidget::ColorAndOpacity_FragmentTimeIndicator() const
+FLinearColor SFlowGraphNode_YapFragmentWidget::ColorAndOpacity_FragmentTimeIndicator() const
 {
 	FLinearColor Color;
 	

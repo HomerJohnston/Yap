@@ -16,7 +16,7 @@ public:
 	SLATE_USER_ARGS(SYapTimeProgressionWidget)
 		{}
 
-		SLATE_ATTRIBUTE(FSlateColor, BarColor)
+		SLATE_ATTRIBUTE(FLinearColor, BarColor)
 		SLATE_ATTRIBUTE(TOptional<float>, SpeechTime)
 		SLATE_ATTRIBUTE(float, PaddingTime)
 		SLATE_ATTRIBUTE(float, MaxDisplayTime)
@@ -25,28 +25,18 @@ public:
 	
 	SLATE_END_ARGS()
 
-	TAttribute<FSlateColor> BarColor;
-	TAttribute<TOptional<float>> SpeechTime;
-	TAttribute<float> PaddingTime;
-	TAttribute<float> MaxDisplayTime;
+	TAttribute<FLinearColor> BarColorAtt;
+	TAttribute<TOptional<float>> SpeechTimeAtt;
+	TAttribute<float> PaddingTimeAtt;
+	TAttribute<float> MaxDisplayTimeAtt;
 	
-	TAttribute<TOptional<float>> PlaybackTime;
+	TAttribute<TOptional<float>> PlaybackTimeAtt;
 
-	TSharedPtr<SBox> Handle;
-	
 	virtual void Construct(const FArguments& InArgs);
 
-	float GetFirstBarPercentage() const;
-
-	float GetSecondBarPercentage() const;
-
-	float GetThirdBarPercentage() const;
-	
-	float GetFourthBarPercentage() const;
-
-	bool GetPaddingPositivity() const;
-
 	int32 OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const override;
+
+	bool IsValid() const;
 };
 
 

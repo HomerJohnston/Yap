@@ -174,13 +174,8 @@ protected:
 	TSharedRef<SWidget> 	BuildPaddingSettings_ExpandedEditor(float Width);
 	
 	// ------------------------------------------
-	TSharedRef<SWidget> 	CreateFragmentTimeIndicatorWidget(int32 TimeSliderSize);
-	
-	TSharedRef<SWidget> 	CreateFragmentTimeProgressBar(EProgressBarFillType::Type FillType, TAttribute<TOptional<float>> PercentAttribute);
 	TOptional<float>		Percent_FragmentTime() const;
-	TOptional<float>		Percent_FragmentTimePadding() const;
-	FSlateColor				FillColorAndOpacity_FragmentTimeIndicatorBars() const;
-	FSlateColor 			ColorAndOpacity_FragmentTimeIndicator() const;
+	FLinearColor 			ColorAndOpacity_FragmentTimeIndicator() const;
 
 	// ------------------------------------------
 	

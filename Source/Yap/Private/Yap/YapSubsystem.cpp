@@ -256,7 +256,7 @@ void UYapSubsystem::StartOpeningConversation(FYapConversation& Conversation)
 	ActiveConversationName = Conversation.GetConversationName();
 	
 	FYapData_ConversationOpened Data;
-	Data.Conversation = ActiveConversationName;
+	Data.Conversation = ActiveConversationName.GetValue();
 
 	FYapConversationHandle Handle(Conversation.GetGuid());
 
@@ -281,7 +281,7 @@ EYapCloseConversationResult UYapSubsystem::StartClosingConversation(const FGamep
 
 	if (Conversation.GetState() == EYapConversationState::Closed)
 	{
-		ActiveConversationName = FGameplayTag::EmptyTag;
+		ActiveConversationName.Reset();
 		ConversationQueue.RemoveAll(Find);
 		StartNextQueuedConversation();
 		return EYapCloseConversationResult::Closed;
@@ -300,7 +300,7 @@ void UYapSubsystem::OnActiveConversationClosed()
 	};
 	
 	ConversationQueue.RemoveAll(Find);
-	ActiveConversationName = FGameplayTag::EmptyTag;
+	ActiveConversationName.Reset();
 	StartNextQueuedConversation();
 }
 

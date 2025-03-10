@@ -79,7 +79,7 @@ protected:
 	TObjectPtr<UYapBroker> Broker;
 
 	UPROPERTY(Transient)
-	FGameplayTag ActiveConversationName;
+	TOptional<FGameplayTag> ActiveConversationName;
 
 	UPROPERTY(Transient)
 	TSet<FYapPromptHandle> ActivePromptHandles;

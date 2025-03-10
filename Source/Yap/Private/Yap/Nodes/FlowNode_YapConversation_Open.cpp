@@ -25,6 +25,8 @@ void UFlowNode_YapConversation_Open::OnActivate()
 	
 	FYapConversation& NewConversation = UYapSubsystem::Get()->OpenConversation(ConversationName, GetFlowAsset());
 
+	// The subsystem will give conversation listeners a chance to set an interlock. If so, the state will be "Opening" rather than "Open".
+	// When the interlock gets released, the delegate below will get called instead.
 	if (NewConversation.GetState() == EYapConversationState::Open)
 	{
 		UE_LOG(LogYap, Verbose, TEXT("Conversation Opened: %s"), *ConversationName.GetTagName().ToString());

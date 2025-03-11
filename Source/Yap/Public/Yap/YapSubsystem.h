@@ -25,24 +25,10 @@ class UYapCharacterComponent;
 enum class EYapMaturitySetting : uint8;
 
 UDELEGATE()
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FYapPromptChosen, FYapPromptHandle, Handle);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FYapPromptChosen, UObject*, Instigator, FYapPromptHandle, Handle);
 
 UDELEGATE()
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FYapSpeechEvent);
-
-UDELEGATE()
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FYapSkipEvent, FYapSpeechHandle, Handle);
-
-// ================================================================================================
-
-UENUM()
-enum class EYapCloseConversationResult : uint8
-{
-	Undefined,
-	Failed,
-	Closing,
-	Closed,
-};
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FYapSpeechEvent, UObject*, Instigator, FYapSpeechHandle, Handle);
 
 // ================================================================================================
 
@@ -106,8 +92,6 @@ protected:
 
 	static bool bGetGameMaturitySettingWarningIssued;
 
-	static FYapRunningFragment InvalidHandle;
-
 public:
 	UPROPERTY(Transient)
 	TMap<FYapSpeechHandle, FYapSpeechEvent> SpeechCompleteEvents;
@@ -119,7 +103,7 @@ public:
 	FYapPromptChosen OnPromptChosen;
 
 	UPROPERTY(Transient)
-	FYapSkipEvent OnSkip;
+	FYapSpeechEvent OnSpeechSkip;
 	
 	/*
 	UPROPERTY(BlueprintAssignable, Transient)
@@ -182,13 +166,13 @@ public:
 	/**  */
 	FYapConversation& OpenConversation(const FGameplayTag& ConversationName, UObject* ConversationOwner); // Called by Open Conversation node
 
-	EYapCloseConversationResult RequestCloseConversation(const FGameplayTag& ConversationName);
+	EYapConversationState RequestCloseConversation(const FGameplayTag& ConversationName);
 
 protected:
 	void StartOpeningConversation(FYapConversation& Conversation);
 	
 	/**  */
-	EYapCloseConversationResult StartClosingConversation(const FGameplayTag& ConversationName); // Called by Close Conversation node
+	EYapConversationState StartClosingConversation(const FGameplayTag& ConversationName); // Called by Close Conversation node
 
 	void StartNextQueuedConversation();
 

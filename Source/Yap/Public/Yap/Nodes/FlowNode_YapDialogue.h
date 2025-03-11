@@ -259,10 +259,10 @@ protected:
 	const FYapFragment& GetFragmentByIndex(uint8 Index) const;
 	
 	UFUNCTION()
-	void OnPromptChosen(FYapPromptHandle Handle);
+	void OnPromptChosen(UObject* Instigator, FYapPromptHandle Handle);
 	
 	UFUNCTION()
-	void OnSkipAction(FYapSpeechHandle Handle);
+	void OnSkipAction(UObject* Instigator, FYapSpeechHandle Handle);
 	
 #if WITH_EDITOR
 public:

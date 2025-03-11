@@ -202,11 +202,11 @@ FYapConversation& UYapSubsystem::OpenConversation(const FGameplayTag& Conversati
 
 // ------------------------------------------------------------------------------------------------
 
-EYapCloseConversationResult UYapSubsystem::RequestCloseConversation(const FGameplayTag& ConversationName)
+EYapConversationState UYapSubsystem::RequestCloseConversation(const FGameplayTag& ConversationName)
 {
 	if (ConversationQueue.Num() == 0)
 	{
-		return EYapCloseConversationResult::Failed;
+		return EYapConversationState::Closed;
 	}
 
 	auto Match = [&ConversationName] (const FYapConversation& Conversation)
@@ -223,7 +223,7 @@ EYapCloseConversationResult UYapSubsystem::RequestCloseConversation(const FGamep
 	{
 		// Just remove this conversation from queues.
 		ConversationQueue.RemoveAll(Match);
-		return EYapCloseConversationResult::Closed;
+		return EYapConversationState::Closed;
 	}
 }
 
@@ -268,7 +268,7 @@ void UYapSubsystem::StartOpeningConversation(FYapConversation& Conversation)
 
 // ------------------------------------------------------------------------------------------------
 
-EYapCloseConversationResult UYapSubsystem::StartClosingConversation(const FGameplayTag& ConversationName)
+EYapConversationState UYapSubsystem::StartClosingConversation(const FGameplayTag& ConversationName)
 {
 	auto Find = [&ConversationName] (const FYapConversation& Conversation)
 	{
@@ -284,12 +284,12 @@ EYapCloseConversationResult UYapSubsystem::StartClosingConversation(const FGamep
 		ActiveConversationName.Reset();
 		ConversationQueue.RemoveAll(Find);
 		StartNextQueuedConversation();
-		return EYapCloseConversationResult::Closed;
+		return EYapConversationState::Closed;
 	}
 
 	Conversation.OnConversationClosed.AddDynamic(this, &UYapSubsystem::OnActiveConversationClosed);
 	
-	return EYapCloseConversationResult::Closing;
+	return EYapConversationState::Closing;
 }
 
 void UYapSubsystem::OnActiveConversationClosed()
@@ -445,8 +445,10 @@ bool UYapSubsystem::RunPrompt(const FYapPromptHandle& Handle)
 {
 	// TODO handle invalid handles gracefully
 
+	UYapSubsystem* Subsystem = Get();
+	
 	// Broadcast to Yap systems
-	Get()->OnPromptChosen.Broadcast(Handle);
+	Subsystem->OnPromptChosen.Broadcast(Subsystem, Handle);
 
 	// Broadcast to game listeners
 	FYapData_PlayerPromptChosen Data;
@@ -461,8 +463,10 @@ bool UYapSubsystem::SkipSpeech(const FYapSpeechHandle& Handle)
 {
 	// TODO handle invalid handles gracefully
 	
+	UYapSubsystem* Subsystem = Get();
+	
 	// Broadcast to Yap systems
-	Get()->OnSkip.Broadcast(Handle);
+	Subsystem->OnSpeechSkip.Broadcast(Subsystem, Handle);
 
 	// Broadcast to game listeners
 	// TODO
@@ -542,13 +546,13 @@ void UYapSubsystem::OnWorldBeginPlay(UWorld& InWorld)
 
 void UYapSubsystem::OnSpeechComplete(FYapSpeechHandle Handle)
 {
-	SpeechCompleteEvents[Handle].Broadcast();
+	SpeechCompleteEvents[Handle].Broadcast(this, Handle);
 	SpeechCompleteEvents.Remove(Handle);
 }
 
 void UYapSubsystem::OnFragmentComplete(FYapSpeechHandle Handle)
 {
-	FragmentCompleteEvents[Handle].Broadcast();
+	FragmentCompleteEvents[Handle].Broadcast(this, Handle);
 	FragmentCompleteEvents.Remove(Handle);
 }
 

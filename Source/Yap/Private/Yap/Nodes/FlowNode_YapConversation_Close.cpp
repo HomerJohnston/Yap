@@ -20,9 +20,9 @@ void UFlowNode_YapConversation_Close::OnActivate()
 
 	FGameplayTag ConversationToClose = Conversation.IsValid() ? Conversation : UYapSubsystem::GetActiveConversation();
 	
-	EYapCloseConversationResult Result = UYapSubsystem::Get()->RequestCloseConversation(ConversationToClose);
+	EYapConversationState Result = UYapSubsystem::Get()->RequestCloseConversation(ConversationToClose);
 
-	if (Result == EYapCloseConversationResult::Closed)
+	if (Result == EYapConversationState::Closed)
 	{
 		UE_LOG(LogYap, Verbose, TEXT("Conversation closed: %s"), *ConversationToClose.GetTagName().ToString());
 		FinishNode();

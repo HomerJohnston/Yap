@@ -80,7 +80,7 @@ FYapFragment* UFlowNode_YapDialogue::FindTaggedFragment(const FGameplayTag& Tag)
 	return nullptr;
 }
 
-void UFlowNode_YapDialogue::OnSkipAction(FYapSpeechHandle Handle)
+void UFlowNode_YapDialogue::OnSkipAction(UObject* Instigator, FYapSpeechHandle Handle)
 {
 	if (!CanSkip(Handle))
 	{
@@ -508,7 +508,7 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 	Data.bSkippable = Fragment.GetSkippable(GetSkippable());
 	
 	RunningSpeechHandle = Subsystem->RunSpeech(Data);
-	Subsystem->OnSkip.AddDynamic(this, &ThisClass::OnSkipAction);
+	Subsystem->OnSpeechSkip.AddDynamic(this, &ThisClass::OnSkipAction);
 	
 	Fragment.IncrementActivations();
 
@@ -584,7 +584,7 @@ void UFlowNode_YapDialogue::OnProgressionComplete(uint8 FragmentIndex)
 	uint8 FinishedFragmentIndex = RunningFragmentIndex;
 	FYapFragment& Fragment = Fragments[RunningFragmentIndex];
 
-	UYapSubsystem::Get()->OnSkip.RemoveDynamic(this, &ThisClass::OnSkipAction);
+	UYapSubsystem::Get()->OnSpeechSkip.RemoveDynamic(this, &ThisClass::OnSkipAction);
 	
 	if (Fragment.ProgressionTimerHandle.IsValid())
 	{
@@ -723,7 +723,7 @@ const FYapFragment& UFlowNode_YapDialogue::GetFragmentByIndex(uint8 Index) const
 	return Fragments[Index];
 }
 
-void UFlowNode_YapDialogue::OnPromptChosen(FYapPromptHandle Handle)
+void UFlowNode_YapDialogue::OnPromptChosen(UObject* Instigator, FYapPromptHandle Handle)
 {
 	UYapSubsystem::Get()->OnPromptChosen.RemoveDynamic(this, &ThisClass::OnPromptChosen);
 	

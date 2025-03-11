@@ -2696,7 +2696,9 @@ bool SFlowGraphNode_YapFragmentWidget::HasCompleteChildSafeData() const
 
 bool SFlowGraphNode_YapFragmentWidget::FragmentIsRunning() const
 {
-	return FragmentIndex == GetDialogueNode()->GetRunningFragmentIndex();
+	return GetFragment().GetStartTime() > GetFragment().GetEndTime();
+	
+	//return FragmentIndex == GetDialogueNode()->GetRunningFragmentIndex();
 }
 
 bool SFlowGraphNode_YapFragmentWidget::IsDroppedAsset_YapCharacter(TArrayView<FAssetData> AssetDatas) const

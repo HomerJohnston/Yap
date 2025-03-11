@@ -474,6 +474,7 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 	if (!FragmentCanRun(FragmentIndex))
 	{
 		Fragment.SetStartTime(-1.0);
+		Fragment.SetEndTime(-1.0);
 		Fragment.SetEntryState(EYapFragmentEntryStateFlags::Failed);
 		return false;
 	}
@@ -571,8 +572,8 @@ void UFlowNode_YapDialogue::OnSpeechComplete(uint8 FragmentIndex)
 		const FFlowPin EndPin = Fragment.GetEndPin();
 		TriggerOutput(EndPin.PinName, false);
 	}
-
-	//Fragment.SetEndTime(GetWorld()->GetTimeSeconds());
+	
+	Fragment.SetEndTime(GetWorld()->GetTimeSeconds());
 }
 
 // ------------------------------------------------------------------------------------------------

@@ -29,17 +29,21 @@ protected:
 	/** Controls how bright the portrait borders are in the graph. */
 	UPROPERTY(Config, EditAnywhere, Category = "Settings", meta = (ClampMin = 0.0, ClampMax = 1.0, UIMin = 0.0, UIMax = 1.0, Delta = 0.01))
 	float PortraitBorderAlpha = 1.0f;
-	
-	/** This is for internal development only. This helps to reduce crashes from reloading slate styles after live coding. */
-	UPROPERTY(Config, EditAnywhere, Category = "Development")
-	bool bCloseAndReopenAssetsOnLiveCoding = false;
 
+	UPROPERTY(Config, EditAnywhere, Category = "Settings")
+	bool bWrapExpandedEditorText = false;
+
+	UPROPERTY(Config, EditAnywhere, Category = "Settings", meta = (ClampMin = -200, ClampMax = +9999, UIMin = -200, UIMax = +400, Delta = 1))
+	int32 ExpandedEditorWidthAdjustment = 0;
+	
 	/** Allows the developer to override the dialogue font. Might be useful e.g. for team members with dyslexia. */
 	UPROPERTY(Config, EditAnywhere, Category = "Settings")
 	FSlateFontInfo GraphDialogueFontUserOverride;
 
-	UPROPERTY(Config, EditAnywhere, Category = "Settings")
-	bool bWrapExpandedEditorText = false;
+	
+	/** This is for internal development only. This helps to reduce crashes from reloading slate styles after live coding. */
+	UPROPERTY(Config, EditAnywhere, Category = "Development")
+	bool bCloseAndReopenAssetsOnLiveCoding = false;
 	
 public:
 	static float GetConditionDetailsWidth() { return Get().ConditionDetailsWidth; }
@@ -48,11 +52,13 @@ public:
 
 	static float GetPortraitBorderAlpha() { return Get().PortraitBorderAlpha; }
 
+	static bool GetWrapExpandedEditorText() { return Get().bWrapExpandedEditorText; }
+
+	static int32 GetExpandedEditorWidthAdjustment() { return Get().ExpandedEditorWidthAdjustment; }
+	
 	static const FSlateFontInfo& GetGraphDialogueFontUserOverride() { return Get().GraphDialogueFontUserOverride; }
 
 	static bool GetCloseAndReopenAssetsOnLiveCoding() { return Get().bCloseAndReopenAssetsOnLiveCoding; }
-
-	static bool GetWrapExpandedEditorText() { return Get().bWrapExpandedEditorText; }
 	
 public:
 	FName GetCategoryName() const override { return FName("Yap"); }

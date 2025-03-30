@@ -1248,6 +1248,8 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::PopupContentGetter_Expande
 {
 	float Width = NeedsChildSafeData() ? 500 : 600; // TODO developer setting
 
+	Width += UYapDeveloperSettings::GetExpandedEditorWidthAdjustment();
+	
 	return SNew(SSplitter)
 	.Orientation(Orient_Vertical)
 	.PhysicalSplitterHandleSize(2.0)

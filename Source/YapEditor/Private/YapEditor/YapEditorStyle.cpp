@@ -117,6 +117,7 @@ void FYapEditorStyle::Initialize()
 	YAP_DEFINE_FONT(Font_DialogueText,		"Normal",	10);
 	YAP_DEFINE_FONT(Font_TitleText,			"Italic",	10);
 	YAP_DEFINE_FONT(Font_NodeHeader,		"Bold",		15);
+	YAP_DEFINE_FONT(Font_GroupLabel,		"Normal",	15);
 	YAP_DEFINE_FONT(Font_SectionHeader,		"Bold",		12);
 	YAP_DEFINE_FONT(Font_NodeSequencing,	"Italic",	9);
 	YAP_DEFINE_FONT(Font_CharacterAssetThumbnail, "Normal", 14);
@@ -379,6 +380,11 @@ void FYapEditorStyle::Initialize()
 	
 	YAP_DEFINE_STYLE(FTextBlockStyle, TextBlockStyle_NodeHeader, GetParentStyle()->GetWidgetStyle<FTextBlockStyle>("NormalText"),
 		.SetFont(Font_NodeHeader)
+		.SetColorAndOpacity(FSlateColor::UseForeground())
+	);
+	
+	YAP_DEFINE_STYLE(FTextBlockStyle, TextBlockStyle_GroupLabel, GetParentStyle()->GetWidgetStyle<FTextBlockStyle>("NormalText"),
+		.SetFont(Font_GroupLabel)
 		.SetColorAndOpacity(FSlateColor::UseForeground())
 	);
 

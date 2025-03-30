@@ -189,18 +189,18 @@ const FYapBit& FYapFragment::GetBit(EYapMaturitySetting MaturitySetting) const
 	return MatureBit;
 }
 
-TOptional<float> FYapFragment::GetSpeechTime() const
+TOptional<float> FYapFragment::GetSpeechTime(const FGameplayTag& TypeGroup) const
 {
-	return GetSpeechTime(UYapSubsystem::GetCurrentMaturitySetting(), EYapLoadContext::Sync);
+	return GetSpeechTime(UYapSubsystem::GetCurrentMaturitySetting(), EYapLoadContext::Sync, TypeGroup);
 }
 
-TOptional<float> FYapFragment::GetSpeechTime(EYapMaturitySetting MaturitySetting, EYapLoadContext LoadContext) const
+TOptional<float> FYapFragment::GetSpeechTime(EYapMaturitySetting MaturitySetting, EYapLoadContext LoadContext, const FGameplayTag& TypeGroup) const
 {
-	EYapTimeMode EffectiveTimeMode = GetTimeMode(MaturitySetting);
-	return GetBit(MaturitySetting).GetSpeechTime(EffectiveTimeMode, LoadContext);
+	EYapTimeMode EffectiveTimeMode = GetTimeMode(MaturitySetting, TypeGroup);
+	return GetBit(MaturitySetting).GetSpeechTime(EffectiveTimeMode, LoadContext, TypeGroup);
 }
 
-float FYapFragment::GetPaddingValue() const
+float FYapFragment::GetPaddingValue(const FGameplayTag& TypeGroup) const
 {
 	if (IsTimeModeNone())
 	{
@@ -212,12 +212,12 @@ float FYapFragment::GetPaddingValue() const
 		return Padding.GetValue();
 	}
 	
-	return UYapProjectSettings::GetDefaultFragmentPaddingTime();
+	return UYapProjectSettings::GetTypeGroup(TypeGroup).GetDefaultFragmentPaddingTime();
 }
 
-float FYapFragment::GetProgressionTime() const
+float FYapFragment::GetProgressionTime(const FGameplayTag& TypeGroup) const
 {
-	float SpeechTime = GetSpeechTime().Get(0.0f);
+	float SpeechTime = GetSpeechTime(TypeGroup).Get(0.0f);
 	float PaddingTime = 0.0f;
 	
 	if (Padding.IsSet())
@@ -226,7 +226,7 @@ float FYapFragment::GetProgressionTime() const
 	}
 	else
 	{
-		PaddingTime = UYapProjectSettings::GetDefaultFragmentPaddingTime();
+		PaddingTime = UYapProjectSettings::GetTypeGroup(TypeGroup).GetDefaultFragmentPaddingTime();
 	}
 
 	return SpeechTime + PaddingTime;
@@ -307,20 +307,20 @@ bool FYapFragment::GetSkippable(bool Default) const
 	return Skippable.Get(Default);
 }
 
-EYapTimeMode FYapFragment::GetTimeMode() const
+EYapTimeMode FYapFragment::GetTimeMode(const FGameplayTag& TypeGroup) const
 {
-	return GetTimeMode(UYapSubsystem::GetCurrentMaturitySetting());
+	return GetTimeMode(UYapSubsystem::GetCurrentMaturitySetting(), TypeGroup);
 }
 
-EYapTimeMode FYapFragment::GetTimeMode(EYapMaturitySetting MaturitySetting) const
+EYapTimeMode FYapFragment::GetTimeMode(EYapMaturitySetting MaturitySetting, const FGameplayTag& TypeGroup) const
 {
-	EYapTimeMode EffectiveTimeMode = (TimeMode == EYapTimeMode::Default) ? UYapProjectSettings::GetDefaultTimeModeSetting() : TimeMode;
+	EYapTimeMode EffectiveTimeMode = (TimeMode == EYapTimeMode::Default) ? UYapProjectSettings::GetTypeGroup(TypeGroup).GetDefaultTimeModeSetting() : TimeMode;
 
 	if (EffectiveTimeMode == EYapTimeMode::AudioTime)
 	{
 		if (!GetBit(MaturitySetting).HasAudioAsset())
 		{
-			EYapMissingAudioErrorLevel MissingAudioBehavior = UYapProjectSettings::GetMissingAudioBehavior();
+			EYapMissingAudioErrorLevel MissingAudioBehavior = UYapProjectSettings::GetTypeGroup(TypeGroup).GetMissingAudioErrorLevel();
 			
 			if (MissingAudioBehavior == EYapMissingAudioErrorLevel::Error)
 			{

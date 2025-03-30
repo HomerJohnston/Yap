@@ -1,7 +1,7 @@
 // Copyright Ghost Pepper Games, Inc. All Rights Reserved.
 // This work is MIT-licensed. Feel free to use it however you wish, within the confines of the MIT license. 
 
-#include "YapEditor/DetailCustomizations/DetailCustomization_YapProjectSettings.h"
+#include "YapEditor/Customizations/DetailCustomization_YapProjectSettings.h"
 
 #include "DetailCategoryBuilder.h"
 #include "DetailLayoutBuilder.h"
@@ -72,8 +72,8 @@ void CustomSortYapProjectSettingsCategories(const TMap<FName, IDetailCategoryBui
 	(*AllCategoryMap.Find(FName("Dialogue Tags")))->SetSortOrder(i++);
 	(*AllCategoryMap.Find(FName("Dialogue Playback")))->SetSortOrder(i++);
 	(*AllCategoryMap.Find(FName("Editor")))->SetSortOrder(i++);
-	(*AllCategoryMap.Find(FName("Audio")))->SetSortOrder(i++);
-	(*AllCategoryMap.Find(FName("Flow Graph Appearance")))->SetSortOrder(i++);
+	//(*AllCategoryMap.Find(FName("Audio")))->SetSortOrder(i++);
+	(*AllCategoryMap.Find(FName("Flow Graph Settings")))->SetSortOrder(i++);
 	(*AllCategoryMap.Find(FName("Error Handling")))->SetSortOrder(i++);
 }
 
@@ -84,161 +84,8 @@ void FDetailCustomization_YapProjectSettings::CustomizeDetails(IDetailLayoutBuil
 	IDetailCategoryBuilder& MoodTagsCategory = DetailBuilder.EditCategory("Mood Tags");
 	IDetailCategoryBuilder& DialogueTagsCategory = DetailBuilder.EditCategory("Dialogue Tags");
 
-	ProcessCategory(MoodTagsCategory, &FDetailCustomization_YapProjectSettings::ProcessMoodTagsProperty);
-	ProcessCategory(DialogueTagsCategory, &FDetailCustomization_YapProjectSettings::ProcessDialogueTagsCategoryProperty);
-}
-
-void FDetailCustomization_YapProjectSettings::ProcessCategory(IDetailCategoryBuilder& Category, void(FDetailCustomization_YapProjectSettings::*Func)(IDetailCategoryBuilder&, TSharedPtr<IPropertyHandle>))
-{
-	TArray<TSharedRef<IPropertyHandle>> Properties;
-	Category.GetDefaultProperties(Properties, true, true);
-
-	for (TSharedPtr<IPropertyHandle> PropertyHandle : Properties)
-	{
-		Category.AddProperty(PropertyHandle);
-		(this->*Func)(Category, PropertyHandle);
-	}
-}
-
-void FDetailCustomization_YapProjectSettings::ProcessMoodTagsProperty(IDetailCategoryBuilder& Category, TSharedPtr<IPropertyHandle> Property)
-{
-	if (Property->GetProperty()->GetFName() == GET_MEMBER_NAME_CHECKED(UYapProjectSettings, MoodTagsParent))
-	{
-		float VerticalPadding = 3.0;
-
-		// Make the widget able to hold all of the default tags
-		float TagLineHeight = 15.0; // This is the height of a single tag name in pixels
-		float LineHeightPercentage = 18.0 / TagLineHeight; // Desired row height divided by actual height
-		float TotalHeight = FMath::RoundFromZero(DefaultMoodTags.Num() * TagLineHeight * LineHeightPercentage + VerticalPadding * 2.0);
-		
-		Category.AddCustomRow(LOCTEXT("MoodTags_Header", "Mood Tags"))
-		.NameContent()
-		[
-			SNew(STextBlock)
-			.Text(LOCTEXT("MoodTags", "Mood tags"))
-			.Font(IDetailLayoutBuilder::GetDetailFont())
-		]
-		.ValueContent()
-		[
-			SNew(SVerticalBox)
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			.Padding(0, VerticalPadding)
-			[
-				SNew(SScrollBox)
-				+ SScrollBox::Slot()
-				[
-					SNew(SBorder)
-					.BorderImage(this, &FDetailCustomization_YapProjectSettings::TODOBorderImage)
-					.Padding(4, 2, 4, 2)
-					[
-						SNew(STextBlock)
-						.Text(this, &FDetailCustomization_YapProjectSettings::GetMoodTags)
-						.LineHeightPercentage(LineHeightPercentage)
-					]
-				]
-			]
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			.Padding(0, VerticalPadding)
-			[
-				SNew(SButton)
-				.IsEnabled(this, &FDetailCustomization_YapProjectSettings::IsTagPropertySet, Property)
-				.OnClicked(this, &FDetailCustomization_YapProjectSettings::OnClicked_OpenMoodTagsManager)
-				.VAlign(VAlign_Center)
-				.HAlign(HAlign_Center)
-				.Text(LOCTEXT("EditMoodTags", "Edit mood tags"))
-				.ToolTipText(LOCTEXT("OpenTagsManager_ToolTip", "Open tags manager"))
-			]
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			.Padding(0, VerticalPadding)
-			[
-				SNew(SButton)
-				.IsEnabled(this, &FDetailCustomization_YapProjectSettings::IsTagPropertySet, Property)
-				.OnClicked(this, &FDetailCustomization_YapProjectSettings::OnClicked_ResetDefaultMoodTags)
-				.VAlign(VAlign_Center)
-				.HAlign(HAlign_Center)
-				.Text(LOCTEXT("ResetMoodTags_Button", "Reset to defaults..."))
-				.ToolTipText(this, &FDetailCustomization_YapProjectSettings::ToolTipText_DefaultMoodTags)
-			]
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			.Padding(0, VerticalPadding)
-			[
-				SNew(SButton)
-				.IsEnabled(this, &FDetailCustomization_YapProjectSettings::IsTagPropertySet, Property)
-				.OnClicked(this, &FDetailCustomization_YapProjectSettings::OnClicked_DeleteAllMoodTags)
-				.VAlign(VAlign_Center)
-				.HAlign(HAlign_Center)
-				.Text(LOCTEXT("DeleteMoodTags_Button", "Delete all..."))
-				.ToolTipText(LOCTEXT("DeleteMoodTags_ToolTip", "Attempts to delete all tags"))
-			]
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			.Padding(0, VerticalPadding)
-			[
-				SNew(SButton)
-				.Visibility(EVisibility::Collapsed) // TODO -- this does NOT work! Keep it hidden until I can figure out why. For some reason FSlateSVGRasterizer will NOT attempt to load a file that didn't exist on startup?
-				.IsEnabled(this, &FDetailCustomization_YapProjectSettings::IsTagPropertySet, Property)
-				.OnClicked(this, &FDetailCustomization_YapProjectSettings::OnClicked_RefreshMoodTagIcons)
-				.VAlign(VAlign_Center)
-				.HAlign(HAlign_Center)
-				.Text(LOCTEXT("RefreshMoodTagIcons_Button", "Refresh Icons"))
-				.ToolTipText(LOCTEXT("RefreshMoodTagIcons_ToolTip", "Reloads mood tag icons (.svg or .png)"))
-			]
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			.Padding(0, VerticalPadding)
-			[
-				SNew(STextBlock)
-				.Visibility_Lambda([](){return UYapEditorSubsystem::GetMoodTagsDirty() ? EVisibility::Visible : EVisibility::Collapsed;})
-				.Font(YapFonts.Font_WarningText)
-				.Text(LOCTEXT("MoodTagIconsRequiresRestart_Warning", "You must restart Unreal\nto rebuild mood tag icons."))
-				.ColorAndOpacity(YapColor::LightYellow)
-			]
-		];
-	}
-}
-
-void FDetailCustomization_YapProjectSettings::ProcessDialogueTagsCategoryProperty(IDetailCategoryBuilder& Category, TSharedPtr<IPropertyHandle> Property)
-{
-	float VerticalPadding = 3.0;
-	
-	if (Property->GetProperty()->GetFName() == GET_MEMBER_NAME_CHECKED(UYapProjectSettings, DialogueTagsParent))
-	{
-		Category.AddCustomRow(LOCTEXT("DialogueTags_Header", "Dialogue Tags"))
-		.NameContent()
-		[
-			SNew(STextBlock)
-			.Text(LOCTEXT("DialogueTags", "Dialogue Tags"))
-			.Font(IDetailLayoutBuilder::GetDetailFont())
-		]
-		.ValueContent()
-		[
-			SNew(SVerticalBox)
-			+ SVerticalBox::Slot()
-			.Padding(0, VerticalPadding)
-			[
-				SNew(SButton)
-				.VAlign(VAlign_Center)
-				.HAlign(HAlign_Center)
-				.ToolTipText(LOCTEXT("EditDialogueTags_ToolTip", "Opens the tag manager"))
-				.Text(LOCTEXT("EditDialogueTags_Button", "Edit dialogue tags"))
-				.OnClicked(this, &FDetailCustomization_YapProjectSettings::OnClicked_OpenDialogueTagsManager)
-			]
-			+ SVerticalBox::Slot()
-			.Padding(0, VerticalPadding)
-			[
-				SNew(SButton)
-				.VAlign(VAlign_Center)
-				.HAlign(HAlign_Center)
-				.ToolTipText(LOCTEXT("CleanupUnusedDialogueTags_ToolTip", "Finds and deletes unused tags under the Dialogue Tags Parent - make sure all assets have been saved first!"))
-				.Text(LOCTEXT("CleanupUnusedDialogueTags_Button", "Cleanup unused tags"))
-				.OnClicked(this, &FDetailCustomization_YapProjectSettings::OnClicked_CleanupDialogueTags)
-			]
-		];
-	}
+	// ProcessCategory(MoodTagsCategory, &FDetailCustomization_YapProjectSettings::ProcessMoodTagsProperty);
+	// ProcessCategory(DialogueTagsCategory, &FDetailCustomization_YapProjectSettings::ProcessDialogueTagsCategoryProperty);
 }
 
 FReply FDetailCustomization_YapProjectSettings::OnClicked_ResetDefaultMoodTags() const
@@ -338,18 +185,19 @@ FReply FDetailCustomization_YapProjectSettings::OnClicked_OpenMoodTagsManager()
 	return FReply::Handled();
 }
 
-FReply FDetailCustomization_YapProjectSettings::OnClicked_OpenDialogueTagsManager()
+FReply FDetailCustomization_YapProjectSettings::OnClicked_OpenDialogueTagsManager(const FGameplayTag& TypeGroup)
 {
 	FGameplayTagManagerWindowArgs Args;
 	Args.Title = LOCTEXT("DialogueTags", "Dialogue Tags");
 	Args.bRestrictedTags = false;
-	Args.Filter = UYapProjectSettings::GetDialogueTagsParent().ToString();
+	Args.Filter = UYapProjectSettings::GetTypeGroup(TypeGroup).GetDialogueTagsParent().ToString();
 
 	UE::GameplayTags::Editor::OpenGameplayTagManager(Args);
 
 	return FReply::Handled();
 }
 
+/*
 FReply FDetailCustomization_YapProjectSettings::OnClicked_CleanupDialogueTags()
 {
 	// If the dialogue tags parent is unset, don't do anything
@@ -427,6 +275,7 @@ FReply FDetailCustomization_YapProjectSettings::OnClicked_CleanupDialogueTags()
 	
 	return FReply::Handled();
 }
+*/
 
 FReply FDetailCustomization_YapProjectSettings::OnClicked_RefreshMoodTagIcons()
 {
@@ -500,7 +349,7 @@ FText FDetailCustomization_YapProjectSettings::GetDeletedTagsText(const TArray<F
 		}
 	}
 
-	FText TagNameListText = FText::FromString(TagNameList);// FText::Format(LOCTEXT("", "{0}"), FText::FromString(TagNameList));
+	FText TagNameListText = FText::FromString(TagNameList);
 
 	if (AppendCountText.IsEmpty())
 	{

@@ -35,7 +35,7 @@ public:
 	static float GetSoundLength(USoundBase* Sound);
 	
 	UFUNCTION(BlueprintCallable, Category = "Yap")
-	static void RegisterConversationHandler(UObject* NewHandler);
+	static void RegisterConversationHandler(UObject* NewHandler, FGameplayTag TypeGroup);
 	
 	UFUNCTION(BlueprintCallable, Category = "Yap")
 	static void RegisterFreeSpeechHandler(UObject* NewHandler);

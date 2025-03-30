@@ -262,7 +262,7 @@ bool UFlowNode_YapDialogue::CheckConditions()
 
 bool UFlowNode_YapDialogue::UsesTitleText() const
 {
-	return IsPlayerPrompt() || UYapProjectSettings::GetShowTitleTextOnTalkNodes();
+	return IsPlayerPrompt() || UYapProjectSettings::GetTypeGroup(TypeGroup).GetShowTitleTextOnTalkNodes();
 }
 
 const FYapFragment& UFlowNode_YapDialogue::GetFragment(uint8 FragmentIndex) const
@@ -276,12 +276,12 @@ const FYapFragment& UFlowNode_YapDialogue::GetFragment(uint8 FragmentIndex) cons
 
 bool UFlowNode_YapDialogue::GetSkippable() const
 {
-	return Skippable.Get(UYapProjectSettings::GetDefaultSkippableSetting());
+	return Skippable.Get(!UYapProjectSettings::GetTypeGroup(TypeGroup).GetForcedDialogueDuration());
 }
 
 bool UFlowNode_YapDialogue::GetNodeAutoAdvance() const
 {
-	return AutoAdvance.Get(UYapProjectSettings::GetDefaultAutoAdvanceSetting());
+	return AutoAdvance.Get(!UYapProjectSettings::GetTypeGroup(TypeGroup).GetManualAdvanceOnly());
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -307,7 +307,7 @@ bool UFlowNode_YapDialogue::GetFragmentAutoAdvance(uint8 FragmentIndex) const
 		*/
 		
 		// Fragments that have no speech time must always be manual-advance
-		if (Fragment.GetTimeMode() == EYapTimeMode::None)
+		if (Fragment.GetTimeMode(TypeGroup) == EYapTimeMode::None)
 		{
 			return false;
 		}
@@ -330,7 +330,7 @@ bool UFlowNode_YapDialogue::GetFragmentAutoAdvance(uint8 FragmentIndex) const
 	bool bAutoAdvance = GetNodeAutoAdvance();
 
 	// Check if this fragment is going to progress into a prompt node...
-	if (DialogueNodeType == EYapDialogueNodeType::Talk && !bAutoAdvance && FragmentIndex == Fragments.Num() - 1 && UYapProjectSettings::GetAutoAdvanceToPromptNodes())
+	if (DialogueNodeType == EYapDialogueNodeType::Talk && !bAutoAdvance && FragmentIndex == Fragments.Num() - 1 && UYapProjectSettings::GetTypeGroup(TypeGroup).GetAutoAdvanceToPromptNodes())
 	{
 		if (IsOutputConnectedToPromptNode())
 		{
@@ -398,7 +398,7 @@ bool UFlowNode_YapDialogue::TryBroadcastPrompts()
  		Data.DialogueText = Bit.GetDialogueText();
  		Data.TitleText = Bit.GetTitleText();
  		
-		FYapPromptHandle PromptHandle = Subsystem->BroadcastPrompt(Data);
+		FYapPromptHandle PromptHandle = Subsystem->BroadcastPrompt(Data, TypeGroup);
 
  		PromptIndices.Add(PromptHandle, i);
 	}
@@ -406,7 +406,7 @@ bool UFlowNode_YapDialogue::TryBroadcastPrompts()
 	{
 		FYapData_PlayerPromptsReady Data;
 		Data.Conversation = Subsystem->GetConversation(GetFlowAsset()).GetConversationName();
-		Subsystem->OnFinishedBroadcastingPrompts(Data);
+		Subsystem->OnFinishedBroadcastingPrompts(Data, TypeGroup);
 	}
 	
 	Subsystem->OnPromptChosen.AddDynamic(this, &ThisClass::OnPromptChosen);
@@ -481,7 +481,7 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 
 	const FYapBit& Bit = Fragment.GetBit();
 
-	TOptional<float> Time = Fragment.GetSpeechTime();
+	TOptional<float> Time = Fragment.GetSpeechTime(TypeGroup);
 
 	float EffectiveTime;
 	
@@ -491,7 +491,7 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 	}
 	else
 	{
-		EffectiveTime = UYapProjectSettings::GetMinimumFragmentTime();
+		EffectiveTime = UYapProjectSettings::GetTypeGroup(TypeGroup).GetMinimumSpeakingTime();
 	}
 
 	UYapSubsystem* Subsystem = GetWorld()->GetSubsystem<UYapSubsystem>();
@@ -504,11 +504,11 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 	Data.DialogueText = Bit.GetDialogueText();
 	Data.TitleText = Bit.GetTitleText();
 	Data.SpeechTime = EffectiveTime;
-	Data.FragmentTime = Fragment.GetProgressionTime(); 
+	Data.FragmentTime = Fragment.GetProgressionTime(TypeGroup); 
 	Data.DialogueAudioAsset = Bit.GetAudioAsset<UObject>();
 	Data.bSkippable = Fragment.GetSkippable(GetSkippable());
 	
-	RunningSpeechHandle = Subsystem->RunSpeech(Data);
+	RunningSpeechHandle = Subsystem->RunSpeech(Data, TypeGroup);
 	Subsystem->OnSpeechSkip.AddDynamic(this, &ThisClass::OnSkipAction);
 	
 	Fragment.IncrementActivations();
@@ -523,9 +523,9 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 	Fragment.SetStartTime(GetWorld()->GetTimeSeconds());
 	Fragment.SetEntryState(EYapFragmentEntryStateFlags::Success);
 
-	if (Fragment.GetSpeechTime().IsSet())
+	if (Fragment.GetSpeechTime(TypeGroup).IsSet())
 	{
-		float SpeechTime = Fragment.GetSpeechTime().Get(0.0f);
+		float SpeechTime = Fragment.GetSpeechTime(TypeGroup).Get(0.0f);
 		
 		UE_LOG(LogYap, VeryVerbose, TEXT("Speech time: %f"), SpeechTime);
 		
@@ -540,7 +540,7 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 		}
 	}
 
-	float ProgressionTime = Fragment.GetProgressionTime();
+	float ProgressionTime = Fragment.GetProgressionTime(TypeGroup);
 
 	UE_LOG(LogYap, VeryVerbose, TEXT("Progression time: %f"), ProgressionTime);
 	
@@ -956,7 +956,7 @@ void UFlowNode_YapDialogue::OnFilterGameplayTagChildren(const FString& String, T
 	
 	const FGameplayTagContainer& ParentTagContainer = ParentTagNode->GetSingleTagContainer();
 
-	if (ParentTagContainer.HasTagExact(UYapProjectSettings::GetDialogueTagsParent()))
+	if (ParentTagContainer.HasTagExact(UYapProjectSettings::GetTypeGroup(TypeGroup).GetDialogueTagsParent()))
 	{
 		bArg = true;
 	}

@@ -1,0 +1,43 @@
+Availability:NoPublish
+Title:FYapGroupSettings
+Crumbs:
+Description: Test
+
+
+
+[EXCERPT:AudioAssetsRootFolder]
+Audio must be placed into a subfolder matching the flow asset name. Example:
+
+Content\Flows 
+  ^ The Flow Assets root folder
+
+Content\Flows\E1L1\WallyStore.uasset
+  ^ The flow asset containing dialogue
+
+Content\DialogueAudio
+  ^ The Audio Assets root folder
+
+Content\DialogueAudio\E1L1\WallyStore\Wally_ABC-001.uasset 
+  ^ Audio asset for audio ID 'ABC-001' in the E1L1\WallyStore flow asset.
+[/EXCERPT:AudioAssetsRootFolder]
+
+
+
+[EXCERPT:FlowAssetsRootFolder]
+Audio must be placed into a subfolder matching the flow asset name. Example:
+
+Content\Flows 
+  ^ The Flow Assets root folder
+
+Content\Flows\E1L1\WallyStore.uasset
+  ^ The flow asset containing dialogue
+
+Content\DialogueAudio
+  ^ The Audio Assets root folder
+
+Content\DialogueAudio\E1L1\WallyStore\Wally_ABC-001.uasset 
+  ^ Audio asset for audio ID 'ABC-001' in the E1L1\WallyStore flow asset.
+[/EXCERPT:FlowAssetsRootFolder]
+
+
+

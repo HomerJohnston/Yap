@@ -32,6 +32,24 @@ FString Yap::Tags::GetFilteredSubTag(const FGameplayTag& ParentContainer, const 
 	return PropertyTag.ToString();
 }
 
+// ------------------------------------------------------------------------------------------------
+
+FName Yap::Tags::GetLeafTag(const FGameplayTag& Tag)
+{
+	UGameplayTagsManager& GameplayTagsManager = UGameplayTagsManager::Get();
+	
+	TSharedPtr<FGameplayTagNode> TagNode = GameplayTagsManager.FindTagNode(Tag);
+
+	if (TagNode.IsValid())
+	{
+		return TagNode->GetSimpleTagName();
+	}
+
+	return NAME_None;
+}
+
+// ------------------------------------------------------------------------------------------------
+
 const FGameplayTag& Yap::Tags::GetOrAddTag(FString NewTagString, FString Comment)
 {
 	FGameplayTag NewTagSource = UGameplayTagsManager::Get().RequestGameplayTag(FName(NewTagString), false);

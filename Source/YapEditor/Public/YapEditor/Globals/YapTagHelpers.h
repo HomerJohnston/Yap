@@ -20,6 +20,9 @@ namespace Yap
 		FString GetFilteredSubTag(const FGameplayTag& ParentContainer, const FGameplayTag& PropertyTag);
 
 		/**  */
+		FName GetLeafTag(const FGameplayTag& Tag);
+		
+		/**  */
 		const FGameplayTag& GetOrAddTag(FString NewTagString, FString Comment = "");
 
 		void ParseChangedTag(FString OldTagString, FString NewTagString);

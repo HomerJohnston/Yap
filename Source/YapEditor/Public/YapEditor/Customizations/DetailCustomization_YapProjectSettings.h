@@ -50,22 +50,18 @@ protected:
 
 	void CustomizeDetails(IDetailLayoutBuilder& DetailBuilder) override;
 	
-	void ProcessDialogueTagsCategoryProperty(IDetailCategoryBuilder& Category, TSharedPtr<IPropertyHandle> Property);
-
-	void ProcessMoodTagsProperty(IDetailCategoryBuilder& Category, TSharedPtr<IPropertyHandle> Property);
-
-	void ProcessCategory(IDetailCategoryBuilder& Category, void(FDetailCustomization_YapProjectSettings::*Func)(IDetailCategoryBuilder&, TSharedPtr<IPropertyHandle>));
-	
 	FReply OnClicked_ResetDefaultMoodTags() const;
 
 	FReply OnClicked_DeleteAllMoodTags() const;
 
 	FReply OnClicked_OpenMoodTagsManager();
 
-	FReply OnClicked_OpenDialogueTagsManager();
+	FReply OnClicked_OpenDialogueTagsManager(const FGameplayTag& TypeGroup);
 
+	/*
 	FReply OnClicked_CleanupDialogueTags();
-
+	*/
+	
 	FReply OnClicked_RefreshMoodTagIcons();
 	
 	FText ToolTipText_DefaultMoodTags() const;

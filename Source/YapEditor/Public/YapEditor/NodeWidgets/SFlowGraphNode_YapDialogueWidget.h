@@ -7,6 +7,7 @@
 #include "Graph/Widgets/SFlowGraphNode.h"
 #include "Yap/Nodes/FlowNode_YapDialogue.h"
 
+struct FYapGroupSettings;
 class SCanvas;
 class SYapConditionDetailsViewWidget;
 class SVirtualWindow;
@@ -149,8 +150,7 @@ protected:
 	FSlateColor			ColorAndOpacity_FragmentSequencingButton() const;
 	
 	FText				Text_NodeHeader() const;
-	EVisibility			FragmentRowHighlight_Visibility(uint8 f) const;
-	FSlateColor			FragmentRowHighlight_BorderBackgroundColor(uint8 f) const;
+	FText				Text_GroupLabel() const;
 
 	// ------------------------------------------
 protected:
@@ -218,6 +218,8 @@ protected:
 	void OnDialogueEnd(uint8 FragmentIndex);
 	void OnDialogueStart(uint8 FragmentIndex);
 	void OnDialogueSkipped(uint8 FragmentIndex);
+
+	const FYapGroupSettings& GetTypeGroup() const;
 	
 	// ------------------------------------------
 	// OVERRIDES & THEIR HELPERS
@@ -242,5 +244,6 @@ public:
 	TMap<FName, FName> EventUpdateMemberMap;
 	TMap<FName, FSimpleDelegate> MemberUpdateDelegateMap;
 };
+
 
 #undef LOCTEXT_NAMESPACE

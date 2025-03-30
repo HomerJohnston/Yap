@@ -1,7 +1,7 @@
 ﻿// Copyright Ghost Pepper Games, Inc. All Rights Reserved.
 // This work is MIT-licensed. Feel free to use it however you wish, within the confines of the MIT license. 
 
-#include "YapEditor/DetailCustomizations/DetailCustomization_YapCharacter.h"
+#include "YapEditor/Customizations/DetailCustomization_YapCharacter.h"
 
 #include "DetailCategoryBuilder.h"
 #include "DetailLayoutBuilder.h"

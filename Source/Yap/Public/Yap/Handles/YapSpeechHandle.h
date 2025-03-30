@@ -52,6 +52,10 @@ public:
     void BindToOnSpeechComplete(FYapSpeechEventDelegate Delegate) const;
 
     void UnbindToOnSpeechComplete(FYapSpeechEventDelegate Delegate) const;
+
+    void BindToOnFragmentComplete(FYapSpeechEventDelegate Delegate) const;
+
+    void UnbindToOnFragmentComplete(FYapSpeechEventDelegate Delegate) const;
 };
 
 FORCEINLINE uint32 GetTypeHash(const FYapSpeechHandle& Struct)

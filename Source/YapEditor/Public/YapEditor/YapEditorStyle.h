@@ -131,6 +131,7 @@ struct FYapStyles
 	
 	FName TextBlockStyle_DialogueText;
 	FName TextBlockStyle_NodeHeader;
+	FName TextBlockStyle_GroupLabel;
 	FName TextBlockStyle_NodeSequencing;
 	FName TextBlockStyle_TitleText;
 };
@@ -140,6 +141,7 @@ struct FYapFonts
 	FSlateFontInfo Font_DialogueText;
 	FSlateFontInfo Font_TitleText;
 	FSlateFontInfo Font_NodeHeader;	
+	FSlateFontInfo Font_GroupLabel;	
 	FSlateFontInfo Font_SectionHeader;	
 	FSlateFontInfo Font_NodeSequencing;	
 	FSlateFontInfo Font_CharacterAssetThumbnail;

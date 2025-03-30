@@ -8,36 +8,33 @@
 #include "Yap/YapProjectSettings.h"
 #include "YapEditor/YapCharacterThumbnailRenderer.h"
 #include "YapEditor/YapEditorStyle.h"
-#include "YapEditor/DetailCustomizations/DetailCustomization_YapProjectSettings.h"
-#include "YapEditor/DetailCustomizations/DetailCustomization_YapCharacter.h"
+#include "YapEditor/Customizations/DetailCustomization_YapProjectSettings.h"
+#include "YapEditor/Customizations/DetailCustomization_YapCharacter.h"
+#include "YapEditor/Customizations/PropertyCustomization_YapGroupSettings.h"
 
 #define LOCTEXT_NAMESPACE "YapEditor"
+
+#define REGISTER_ASSET_TYPE_ACTION(NAME) AssetTypeActions.Add(MakeShared<NAME>())
+#define REGISTER_DETAIL_CUSTOMIZATION(CLASSNAME, CUSTOMIZATIONNAME) DetailCustomizations.Append({{ CLASSNAME::StaticClass(), FOnGetDetailCustomizationInstance::CreateStatic(&CUSTOMIZATIONNAME::MakeInstance)}})
+#define REGISTER_PROPERTY_CUSTOMIZATION(CLASSNAME, CUSTOMIZATIONNAME) PropertyCustomizations.Append({{ *CLASSNAME::StaticStruct(), FOnGetPropertyTypeCustomizationInstance::CreateStatic(&CUSTOMIZATIONNAME::MakeInstance) }});
+#define REGISTER_THUMBNAIL_RENDERER(CLASSNAME, THUMBNAILRENDERERNAME) ClassThumbnailRenderers.Append({{ CLASSNAME::StaticClass(), THUMBNAILRENDERERNAME::StaticClass() }});
 
 void FYapEditorModule::StartupModule()
 {
 	AssetCategory = { "Yap", LOCTEXT("Yap", "Yap") };
-	
-	AssetTypeActions.Add(MakeShareable(new FAssetTypeActions_FlowYapCharacter()));
-	
-	DetailCustomizations.Append
-		({
-			{ UYapProjectSettings::StaticClass(), FOnGetDetailCustomizationInstance::CreateStatic(&FDetailCustomization_YapProjectSettings::MakeInstance) }
-		});
 
-	DetailCustomizations.Append
-		({
-			{ UYapCharacter::StaticClass(), FOnGetDetailCustomizationInstance::CreateStatic(&FDetailCustomization_YapCharacter::MakeInstance) }
-		});
+	REGISTER_ASSET_TYPE_ACTION(FAssetTypeActions_FlowYapCharacter);
+
+	REGISTER_DETAIL_CUSTOMIZATION(UYapProjectSettings, FDetailCustomization_YapProjectSettings);
+
+	REGISTER_DETAIL_CUSTOMIZATION(UYapCharacter, FDetailCustomization_YapCharacter);
+
+	REGISTER_PROPERTY_CUSTOMIZATION(FYapGroupSettings, FPropertyCustomization_YapGroupSettings);
+
+	REGISTER_THUMBNAIL_RENDERER(UYapCharacter, UYapCharacterThumbnailRenderer);
+
+
 	
-	ClassThumbnailRenderers.Append
-		({
-			{ UYapCharacter::StaticClass(), UYapCharacterThumbnailRenderer::StaticClass() }
-		});
-	
-	PropertyCustomizations.Append
-	({
-		//{ *FFlowYapFragment::StaticStruct(), FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FPropertyCustomization_FlowYapFragment::MakeInstance) }
-	});
 	
 	StartupModuleBase();
 

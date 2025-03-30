@@ -44,7 +44,7 @@ struct FYapData_SpeechBegins
 	/** Conversation name. This will be empty for speech occurring outside of a conversation. */
 	UPROPERTY(BlueprintReadOnly)
 	FGameplayTag Conversation;
-
+	
 	/** Who is being speaked towards. */
 	UPROPERTY(BlueprintReadOnly)
 	TObjectPtr<const UYapCharacter> DirectedAt = nullptr;
@@ -93,7 +93,7 @@ struct FYapData_PlayerPromptCreated
 	/** Conversation name. */
 	UPROPERTY(BlueprintReadOnly)
 	FGameplayTag Conversation;
-
+	
 	/** Who will be spoken to. */
 	UPROPERTY(BlueprintReadOnly)
 	TObjectPtr<const UYapCharacter> DirectedAt;

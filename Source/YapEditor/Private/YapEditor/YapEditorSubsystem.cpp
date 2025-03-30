@@ -109,18 +109,18 @@ TSharedPtr<FSlateImageBrush> UYapEditorSubsystem::GetCharacterPortraitBrush(cons
 
 	if (!Texture)
 	{
-		if (UYapProjectSettings::GetMissingPortraitTextureAsset().IsNull())
+		if (UYapProjectSettings::GetDefaultPortraitTextureAsset().IsNull())
 		{
 			return nullptr;
 		}
 
-		if (UYapProjectSettings::GetMissingPortraitTextureAsset().IsValid())
+		if (UYapProjectSettings::GetDefaultPortraitTextureAsset().IsValid())
 		{
-			Texture = Get()->MissingPortraitTexture = UYapProjectSettings::GetMissingPortraitTextureAsset().Get();
+			Texture = Get()->MissingPortraitTexture = UYapProjectSettings::GetDefaultPortraitTextureAsset().Get();
 		}
 		else
 		{
-			Texture = Get()->MissingPortraitTexture = UYapProjectSettings::GetMissingPortraitTextureAsset().LoadSynchronous();
+			Texture = Get()->MissingPortraitTexture = UYapProjectSettings::GetDefaultPortraitTextureAsset().LoadSynchronous();
 		}
 	}
 	
@@ -315,19 +315,6 @@ void UYapEditorSubsystem::Tick(float DeltaTime)
 		}
 	}
 #endif
-}
-
-bool UYapEditorSubsystem::GetMoodTagsDirty()
-{
-	//return Get()->bMoodTagsDirty;
-	FGameplayTagContainer ProjectMoodTags = UYapProjectSettings::GetMoodTags();
-	
-	if (ProjectMoodTags.Num() != Get()->CachedMoodTags.Num() || !Get()->CachedMoodTags.HasAllExact(ProjectMoodTags))
-	{
-		return true;
-	}
-
-	return false;
 }
 
 TStatId UYapEditorSubsystem::UYapEditorSubsystem::GetStatId() const

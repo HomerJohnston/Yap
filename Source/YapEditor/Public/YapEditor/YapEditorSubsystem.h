@@ -43,8 +43,6 @@ protected:
 
 	FGameplayTagContainer CachedMoodTags;
 
-	bool bMoodTagsDirty;
-
 	UPROPERTY(Transient)
 	TObjectPtr<UTexture2D> MissingPortraitTexture;
 
@@ -98,8 +96,6 @@ public:
 	void ReOpenAssets();
 
 	void Tick(float DeltaTime) override;
-
-	static bool GetMoodTagsDirty();
 
 	TStatId GetStatId() const override;
 

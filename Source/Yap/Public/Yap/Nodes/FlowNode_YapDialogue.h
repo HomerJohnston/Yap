@@ -97,6 +97,10 @@ protected:
 	UPROPERTY(BlueprintReadOnly)
 	EYapDialogueNodeType DialogueNodeType;
 
+	/** What is this dialogue's type-group? Leave unset to use the default type-group. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	FGameplayTag TypeGroup;
+	
 	/** Maximum number of times we can successfully enter & exit this node. Any further attempts will trigger the Bypass output. */
 	UPROPERTY(BlueprintReadOnly)
 	int32 NodeActivationLimit;
@@ -158,6 +162,9 @@ public:
 	/** Is this dialogue a Talk node or a Player Prompt node? */
 	bool IsPlayerPrompt() const { return DialogueNodeType == EYapDialogueNodeType::PlayerPrompt; }
 
+	/** What type-group is this dialogue node? Different type groups can have different playback settings, and be handled by different registered listeners. */
+	const FGameplayTag& GetTypeGroupTag() const { return TypeGroup; }
+	
 	/** Does this node use title text? */
 	bool UsesTitleText() const;
 
@@ -267,7 +274,7 @@ protected:
 #if WITH_EDITOR
 public:
 	TArray<FYapFragment>& GetFragmentsMutable();
-
+	
 private:
 	FYapFragment& GetFragmentByIndexMutable(uint8 Index);
 	
@@ -300,10 +307,6 @@ private:
 	void SwapFragments(uint8 IndexA, uint8 IndexB);
 	
 public:
-	bool IsFragmentRunning(uint8 FragmentIndex) const;
-
-	bool IsFragmentSpeaking(uint8 FragmentIndex) const;
-
 	FString GetNodeDescription() const override;
 
 	const FGameplayTag& GetDialogueTag() const { return DialogueTag; }

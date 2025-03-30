@@ -9,12 +9,12 @@
 
 struct FYapMessageEntry;
 
-UCLASS()
-class UYapStructListView : public UListViewBase//, public ITypedUMGListView<FYapMessageEntry*>
+UCLASS(meta = (EntryInterface = "/Script/Yap.YapSpeechListEntry"), MinimalAPI)
+class UYapStructListView : public UListViewBase//, public ITypedUMGListView<TSharedPtr<FYapMessageEntry>>
 {
     GENERATED_BODY()
 
-   // IMPLEMENT_TYPED_UMG_LIST(FYapMessageEntry*, MyListView)
+//    IMPLEMENT_TYPED_UMG_LIST(TSharedPtr<FYapMessageEntry>, MyListView)
 
 public:
     //UYapStructListView();

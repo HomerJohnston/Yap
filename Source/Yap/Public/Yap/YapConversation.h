@@ -47,6 +47,9 @@ protected:
     FGameplayTag ConversationName;
 
     UPROPERTY(Transient)
+    FGameplayTag TypeGroup;
+    
+    UPROPERTY(Transient)
     TArray<FYapSpeechHandle> RunningFragments;
 
     UPROPERTY(Transient)
@@ -96,6 +99,8 @@ public:
 public:
     const FGameplayTag& GetConversationName() const { return ConversationName; }
 
+    const FGameplayTag& GetTypeGroup() const { return TypeGroup; }
+    
     const TArray<FYapSpeechHandle>& GetRunningFragments() const { return RunningFragments; }
 
     const FGuid& GetGuid() const { return Guid; }

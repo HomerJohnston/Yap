@@ -245,7 +245,7 @@ public:
 
 	FYapBit& GetChildSafeBitMutable() { return ChildSafeBit; }
 
-	TOptional<float> GetSpeechTime() const;
+	TOptional<float> GetSpeechTime(const FGameplayTag& TypeGroup) const;
 
 	double GetStartTime() const { return StartTime; }
 
@@ -260,14 +260,14 @@ public:
 	void SetAwaitingManualAdvance() { bFragmentAwaitingManualAdvance = true; };
 
 protected:
-	TOptional<float> GetSpeechTime(EYapMaturitySetting MaturitySetting, EYapLoadContext LoadContext) const;
+	TOptional<float> GetSpeechTime(EYapMaturitySetting MaturitySetting, EYapLoadContext LoadContext, const FGameplayTag& TypeGroup) const;
 
 public:
 	TOptional<float> GetPaddingSetting() const { return Padding; };
 	
-	float GetPaddingValue() const;
+	float GetPaddingValue(const FGameplayTag& TypeGroup) const;
 
-	float GetProgressionTime() const;
+	float GetProgressionTime(const FGameplayTag& TypeGroup) const;
 	
 	void IncrementActivations();
 
@@ -308,9 +308,9 @@ public:
 	bool GetSkippable(bool Default) const;
 	
 	/** Gets the evaluated time mode to be used for this bit (incorporating project default settings and fallbacks) */
-	EYapTimeMode GetTimeMode() const;
+	EYapTimeMode GetTimeMode(const FGameplayTag& TypeGroup) const;
 	
-	EYapTimeMode GetTimeMode(EYapMaturitySetting MaturitySetting) const;
+	EYapTimeMode GetTimeMode(EYapMaturitySetting MaturitySetting, const FGameplayTag& TypeGroup) const;
 
 	FGameplayTag GetMoodTag() const { return MoodTag; }
 

@@ -108,9 +108,9 @@ void SFlowGraphNode_YapFragmentWidget::Construct(const FArguments& InArgs, SFlow
 	{
 		DialogueTextFont = UYapDeveloperSettings::GetGraphDialogueFontUserOverride();
 	}
-	else if (UYapProjectSettings::GetGraphDialogueFont().HasValidFont())
+	else if (GetTypeGroup().GetGraphDialogueFont().HasValidFont())
 	{
-		DialogueTextFont = UYapProjectSettings::GetGraphDialogueFont();
+		DialogueTextFont = GetTypeGroup().GetGraphDialogueFont();
 	}
 	else
 	{
@@ -700,6 +700,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateFragmentWidget()
 							.Padding(0, 0, 2, 0)
 							[
 								SNew(SOverlay)
+								.Visibility_Lambda( [this] () { return GetTypeGroup().GetIgnoreSpeakerInfo() ? EVisibility::Collapsed : EVisibility::Visible; } )
 								+ SOverlay::Slot()
 								[
 									CreateSpeakerWidget()
@@ -738,7 +739,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateFragmentWidget()
 				]
 			]
 			+ SOverlay::Slot()
-			.Padding(32, 0, 32, -8)
+			.Padding(32, 0, 32, -6)
 			.VAlign(EVerticalAlignment::VAlign_Bottom)
 			[
 				SNew(SBox)
@@ -746,8 +747,8 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateFragmentWidget()
 				[
 					SNew(SYapTimeProgressionWidget)
 					.BarColor(this, &ThisClass::ColorAndOpacity_FragmentTimeIndicator)
-					.SpeechTime_Lambda( [this] () { return GetFragment().GetSpeechTime(GetDisplayMaturitySetting(), EYapLoadContext::AsyncEditorOnly); })
-					.PaddingTime_Lambda( [this] () { return GetFragment().GetPaddingValue(); } )
+					.SpeechTime_Lambda( [this] () { return GetFragment().GetSpeechTime(GetDisplayMaturitySetting(), EYapLoadContext::AsyncEditorOnly, GetDialogueNode()->GetTypeGroupTag()); })
+					.PaddingTime_Lambda( [this] () { return GetFragment().GetPaddingValue(GetDialogueNode()->GetTypeGroupTag()); } )
 					.MaxDisplayTime_Lambda( [this] () { return UYapProjectSettings::GetDialogueTimeSliderMax(); } )
 					.PlaybackTime_Lambda( [this] () { return Percent_FragmentTime(); } )
 				]
@@ -978,7 +979,7 @@ TOptional<float> SFlowGraphNode_YapFragmentWidget::Value_TimeSetting_AudioTime(E
 
 TOptional<float> SFlowGraphNode_YapFragmentWidget::Value_TimeSetting_TextTime(EYapMaturitySetting MaturitySetting) const
 {
-	return GetFragment().GetBit(MaturitySetting).GetTextTime();
+	return GetFragment().GetBit(MaturitySetting).GetTextTime(GetDialogueNode()->GetTypeGroupTag());
 }
 
 TOptional<float> SFlowGraphNode_YapFragmentWidget::Value_TimeSetting_ManualTime(EYapMaturitySetting MaturitySetting) const
@@ -988,7 +989,7 @@ TOptional<float> SFlowGraphNode_YapFragmentWidget::Value_TimeSetting_ManualTime(
 
 EVisibility SFlowGraphNode_YapFragmentWidget::Visibility_AudioSettingsButton() const
 {
-	if (UYapProjectSettings::GetMissingAudioBehavior() != EYapMissingAudioErrorLevel::OK)
+	if (GetTypeGroup().GetMissingAudioErrorLevel() != EYapMissingAudioErrorLevel::OK)
 	{
 		return EVisibility::Visible;
 	}
@@ -1140,7 +1141,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateDialogueDisplayWidge
 					.Padding(4, 4, 4, 2)
 					[
 						SNew(STextBlock)
-						.AutoWrapText_Lambda([] () { return UYapProjectSettings::GetWrapDialogueText(); })
+						.AutoWrapText_Lambda( [this] () { return !GetTypeGroup().GetPreventDialogueTextWrapping(); })
 						.TextStyle(FYapEditorStyle::Get(), YapStyles.TextBlockStyle_DialogueText)
 						.Font(DialogueTextFont)
 						.Text_Lambda( [this] () { return GetFragment().GetDialogueText(GetDisplayMaturitySetting()); } )
@@ -1624,7 +1625,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::BuildPaddingSettings_Expan
 						.MaxSliderValue(UYapProjectSettings::GetFragmentPaddingSliderMax())
 						.ToolTipText(LOCTEXT("FragmentTimeEntry_Tooltip", "Time this dialogue fragment will play for"))
 						.Justification(ETextJustify::Center)
-						.Value_Lambda( [this] () { return GetFragmentMutable().GetPaddingValue(); } )
+						.Value_Lambda( [this] () { return GetFragmentMutable().GetPaddingValue(GetDialogueNode()->GetTypeGroupTag()); } )
 						.OnValueChanged_Lambda( [this] (float NewValue) { GetFragmentMutable().SetPaddingToNextFragment(NewValue); } )
 						.OnValueCommitted_Lambda( [this] (float NewValue, ETextCommit::Type) { GetFragmentMutable().SetPaddingToNextFragment(NewValue); } ) // TODO transactions
 					]
@@ -2326,7 +2327,7 @@ FSlateColor SFlowGraphNode_YapFragmentWidget::ButtonColorAndOpacity_UseTimeMode(
 		return ColorTint;
 	}
 	
-	if (GetFragment().GetTimeMode(GetDisplayMaturitySetting()) == TimeMode)
+	if (GetFragment().GetTimeMode(GetDisplayMaturitySetting(), GetDialogueNode()->GetTypeGroupTag()) == TimeMode)
 	{
 		// Implicit match through project defaults
 		return ColorTint.Desaturate(0.50);
@@ -2353,7 +2354,7 @@ FSlateColor SFlowGraphNode_YapFragmentWidget::ForegroundColor_TimeSettingButton(
 		return ColorTint;
 	}
 	
-	if (GetFragment().GetTimeMode(GetDisplayMaturitySetting()) == TimeMode)
+	if (GetFragment().GetTimeMode(GetDisplayMaturitySetting(), GetDialogueNode()->GetTypeGroupTag()) == TimeMode)
 	{
 		// Implicit match through project defaults
 		return ColorTint;
@@ -2588,12 +2589,12 @@ EYapErrorLevel SFlowGraphNode_YapFragmentWidget::GetAudioAssetErrorLevel(const T
 		}
 	}
 
-	EYapMissingAudioErrorLevel MissingAudioBehavior = UYapProjectSettings::GetMissingAudioBehavior();
+	EYapMissingAudioErrorLevel MissingAudioBehavior = GetTypeGroup().GetMissingAudioErrorLevel();
 
 	EYapTimeMode TimeModeSetting = GetFragment().GetTimeModeSetting();
 	
 	// We don't have any audio asset set. If the dialogue is set to use audio time but does NOT have an audio asset, we either indicate an error (prevent packaging) or indicate a warning (allow packaging) 
-	if ((TimeModeSetting == EYapTimeMode::AudioTime) || (TimeModeSetting == EYapTimeMode::Default && UYapProjectSettings::GetDefaultTimeModeSetting() == EYapTimeMode::AudioTime))
+	if ((TimeModeSetting == EYapTimeMode::AudioTime) || (TimeModeSetting == EYapTimeMode::Default && GetTypeGroup().GetDefaultTimeModeSetting() == EYapTimeMode::AudioTime))
 	{
 		switch (MissingAudioBehavior)
 		{
@@ -2728,6 +2729,11 @@ FSlateColor SFlowGraphNode_YapFragmentWidget::GetColorAndOpacityForFragmentText(
 	}
 	
 	return Color;
+}
+
+const FYapGroupSettings& SFlowGraphNode_YapFragmentWidget::GetTypeGroup() const
+{
+	return UYapProjectSettings::GetTypeGroup(GetDialogueNode()->GetTypeGroupTag());
 }
 
 // ================================================================================================

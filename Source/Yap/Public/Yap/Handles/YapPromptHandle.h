@@ -4,6 +4,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayTagContainer.h"
 
 #include "YapPromptHandle.generated.h"
 
@@ -16,13 +17,16 @@ USTRUCT(BlueprintType)
 struct YAP_API FYapPromptHandle
 {
 	GENERATED_BODY()
-
+	
 	// ------------------------------------------
 	// STATE
 
 protected:
 	UPROPERTY(Transient, BlueprintReadOnly, meta = (AllowPrivateAccess, IgnoreForMemberInitializationTest))
 	FGuid Guid;
+
+	UPROPERTY(Transient, BlueprintReadOnly, meta = (AllowPrivateAccess))
+	FGameplayTag TypeGroup;
 
 	// ------------------------------------------
 	// PUBLIC API - Your game should use these
@@ -36,11 +40,15 @@ public:
 public:
 	FYapPromptHandle();
 
+	FYapPromptHandle(const FGameplayTag& InTypeGroup) { TypeGroup = InTypeGroup; }
+	
 	void Invalidate();
 	
 	bool IsValid() { return Guid.IsValid(); }
 
 	FGuid GetGuid() const { return Guid; }
+
+	const FGameplayTag& GetTypeGroup() const { return TypeGroup; }
 	
 	bool operator==(const FYapPromptHandle& Other) const
 	{

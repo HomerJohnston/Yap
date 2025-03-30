@@ -21,6 +21,7 @@
 #include "YapEditor/YapEditorStyle.h"
 #include "YapEditor/GraphNodes/FlowGraphNode_YapDialogue.h"
 #include "Yap/Nodes/FlowNode_YapDialogue.h"
+#include "YapEditor/YapEditorEvents.h"
 #include "YapEditor/Globals/YapEditorFuncs.h"
 #include "YapEditor/Globals/YapTagHelpers.h"
 #include "YapEditor/Helpers/ProgressionSettingWidget.h"
@@ -289,7 +290,7 @@ void SFlowGraphNode_YapDialogueWidget::OnTagChanged_DialogueTag_PostEdit(TArray<
 FOptionalSize SFlowGraphNode_YapDialogueWidget::GetMaxNodeWidth() const
 {
 	const float GraphGridSize = 16;
-	return FMath::Max(YAP_MIN_NODE_WIDTH + UYapProjectSettings::GetPortraitSize(), YAP_DEFAULT_NODE_WIDTH + GraphGridSize * UYapProjectSettings::GetDialogueWidthAdjustment());
+	return FMath::Max(YAP_MIN_NODE_WIDTH + UYapProjectSettings::GetPortraitSize(), YAP_DEFAULT_NODE_WIDTH + GraphGridSize * GetTypeGroup().GetDialogueWidthAdjustment());
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -347,7 +348,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapDialogueWidget::CreateTitleWidget(TSharedP
 	
 	FString AssetName = FlowAsset->GetName();
 			
-	FString ProjectParentTag = UYapProjectSettings::GetDialogueTagsParent().GetTagName().ToString();
+	FString ProjectParentTag = GetTypeGroup().GetDialogueTagsParent().ToString();
 			
 	FString GameplayTagFilter = ProjectParentTag + "." + Path + "." + AssetName;
 	
@@ -531,71 +532,104 @@ TSharedRef<SWidget> SFlowGraphNode_YapDialogueWidget::CreateContentHeader()
 		SAssignNew(DialogueInputBoxArea, SBox)
 	]
 	+ SHorizontalBox::Slot()
-	.AutoWidth()
+	.FillWidth(1.0)
 	.Padding(-2, 0, 0, 0)
 	[
-		SAssignNew(NodeHeaderButton, SButton)
-		.Cursor(EMouseCursor::Default)
-		.ButtonStyle(FYapEditorStyle::Get(), YapStyles.ButtonStyle_HeaderButton)
-		.ContentPadding(FMargin(4, 0, 4, 0))
-		.ButtonColorAndOpacity(this, &SFlowGraphNode_YapDialogueWidget::ColorAndOpacity_NodeHeaderButton)
-		.ForegroundColor(YapColor::White)
-		.OnClicked(this, &SFlowGraphNode_YapDialogueWidget::OnClicked_TogglePlayerPrompt)
-		.ToolTipText(LOCTEXT("ToggleDialogueModeToolTip", "Toggle between player prompt or normal speech"))
+		SNew(SOverlay)
+		+ SOverlay::Slot()
+		.HAlign(EHorizontalAlignment::HAlign_Right)
+		.VAlign(VAlign_Center)
+		.Padding(0, 0, 8, 0)
 		[
-			SAssignNew(NodeHeaderButtonToolTip, STextBlock)
-			.TextStyle(FYapEditorStyle::Get(), YapStyles.TextBlockStyle_NodeHeader)
-			.Text(Text_NodeHeader())
-			.ColorAndOpacity(FSlateColor::UseForeground())
+			SNew(STextBlock)
+			.Visibility_Lambda([this] ()
+			{
+				bool bShouldShowGroupLabel;
+
+				if (GetTypeGroup().GetDefault())
+				{
+					 bShouldShowGroupLabel = false;
+				}
+				else if (GetFlowYapDialogueNode()->IsPlayerPrompt())
+				{
+					bShouldShowGroupLabel = !GetTypeGroup().bPromptModeTitle_Override;
+				}
+				else
+				{
+					bShouldShowGroupLabel = !GetTypeGroup().bTalkModeTitle_Override;
+				}
+
+				return bShouldShowGroupLabel ? EVisibility::Visible : EVisibility::Collapsed;
+			})
+			.TextStyle(FYapEditorStyle::Get(), YapStyles.TextBlockStyle_GroupLabel)
+			.Text_Lambda( [this] () { return Text_GroupLabel(); })
+			.ColorAndOpacity(YapColor::Gray)
 		]
-	]
-	+ SHorizontalBox::Slot()
-	.AutoWidth()
-	.Padding(8, 0, 8, 0)
-	.VAlign(VAlign_Fill)
-	[
-		SAssignNew(FragmentSequencingButton_Box, SBox)
-		.Visibility(Visibility_FragmentSequencingButton())
-		.VAlign(VAlign_Fill)
-		.WidthOverride(110)
-		.Padding(0)
+		+ SOverlay::Slot()
 		[
-			SAssignNew(FragmentSequencingButton_Button, SButton)
-			.Cursor(EMouseCursor::Default)
-			.ButtonStyle(FAppStyle::Get(), "SimpleButton")
-			.ContentPadding(FMargin(2, 1, 2, 1))
-			.OnClicked(this, &SFlowGraphNode_YapDialogueWidget::OnClicked_FragmentSequencingButton)
-			.ToolTipText(ToolTipText_FragmentSequencingButton())
+			SNew(SHorizontalBox)
+			+ SHorizontalBox::Slot()
+			.AutoWidth()
+			.Padding(2, 0, 2, 0)
 			[
-				SNew(SHorizontalBox)
-				+ SHorizontalBox::Slot()
-				.Padding(0, 0, 4, 0)
-				.VAlign(VAlign_Center)
-				.AutoWidth()
+				SAssignNew(NodeHeaderButton, SButton)
+				.Cursor(EMouseCursor::Default)
+				.ButtonStyle(FYapEditorStyle::Get(), YapStyles.ButtonStyle_HeaderButton)
+				.ContentPadding(FMargin(4, 0, 4, 0))
+				.ButtonColorAndOpacity(this, &SFlowGraphNode_YapDialogueWidget::ColorAndOpacity_NodeHeaderButton)
+				.ForegroundColor(YapColor::White)
+				.OnClicked(this, &SFlowGraphNode_YapDialogueWidget::OnClicked_TogglePlayerPrompt)
+				.ToolTipText(LOCTEXT("ToggleDialogueModeToolTip", "Toggle between player prompt or normal speech"))
 				[
-					SAssignNew(FragmentSequencingButton_Image, SImage)
-					.ColorAndOpacity(ColorAndOpacity_FragmentSequencingButton())
-					.DesiredSizeOverride(FVector2D(16, 16))
-					.Image(Image_FragmentSequencingButton())
+					SAssignNew(NodeHeaderButtonToolTip, STextBlock)
+					.TextStyle(FYapEditorStyle::Get(), YapStyles.TextBlockStyle_NodeHeader)
+					.Text_Lambda( [this] () { return Text_NodeHeader(); })
+					.ColorAndOpacity_Lambda( [this] () { return GetTypeGroup().GetGroupColor(); })
 				]
-				+ SHorizontalBox::Slot()
-				.Padding(4, 0, 0, 0)
-				.HAlign(HAlign_Fill)
-				.VAlign(VAlign_Center)
+			]
+			+ SHorizontalBox::Slot()
+			.AutoWidth()
+			.Padding(2, 0, 2, 0)
+			[
+				SAssignNew(FragmentSequencingButton_Box, SBox)
+				.Visibility(Visibility_FragmentSequencingButton())
+				.WidthOverride(110)
+				.Padding(0, 0, 0, 0)
 				[
-					SAssignNew(FragmentSequencingButton_Text, STextBlock)
-					.TextStyle(FYapEditorStyle::Get(), YapStyles.TextBlockStyle_NodeSequencing)
-					.Text(Text_FragmentSequencingButton())
-					.Justification(ETextJustify::Left)
-					.ColorAndOpacity(ColorAndOpacity_FragmentSequencingButton())
+					SAssignNew(FragmentSequencingButton_Button, SButton)
+					.Cursor(EMouseCursor::Default)
+					.ButtonStyle(FAppStyle::Get(), "SimpleButton")
+					.ContentPadding(FMargin(2, 1, 2, 1))
+					.OnClicked(this, &SFlowGraphNode_YapDialogueWidget::OnClicked_FragmentSequencingButton)
+					.ToolTipText(ToolTipText_FragmentSequencingButton())
+					.HAlign(HAlign_Left)
+					[
+						SNew(SHorizontalBox)
+						+ SHorizontalBox::Slot()
+						.Padding(0, 0, 4, 0)
+						.VAlign(VAlign_Center)
+						.AutoWidth()
+						[
+							SAssignNew(FragmentSequencingButton_Image, SImage)
+							.ColorAndOpacity(ColorAndOpacity_FragmentSequencingButton())
+							.DesiredSizeOverride(FVector2D(16, 16))
+							.Image(Image_FragmentSequencingButton())
+						]
+						+ SHorizontalBox::Slot()
+						.Padding(4, 0, 0, 0)
+						.VAlign(VAlign_Center)
+						.AutoWidth()
+						[
+							SAssignNew(FragmentSequencingButton_Text, STextBlock)
+							.TextStyle(FYapEditorStyle::Get(), YapStyles.TextBlockStyle_NodeSequencing)
+							.Text(Text_FragmentSequencingButton())
+							.Justification(ETextJustify::Center)
+							.ColorAndOpacity(ColorAndOpacity_FragmentSequencingButton())
+						]
+					]
 				]
 			]
 		]
-	]
-	+ SHorizontalBox::Slot()
-	.HAlign(HAlign_Fill)
-	[
-		SNew(SSpacer)
 	]
 	+ SHorizontalBox::Slot()
 	.HAlign(HAlign_Right)
@@ -603,6 +637,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapDialogueWidget::CreateContentHeader()
 	.Padding(0, 0, 4, 0)
 	[
 		SAssignNew(DialogueOutputBoxArea, SBox)
+		.MinDesiredWidth(19)
 	];
 
 	return Box;
@@ -644,41 +679,17 @@ FText SFlowGraphNode_YapDialogueWidget::Text_NodeHeader() const
 {
 	if (GetFlowYapDialogueNode()->IsPlayerPrompt())
 	{
-		return LOCTEXT("DialogueModeLabel_PlayerPrompt", "PLAYER PROMPT");
+		return GetTypeGroup().GetPromptModeTitle();
 	}
 	else
 	{
-		return LOCTEXT("DialogueModeLabel_Talk", "TALK");
+		return GetTypeGroup().GetTalkModeTitle();
 	}
 }
 
-// ------------------------------------------------------------------------------------------------
-// TODO UNUSED?
-EVisibility SFlowGraphNode_YapDialogueWidget::FragmentRowHighlight_Visibility(uint8 f) const
+FText SFlowGraphNode_YapDialogueWidget::Text_GroupLabel() const
 {
-	if (FlashFragmentIndex == f /*|| (GetFlowYapDialogueNode()->GetRunningFragmentIndex() == f && GetFlowYapDialogueNode()->FragmentStartedTime > GetFlowYapDialogueNode()->FragmentEndedTime)*/ /* TODO */ )
-	{
-		return EVisibility::HitTestInvisible;
-	}
-
-	return EVisibility::Collapsed;
-}
-
-// ------------------------------------------------------------------------------------------------
-// TODO UNUSED?
-FSlateColor SFlowGraphNode_YapDialogueWidget::FragmentRowHighlight_BorderBackgroundColor(uint8 f) const
-{
-	if ( /*GetFlowYapDialogueNode()->GetRunningFragmentIndex() == f*/ false)
-	{
-		return YapColor::White_Glass;
-	}
-	
-	if (FlashFragmentIndex == f)
-	{
-		return FlashHighlight * YapColor::White_Trans;
-	}
-
-	return YapColor::Transparent;
+	return FText::FromName( Yap::Tags::GetLeafTag(GetFlowYapDialogueNode()->GetTypeGroupTag()) );
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -804,7 +815,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapDialogueWidget::CreateContentFooter()
 			.Visibility(this, &SFlowGraphNode_YapDialogueWidget::Visibility_BottomAddFragmentButton)
 			.HeightOverride(14)
 			.VAlign(VAlign_Center)
-			//.Padding(0, 0, 0, 2)
+			.Padding(0, 2, 0, 0)
 			[
 				SNew(SButton)
 				.Cursor(EMouseCursor::Default)
@@ -820,7 +831,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapDialogueWidget::CreateContentFooter()
 						SNew(SImage)
 						.Image(FYapEditorStyle::GetImageBrush(YapBrushes.Icon_PlusSign))
 						.DesiredSizeOverride(FVector2D(12, 12))
-						.ColorAndOpacity(YapColor::Noir)
+						.ColorAndOpacity(YapColor::DarkGray)
 					]
 				]
 			]
@@ -1148,6 +1159,7 @@ UFlowGraphNode_YapDialogue* SFlowGraphNode_YapDialogueWidget::GetFlowGraphNode_Y
 }
 
 // ------------------------------------------------------------------------------------------------
+
 void SFlowGraphNode_YapDialogueWidget::SetFlashFragment(uint8 FragmentIndex)
 {
 	FlashFragmentIndex = FragmentIndex;
@@ -1155,20 +1167,35 @@ void SFlowGraphNode_YapDialogueWidget::SetFlashFragment(uint8 FragmentIndex)
 }
 
 // ------------------------------------------------------------------------------------------------
+
 void SFlowGraphNode_YapDialogueWidget::OnDialogueEnd(uint8 FragmentIndex)
 {
 }
 
 // ------------------------------------------------------------------------------------------------
+
 void SFlowGraphNode_YapDialogueWidget::OnDialogueStart(uint8 FragmentIndex)
 {
 	SetFlashFragment(FragmentIndex);
 }
 
 // ------------------------------------------------------------------------------------------------
+
 void SFlowGraphNode_YapDialogueWidget::OnDialogueSkipped(uint8 FragmentIndex)
 {
 	SetFlashFragment(FragmentIndex);
+}
+
+// ------------------------------------------------------------------------------------------------
+
+const FYapGroupSettings& SFlowGraphNode_YapDialogueWidget::GetTypeGroup() const
+{
+	const UFlowNode_YapDialogue* DialogueNode = GetFlowYapDialogueNode();
+	check(DialogueNode);
+
+	const FGameplayTag& TypeGroupTag = DialogueNode->GetTypeGroupTag(); 
+	
+	return UYapProjectSettings::GetTypeGroup(TypeGroupTag);
 }
 
 // ------------------------------------------------------------------------------------------------

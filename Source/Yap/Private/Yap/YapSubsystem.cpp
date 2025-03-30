@@ -32,11 +32,11 @@ UYapSubsystem::UYapSubsystem()
 
 // ------------------------------------------------------------------------------------------------
 
-void UYapSubsystem::RegisterConversationHandler(UObject* NewHandler)
+void UYapSubsystem::RegisterConversationHandler(UObject* NewHandler, FGameplayTag TypeGroup)
 {
 	if (NewHandler->Implements<UYapConversationHandler>())
 	{
-		Get()->ConversationHandlers.AddUnique(NewHandler);
+		FindOrAddConversationHandlerArray(TypeGroup).AddUnique(NewHandler);
 	}
 	else
 	{
@@ -46,18 +46,28 @@ void UYapSubsystem::RegisterConversationHandler(UObject* NewHandler)
 
 // ------------------------------------------------------------------------------------------------
 
-void UYapSubsystem::UnregisterConversationHandler(UObject* HandlerToRemove)
+void UYapSubsystem::UnregisterConversationHandler(UObject* HandlerToRemove, FGameplayTag TypeGroup)
 {
-	Get()->ConversationHandlers.Remove(HandlerToRemove);
+	auto* Array = FindConversationHandlerArray(TypeGroup);
+
+	if (Array)
+	{
+		Array->Remove(HandlerToRemove);
+	}
+
+	if (Array->IsEmpty())
+	{
+		Get()->ConversationHandlers.Remove(TypeGroup);
+	}
 }
 
 // ------------------------------------------------------------------------------------------------
 
-void UYapSubsystem::RegisterFreeSpeechHandler(UObject* NewHandler)
+void UYapSubsystem::RegisterFreeSpeechHandler(UObject* NewHandler, FGameplayTag TypeGroup)
 {
 	if (NewHandler->Implements<UYapFreeSpeechHandler>())
 	{
-		Get()->FreeSpeechHandlers.AddUnique(NewHandler);
+		FindOrAddFreeSpeechHandlerArray(TypeGroup).AddUnique(NewHandler);
 	}
 	else
 	{
@@ -67,9 +77,19 @@ void UYapSubsystem::RegisterFreeSpeechHandler(UObject* NewHandler)
 
 // ------------------------------------------------------------------------------------------------
 
-void UYapSubsystem::UnregisterFreeSpeechHandler(UObject* HandlerToRemove)
+void UYapSubsystem::UnregisterFreeSpeechHandler(UObject* HandlerToRemove, FGameplayTag TypeGroup)
 {
-	Get()->FreeSpeechHandlers.Remove(HandlerToRemove);
+	auto* Array = FindFreeSpeechHandlerArray(TypeGroup);
+
+	if (Array)
+	{
+		Array->Remove(HandlerToRemove);
+	}
+	
+	if (Array->IsEmpty())
+	{
+		Get()->FreeSpeechHandlers.Remove(TypeGroup);
+	}
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -260,8 +280,10 @@ void UYapSubsystem::StartOpeningConversation(FYapConversation& Conversation)
 
 	FYapConversationHandle Handle(Conversation.GetGuid());
 
+	auto* HandlerArray = FindConversationHandlerArray(Conversation.GetTypeGroup());
+
 	// Game code may add opening locks to the conversation here
-	BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapConversationHandler, OnConversationOpened, Execute_K2_ConversationOpened)>(ConversationHandlers, Data, Handle);
+	BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapConversationHandler, OnConversationOpened, Execute_K2_ConversationOpened)>(HandlerArray, Data, Handle);
 
 	Conversation.StartOpening();
 }
@@ -306,13 +328,15 @@ void UYapSubsystem::OnActiveConversationClosed()
 
 // ------------------------------------------------------------------------------------------------
 
-FYapPromptHandle UYapSubsystem::BroadcastPrompt(const FYapData_PlayerPromptCreated& Data)
+FYapPromptHandle UYapSubsystem::BroadcastPrompt(const FYapData_PlayerPromptCreated& Data, const FGameplayTag& TypeGroup)
 {
 	if (Data.Conversation.IsValid())
 	{
-		FSetElementId Elem = ActivePromptHandles.Emplace({});
-		
-		BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapConversationHandler, OnConversationPlayerPromptCreated, Execute_K2_ConversationPlayerPromptCreated)>(ConversationHandlers, Data, ActivePromptHandles[Elem]);
+		FSetElementId Elem = ActivePromptHandles.Emplace({TypeGroup});
+
+		auto* HandlerArray = FindConversationHandlerArray(TypeGroup);
+
+		BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapConversationHandler, OnConversationPlayerPromptCreated, Execute_K2_ConversationPlayerPromptCreated)>(HandlerArray, Data, ActivePromptHandles[Elem]);
 
 		return ActivePromptHandles[Elem];
 	}
@@ -328,11 +352,13 @@ FYapPromptHandle UYapSubsystem::BroadcastPrompt(const FYapData_PlayerPromptCreat
 
 // ------------------------------------------------------------------------------------------------
 
-void UYapSubsystem::OnFinishedBroadcastingPrompts(const FYapData_PlayerPromptsReady& Data)
+void UYapSubsystem::OnFinishedBroadcastingPrompts(const FYapData_PlayerPromptsReady& Data, const FGameplayTag& TypeGroup)
 {
 	if (Data.Conversation.IsValid())
 	{
-		BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapConversationHandler, OnConversationPlayerPromptsReady, Execute_K2_ConversationPlayerPromptsReady)>(ConversationHandlers, Data);
+		auto* HandlerArray = FindConversationHandlerArray(TypeGroup);
+
+		BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapConversationHandler, OnConversationPlayerPromptsReady, Execute_K2_ConversationPlayerPromptsReady)>(HandlerArray, Data);
 	}
 	else
 	{
@@ -342,7 +368,7 @@ void UYapSubsystem::OnFinishedBroadcastingPrompts(const FYapData_PlayerPromptsRe
 
 // ------------------------------------------------------------------------------------------------
 
-FYapSpeechHandle UYapSubsystem::RunSpeech(const FYapData_SpeechBegins& SpeechData)
+FYapSpeechHandle UYapSubsystem::RunSpeech(const FYapData_SpeechBegins& SpeechData, const FGameplayTag& TypeGroup)
 {
 	// TODO see if I can get rid of this shit
 	FYapRunningFragment RunningFragment;
@@ -370,11 +396,15 @@ FYapSpeechHandle UYapSubsystem::RunSpeech(const FYapData_SpeechBegins& SpeechDat
 	
 	if (SpeechData.Conversation.IsValid())
 	{
-		BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapConversationHandler, OnConversationSpeechBegins, Execute_K2_ConversationSpeechBegins)>(ConversationHandlers, SpeechData, SpeechHandle);
+		auto* HandlerArray = FindConversationHandlerArray(TypeGroup);
+		
+		BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapConversationHandler, OnConversationSpeechBegins, Execute_K2_ConversationSpeechBegins)>(HandlerArray, SpeechData, SpeechHandle);
 	}
 	else
 	{
-		BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapFreeSpeechHandler, OnTalkSpeechBegins, Execute_K2_TalkSpeechBegins)>(FreeSpeechHandlers, SpeechData, SpeechHandle);
+		auto* HandlerArray = FindFreeSpeechHandlerArray(TypeGroup);
+		
+		BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapFreeSpeechHandler, OnTalkSpeechBegins, Execute_K2_TalkSpeechBegins)>(HandlerArray, SpeechData, SpeechHandle);
 	}
 
 	return SpeechHandle;
@@ -452,7 +482,10 @@ bool UYapSubsystem::RunPrompt(const FYapPromptHandle& Handle)
 
 	// Broadcast to game listeners
 	FYapData_PlayerPromptChosen Data;
-	BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapConversationHandler, OnConversationPlayerPromptChosen, Execute_K2_ConversationPlayerPromptChosen)>(Get()->ConversationHandlers, Data, Handle);
+	
+	auto* HandlerArray = FindFreeSpeechHandlerArray(Handle.GetTypeGroup());
+	
+	BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapConversationHandler, OnConversationPlayerPromptChosen, Execute_K2_ConversationPlayerPromptChosen)>(HandlerArray, Data, Handle);
 
 	return true;
 }
@@ -506,6 +539,42 @@ void UYapSubsystem::UnregisterCharacterComponent(UYapCharacterComponent* YapChar
 
 	YapCharacterComponents.Remove(YapCharacterComponent->GetCharacterTag());
 	RegisteredYapCharacterActors.Remove(Actor);
+}
+
+// ------------------------------------------------------------------------------------------------
+
+TArray<TObjectPtr<UObject>>& UYapSubsystem::FindOrAddConversationHandlerArray(const FGameplayTag& TypeGroup)
+{
+	return Get()->ConversationHandlers.FindOrAdd(TypeGroup).Array;
+}
+
+TArray<TObjectPtr<UObject>>* UYapSubsystem::FindConversationHandlerArray(const FGameplayTag& TypeGroup)
+{
+	FYapHandlersArray* Handlers = Get()->ConversationHandlers.Find(TypeGroup);
+
+	if (Handlers)
+	{
+		return &Handlers->Array;
+	}
+
+	return nullptr;
+}
+
+TArray<TObjectPtr<UObject>>& UYapSubsystem::FindOrAddFreeSpeechHandlerArray(const FGameplayTag& TypeGroup)
+{
+	return Get()->FreeSpeechHandlers.FindOrAdd(TypeGroup).Array;
+}
+
+TArray<TObjectPtr<UObject>>* UYapSubsystem::FindFreeSpeechHandlerArray(const FGameplayTag& TypeGroup)
+{
+	FYapHandlersArray* Handlers = Get()->FreeSpeechHandlers.Find(TypeGroup);
+
+	if (Handlers)
+	{
+		return &Handlers->Array;
+	}
+
+	return nullptr;
 }
 
 // ------------------------------------------------------------------------------------------------

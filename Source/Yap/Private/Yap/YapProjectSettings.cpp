@@ -6,7 +6,6 @@
 #if WITH_EDITOR
 #include "GameplayTagsManager.h"
 #endif
-#include "Yap/Enums/YapMissingAudioErrorLevel.h"
 #include "Yap/Globals/YapFileUtilities.h"
 
 #define LOCTEXT_NAMESPACE "Yap"
@@ -18,27 +17,24 @@ FName UYapProjectSettings::CategoryName = FName("Yap");
 UYapProjectSettings::UYapProjectSettings()
 {
 #if WITH_EDITORONLY_DATA
-	MoodTagIconPath.Path = "";
-
-	UGameplayTagsManager& TagsManager = UGameplayTagsManager::Get();
-
-	DialogueTagsParent = TagsManager.AddNativeGameplayTag("Yap.Dialogue");
-
-	MoodTagsParent = TagsManager.AddNativeGameplayTag("Yap.Mood");
-
 	TagContainers =
 	{
-		{ EYap_TagFilter::Prompts, &DialogueTagsParent }
+		{ EYap_TagFilter::Prompts, &DefaultGroup.DialogueTagsParent }
 	};
 #endif
 
 	DefaultAssetAudioClasses = { USoundBase::StaticClass() };
 
-	DefaultTimeModeSetting = EYapTimeMode::AudioTime;
+	DefaultGroup = FYapGroupSettings(true);
 
-	MissingAudioErrorLevel = EYapMissingAudioErrorLevel::OK;
+	UGameplayTagsManager& TagsManager = UGameplayTagsManager::Get();
+	DefaultGroup.DialogueTagsParent = TagsManager.AddNativeGameplayTag("Yap.Dialogue");
 
-	MissingPortraitTexture = FSoftObjectPath("/Yap/T_Avatar_Missing.T_Avatar_Missing");
+	MoodTagsParent = TagsManager.AddNativeGameplayTag("Yap.Mood");
+
+	TagsManager.AddNativeGameplayTag("Yap.TypeGroup");
+	
+	DefaultPortraitTexture = FSoftObjectPath("/Yap/T_Avatar_Missing.T_Avatar_Missing");
 	
 #if WITH_EDITOR
 	UGameplayTagsManager::Get().OnGetCategoriesMetaFromPropertyHandle.AddUObject(this, &ThisClass::OnGetCategoriesMetaFromPropertyHandle);
@@ -56,16 +52,17 @@ FString UYapProjectSettings::GetMoodTagIconPath(FGameplayTag Key, FString FileEx
 	{
 		KeyString = KeyString.RightChop(Index + 1);
 	}
-	
-	if (Get().MoodTagIconPath.Path == "")
-	{		
+
+	if (Get().MoodTagEditorIconsPath.Path == "")
+	{
 		static FString ResourcesDir = Yap::FileUtilities::GetPluginFolder();
 		
 		return Yap::FileUtilities::GetResourcesFolder() / FString::Format(TEXT("DefaultMoodTags/{0}.{1}"), { KeyString, FileExtension });
 	}
 	
-	return FPaths::ProjectDir() / FString::Format(TEXT("{0}/{1}.{2}}"), { Get().MoodTagIconPath.Path, KeyString, FileExtension });
+	return FPaths::ProjectDir() / FString::Format(TEXT("{0}/{1}.{2}}"), { Get().MoodTagEditorIconsPath.Path, KeyString, FileExtension });
 }
+
 #endif
 
 #if WITH_EDITOR
@@ -101,14 +98,21 @@ const TArray<TSoftClassPtr<UObject>>& UYapProjectSettings::GetAudioAssetClasses(
 }
 
 #if WITH_EDITOR
-const FString UYapProjectSettings::GetAudioAssetRootFolder()
+const FString UYapProjectSettings::GetAudioAssetRootFolder(FGameplayTag TypeGroup)
 {
-	if (Get().AudioAssetsRootFolder.Path.IsEmpty())
+	const FYapGroupSettings* Group = GetTypeGroupPtr(TypeGroup);
+
+	if (!Group)
 	{
 		return "";
 	}
 	
-	return /*FPaths::ProjectContentDir() / */Get().AudioAssetsRootFolder.Path;
+	if (Group->AudioAssetsRootFolder.Path.IsEmpty())
+	{
+		return "";
+	}
+	
+	return Group->AudioAssetsRootFolder.Path;
 }
 #endif
 
@@ -124,6 +128,7 @@ void UYapProjectSettings::PostEditChangeChainProperty(FPropertyChangedChainEvent
 {
 	Super::PostEditChangeChainProperty(PropertyChangedEvent);
 
+	/*
 	// TODO better variable names please
 	FName one = PropertyChangedEvent.PropertyChain.GetHead()->GetValue()->GetFName();
 	
@@ -143,28 +148,27 @@ void UYapProjectSettings::PostEditChangeChainProperty(FPropertyChangedChainEvent
 			}
 		}
 	}
+	*/
 }
 #endif
 
 #if WITH_EDITOR
-const FString& UYapProjectSettings::GetMoodTagIconPath()
+FString UYapProjectSettings::GetMoodTagIconPath()
 {
-	static FString CachedPath;
-
 	// Recache the path if it was never calculated, or if the setting is set and the cached path is not equal to it
-	if (CachedPath.IsEmpty() || (!Get().MoodTagIconPath.Path.IsEmpty() && CachedPath != Get().MoodTagIconPath.Path))
+	if (Get().MoodTagEditorIconsPath.Path.IsEmpty())
 	{
-		if (Get().MoodTagIconPath.Path == "")
-		{
-			CachedPath = Yap::FileUtilities::GetResourcesFolder() / TEXT("DefaultMoodTags");
-		}
-		else
-		{
-			CachedPath = FPaths::ProjectDir() / Get().MoodTagIconPath.Path;
-		}	
+		return Yap::FileUtilities::GetResourcesFolder() / TEXT("DefaultMoodTags");
 	}
-	
-	return CachedPath;
+	else
+	{
+		return FPaths::ProjectDir() / Get().MoodTagEditorIconsPath.Path;
+	}
+}
+
+FLinearColor UYapProjectSettings::GetGroupColor(FGameplayTag GroupName)
+{
+	return GetTypeGroup(GroupName).GetGroupColor();
 }
 
 void UYapProjectSettings::RegisterTagFilter(UObject* ClassSource, FName PropertyName, EYap_TagFilter Filter)
@@ -204,6 +208,44 @@ void UYapProjectSettings::OnGetCategoriesMetaFromPropertyHandle(TSharedPtr<IProp
 	}
 }
 
+const FYapGroupSettings& UYapProjectSettings::GetTypeGroup(FGameplayTag TypeGroup)
+{
+	if (!TypeGroup.IsValid())
+	{
+		return Get().DefaultGroup;
+	}
+
+	FYapGroupSettings* Group = Get().NamedGroups.Find(TypeGroup);
+
+	if (!Group)
+	{
+		UE_LOG(LogYap, Error, TEXT("Yap group [%s] not found!"), *TypeGroup.ToString());
+		
+		return Get().DefaultGroup;
+	}
+	
+	return *Group;
+}
+
+const FYapGroupSettings* UYapProjectSettings::GetTypeGroupPtr(FGameplayTag TypeGroup)
+{
+	if (!TypeGroup.IsValid())
+	{
+		return &Get().DefaultGroup;
+	}
+
+	FYapGroupSettings* Group = Get().NamedGroups.Find(TypeGroup);
+
+	if (!Group)
+	{
+		UE_LOG(LogYap, Error, TEXT("Yap group [%s] not found!"), *TypeGroup.ToString());
+		
+		return nullptr;
+	}
+	
+	return Group;
+}
+
 // TODO someone posted a nicer way to do this in Slackers without this... something about simple name? using the node?? can't remember
 FString UYapProjectSettings::GetTrimmedGameplayTagString(EYap_TagFilter Filter, const FGameplayTag& PropertyTag)
 {
@@ -221,6 +263,7 @@ FString UYapProjectSettings::GetTrimmedGameplayTagString(EYap_TagFilter Filter, 
 	
 	return PropertyTag.ToString();
 }
+
 #endif
 
 #undef LOCTEXT_NAMESPACE

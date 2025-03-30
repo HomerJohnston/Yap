@@ -40,9 +40,9 @@ float UYapBlueprintFunctionLibrary::GetSoundLength(USoundBase* Sound)
 
 // ------------------------------------------------------------------------------------------------
 
-void UYapBlueprintFunctionLibrary::RegisterConversationHandler(UObject* NewHandler)
+void UYapBlueprintFunctionLibrary::RegisterConversationHandler(UObject* NewHandler, FGameplayTag TypeGroup)
 {
-	UYapSubsystem::RegisterConversationHandler(NewHandler);
+	UYapSubsystem::RegisterConversationHandler(NewHandler, TypeGroup);
 }
 
 // ------------------------------------------------------------------------------------------------

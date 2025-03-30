@@ -6,21 +6,21 @@
 #include "Yap/Enums/YapMissingAudioErrorLevel.h"
 #include "Yap/Enums/YapTimeMode.h"
 #include "GameplayTagContainer.h"
-#include "YapGroupSettings.generated.h"
+#include "YapTypeGroupSettings.generated.h"
 
 #define LOCTEXT_NAMESPACE "YapEditor"
 
 USTRUCT()
-struct YAP_API FYapGroupSettings
+struct YAP_API FYapTypeGroupSettings
 {
     GENERATED_BODY()
 
 	// CONSTRUCTION ===============================================================================
 
 public:
-	FYapGroupSettings();
+	FYapTypeGroupSettings();
 
-	FYapGroupSettings(bool bDefaultIn);
+	FYapTypeGroupSettings(bool bDefaultIn);
 
 	friend class UYapProjectSettings;
 
@@ -147,13 +147,21 @@ private:
 	UPROPERTY(Config, EditAnywhere, Category = "Flow Graph Settings")
 	bool bShowTitleTextOnTalkNodes = false;
 
-	/** If this type group doesn't require any speaker info (such as for generic tutorial popups), you can enable this. */
+	/** If this type group doesn't require any speaker info (such as for generic tutorial popups), you can enable this to clean up the flow graph. */
 	UPROPERTY(Config, EditAnywhere, Category = "Flow Graph Settings")
-	bool bIgnoreSpeakerInfo = false;
+	bool bHideSpeakerSelector = false;
 
-	/** If this type group doesn't require any speaker info (such as for generic tutorial popups), you can enable this. */
-	//UPROPERTY(Config, EditAnywhere, Category = "Flow Graph Settings")
-	//bool bIgnoreMoodInfo = false;
+	/** If this type group doesn't require any mood info (such as for generic tutorial popups), you can enable this to clean up the flow graph. */
+	UPROPERTY(Config, EditAnywhere, Category = "Flow Graph Settings")
+	bool bHideMoodSelector = false;
+	
+	/** If this type group doesn't require any child safe info (such as for generic tutorial popups), you can enable this to clean up the flow graph. */
+	UPROPERTY(Config, EditAnywhere, Category = "Flow Graph Settings")
+	bool bHideChildSafeButton = false;
+	
+	/** If this type group doesn't require any audio (like if your game does not have dialogue audio), you can enable this to clean up the flow graph. */
+	UPROPERTY(Config, EditAnywhere, Category = "Flow Graph Settings")
+	bool bHideAudioID = false;
 	
 	// ============================================================================================
 public:
@@ -229,8 +237,17 @@ public:
 	UPROPERTY(EditAnywhere, meta = (DefaultOverride = bShowTitleTextOnTalkNodes))
 	bool bShowTitleTextOnTalkNodes_Override = false;
 
-	UPROPERTY(EditAnywhere, meta = (DefaultOverride = bIgnoreSpeakerInfo))
-	bool bIgnoreSpeakerInfo_Override = false;
+	UPROPERTY(EditAnywhere, meta = (DefaultOverride = bHideSpeakerSelector))
+	bool bHideSpeakerSelector_Override = false;
+	
+	UPROPERTY(EditAnywhere, meta = (DefaultOverride = bHideMoodSelector))
+	bool bHideMoodSelector_Override = false;
+	
+	UPROPERTY(EditAnywhere, meta = (DefaultOverride = bHideChildSafeButton))
+	bool bHideChildSafeButton_Override = false;
+	
+	UPROPERTY(EditAnywhere, meta = (DefaultOverride = bHideAudioID))
+	bool bHideAudioID_Override = false;
 	
 	// PROPERTY GETTERS
 	// ============================================================================================
@@ -289,14 +306,19 @@ public:
 
 	bool GetShowTitleTextOnTalkNodes() RETURN(bShowTitleTextOnTalkNodes_Override, bShowTitleTextOnTalkNodes)
 	
-	bool GetIgnoreSpeakerInfo() RETURN(bIgnoreSpeakerInfo_Override, bIgnoreSpeakerInfo)
+	bool GetHideSpeakerSelector() RETURN(bHideSpeakerSelector_Override, bHideSpeakerSelector)
 
+	bool GetHideMoodSelector() RETURN(bHideMoodSelector_Override, bHideMoodSelector)
+	
+	bool GetHideChildSafeButton() RETURN(bHideChildSafeButton_Override, bHideChildSafeButton)
+
+	bool GetHideAudioID() RETURN(bHideAudioID_Override, bHideAudioID)
 	// OTHER HELPERS
 	// ============================================================================================
 private:
 	static TArray<FString>& GetDefaultMoodTags();
 
-	static const FYapGroupSettings& Default();
+	static const FYapTypeGroupSettings& Default();
 };
 
 #undef LOCTEXT_NAMESPACE

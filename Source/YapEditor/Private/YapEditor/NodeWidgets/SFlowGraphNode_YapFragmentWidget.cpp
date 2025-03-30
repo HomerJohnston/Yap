@@ -636,6 +636,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateFragmentWidget()
 						.Padding(0, 0, 0, 2)
 						[
 							SNew(SBox)
+							.Visibility_Lambda( [this] () { return GetTypeGroup().GetHideChildSafeButton() ? EVisibility::Collapsed : EVisibility::Visible; } )
 							.WidthOverride(22)
 							.HeightOverride(22)
 							[
@@ -675,6 +676,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateFragmentWidget()
 						.Padding(0, 2, 0, 0)
 						[
 							SNew(SBox)
+							.Visibility_Lambda( [this] () { return GetTypeGroup().GetHideMoodSelector() ? EVisibility::Collapsed : EVisibility::Visible; } )
 							.WidthOverride(22)
 							.HeightOverride(22)
 							[
@@ -697,10 +699,10 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateFragmentWidget()
 							.HAlign(HAlign_Center)
 							.VAlign(VAlign_Top)
 							.AutoWidth()
-							.Padding(0, 0, 2, 0)
+							.Padding(0, 0, 4, 0)
 							[
 								SNew(SOverlay)
-								.Visibility_Lambda( [this] () { return GetTypeGroup().GetIgnoreSpeakerInfo() ? EVisibility::Collapsed : EVisibility::Visible; } )
+								.Visibility_Lambda( [this] () { return GetTypeGroup().GetHideSpeakerSelector() ? EVisibility::Collapsed : EVisibility::Visible; } )
 								+ SOverlay::Slot()
 								[
 									CreateSpeakerWidget()
@@ -717,7 +719,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateFragmentWidget()
 							.HAlign(HAlign_Fill)
 							.VAlign(VAlign_Fill)
 							.FillWidth(1.0f)
-							.Padding(2, 0, 0, 0)
+							.Padding(0, 0, 0, 0)
 							[
 								CreateCentreTextDisplayWidget()
 							]
@@ -1198,6 +1200,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateDialogueDisplayWidge
 		.Padding(0)
 		[
 			SNew(SBorder)
+			.Visibility_Lambda( [this] () { return GetTypeGroup().GetHideAudioID() ? EVisibility::Collapsed : EVisibility::Visible; } )
 			.BorderImage(FYapEditorStyle::GetImageBrush(YapBrushes.Icon_IDTag))
 			.BorderBackgroundColor(YapColor::Noir)
 			.Padding(4)
@@ -1378,6 +1381,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::BuildDialogueEditor_Single
 				.ForegroundColor(YapColor::White)
 				.Cursor(EMouseCursor::Default)
 				.MaxDesiredHeight(66)
+				.AutoWrapText_Lambda( [] () { return UYapDeveloperSettings::GetWrapExpandedEditorText(); } )
 			]
 		]
 		+ SVerticalBox::Slot()
@@ -1405,6 +1409,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::BuildDialogueEditor_Single
 				.HintText(TitleTextHint)
 				.ForegroundColor(YapColor::YellowGray)
 				.Cursor(EMouseCursor::Default)
+				.AutoWrapText_Lambda( [] () { return UYapDeveloperSettings::GetWrapExpandedEditorText(); } )
 			]
 			+ SVerticalBox::Slot()
 			.AutoHeight()
@@ -2731,7 +2736,7 @@ FSlateColor SFlowGraphNode_YapFragmentWidget::GetColorAndOpacityForFragmentText(
 	return Color;
 }
 
-const FYapGroupSettings& SFlowGraphNode_YapFragmentWidget::GetTypeGroup() const
+const FYapTypeGroupSettings& SFlowGraphNode_YapFragmentWidget::GetTypeGroup() const
 {
 	return UYapProjectSettings::GetTypeGroup(GetDialogueNode()->GetTypeGroupTag());
 }

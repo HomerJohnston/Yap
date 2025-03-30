@@ -25,7 +25,7 @@ UYapProjectSettings::UYapProjectSettings()
 
 	DefaultAssetAudioClasses = { USoundBase::StaticClass() };
 
-	DefaultGroup = FYapGroupSettings(true);
+	DefaultGroup = FYapTypeGroupSettings(true);
 
 	UGameplayTagsManager& TagsManager = UGameplayTagsManager::Get();
 	DefaultGroup.DialogueTagsParent = TagsManager.AddNativeGameplayTag("Yap.Dialogue");
@@ -100,7 +100,7 @@ const TArray<TSoftClassPtr<UObject>>& UYapProjectSettings::GetAudioAssetClasses(
 #if WITH_EDITOR
 const FString UYapProjectSettings::GetAudioAssetRootFolder(FGameplayTag TypeGroup)
 {
-	const FYapGroupSettings* Group = GetTypeGroupPtr(TypeGroup);
+	const FYapTypeGroupSettings* Group = GetTypeGroupPtr(TypeGroup);
 
 	if (!Group)
 	{
@@ -208,14 +208,14 @@ void UYapProjectSettings::OnGetCategoriesMetaFromPropertyHandle(TSharedPtr<IProp
 	}
 }
 
-const FYapGroupSettings& UYapProjectSettings::GetTypeGroup(FGameplayTag TypeGroup)
+const FYapTypeGroupSettings& UYapProjectSettings::GetTypeGroup(FGameplayTag TypeGroup)
 {
 	if (!TypeGroup.IsValid())
 	{
 		return Get().DefaultGroup;
 	}
 
-	FYapGroupSettings* Group = Get().NamedGroups.Find(TypeGroup);
+	FYapTypeGroupSettings* Group = Get().NamedGroups.Find(TypeGroup);
 
 	if (!Group)
 	{
@@ -227,14 +227,14 @@ const FYapGroupSettings& UYapProjectSettings::GetTypeGroup(FGameplayTag TypeGrou
 	return *Group;
 }
 
-const FYapGroupSettings* UYapProjectSettings::GetTypeGroupPtr(FGameplayTag TypeGroup)
+const FYapTypeGroupSettings* UYapProjectSettings::GetTypeGroupPtr(FGameplayTag TypeGroup)
 {
 	if (!TypeGroup.IsValid())
 	{
 		return &Get().DefaultGroup;
 	}
 
-	FYapGroupSettings* Group = Get().NamedGroups.Find(TypeGroup);
+	FYapTypeGroupSettings* Group = Get().NamedGroups.Find(TypeGroup);
 
 	if (!Group)
 	{

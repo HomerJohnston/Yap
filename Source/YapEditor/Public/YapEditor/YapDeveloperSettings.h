@@ -38,6 +38,9 @@ protected:
 	UPROPERTY(Config, EditAnywhere, Category = "Settings")
 	FSlateFontInfo GraphDialogueFontUserOverride;
 
+	UPROPERTY(Config, EditAnywhere, Category = "Settings")
+	bool bWrapExpandedEditorText = false;
+	
 public:
 	static float GetConditionDetailsWidth() { return Get().ConditionDetailsWidth; }
 	
@@ -48,6 +51,8 @@ public:
 	static const FSlateFontInfo& GetGraphDialogueFontUserOverride() { return Get().GraphDialogueFontUserOverride; }
 
 	static bool GetCloseAndReopenAssetsOnLiveCoding() { return Get().bCloseAndReopenAssetsOnLiveCoding; }
+
+	static bool GetWrapExpandedEditorText() { return Get().bWrapExpandedEditorText; }
 	
 public:
 	FName GetCategoryName() const override { return FName("Yap"); }

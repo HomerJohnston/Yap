@@ -8,7 +8,7 @@
 #include "Widgets/Notifications/SProgressBar.h"
 #include "Yap/Enums/YapTimeMode.h"
 
-struct FYapGroupSettings;
+struct FYapTypeGroupSettings;
 enum class EYapDialogueProgressionFlags : uint8;
 class UYapCharacter;
 class SYapConditionsScrollBox;
@@ -301,7 +301,7 @@ protected:
 	// ------------
 	FSlateColor	GetColorAndOpacityForFragmentText(FLinearColor BaseColor) const;
 
-	const FYapGroupSettings& GetTypeGroup() const;
+	const FYapTypeGroupSettings& GetTypeGroup() const;
 	
 	// ================================================================================================
 	// OVERRIDES

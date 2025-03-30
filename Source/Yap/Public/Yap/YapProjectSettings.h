@@ -5,7 +5,7 @@
 
 #include "Engine/DeveloperSettings.h"
 #include "GameplayTagContainer.h"
-#include "YapGroupSettings.h"
+#include "YapTypeGroupSettings.h"
 #include "Yap/Enums/YapTimeMode.h"
 #include "Yap/YapBroker.h"
 
@@ -83,14 +83,14 @@ protected:
 
 	/** Your most commonly used dialogue type should be setup here. Settings from here will be used for any dialogue nodes which do not have a group assigned. */
 	UPROPERTY(Config, EditAnywhere, Category = "Core")
-	FYapGroupSettings DefaultGroup;
+	FYapTypeGroupSettings DefaultGroup;
 	
 	/**
 	 * Type groups - if you want to have separate type handling for things like normal in-level chatting, tutorial text, incoming radio messages, etc... add "Groups" for them here.
 	 * Your "Listeners" can register to receive events from one or more groups.
 	 */
 	UPROPERTY(Config, EditAnywhere, Category = "Core", meta = (ForceInlineRow))
-	TMap<FGameplayTag, FYapGroupSettings> NamedGroups;
+	TMap<FGameplayTag, FYapTypeGroupSettings> NamedGroups;
 	
 	// - - - - - DIALOGUE PLAYBACK - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
 	
@@ -242,9 +242,9 @@ protected:
 #endif
 
 public:
-	static const FYapGroupSettings& GetTypeGroup(FGameplayTag TypeGroup);
+	static const FYapTypeGroupSettings& GetTypeGroup(FGameplayTag TypeGroup);
 
-	static const FYapGroupSettings* GetTypeGroupPtr(FGameplayTag TypeGroup);
+	static const FYapTypeGroupSettings* GetTypeGroupPtr(FGameplayTag TypeGroup);
 };
 
 #undef LOCTEXT_NAMESPACE

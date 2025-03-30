@@ -1188,7 +1188,7 @@ void SFlowGraphNode_YapDialogueWidget::OnDialogueSkipped(uint8 FragmentIndex)
 
 // ------------------------------------------------------------------------------------------------
 
-const FYapGroupSettings& SFlowGraphNode_YapDialogueWidget::GetTypeGroup() const
+const FYapTypeGroupSettings& SFlowGraphNode_YapDialogueWidget::GetTypeGroup() const
 {
 	const UFlowNode_YapDialogue* DialogueNode = GetFlowYapDialogueNode();
 	check(DialogueNode);

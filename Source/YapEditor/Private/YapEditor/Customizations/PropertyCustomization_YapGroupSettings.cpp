@@ -10,7 +10,7 @@
 #include "IDetailGroup.h"
 #include "SGameplayTagPicker.h"
 #include "Widgets/Layout/SWidgetSwitcher.h"
-#include "Yap/YapGroupSettings.h"
+#include "Yap/YapTypeGroupSettings.h"
 #include "Yap/YapProjectSettings.h"
 #include "Yap/Globals/YapFileUtilities.h"
 #include "YapEditor/YapEditorColor.h"
@@ -108,7 +108,7 @@ void FPropertyCustomization_YapGroupSettings::GrabOriginalStructPtr(TSharedRef<I
 
 	if (Result == FPropertyAccess::Success)
 	{
-		Settings = reinterpret_cast<FYapGroupSettings*>(StructData);
+		Settings = reinterpret_cast<FYapTypeGroupSettings*>(StructData);
 	}
 }
 
@@ -128,7 +128,7 @@ void FPropertyCustomization_YapGroupSettings::IndexChildrenProperties(TSharedRef
 
 		IndexedPropertyHandles.Add(ChildHandle);
 
-		static const FName GroupColorName = GET_MEMBER_NAME_CHECKED(FYapGroupSettings, GroupColor);
+		static const FName GroupColorName = GET_MEMBER_NAME_CHECKED(FYapTypeGroupSettings, GroupColor);
 
 		FName PropertyName = ChildHandle->GetProperty()->GetFName();
 
@@ -223,8 +223,8 @@ void FPropertyCustomization_YapGroupSettings::GroupProperties()
 {
 	TArray<FName> IgnoredProperties
 	{
-		GET_MEMBER_NAME_CHECKED(FYapGroupSettings, bDefault),
-		GET_MEMBER_NAME_CHECKED(FYapGroupSettings, GroupColor)
+		GET_MEMBER_NAME_CHECKED(FYapTypeGroupSettings, bDefault),
+		GET_MEMBER_NAME_CHECKED(FYapTypeGroupSettings, GroupColor)
 	};
 	
 	// Iterate through all of the properties and find initial information
@@ -477,7 +477,7 @@ void FPropertyCustomization_YapGroupSettings::DrawNamedGroupProperty(IDetailChil
 // ------------------------------------------------------------------------------------------------
 void FPropertyCustomization_YapGroupSettings::DrawExtraPanelContent(IDetailGroup& Group, TSharedPtr<IPropertyHandle> Property)
 {
-	if (Property->GetProperty()->GetFName() == GET_MEMBER_NAME_CHECKED(FYapGroupSettings, DialogueTagsParent))
+	if (Property->GetProperty()->GetFName() == GET_MEMBER_NAME_CHECKED(FYapTypeGroupSettings, DialogueTagsParent))
 	{
 		//DrawDialogueTagsExtraControls(Group, Property);
 		DrawTagExtraControls(Group, Property, LOCTEXT("DialogueTags", "Dialogue Tags"));
@@ -800,7 +800,7 @@ void FPropertyCustomization_YapGroupSettings::DrawTagExtraControls(IDetailGroup&
 // ------------------------------------------------------------------------------------------------
 void FPropertyCustomization_YapGroupSettings::DrawDialogueTagsExtraControls(IDetailGroup& Group, TSharedPtr<IPropertyHandle> DialogueTagsParentProperty)
 {
-	if (DialogueTagsParentProperty->GetProperty()->GetFName() != GET_MEMBER_NAME_CHECKED(FYapGroupSettings, DialogueTagsParent))
+	if (DialogueTagsParentProperty->GetProperty()->GetFName() != GET_MEMBER_NAME_CHECKED(FYapTypeGroupSettings, DialogueTagsParent))
 	{
 		checkNoEntry();
 	}

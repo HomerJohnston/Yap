@@ -1,21 +1,21 @@
 #// Copyright Ghost Pepper Games, Inc. All Rights Reserved.
 // This work is MIT-licensed. Feel free to use it however you wish, within the confines of the MIT license. 
 
-#include "Yap/YapGroupSettings.h"
+#include "Yap/YapTypeGroupSettings.h"
 
 #include "GameplayTagsManager.h"
 #include "Yap/YapProjectSettings.h"
 
-FYapGroupSettings::FYapGroupSettings()
+FYapTypeGroupSettings::FYapTypeGroupSettings()
 {
 }
 
-FYapGroupSettings::FYapGroupSettings(bool bDefaultIn)
+FYapTypeGroupSettings::FYapTypeGroupSettings(bool bDefaultIn)
 {
     bDefault = bDefaultIn;
 }
 
-TArray<FString>& FYapGroupSettings::GetDefaultMoodTags()
+TArray<FString>& FYapTypeGroupSettings::GetDefaultMoodTags()
 {
     static TArray<FString> Tags
     {
@@ -39,7 +39,7 @@ TArray<FString>& FYapGroupSettings::GetDefaultMoodTags()
     return Tags;
 }
 
-const FYapGroupSettings& FYapGroupSettings::Default()
+const FYapTypeGroupSettings& FYapTypeGroupSettings::Default()
 {
     return UYapProjectSettings::GetTypeGroup(FGameplayTag::EmptyTag);
 }

@@ -13,7 +13,7 @@ class IDetailChildrenBuilder;
 class IDetailCategoryBuilder;
 class IDetailGroup;
 struct FGameplayTag;
-struct FYapGroupSettings;
+struct FYapTypeGroupSettings;
 class FPropertyCustomization_YapGroupSettings : public IPropertyTypeCustomization
 {
     // CONSTRUCTION -------------------------------------------------------------------------------
@@ -26,7 +26,7 @@ public:
     
 protected:
 
-    FYapGroupSettings* Settings = nullptr;
+    FYapTypeGroupSettings* Settings = nullptr;
         
     TArray<TSharedPtr<IPropertyHandle>> IndexedPropertyHandles;
 

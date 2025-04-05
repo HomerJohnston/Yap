@@ -29,7 +29,7 @@ protected:
     void K2_TalkSpeechBegins(FYapData_SpeechBegins In, FYapSpeechHandle Handle);
     
 public:
-    virtual void OnTalkSpeechBegins(FYapData_SpeechBegins Data, FYapSpeechHandle Handle)
+    YAP_API virtual void OnTalkSpeechBegins(FYapData_SpeechBegins Data, FYapSpeechHandle Handle)
     {
 	    K2_TalkSpeechBegins(Data, Handle);
     }

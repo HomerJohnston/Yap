@@ -20,12 +20,12 @@ public:
     UFUNCTION(BlueprintImplementableEvent)
     void K2_OnHandleInvalidated();
 
-    virtual void OnSpeakingEnds()
+    YAP_API virtual void OnSpeakingEnds()
     {
         K2_OnSpeakingEnds();
     }
     
-    virtual void OnHandleInvalidated()
+    YAP_API virtual void OnHandleInvalidated()
     {
         K2_OnHandleInvalidated();
     }

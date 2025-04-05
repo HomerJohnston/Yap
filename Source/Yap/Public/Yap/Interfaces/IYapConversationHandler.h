@@ -60,31 +60,31 @@ protected:
 	
 public:
 	/** Code to run when a conversation begins. Do NOT call Super when overriding. */
-	virtual void OnConversationOpened(FYapData_ConversationOpened Data, FYapConversationHandle Handle)
+	YAP_API virtual void OnConversationOpened(FYapData_ConversationOpened Data, FYapConversationHandle Handle)
 	{
 		K2_ConversationOpened(Data, Handle);
 	};
 	
 	/** Code to run when a piece of dialogue (speech) begins. Do NOT call Super when overriding. */
-	virtual void OnConversationSpeechBegins(FYapData_SpeechBegins Data, FYapSpeechHandle Handle)
+	YAP_API virtual void OnConversationSpeechBegins(FYapData_SpeechBegins Data, FYapSpeechHandle Handle)
 	{
 		K2_ConversationSpeechBegins(Data, Handle);
 	}
 	
 	/** Code to run when a single player prompt entry is emitted (for example, to add a button/text widget to a list). Do NOT call Super when overriding. */
-	virtual void OnConversationPlayerPromptCreated(FYapData_PlayerPromptCreated Data, FYapPromptHandle Handle)
+	YAP_API virtual void OnConversationPlayerPromptCreated(FYapData_PlayerPromptCreated Data, FYapPromptHandle Handle)
 	{
 		K2_ConversationPlayerPromptCreated(Data, Handle);
 	}
 	
 	/** Code to run after all player prompt entries have been emitted. Do NOT call Super when overriding. */
-	virtual void OnConversationPlayerPromptsReady(FYapData_PlayerPromptsReady Data)
+	YAP_API virtual void OnConversationPlayerPromptsReady(FYapData_PlayerPromptsReady Data)
 	{
 		K2_ConversationPlayerPromptsReady(Data);
 	}
 	
 	/** Code to run when a player prompt is ran. Do NOT call Super when overriding. */
-	virtual void OnConversationPlayerPromptChosen(FYapData_PlayerPromptChosen Data, FYapPromptHandle Handle)
+	YAP_API virtual void OnConversationPlayerPromptChosen(FYapData_PlayerPromptChosen Data, FYapPromptHandle Handle)
 	{
 		K2_ConversationPlayerPromptChosen(Data, Handle);
 	}

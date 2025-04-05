@@ -17,6 +17,10 @@ void SYapButtonPopup::Construct(const FArguments& InArgs)
 	PopupContentGetter = InArgs._PopupContentGetter;
 
 	OnClicked = InArgs._OnClicked;
+
+	OnPostPopup = InArgs._OnPostPopup;
+
+	FocusWidget = InArgs._FocusWidget;
 	
 	SMenuAnchor::Construct(SMenuAnchor::FArguments()
 	.Placement(InArgs._PopupPlacement)
@@ -65,11 +69,28 @@ FReply SYapButtonPopup::OnClicked_Button()
 	{
 		(void)OnOpened.ExecuteIfBound();
 
-		ButtonReply.SetUserFocus(MenuContent.ToSharedRef(), EFocusCause::SetDirectly);
 		FSlateApplication::Get().SetKeyboardFocus(MenuContent);
 	}
 
+	if (!RunPostPopupDelegate())
+	{
+		ButtonReply.SetUserFocus(MenuContent.ToSharedRef(), EFocusCause::SetDirectly);
+	}
+	
 	return ButtonReply;
+}
+
+bool SYapButtonPopup::RunPostPopupDelegate()
+{
+	if (OnPostPopup.IsBound())
+	{
+		bool bOverrideFocus;
+		OnPostPopup.Execute(bOverrideFocus);
+
+		return bOverrideFocus;
+	}
+
+	return false;
 }
 
 void SYapButtonPopup::SetMenuContent(TSharedRef<SWidget> InMenuContent)

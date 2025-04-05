@@ -41,6 +41,7 @@
 #include "YapEditor/Globals/YapEditorFuncs.h"
 #include "YapEditor/GraphNodes/FlowGraphNode_YapDialogue.h"
 #include "YapEditor/Helpers/ProgressionSettingWidget.h"
+#include "YapEditor/SlateWidgets/SYapDialogueEditor.h"
 #include "YapEditor/SlateWidgets/SYapGameplayTagTypedPicker.h"
 #include "YapEditor/SlateWidgets/SYapTimeProgressionWidget.h"
 
@@ -65,6 +66,78 @@ void SFlowGraphNode_YapFragmentWidget::PrivateRegisterAttributes(struct FSlateAt
 
 TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateCentreTextDisplayWidget()
 {
+	return SNew(SVerticalBox)
+	+ SVerticalBox::Slot()
+	.Padding(0, 0, 0, 0)
+	.VAlign(VAlign_Fill)
+	.HAlign(HAlign_Fill)
+	[
+		SNew(SBox)
+		.MaxDesiredHeight(49)
+		[
+			SNew(SYapButtonPopup)
+			.ButtonStyle(FYapEditorStyle::Get(), YapStyles.ButtonStyle_NoBorder)
+			.PopupContentGetter(FPopupContentGetter::CreateSP(this, &ThisClass::PopupContentGetter_ExpandedEditor))
+			.PopupPlacement(MenuPlacement_Center)
+			.ButtonForegroundColor(YapColor::DarkGray_SemiGlass)
+			.ButtonContent()
+			[
+				CreateDialogueDisplayWidget()
+			]
+			.OnPostPopup_Lambda( [this] (bool& bOverrideFocus)
+			{
+				if (ExpandedDialogueEditor.IsValid())
+				{
+					bOverrideFocus = true;
+					
+					if (bShiftPressed && NeedsChildSafeData())
+					{
+						ExpandedDialogueEditor.Pin()->SetFocus_ChildSafeDialogue();
+					}
+					else
+					{
+						ExpandedDialogueEditor.Pin()->SetFocus_MatureDialogue();
+					}
+				}
+			})
+		]
+	]
+	+ SVerticalBox::Slot()
+	.Padding(0, 4, 0, 0)
+	.AutoHeight()
+	[
+		SNew(SBox)
+		.MaxDesiredHeight(20)
+		.Visibility(this, &ThisClass::Visibility_TitleTextWidgets)
+		[
+			SNew(SYapButtonPopup)
+			.ButtonStyle(FYapEditorStyle::Get(), YapStyles.ButtonStyle_NoBorder)
+			.PopupContentGetter(FPopupContentGetter::CreateSP(this, &ThisClass::PopupContentGetter_ExpandedEditor))
+			.PopupPlacement(MenuPlacement_Center)
+			.ButtonForegroundColor(YapColor::DarkGray_SemiGlass)
+			.ButtonContent()
+			[
+				CreateTitleTextDisplayWidget()
+			]
+			.OnPostPopup_Lambda( [this] (bool& bOverrideFocus)
+			{
+				if (ExpandedDialogueEditor.IsValid())
+				{
+					bOverrideFocus = true;
+
+					if (bShiftPressed && NeedsChildSafeData())
+					{
+						ExpandedDialogueEditor.Pin()->SetFocus_ChildSafeTitleText();
+					}
+					else
+					{
+						ExpandedDialogueEditor.Pin()->SetFocus_MatureTitleText();
+					}
+				}
+			})
+		]
+	];
+	/*
 	return SNew(SYapButtonPopup)
 	.ButtonStyle(FYapEditorStyle::Get(), YapStyles.ButtonStyle_NoBorder)
 	.PopupContentGetter(FPopupContentGetter::CreateSP(this, &ThisClass::PopupContentGetter_ExpandedEditor))
@@ -95,14 +168,34 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateCentreTextDisplayWid
 				CreateTitleTextDisplayWidget()
 			]
 		]
-	];
+	]
+	.OnPostPopup_Lambda( [this] (bool& bOverrideFocus)
+	{
+		if (ExpandedDialogueEditor.IsValid())
+		{
+			bOverrideFocus = true;
+			ExpandedDialogueEditor.Pin()->SetFocus_MatureDialogue();
+		}
+	});
+	*/
 }
 
-void SFlowGraphNode_YapFragmentWidget::Construct(const FArguments& InArgs, SFlowGraphNode_YapDialogueWidget* InOwner, uint8 InFragmentIndex)
-{	
-	Owner = InOwner;
+TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::PopupContentGetter_ExpandedEditor()
+{
+	TSharedRef<SFlowGraphNode_YapFragmentWidget> x = StaticCastSharedRef<SFlowGraphNode_YapFragmentWidget>(AsShared());
 	
-	FragmentIndex = InFragmentIndex;
+	return SAssignNew(ExpandedDialogueEditor, SYapDialogueEditor)
+		.OwnerIn(x)
+		.DialogueNodeIn(GetDialogueNodeMutable())
+		.FragmentIndexIn(FragmentIndex)
+		.bNeedsChildSafeIn(NeedsChildSafeData());
+}
+
+void SFlowGraphNode_YapFragmentWidget::Construct(const FArguments& InArgs)
+{	
+	Owner = InArgs._InOwner;
+	
+	FragmentIndex = InArgs._InFragmentIndex;
 
 	if (UYapDeveloperSettings::GetGraphDialogueFontUserOverride().HasValidFont())
 	{
@@ -771,224 +864,6 @@ void SFlowGraphNode_YapFragmentWidget::OnValueCommitted_ManualTime(float NewValu
 	FYapTransactions::EndModify();
 }
 
-TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::MakeTimeSettingRow(EYapTimeMode TimeMode, EYapMaturitySetting MaturitySetting)
-{
-	using FLabelText =				FText;
-	using FToolTipText =			FText;
-	using FSlateBrushIcon =			const FSlateBrush*;
-	using FValueFunction =			TOptional<float>	(SFlowGraphNode_YapFragmentWidget::*) (EYapMaturitySetting) const;
-	using FValueUpdatedFunction =	void				(SFlowGraphNode_YapFragmentWidget::*) (float, EYapMaturitySetting);
-	using FValueCommittedFunction =	void				(SFlowGraphNode_YapFragmentWidget::*) (float, ETextCommit::Type, EYapMaturitySetting);
-
-	constexpr FSlateBrush* NoBrush = nullptr;
-	constexpr FValueFunction NoValueFunc = nullptr;
-	constexpr FValueUpdatedFunction NoValueUpdatedFunc = nullptr;
-	constexpr FValueCommittedFunction NoValueCommittedFunc = nullptr;
-	
-	using TimeModeData = TTuple
-	<
-		FLabelText,
-		FToolTipText,
-		FSlateBrushIcon,
-		FValueFunction,
-		FValueUpdatedFunction,
-		FValueCommittedFunction
-	>;
-
-	// Each entry in this represents how to display each row.
-	static const TMap<EYapTimeMode, TimeModeData> Data
-	{
-		{
-			EYapTimeMode::Default,
-			{
-				LOCTEXT("DialogueTimeMode_Default_Label", "Use Default Time"),
-				LOCTEXT("DialogueTimeMode_Default_ToolTip", "Use default time method set in project settings"),
-				FYapEditorStyle::GetImageBrush(YapBrushes.Icon_ProjectSettings_TabIcon),
-				NoValueFunc,
-				NoValueUpdatedFunc,
-				NoValueCommittedFunc,
-			}
-		},
-		{
-			EYapTimeMode::None, // This entry isn't used for anything
-			{
-				INVTEXT(""),
-				INVTEXT(""),
-				NoBrush,
-				NoValueFunc,
-				NoValueUpdatedFunc,
-				NoValueCommittedFunc,
-			},
-		},
-		{
-			EYapTimeMode::AudioTime,
-			{
-				LOCTEXT("DialogueTimeMode_Audio_Label", "Use Audio Time"),
-				LOCTEXT("DialogueTimeMode_Audio_ToolTip", "Use a time read from the audio asset"),
-				FYapEditorStyle::GetImageBrush(YapBrushes.Icon_AudioTime),
-				&SFlowGraphNode_YapFragmentWidget::Value_TimeSetting_AudioTime,
-				NoValueUpdatedFunc,
-				NoValueCommittedFunc,
-			},
-		},
-		{
-			EYapTimeMode::TextTime,
-			{
-				LOCTEXT("DialogueTimeMode_Text_Label", "Use Text Time"),
-				LOCTEXT("DialogueTimeMode_Text_ToolTip", "Use a time calculated from text length"),
-				FYapEditorStyle::GetImageBrush(YapBrushes.Icon_TextTime),
-				&SFlowGraphNode_YapFragmentWidget::Value_TimeSetting_TextTime,
-				NoValueUpdatedFunc,
-				NoValueCommittedFunc,
-			},
-		},
-		{
-			EYapTimeMode::ManualTime,
-			{
-				LOCTEXT("DialogueTimeMode_Manual_Label", "Use Specified Time"),
-				LOCTEXT("DialogueTimeMode_Manual_ToolTip", "Use a manually entered time"),
-				FYapEditorStyle::GetImageBrush(YapBrushes.Icon_Timer),
-				&SFlowGraphNode_YapFragmentWidget::Value_TimeSetting_ManualTime,
-				&SFlowGraphNode_YapFragmentWidget::OnValueUpdated_ManualTime,
-				&SFlowGraphNode_YapFragmentWidget::OnValueCommitted_ManualTime,
-			},
-		}
-	};
-
-	const FText& LabelText =					Data[TimeMode].Get<0>();
-	const FText& ToolTipText =					Data[TimeMode].Get<1>();
-	const FSlateBrush* Icon =					Data[TimeMode].Get<2>();
-	FValueFunction ValueFunction =				Data[TimeMode].Get<3>();
-	FValueUpdatedFunction UpdatedFunction =		Data[TimeMode].Get<4>();
-	FValueCommittedFunction CommittedFunction = Data[TimeMode].Get<5>();
-	
-	bool bHasCommittedDelegate =	Data[TimeMode].Get<5>() != nullptr;
-
-	auto OnClickedDelegate = FOnClicked::CreateRaw(this, &ThisClass::OnClicked_SetTimeModeButton, TimeMode);
-	auto ButtonColorDelegate = TAttribute<FSlateColor>::CreateRaw(this, &ThisClass::ButtonColorAndOpacity_UseTimeMode, TimeMode, TimeModeButtonColors[TimeMode], MaturitySetting);
-	auto ForegroundColorDelegate = TAttribute<FSlateColor>::CreateRaw(this, &ThisClass::ForegroundColor_TimeSettingButton, TimeMode, YapColor::White);
-
-	TSharedPtr<SHorizontalBox> RowBox = SNew(SHorizontalBox);
-
-	// Toss in a filler spacer to let widgets flow to the right side
-	RowBox->AddSlot()
-	.FillWidth(1.0)
-	[
-		SNew(SSpacer)
-	];
-
-	// On the left pane, add label texts and buttons
-	if (MaturitySetting == EYapMaturitySetting::Mature)
-	{
-		RowBox->AddSlot()
-		.AutoWidth()
-		.HAlign(HAlign_Right)
-		.VAlign(VAlign_Center)
-		.Padding(0, 0, 8, 0)
-		[
-			SNew(STextBlock)
-			.Text(LabelText)
-		];
-	}
-
-	if (MaturitySetting == EYapMaturitySetting::Mature || TimeMode != EYapTimeMode::Default)
-	{
-		RowBox->AddSlot()
-		.AutoWidth()
-		.HAlign(HAlign_Right)
-		.VAlign(VAlign_Center)
-		.Padding(0, 0, 8, 0)
-		[
-			SNew(SButton)
-			.Cursor(EMouseCursor::Default)
-			.IsEnabled(MaturitySetting == EYapMaturitySetting::Mature)
-			.ButtonStyle(FYapEditorStyle::Get(), YapStyles.ButtonStyle_TimeSetting)
-			.ContentPadding(FMargin(4, 3))
-			.ToolTipText(ToolTipText)
-			.OnClicked(OnClickedDelegate)
-			.ButtonColorAndOpacity(ButtonColorDelegate)
-			.ForegroundColor(ForegroundColorDelegate)
-			.HAlign(HAlign_Center)
-			[
-				SNew(SImage)
-				.DesiredSizeOverride(FVector2D(16, 16))
-				.Image(Icon)
-				.ColorAndOpacity(FSlateColor::UseForeground())
-			]
-		];
-	}
-
-	auto X = SNew(SNumericEntryBox<float>);
-
-	// Add a numeric box if this row has a value getter
-	if (ValueFunction)
-	{
-		RowBox->AddSlot()
-		.AutoWidth()
-		.VAlign(VAlign_Center)
-		[
-			SNew(SBox)
-			.WidthOverride(60)
-			[
-				bHasCommittedDelegate
-				?
-					SNew(SNumericEntryBox<float>)
-					.IsEnabled_Lambda( [this] () { return GetFragment().GetTimeModeSetting() == EYapTimeMode::ManualTime; } )
-					.ToolTipText(LOCTEXT("FragmentTimeEntry_Tooltip", "Time this dialogue fragment will play for"))
-					//.Justification(ETextJustify::Center) // Numeric Entry Box has a bug, when spinbox is turned on this doesn't work. So don't use it for any of the rows.
-					.AllowSpin(true)
-					.Delta(0.05f)
-					.MaxValue(60) // TODO project setting?
-					.MaxSliderValue(10) // TODO project setting?
-					.MaxFractionalDigits(1) // TODO project setting?
-					.OnValueChanged(this, UpdatedFunction, MaturitySetting)
-					.MinValue(0)
-					.Value(this, ValueFunction, MaturitySetting)
-					.OnValueCommitted(this, CommittedFunction, MaturitySetting)
-				:
-					SNew(SNumericEntryBox<float>)
-					.IsEnabled(false)
-					.ToolTipText(LOCTEXT("FragmentTimeEntry_Tooltip", "Time this dialogue fragment will play for"))
-					//.Justification(ETextJustify::Center) // Numeric Entry Box has a bug, when spinbox is turned on this doesn't work. So don't use it for any of the rows.
-					.MaxFractionalDigits(1) // TODO project setting?
-					.Value(this, ValueFunction, MaturitySetting)
-			]
-		];
-	}
-	else
-	{
-		RowBox->AddSlot()
-		.AutoWidth()
-		.HAlign(HAlign_Right)
-		.VAlign(VAlign_Center)
-		[
-			SNew(SSpacer)
-			.Size(60)
-		];
-	}
-	
-	return SNew(SBox)
-	.HeightOverride(24)
-	[
-		RowBox.ToSharedRef()
-	];
-}
-
-TOptional<float> SFlowGraphNode_YapFragmentWidget::Value_TimeSetting_AudioTime(EYapMaturitySetting MaturitySetting) const
-{
-	return GetFragmentMutable().GetBitMutable(MaturitySetting).GetAudioTime(EYapLoadContext::AsyncEditorOnly);
-}
-
-TOptional<float> SFlowGraphNode_YapFragmentWidget::Value_TimeSetting_TextTime(EYapMaturitySetting MaturitySetting) const
-{
-	return GetFragment().GetBit(MaturitySetting).GetTextTime(GetDialogueNode()->GetTypeGroupTag());
-}
-
-TOptional<float> SFlowGraphNode_YapFragmentWidget::Value_TimeSetting_ManualTime(EYapMaturitySetting MaturitySetting) const
-{
-	return GetFragment().GetBit(MaturitySetting).GetManualTime();
-}
-
 EVisibility SFlowGraphNode_YapFragmentWidget::Visibility_AudioSettingsButton() const
 {
 	if (GetTypeGroup().GetMissingAudioErrorLevel() != EYapMissingAudioErrorLevel::OK)
@@ -1135,7 +1010,15 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateDialogueDisplayWidge
 				.Cursor(EMouseCursor::Default)
 				.BorderImage(FYapEditorStyle::GetImageBrush(YapBrushes.Box_SolidWhite))
 				.BorderBackgroundColor(FSlateColor::UseForeground())
-				.ToolTipText(LOCTEXT("DialogueTextDisplayWidget_ToolTipText", "Dialogue text"))
+				.ToolTipText_Lambda( [this] ()
+				{
+					if (NeedsChildSafeData() && GetDisplayMaturitySetting() != EYapMaturitySetting::ChildSafe)
+					{
+						return LOCTEXT("DialogueTextDisplayWidget_ToolTipText", "Hold shift to show child-safe");
+					}
+
+					return FText::GetEmpty();
+				})
 				.Padding(0)
 				[
 					SNew(SOverlay)
@@ -1227,431 +1110,6 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateDialogueDisplayWidge
 	];
 	
 	return Widget;
-}
-
-FText SFlowGraphNode_YapFragmentWidget::Text_TextDisplayWidget(const FText* MatureText, const FText* SafeText) const
-{
-	return (GetDisplayMaturitySetting()) == EYapMaturitySetting::Mature ? *MatureText : *SafeText; 
-}
-
-EVisibility SFlowGraphNode_YapFragmentWidget::Visibility_DialogueBackground() const
-{
-	return GetFragment().GetBitReplaced() ? EVisibility::Visible : EVisibility::Collapsed;
-}
-
-FSlateColor SFlowGraphNode_YapFragmentWidget::BorderBackgroundColor_Dialogue() const
-{
-	return YapColor::LightYellow_SuperGlass;
-}
-
-TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::PopupContentGetter_ExpandedEditor()
-{
-	float Width = NeedsChildSafeData() ? 500 : 600; // TODO developer setting
-
-	Width += UYapDeveloperSettings::GetExpandedEditorWidthAdjustment();
-	
-	return SNew(SSplitter)
-	.Orientation(Orient_Vertical)
-	.PhysicalSplitterHandleSize(2.0)
-	+ SSplitter::Slot()
-	.Resizable(false)
-	.SizeRule(SSplitter::SizeToContent)
-	[
-		SNew(SBox)
-		.Padding(0, 0, 0, 4)
-		[
-			BuildDialogueEditors_ExpandedEditor(Width)
-		]
-	]
-	+ SSplitter::Slot()
-	.Resizable(false)
-	.SizeRule(SSplitter::SizeToContent)
-	[
-		SNew(SBox)
-		.Padding(0, 4, 0, 4)
-		[
-			BuildTimeSettings_ExpandedEditor(Width)
-		]
-	]
-	+ SSplitter::Slot()
-	.Resizable(false)
-	.SizeRule(SSplitter::SizeToContent)
-	[
-		SNew(SBox)
-		.Padding(0, 4, 0, 0)
-		[
-			BuildPaddingSettings_ExpandedEditor(Width)
-		]
-	];
-}
-
-// TODO this is all doubled-up for mature and child safe. Simplify it.
-TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::BuildDialogueEditors_ExpandedEditor(float Width)
-{
-	bool bMatureOnly = !NeedsChildSafeData();
-
-	TSharedRef<SSplitter> Splitter = SNew(SSplitter)
-	.Orientation(Orient_Horizontal)
-	.PhysicalSplitterHandleSize(2.0f);
-	
-	{
-		FYapBit& Bit = GetFragmentMutable().GetMatureBitMutable();
-
-		FText Title = (bMatureOnly) ? LOCTEXT("DialogueDataEditor_Title", "DIALOGUE") : LOCTEXT("MatureDialogueDataEditor_Title", "MATURE DIALOGUE");
-		FText DialogueTextHint = LOCTEXT("DialogueTextEntryBox_Hint", "Dialogue text...");
-		FText TitleTextHint = LOCTEXT("DialogueTextEntryBox_Hint", "Title text...");
-		
-		FMargin Padding(0, 4, 4, 4);
-		
-		
-		Splitter->AddSlot()
-		.Resizable(false)
-		[
-			BuildDialogueEditor_SingleSide(Title, DialogueTextHint, TitleTextHint, Width, Padding, Bit)
-		];
-	}
-	
-	if (!bMatureOnly)
-	{
-		FYapBit& Bit = GetFragmentMutable().GetChildSafeBitMutable();
-
-		FText Title = LOCTEXT("ChildSafeDataEditor_Title", "CHILD-SAFE DIALOGUE");
-		FText DialogueTextHint = LOCTEXT("DialogueTextEntryBox_Hint", "Dialogue text (child-safe)...");
-		FText TitleTextHint = LOCTEXT("DialogueTextEntryBox_Hint", "Title text (child-safe)...");
-
-		FMargin Padding(4, 4, 0, 4);
-				
-		Splitter->AddSlot()
-		.Resizable(false)
-		[
-			BuildDialogueEditor_SingleSide(Title, DialogueTextHint, TitleTextHint, Width, Padding, Bit)
-		];
-	};
-
-	return Splitter;
-}
-
-TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::BuildDialogueEditor_SingleSide(const FText& Title, const FText& DialogueTextHint, const FText& TitleTextHint, float Width, FMargin Padding, FYapBit& Bit)
-{
-	FYapText& DialogueText = Bit.DialogueText;
-	FYapText& TitleText = Bit.TitleText;
-		
-	TSoftObjectPtr<UObject>& AudioAsset = Bit.AudioAsset;
-	FString& StageDirections = Bit.StageDirections;
-
-	FString& DialogueLocalizationComments = Bit.DialogueLocalizationComments;
-	FString& TitleTextLocalizationComments = Bit.TitleTextLocalizationComments;
-
-	TSharedRef<IEditableTextProperty> DialogueTextProperty = MakeShareable(new FYapEditableTextPropertyHandle(DialogueText, Owner->GetFlowGraphNode_YapDialogueMutable()));
-	TSharedRef<IEditableTextProperty> TitleTextProperty = MakeShareable(new FYapEditableTextPropertyHandle(TitleText, Owner->GetFlowGraphNode_YapDialogueMutable()));
-
-	auto DialogueCommentAttribute = TAttribute<FString>::CreateLambda( [DialogueLocalizationComments] () { return *DialogueLocalizationComments; });
-	FText DialogueCommentText = LOCTEXT("POComment_HintText", "Comments for translators...");
-	
-	auto TitleTextCommentAttribute = TAttribute<FString>::CreateLambda( [TitleTextLocalizationComments] () { return *TitleTextLocalizationComments; });
-	FText TitleTextCommentText = LOCTEXT("POComment_HintText", "Comments for translators...");
-	
-	auto StageDirectionsAttribute = TAttribute<FString>::CreateLambda( [StageDirections] () { return *StageDirections; });
-	FText StageDirectionsText = LOCTEXT("StageDirections_HintText", "Stage directions...");
-	
-	return SNew(SBox)
-	.WidthOverride(Width)
-	.Padding(Padding)
-	[
-		SNew(SVerticalBox)
-		+ SVerticalBox::Slot()
-		.AutoHeight()
-		[
-			SNew(STextBlock)
-			.Text(Title)
-			.Font(YapFonts.Font_SectionHeader)
-			.Justification(ETextJustify::Center)	
-		]
-		+ SVerticalBox::Slot()
-		.FillHeight(1.0)
-		.Padding(0, 6, 0, 0)
-		[
-			SNew(SBox)
-			.HeightOverride(66) // Fits ~4 lines of text
-			.VAlign(VAlign_Fill)
-			[
-				SNew(SYapTextPropertyEditableTextBox, DialogueTextProperty)
-				.Style(FYapEditorStyle::Get(), YapStyles.EditableTextBoxStyle_Dialogue)
-				.Owner(GetDialogueNodeMutable())
-				.HintText(DialogueTextHint)
-				.Font(YapFonts.Font_DialogueText)
-				.ForegroundColor(YapColor::White)
-				.Cursor(EMouseCursor::Default)
-				.MaxDesiredHeight(66)
-				.AutoWrapText_Lambda( [] () { return UYapDeveloperSettings::GetWrapExpandedEditorText(); } )
-			]
-		]
-		+ SVerticalBox::Slot()
-		.AutoHeight()
-		.Padding(0, 2, 0, 0)
-		[
-			SNew(SBox)
-			.Visibility(EVisibility::Visible) // TODO project settings to disable localization metadata
-			.Padding(0, 0, 28, 0)
-			[
-					BuildCommentEditor(DialogueCommentAttribute, &DialogueLocalizationComments, LOCTEXT("POComment_HintText", "Comments for translators..."))
-			]
-		]
-		+ SVerticalBox::Slot()
-		.AutoHeight()
-		.Padding(0, 12, 0, 0)
-		[
-			SNew(SVerticalBox)
-			.Visibility(GetDialogueNodeMutable()->UsesTitleText() ? EVisibility::Visible : EVisibility::Collapsed)
-			+ SVerticalBox::Slot()
-			[
-				SNew(SYapTextPropertyEditableTextBox, TitleTextProperty)
-				.Style(FYapEditorStyle::Get(), YapStyles.EditableTextBoxStyle_TitleText)
-				.Owner(GetDialogueNodeMutable())
-				.HintText(TitleTextHint)
-				.ForegroundColor(YapColor::YellowGray)
-				.Cursor(EMouseCursor::Default)
-				.AutoWrapText_Lambda( [] () { return UYapDeveloperSettings::GetWrapExpandedEditorText(); } )
-			]
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			.Padding(0, 2, 0, 0)
-			[
-				SNew(SBox)
-				.Visibility(EVisibility::Visible) // TODO project settings to disable localization metadata
-				.Padding(0, 0, 28, 0)
-				[
-					BuildCommentEditor(TitleTextCommentAttribute, &TitleTextLocalizationComments, LOCTEXT("POComment_HintText", "Comments for translators..."))
-				]
-			]
-		]
-		+ SVerticalBox::Slot()
-		.AutoHeight()
-		.Padding(0, 12, 0, 0)
-		[
-			SNew(SBox)
-			.Visibility(EVisibility::Visible) // TODO project settings to disable audio
-			[
-				SNew(SVerticalBox)
-				+ SVerticalBox::Slot()
-				.HAlign(HAlign_Center)
-				.Padding(0, 0, 0, 0)
-				[							
-					SNew(STextBlock)
-					.Text(LOCTEXT("AudioAssetPicker_Title", "Audio Asset"))
-				]
-				+ SVerticalBox::Slot()
-				.AutoHeight()
-				.Padding(0, 2, 0, 0)
-				[
-					SNew(SHorizontalBox)
-					+ SHorizontalBox::Slot()
-					[
-						SNew(SBox)
-						[
-							CreateAudioAssetWidget(AudioAsset)
-						]
-					]
-					+ SHorizontalBox::Slot()
-					.AutoWidth()
-					.HAlign(HAlign_Right)
-					.VAlign(VAlign_Center)
-					[
-						CreateAudioPreviewWidget(&AudioAsset, EVisibility::Visible)
-					]
-				]
-				+ SVerticalBox::Slot()
-				.Padding(0, 2, 28, 0)
-				.AutoHeight()
-				[
-					BuildCommentEditor(StageDirectionsAttribute, &StageDirections, LOCTEXT("StageDirections_HintText", "Stage directions..."))
-				]
-			]
-		]
-	];
-}
-
-TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::BuildCommentEditor(TAttribute<FString> String, FString* StringProperty, FText HintText)
-{
-	UFlowNode_YapDialogue* DialogueNode = GetDialogueNodeMutable();
-	
-	return SNew(SBorder)
-	.BorderImage(FYapEditorStyle::GetImageBrush(YapBrushes.Box_SolidWhite))
-	.BorderBackgroundColor(YapColor::DeepGray_SemiGlass)
-	.Visibility_Lambda( [this] () { return EVisibility::Visible; } ) // TODO project developer settings to show/hide this
-	[
-		SNew(SMultiLineEditableText)
-		.HintText(HintText)
-		.ClearKeyboardFocusOnCommit(false)
-		.Text_Lambda( [String] () { return FText::FromString(String.Get()); } )
-		.OnTextCommitted_Lambda( [StringProperty, DialogueNode] (const FText& NewText, ETextCommit::Type CommitType)
-		{
-			if (CommitType != ETextCommit::OnCleared)
-			{
-				FYapScopedTransaction Transaction("TODO", LOCTEXT("TransactionText_ChangeComment", "Change comment"), DialogueNode);
-				*StringProperty = NewText.ToString();
-			}
-		})
-	];
-}
-
-TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::BuildTimeSettings_ExpandedEditor(float Width)
-{
-	bool bMatureOnly = !NeedsChildSafeData();
-
-	TSharedRef<SSplitter> Splitter = SNew(SSplitter)
-		.Orientation(Orient_Horizontal)
-		.PhysicalSplitterHandleSize(2.0f);
-
-	{
-		Splitter->AddSlot()
-		.Resizable(false)
-		[
-			BuildTimeSettings_SingleSide(Width, FMargin(4, 4, 28, 4), EYapMaturitySetting::Mature)
-		];
-	}
-	
-	if (!bMatureOnly)
-	{
-		Splitter->AddSlot()
-		.Resizable(false)
-		[
-			BuildTimeSettings_SingleSide(Width, FMargin(4, 4, 28, 4), EYapMaturitySetting::ChildSafe)
-		];
-	};
-
-	return Splitter;
-}
-
-TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::BuildTimeSettings_SingleSide(float Width, FMargin Padding, EYapMaturitySetting MaturitySetting)
-{
-	return SNew(SBox)
-	.WidthOverride(Width)
-	.Padding(Padding)
-	[
-		SNew(SVerticalBox)
-		+ SVerticalBox::Slot()
-		.Padding(0, 0, 0, 2)
-		.AutoHeight()
-		[
-			MakeTimeSettingRow(EYapTimeMode::Default, MaturitySetting)
-		]
-		+ SVerticalBox::Slot()
-		.Padding(0, 2, 0, 2)
-		.AutoHeight()
-		[
-			MakeTimeSettingRow(EYapTimeMode::AudioTime, MaturitySetting)
-		]
-		+ SVerticalBox::Slot()
-		.Padding(0, 2, 0, 2)
-		.AutoHeight()
-		[
-			MakeTimeSettingRow(EYapTimeMode::TextTime, MaturitySetting)
-		]
-		+ SVerticalBox::Slot()
-		.Padding(0, 2, 0, 0)
-		.AutoHeight()
-		[
-			MakeTimeSettingRow(EYapTimeMode::ManualTime, MaturitySetting)
-		]
-	];
-}
-
-TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::BuildPaddingSettings_ExpandedEditor(float Width)
-{
-	bool bMatureOnly = !NeedsChildSafeData();
-
-	TSharedRef<SSplitter> Splitter = SNew (SSplitter)
-		.Orientation(Orient_Horizontal)
-		.PhysicalSplitterHandleSize(2.0f);
-
-	{
-		Splitter->AddSlot()
-		.Resizable(false)
-		[
-			SNew(SBox)
-			.Padding(4, 4, 28, 4)
-			.HAlign(HAlign_Right)
-			[
-				SNew(SHorizontalBox)
-				+ SHorizontalBox::Slot()
-				.AutoWidth()
-				.VAlign(VAlign_Center)
-				.Padding(0, 0, 8, 0)
-				[
-					SNew(STextBlock)
-					.Text(LOCTEXT("PaddingTime_Header", "Padding Time"))
-				]
-				+ SHorizontalBox::Slot()
-				.AutoWidth()
-				.VAlign(VAlign_Center)
-				.Padding(0, 0, 8, 0)
-				[				
-					SNew(SButton)
-					.Cursor(EMouseCursor::Default)
-					.ButtonStyle(FYapEditorStyle::Get(), YapStyles.ButtonStyle_TimeSetting)
-					.ContentPadding(FMargin(4, 3))
-					.ToolTipText(LOCTEXT("UseDefault_Button", "Use Default"))
-					.OnClicked_Lambda( [this] ()
-					{
-						if (!GetFragmentMutable().Padding.IsSet())
-						{
-							TOptional<float> CurrentPadding_Default = GetFragmentMutable().GetPaddingSetting();
-							GetFragmentMutable().SetPaddingToNextFragment(CurrentPadding_Default.Get(0.0f));
-						}
-						else
-						{
-							GetFragmentMutable().Padding.Reset();
-						}
-						return FReply::Handled();
-					})// TODO transactions
-					.ButtonColorAndOpacity(this, &ThisClass::ButtonColorAndOpacity_PaddingButton) // TODO coloring
-					.HAlign(HAlign_Center)
-					[
-						SNew(SImage)
-						.DesiredSizeOverride(FVector2D(16, 16))
-						.Image(FYapEditorStyle::GetImageBrush(YapBrushes.Icon_ProjectSettings_TabIcon))
-						.ColorAndOpacity(FSlateColor::UseForeground())
-					]
-				]
-				+ SHorizontalBox::Slot()
-				.AutoWidth()
-				.VAlign(VAlign_Center)
-				[
-					SNew(SBox)
-					.WidthOverride(60)
-					[
-						// -----------------------------
-						// TIME DISPLAY
-						// -----------------------------
-						SNew(SNumericEntryBox<float>)
-						.IsEnabled(true)
-						.AllowSpin(true)
-						.Delta(0.01f)
-						.MinSliderValue(-1.0f)
-						.MaxSliderValue(UYapProjectSettings::GetFragmentPaddingSliderMax())
-						.ToolTipText(LOCTEXT("FragmentTimeEntry_Tooltip", "Time this dialogue fragment will play for"))
-						.Justification(ETextJustify::Center)
-						.Value_Lambda( [this] () { return GetFragmentMutable().GetPaddingValue(GetDialogueNode()->GetTypeGroupTag()); } )
-						.OnValueChanged_Lambda( [this] (float NewValue) { GetFragmentMutable().SetPaddingToNextFragment(NewValue); } )
-						.OnValueCommitted_Lambda( [this] (float NewValue, ETextCommit::Type) { GetFragmentMutable().SetPaddingToNextFragment(NewValue); } ) // TODO transactions
-					]
-				]
-			]
-		];
-	}
-
-	if (!bMatureOnly)
-	{
-		Splitter->AddSlot()
-		.Resizable(false)
-		[
-			SNew(SBox)
-			.WidthOverride(Width)
-		];
-	}
-
-	return Splitter;
 }
 
 // ================================================================================================
@@ -1964,7 +1422,7 @@ FText SFlowGraphNode_YapFragmentWidget::ToolTipText_SpeakerWidget() const
 	}
 
 	// TODO minor bug this is being reached when it shouldn't be
-	return FText::Format(LOCTEXT("SpeakerMoodImageMissing_Label", "{0}\n\n{1}\n<missing>"), CharacterName, MoodTagLabel);
+	return FText::Format(LOCTEXT("SpeakerMoodImageMissing_Label", "{0}\n\n{1}"), CharacterName, MoodTagLabel);
 }
 
 FText SFlowGraphNode_YapFragmentWidget::Text_SpeakerWidget() const
@@ -2082,7 +1540,7 @@ FSlateColor SFlowGraphNode_YapFragmentWidget::BorderBackgroundColor_DirectedAtIm
 	}
 	else
 	{
-		Color = YapColor::Transparent;		
+		Color = Owner->IsHovered() ? YapColor::Gray_SemiGlass : YapColor::Transparent;
 	}
 
 	float A = UYapDeveloperSettings::GetPortraitBorderAlpha();
@@ -2200,7 +1658,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateTitleTextDisplayWidg
 	.Cursor(EMouseCursor::Default)
 	.BorderImage(FYapEditorStyle::GetImageBrush(YapBrushes.Box_SolidWhite))
 	.BorderBackgroundColor(FSlateColor::UseForeground())
-	.ToolTipText(LOCTEXT("TitleText_ToolTip", "Title text"))
+	.ToolTip(nullptr)
 	.Padding(0)
 	[
 		SNew(SOverlay)
@@ -2664,7 +2122,7 @@ EYapMaturitySetting SFlowGraphNode_YapFragmentWidget::GetDisplayMaturitySetting(
 		return EYapMaturitySetting::Mature;
 	}
 	
-	return bChildSafeCheckBoxHovered ? EYapMaturitySetting::ChildSafe : EYapMaturitySetting::Mature;
+	return (bShiftPressed && Owner->IsHovered() && NeedsChildSafeData()) ? EYapMaturitySetting::ChildSafe : EYapMaturitySetting::Mature;
 }
 
 bool SFlowGraphNode_YapFragmentWidget::NeedsChildSafeData() const
@@ -2762,6 +2220,7 @@ FSlateColor SFlowGraphNode_YapFragmentWidget::GetNodeTitleColor() const
 void SFlowGraphNode_YapFragmentWidget::Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime)
 {
 	bCtrlPressed = GEditor->GetEditorSubsystem<UYapEditorSubsystem>()->GetInputTracker()->GetControlPressed();
+	bShiftPressed = GEditor->GetEditorSubsystem<UYapEditorSubsystem>()->GetInputTracker()->GetShiftPressed();
 
 	bool bOwnerSelected = Owner->GetIsSelected();
 	

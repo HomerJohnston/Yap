@@ -4,10 +4,12 @@
 #pragma once
 
 #define LOCTEXT_NAMESPACE "YapEditor"
+
 #include "YapEditor/YapEditorColor.h"
 
 DECLARE_DELEGATE(FOnOpened)
 DECLARE_DELEGATE_RetVal(TSharedRef<SWidget>, FPopupContentGetter)
+DECLARE_DELEGATE_OneParam(FPostPopupDelegate, bool&)
 
 class SYapButtonPopup : public SMenuAnchor
 {
@@ -26,6 +28,8 @@ public:
 
 		SLATE_EVENT( FOnIsOpenChanged, OnPopupOpenChanged )
 
+		SLATE_EVENT( FPostPopupDelegate, OnPostPopup )
+		
 		/** Pass in a delegate that builds the popup, e.g. (FPopupContentGetter::Create...); this lets us avoid building this whole popup widget until we actually need it */
 		SLATE_ARGUMENT( FPopupContentGetter, PopupContentGetter ) // TODO is there a way for me to take in a delegate arg the same way that a SLATE_EVENT allows?
 
@@ -45,11 +49,16 @@ public:
 		
 		SLATE_NAMED_SLOT( FArguments, ButtonContent )
 
+		SLATE_ARGUMENT( TSharedPtr<SWidget>, FocusWidget )
+
 	SLATE_END_ARGS()
 
 	void Construct(const FArguments& InArgs);
 
 	FReply OnClicked_Button();
+
+	/** Function to run after the popup is constructed. Return value indicates whether or not to leave default focus of popup, return true if the delegate intends to cause a custom widget focus. */
+	bool RunPostPopupDelegate();
 
 	FOnOpened OnOpened;
 	
@@ -62,9 +71,13 @@ public:
 	SHorizontalBox::FSlot* ButtonContentSlot;
 
 	TSharedPtr<SButton> Button;
-	
+
 	FOnClicked OnClicked;
 
+	FPostPopupDelegate OnPostPopup;
+
+	TSharedPtr<SWidget> FocusWidget;
+	
 	FPopupContentGetter PopupContentGetter;
 	
 	virtual void SetMenuContent(TSharedRef<SWidget> InMenuContent) override;

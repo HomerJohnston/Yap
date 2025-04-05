@@ -61,6 +61,7 @@ public:
 	friend class SFlowGraphNode_YapDialogueWidget;
 	friend class SFlowGraphNode_YapFragmentWidget;
 	friend class UFlowGraphNode_YapDialogue;
+	friend class SYapDialogueEditor;
 #endif
 	
 	// ==========================================

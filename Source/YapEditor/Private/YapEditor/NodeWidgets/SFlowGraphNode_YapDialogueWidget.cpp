@@ -736,11 +736,13 @@ FReply SFlowGraphNode_YapDialogueWidget::OnClicked_FragmentSeparator(uint8 Index
 
 TSharedRef<SWidget> SFlowGraphNode_YapDialogueWidget::CreateFragmentRowWidget(uint8 FragmentIndex)
 {
-	TSharedPtr<SFlowGraphNode_YapFragmentWidget> FragmentWidget = SNew(SFlowGraphNode_YapFragmentWidget, this, FragmentIndex);
+	TSharedRef<SFlowGraphNode_YapFragmentWidget> FragmentWidget = SNew(SFlowGraphNode_YapFragmentWidget)
+		.InOwner(this)
+		.InFragmentIndex(FragmentIndex);
 
 	FragmentWidgets.Add(FragmentWidget);
 	
-	return FragmentWidget.ToSharedRef();
+	return FragmentWidget;
 }
 
 // ================================================================================================

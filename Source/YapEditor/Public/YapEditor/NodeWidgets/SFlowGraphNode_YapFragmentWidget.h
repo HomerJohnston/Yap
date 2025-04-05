@@ -5,9 +5,10 @@
 
 #include "CoreMinimal.h"
 #include "EditorUndoClient.h"
-#include "Widgets/Notifications/SProgressBar.h"
 #include "Yap/Enums/YapTimeMode.h"
+#include "Templates/SharedPointer.h"
 
+class SYapDialogueEditor;
 struct FYapTypeGroupSettings;
 enum class EYapDialogueProgressionFlags : uint8;
 class UYapCharacter;
@@ -40,7 +41,7 @@ enum class EYapFragmentControlsDirection : uint8
 	Down,
 };
 
-class SFlowGraphNode_YapFragmentWidget : public SCompoundWidget
+class SFlowGraphNode_YapFragmentWidget : public SCompoundWidget//, public TSharedFromThis<SFlowGraphNode_YapFragmentWidget>
 {
 	// ==========================================
 	// CONSTRUCTION
@@ -50,11 +51,12 @@ private:
 
 	SLATE_BEGIN_ARGS(SFlowGraphNode_YapFragmentWidget)
 	{}
-		
+		SLATE_ARGUMENT(SFlowGraphNode_YapDialogueWidget*, InOwner)
+		SLATE_ARGUMENT(uint8, InFragmentIndex)
 	SLATE_END_ARGS()
 	
 public:
-	void Construct(const FArguments& InArgs, SFlowGraphNode_YapDialogueWidget* InOwner, uint8 InFragmentIndex); // non-virtual override
+	void Construct(const FArguments& InArgs); // non-virtual override
 		
 	// ==========================================
 	// STATE
@@ -82,6 +84,9 @@ protected:
 	// Used to change the click-behavior of some buttons
 	bool bCtrlPressed = false;
 
+	// Used to change the click-behavior of some buttons
+	bool bShiftPressed = false;
+	
 	// Used to hold temporary overlay widgets such as the fragment up-delete-down controls  
 	TSharedPtr<SOverlay> FragmentWidgetOverlay = nullptr;
 
@@ -97,6 +102,8 @@ protected:
 
 	static FSlateFontInfo DialogueTextFont;
 
+	TWeakPtr<SYapDialogueEditor> ExpandedDialogueEditor;
+	
 public:
 	// ================================================================================================
 	// WIDGETS
@@ -139,12 +146,6 @@ protected:
 
 	// ------------------------------------------
 
-	TOptional<float> 		Value_TimeSetting_AudioTime(EYapMaturitySetting MaturitySetting) const;
-	TOptional<float> 		Value_TimeSetting_TextTime(EYapMaturitySetting MaturitySetting) const;
-	TOptional<float> 		Value_TimeSetting_ManualTime(EYapMaturitySetting MaturitySetting) const;
-
-	TSharedRef<SWidget>		MakeTimeSettingRow(EYapTimeMode TimeMode, EYapMaturitySetting MaturitySetting);
-
 	EVisibility 			Visibility_AudioSettingsButton() const;
 	EVisibility 			Visibility_DialogueErrorState() const;
 	FSlateColor 			ColorAndOpacity_AudioID() const;
@@ -153,28 +154,12 @@ protected:
 	
 	TSharedRef<SWidget>		CreateDialogueDisplayWidget();
 	
-	FText					Text_TextDisplayWidget(const FText* MatureText, const FText* SafeText) const;
-	
-	EVisibility				Visibility_DialogueBackground() const;
-	FSlateColor				BorderBackgroundColor_Dialogue() const;
-
 	TSharedRef<SWidget>		CreateCentreTextDisplayWidget();
+	
 	TSharedRef<SWidget>		PopupContentGetter_ExpandedEditor();
 
-
-	TSharedRef<SWidget> 	BuildDialogueEditors_ExpandedEditor(float Width);
-	
-	TSharedRef<SWidget> 	BuildDialogueEditor_SingleSide(const FText& Title, const FText& DialogueTextHint, const FText& TitleTextHint, float Width, FMargin Padding, FYapBit& Bit);
-	
-	TSharedRef<SWidget> 	BuildCommentEditor(TAttribute<FString> String, FString* StringProperty, FText HintText);
-	
-	TSharedRef<SWidget> 	BuildTimeSettings_ExpandedEditor(float Width);
-	
-	TSharedRef<SWidget> 	BuildTimeSettings_SingleSide(float Width, FMargin Padding, EYapMaturitySetting MaturitySetting);
-		
-	TSharedRef<SWidget> 	BuildPaddingSettings_ExpandedEditor(float Width);
-	
 	// ------------------------------------------
+	
 	TOptional<float>		Percent_FragmentTime() const;
 	FLinearColor 			ColorAndOpacity_FragmentTimeIndicator() const;
 
@@ -302,6 +287,9 @@ protected:
 	FSlateColor	GetColorAndOpacityForFragmentText(FLinearColor BaseColor) const;
 
 	const FYapTypeGroupSettings& GetTypeGroup() const;
+
+public:
+	bool GetIsChildSafeCheckBoxHovered() const { return bChildSafeCheckBoxHovered; };
 	
 	// ================================================================================================
 	// OVERRIDES
@@ -313,7 +301,6 @@ public:
 
 	FSlateColor ColorAndOpacity_FragmentDataIcon() const;
 	TSharedRef<SWidget>	CreateRightFragmentPane();
-
 	
 	TSharedPtr<SBox> GetPinContainer(const FFlowPin& Pin);
 	

@@ -24,6 +24,7 @@ struct YAP_API FYapBit
 {
 #if WITH_EDITOR
 	friend class SFlowGraphNode_YapFragmentWidget;
+	friend class SYapDialogueEditor;
 #endif
 	
 	GENERATED_BODY()

@@ -15,51 +15,67 @@ FYapConversationHandle::FYapConversationHandle(const FGuid& InGuid)
 {
 }
 
-void UYapConversationHandleBlueprintFunctionLibrary::BindToConversationOpening(FYapConversationHandle Handle, FYapConversationEventDelegate Delegate)
+FYapConversationHandle UYapConversationHandleBlueprintFunctionLibrary::BindToConversationOpening(FYapConversationHandle Handle, FYapConversationEventDelegate Delegate)
 {
     FYapConversation& Conversation = UYapSubsystem::GetConversation(Handle);
     Conversation.OnConversationOpening.Add(Delegate);
+
+    return Handle;
 }
 
-void UYapConversationHandleBlueprintFunctionLibrary::BindToConversationOpened(FYapConversationHandle Handle, FYapConversationEventDelegate Delegate)
+FYapConversationHandle UYapConversationHandleBlueprintFunctionLibrary::BindToConversationOpened(FYapConversationHandle Handle, FYapConversationEventDelegate Delegate)
 {
     FYapConversation& Conversation = UYapSubsystem::GetConversation(Handle);
     Conversation.OnConversationOpened.Add(Delegate);
+
+    return Handle;
 }
 
-void UYapConversationHandleBlueprintFunctionLibrary::BindToConversationClosing(FYapConversationHandle Handle, FYapConversationEventDelegate Delegate)
+FYapConversationHandle UYapConversationHandleBlueprintFunctionLibrary::BindToConversationClosing(FYapConversationHandle Handle, FYapConversationEventDelegate Delegate)
 {
     FYapConversation& Conversation = UYapSubsystem::GetConversation(Handle);
     Conversation.OnConversationClosing.Add(Delegate);
+
+    return Handle;
 }
 
-void UYapConversationHandleBlueprintFunctionLibrary::BindToConversationClosed(FYapConversationHandle Handle, FYapConversationEventDelegate Delegate)
+FYapConversationHandle UYapConversationHandleBlueprintFunctionLibrary::BindToConversationClosed(FYapConversationHandle Handle, FYapConversationEventDelegate Delegate)
 {
     FYapConversation& Conversation = UYapSubsystem::GetConversation(Handle);
     Conversation.OnConversationClosed.Add(Delegate);
+    
+    return Handle;
 }
 
-void UYapConversationHandleBlueprintFunctionLibrary::ApplyOpeningInterlock(FYapConversationHandle Handle, UObject* LockObject)
+FYapConversationHandle UYapConversationHandleBlueprintFunctionLibrary::ApplyOpeningInterlock(FYapConversationHandle Handle, UObject* LockObject)
 {
     FYapConversation& Conversation = UYapSubsystem::GetConversation(Handle);
     Conversation.ApplyOpeningInterlock(LockObject);
+
+    return Handle;
 }
 
-void UYapConversationHandleBlueprintFunctionLibrary::ReleaseOpeningInterlock(FYapConversationHandle Handle, UObject* LockObject)
+FYapConversationHandle UYapConversationHandleBlueprintFunctionLibrary::ReleaseOpeningInterlock(FYapConversationHandle Handle, UObject* LockObject)
 {
     FYapConversation& Conversation = UYapSubsystem::GetConversation(Handle);
     Conversation.ReleaseOpeningInterlock(LockObject);
+
+    return Handle;
 }
 
-void UYapConversationHandleBlueprintFunctionLibrary::ApplyClosingInterlock(FYapConversationHandle Handle, UObject* LockObject)
+FYapConversationHandle UYapConversationHandleBlueprintFunctionLibrary::ApplyClosingInterlock(FYapConversationHandle Handle, UObject* LockObject)
 {
     FYapConversation& Conversation = UYapSubsystem::GetConversation(Handle);
     Conversation.ApplyClosingInterlock(LockObject);
+
+    return Handle;
 }
 
-void UYapConversationHandleBlueprintFunctionLibrary::ReleaseClosingInterlock(FYapConversationHandle Handle, UObject* LockObject)
+FYapConversationHandle UYapConversationHandleBlueprintFunctionLibrary::ReleaseClosingInterlock(FYapConversationHandle Handle, UObject* LockObject)
 {
     FYapConversation& Conversation = UYapSubsystem::GetConversation(Handle);
     Conversation.ReleaseClosingInterlock(LockObject);
+
+    return Handle;
 }
 

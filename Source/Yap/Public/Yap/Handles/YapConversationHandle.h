@@ -26,42 +26,42 @@ class UYapConversationHandleBlueprintFunctionLibrary : public UBlueprintFunction
 {
     GENERATED_BODY()
 
-    UFUNCTION(BlueprintCallable)
-    static void BindToConversationOpening(FYapConversationHandle Handle, FYapConversationEventDelegate Delegate);
+    UFUNCTION(BlueprintCallable, Category = Yap)
+    static UPARAM(DisplayName = Handle) FYapConversationHandle BindToConversationOpening(FYapConversationHandle Handle, FYapConversationEventDelegate Delegate);
     
-    UFUNCTION(BlueprintCallable)
-    static void BindToConversationOpened(FYapConversationHandle Handle, FYapConversationEventDelegate Delegate);
+    UFUNCTION(BlueprintCallable, Category = Yap)
+    static UPARAM(DisplayName = Handle) FYapConversationHandle BindToConversationOpened(FYapConversationHandle Handle, FYapConversationEventDelegate Delegate);
     
-    UFUNCTION(BlueprintCallable)
-    static void BindToConversationClosing(FYapConversationHandle Handle, FYapConversationEventDelegate Delegate);
+    UFUNCTION(BlueprintCallable, Category = Yap)
+    static UPARAM(DisplayName = Handle) FYapConversationHandle BindToConversationClosing(FYapConversationHandle Handle, FYapConversationEventDelegate Delegate);
 
-    UFUNCTION(BlueprintCallable)
-    static void BindToConversationClosed(FYapConversationHandle Handle, FYapConversationEventDelegate Delegate);
+    UFUNCTION(BlueprintCallable, Category = Yap)
+    static UPARAM(DisplayName = Handle) FYapConversationHandle BindToConversationClosed(FYapConversationHandle Handle, FYapConversationEventDelegate Delegate);
 
     /**
      * Apply an interlock once a conversation starts opening to prevent the conversation from actually opening.
      * Use this to play animations or await other conditions before actually entering the conversation.
      */
-    UFUNCTION(BlueprintCallable, meta = (DefaultToSelf = "LockObject"))
-    static void ApplyOpeningInterlock(FYapConversationHandle Handle, UObject* LockObject);
+    UFUNCTION(BlueprintCallable, Category = Yap, meta = (DefaultToSelf = "LockObject"))
+    static UPARAM(DisplayName = Handle) FYapConversationHandle ApplyOpeningInterlock(FYapConversationHandle Handle, UObject* LockObject);
 
     /**
      * Allow this conversation to open. This causes the conversation to open immediately, at this function call.
      */
-    UFUNCTION(BlueprintCallable, meta = (DefaultToSelf = "LockObject"))
-    static void ReleaseOpeningInterlock(FYapConversationHandle Handle, UObject* LockObject);
+    UFUNCTION(BlueprintCallable, Category = Yap, meta = (DefaultToSelf = "LockObject"))
+    static UPARAM(DisplayName = Handle) FYapConversationHandle ReleaseOpeningInterlock(FYapConversationHandle Handle, UObject* LockObject);
 
     /**
      * Apply an interlock once a conversation starts closing to prevent the conversation from actually closing.
      * Use this to play animations or await other conditions before actually closing the conversation.
      */
-    UFUNCTION(BlueprintCallable, meta = (DefaultToSelf = "LockObject"))
-    static void ApplyClosingInterlock(FYapConversationHandle Handle, UObject* LockObject);
+    UFUNCTION(BlueprintCallable, Category = Yap, meta = (DefaultToSelf = "LockObject"))
+    static UPARAM(DisplayName = Handle) FYapConversationHandle ApplyClosingInterlock(FYapConversationHandle Handle, UObject* LockObject);
     
     /**
      * Allow this conversation to close. This causes the conversation to close immediately, at this function call.
      * If there is another queued conversation, it will open immediately; do not run additional closing logic for your UI pane after releasing an interlock!
      */
-    UFUNCTION(BlueprintCallable, meta = (DefaultToSelf = "LockObject"))
-    static void ReleaseClosingInterlock(FYapConversationHandle Handle, UObject* LockObject);
+    UFUNCTION(BlueprintCallable, Category = Yap, meta = (DefaultToSelf = "LockObject"))
+    static UPARAM(DisplayName = Handle) FYapConversationHandle ReleaseClosingInterlock(FYapConversationHandle Handle, UObject* LockObject);
 };

@@ -792,7 +792,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateFragmentWidget()
 							.HAlign(HAlign_Center)
 							.VAlign(VAlign_Top)
 							.AutoWidth()
-							.Padding(0, 0, 4, 0)
+							.Padding(0, 0, 0, 0)
 							[
 								SNew(SOverlay)
 								.Visibility_Lambda( [this] () { return GetTypeGroup().GetHideSpeakerSelector() ? EVisibility::Collapsed : EVisibility::Visible; } )

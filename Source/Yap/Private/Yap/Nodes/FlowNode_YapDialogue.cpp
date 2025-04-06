@@ -262,7 +262,12 @@ bool UFlowNode_YapDialogue::CheckConditions()
 
 bool UFlowNode_YapDialogue::UsesTitleText() const
 {
-	return IsPlayerPrompt() || UYapProjectSettings::GetTypeGroup(TypeGroup).GetShowTitleTextOnTalkNodes();
+	if (IsPlayerPrompt())
+	{
+		return !UYapProjectSettings::GetTypeGroup(TypeGroup).GetHideTitleTextOnPromptNodes();
+	}
+
+	return UYapProjectSettings::GetTypeGroup(TypeGroup).GetShowTitleTextOnTalkNodes();
 }
 
 const FYapFragment& UFlowNode_YapDialogue::GetFragment(uint8 FragmentIndex) const

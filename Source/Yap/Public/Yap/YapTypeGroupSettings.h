@@ -143,10 +143,14 @@ private:
 	UPROPERTY(Config, EditAnywhere, Category = "Flow Graph Settings")
 	bool bPreventDialogueTextWrapping = true;
 
-	/** If enabled, will show title text on normal talk nodes as well as player prompt nodes. Title text is not commonly used on automatically progressing dialogue, so it is hidden by default. */
+	/** If enabled, will show title text on normal talk nodes. Title text is not commonly used on automatically progressing dialogue, so it is hidden by default. */
 	UPROPERTY(Config, EditAnywhere, Category = "Flow Graph Settings")
 	bool bShowTitleTextOnTalkNodes = false;
 
+	/** If enabled, will hide the title text field on prompt nodes. */
+	UPROPERTY(Config, EditAnywhere, Category = "Flow Graph Settings")
+	bool bHideTitleTextOnPromptNodes = false;
+	
 	/** If this type group doesn't require any speaker info (such as for generic tutorial popups), you can enable this to clean up the flow graph. */
 	UPROPERTY(Config, EditAnywhere, Category = "Flow Graph Settings")
 	bool bHideSpeakerSelector = false;
@@ -237,6 +241,9 @@ public:
 	UPROPERTY(EditAnywhere, meta = (DefaultOverride = bShowTitleTextOnTalkNodes))
 	bool bShowTitleTextOnTalkNodes_Override = false;
 
+	UPROPERTY(EditAnywhere, meta = (DefaultOverride = bHideTitleTextOnPromptNodes))
+	bool bHideTitleTextOnPromptNodes_Override = false;
+	
 	UPROPERTY(EditAnywhere, meta = (DefaultOverride = bHideSpeakerSelector))
 	bool bHideSpeakerSelector_Override = false;
 	
@@ -305,6 +312,8 @@ public:
 	bool GetPreventDialogueTextWrapping() RETURN(bPreventDialogueTextWrapping_Override, bPreventDialogueTextWrapping)
 
 	bool GetShowTitleTextOnTalkNodes() RETURN(bShowTitleTextOnTalkNodes_Override, bShowTitleTextOnTalkNodes)
+	
+	bool GetHideTitleTextOnPromptNodes() RETURN(bHideTitleTextOnPromptNodes_Override, bHideTitleTextOnPromptNodes)
 	
 	bool GetHideSpeakerSelector() RETURN(bHideSpeakerSelector_Override, bHideSpeakerSelector)
 

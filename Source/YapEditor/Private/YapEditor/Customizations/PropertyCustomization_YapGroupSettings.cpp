@@ -329,11 +329,11 @@ void FPropertyCustomization_YapGroupSettings::DrawGroup(IDetailChildrenBuilder& 
 			
 			if (!Count || *Count == 0)
 			{
-				Color *= YapColor::LightGray;
+				//Color *= YapColor::LightGray;
 			}
 			else
 			{
-				Color /= YapColor::LightGray;
+				//Color /= YapColor::LightGray;
 			}
 			
 			return Color;
@@ -375,23 +375,28 @@ void FPropertyCustomization_YapGroupSettings::DrawProperty(IDetailChildrenBuilde
 }
 
 void FPropertyCustomization_YapGroupSettings::DrawDefaultProperty(IDetailChildrenBuilder& StructBuilder, IDetailGroup& Group, TSharedPtr<IPropertyHandle>& Property)
-{	
-	Group.AddWidgetRow()
+{
+	IDetailPropertyRow& Row = Group.AddPropertyRow(Property.ToSharedRef());
+
+	TSharedPtr<SWidget> NameWidget;
+	TSharedPtr<SWidget> ValueWidget;
+	FDetailWidgetRow WidgetRow;
+
+	Row.GetDefaultWidgets(NameWidget, ValueWidget, WidgetRow);
+	
+	Row.CustomWidget(true)
 	.NameContent()
-	.HAlign(HAlign_Fill)
 	[
 		SNew(SBorder)
 		.BorderImage(FYapEditorStyle::GetImageBrush(YapBrushes.None))
 		.ForegroundColor_Lambda( [this] () { return GetGroupColor(); } )
 		[
-			Property->CreatePropertyNameWidget()
+			NameWidget.ToSharedRef()
 		]
 	]
 	.ValueContent()
 	[
-		(CastField<FStructProperty>(Property->GetProperty()))
-			? StructBuilder.GenerateStructValueWidget(Property.ToSharedRef())
-			: Property->CreatePropertyValueWidget()
+		ValueWidget.ToSharedRef()
 	];
 }
 
@@ -407,7 +412,135 @@ void FPropertyCustomization_YapGroupSettings::DrawNamedGroupProperty(IDetailChil
 	
 	TSharedPtr<IPropertyHandle> BoolControl = *BoolControlPtr;
 	TSharedPtr<IPropertyHandle> DefaultValue = *DefaultValuePtr;
+	
+	// FAILURE IMPLEMENTATION
+	
+	/*
+	IDetailPropertyRow& Row = Group.AddPropertyRow(Property.ToSharedRef());
+	IDetailPropertyRow& RowDefault = Group.AddPropertyRow(DefaultValue.ToSharedRef());
 
+	TSharedPtr<SWidget> NameWidget;
+	TSharedPtr<SWidget> ValueWidget;
+	FDetailWidgetRow WidgetRow;
+	
+	Row.GetDefaultWidgets(NameWidget, ValueWidget, WidgetRow);
+	Row.CustomWidget(true)
+	.Visibility(TAttribute<EVisibility>::CreateLambda( [BoolControl] ()
+	{
+		bool b;
+		BoolControl->GetValue(b);
+		return b ? EVisibility::Visible : EVisibility::Collapsed;
+	}))
+	.NameContent()
+	[
+		SNew(SCheckBox)
+		.Style(FYapEditorStyle::Get(), YapStyles.CheckBoxStyle_Skippable)
+		.Padding(0)
+		.IsChecked_Lambda( [this, BoolControl] ()
+		{
+			bool bTemp;
+			BoolControl->GetValue(bTemp);
+			return bTemp ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
+		})
+		.OnCheckStateChanged_Lambda( [this, BoolControl] (ECheckBoxState NewState)
+		{
+			BoolControl->SetValue(NewState == ECheckBoxState::Checked);
+			UpdateOverriddenCounts();
+		})
+		[
+			SNew(SBorder)
+			.BorderImage(FYapEditorStyle::GetImageBrush(YapBrushes.None))
+			.ForegroundColor_Lambda( [this, PropertyName] ()
+			{
+				FLinearColor Color = GetGroupColor();
+				
+				if (!IsOverridden(PropertyName))
+				{
+					Color *= YapColor::LightGray;
+				}
+				else
+				{
+					Color /= YapColor::LightGray;
+				}
+				
+				return Color;
+			})
+			[
+				NameWidget.ToSharedRef()
+			]
+		]
+	]
+	.ValueContent()
+	[
+		ValueWidget.ToSharedRef()
+	];
+	
+	TSharedPtr<SWidget> DefaultNameWidget;
+	TSharedPtr<SWidget> DefaultValueWidget;
+	FDetailWidgetRow DefaultWidgetRow;
+
+	RowDefault.GetDefaultWidgets(DefaultNameWidget, DefaultValueWidget, DefaultWidgetRow);
+	
+	DefaultValueWidget->SetEnabled(false);
+	
+	//RowDefault.IsEnabled(false);
+	
+	RowDefault.CustomWidget(true)
+	.Visibility(TAttribute<EVisibility>::CreateLambda( [BoolControl] ()
+	{
+		bool b;
+		BoolControl->GetValue(b);
+		return !b ? EVisibility::Visible : EVisibility::Collapsed;
+	}))
+	.NameContent()
+	[
+		SNew(SCheckBox)
+		.Style(FYapEditorStyle::Get(), YapStyles.CheckBoxStyle_Skippable)
+		.Padding(0)
+		.IsChecked_Lambda( [this, BoolControl] ()
+		{
+			bool bTemp;
+			BoolControl->GetValue(bTemp);
+			return bTemp ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
+		})
+		.OnCheckStateChanged_Lambda( [this, BoolControl] (ECheckBoxState NewState)
+		{
+			BoolControl->SetValue(NewState == ECheckBoxState::Checked);
+			UpdateOverriddenCounts();
+		})
+		[
+			SNew(SBorder)
+			.BorderImage(FYapEditorStyle::GetImageBrush(YapBrushes.None))
+			.ForegroundColor_Lambda( [this, PropertyName] ()
+			{
+				FLinearColor Color = GetGroupColor();
+				
+				if (!IsOverridden(PropertyName))
+				{
+					Color *= YapColor::LightGray;
+				}
+				else
+				{
+					Color /= YapColor::LightGray;
+				}
+				
+				return Color;
+			})
+			[
+				NameWidget.ToSharedRef()
+			]
+		]
+	]
+	.ValueContent()
+	[
+		DefaultValueWidget.ToSharedRef()
+	];
+	*/
+
+
+	// ORIGINAL IMPLEMENTATION
+	
+	///*
 	TSharedRef<SWidget> NormalValueWidget = 
 			(CastField<FStructProperty>(Property->GetProperty()))
 				? StructBuilder.GenerateStructValueWidget(Property.ToSharedRef())
@@ -420,7 +553,7 @@ void FPropertyCustomization_YapGroupSettings::DrawNamedGroupProperty(IDetailChil
 
 	DefaultValueWidget->SetEnabled(false);
 	
-	Group.AddWidgetRow()
+	FDetailWidgetRow& Row1 = Group.AddWidgetRow()
 	.NameContent()
 	.HAlign(HAlign_Fill)
 	[
@@ -472,6 +605,71 @@ void FPropertyCustomization_YapGroupSettings::DrawNamedGroupProperty(IDetailChil
 			DefaultValueWidget
 		]
 	];
+
+	Row1.Visibility(TAttribute<EVisibility>::CreateLambda( [BoolControl] ()
+	{
+		bool b;
+		BoolControl->GetValue(b);
+		return !b ? EVisibility::Visible : EVisibility::Collapsed;
+	}));
+	
+	IDetailPropertyRow& Row2 = Group.AddPropertyRow(Property.ToSharedRef());
+
+	TSharedPtr<SWidget> NameWidget;
+	TSharedPtr<SWidget> ValueWidget;
+	FDetailWidgetRow RowWidget;
+		
+	Row2.GetDefaultWidgets(NameWidget, ValueWidget, RowWidget);
+
+	Row2.CustomWidget(true)
+	.Visibility(TAttribute<EVisibility>::CreateLambda( [BoolControl] ()
+	{
+		bool b;
+		BoolControl->GetValue(b);
+		return b ? EVisibility::Visible : EVisibility::Collapsed;
+	}))
+	.NameContent()
+	[
+		SNew(SCheckBox)
+		.IsChecked_Lambda( [this, BoolControl] ()
+		{
+			bool bTemp;
+			BoolControl->GetValue(bTemp);
+			return bTemp ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
+		})
+		.OnCheckStateChanged_Lambda( [this, BoolControl] (ECheckBoxState NewState)
+		{
+			BoolControl->SetValue(NewState == ECheckBoxState::Checked);
+			UpdateOverriddenCounts();
+		})
+		[
+			SNew(SBorder)
+			.BorderImage(FYapEditorStyle::GetImageBrush(YapBrushes.None))
+			.ForegroundColor_Lambda( [this, PropertyName] ()
+			{
+				FLinearColor Color = GetGroupColor();
+				
+				if (!IsOverridden(PropertyName))
+				{
+					Color *= YapColor::LightGray;
+				}
+				else
+				{
+					Color /= YapColor::LightGray;
+				}
+				
+				return Color;
+			})
+			[
+				NameWidget.ToSharedRef()
+			]
+		]
+	]
+	.ValueContent()
+	[
+		ValueWidget.ToSharedRef()
+	];
+	//*/
 }
 
 // ------------------------------------------------------------------------------------------------

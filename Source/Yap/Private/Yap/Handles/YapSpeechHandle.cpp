@@ -18,7 +18,8 @@ FYapSpeechHandle::FYapSpeechHandle()
 
 FYapSpeechHandle::FYapSpeechHandle(const FYapRunningFragment& RunningFragment)
 {
-    Guid = RunningFragment.GetGuid();
+	// TODO
+	Guid = RunningFragment.GetGuid(); 
 }
 
 bool FYapSpeechHandle::SkipDialogue()
@@ -44,6 +45,7 @@ bool FYapSpeechHandle::operator==(const FYapSpeechHandle& Other) const
 
 // ------------------------------------------------------------------------------------------------
 
+/*
 void FYapSpeechHandle::BindToOnSpeechComplete(FYapSpeechEventDelegate Delegate) const
 {
 	FYapSpeechEvent* Event = UYapSubsystem::Get()->SpeechCompleteEvents.Find(*this);
@@ -53,9 +55,11 @@ void FYapSpeechHandle::BindToOnSpeechComplete(FYapSpeechEventDelegate Delegate) 
 		(*Event).Add(Delegate);
 	}
 }
+*/
 
 // ------------------------------------------------------------------------------------------------
 
+/*
 void FYapSpeechHandle::UnbindToOnSpeechComplete(FYapSpeechEventDelegate Delegate) const
 {
 	FYapSpeechEvent* Event = UYapSubsystem::Get()->SpeechCompleteEvents.Find(*this);
@@ -65,9 +69,11 @@ void FYapSpeechHandle::UnbindToOnSpeechComplete(FYapSpeechEventDelegate Delegate
 		(*Event).Remove(Delegate);
 	}
 }
+*/
 
 // ------------------------------------------------------------------------------------------------
 
+/*
 void FYapSpeechHandle::BindToOnFragmentComplete(FYapSpeechEventDelegate Delegate) const
 {
 	FYapSpeechEvent* Event = UYapSubsystem::Get()->FragmentCompleteEvents.Find(*this);
@@ -77,9 +83,11 @@ void FYapSpeechHandle::BindToOnFragmentComplete(FYapSpeechEventDelegate Delegate
 		(*Event).Add(Delegate);
 	}
 }
+*/
 
 // ------------------------------------------------------------------------------------------------
 
+/*
 void FYapSpeechHandle::UnbindToOnFragmentComplete(FYapSpeechEventDelegate Delegate) const
 {
 	FYapSpeechEvent* Event = UYapSubsystem::Get()->FragmentCompleteEvents.Find(*this);
@@ -89,6 +97,7 @@ void FYapSpeechHandle::UnbindToOnFragmentComplete(FYapSpeechEventDelegate Delega
 		(*Event).Remove(Delegate);
 	}
 }
+*/
 
 // ------------------------------------------------------------------------------------------------
 
@@ -96,7 +105,12 @@ void UYapSpeechHandleBFL::BindToOnSpeechComplete(FYapSpeechHandle Handle, FYapSp
 {
 	if (ensureAlwaysMsgf(Handle.IsValid(), TEXT("Null/unset Yap Speech Handle!")))
 	{
-		Handle.BindToOnSpeechComplete(Delegate);
+		FYapSpeechEvent* Event = UYapSubsystem::Get()->SpeechCompleteEvents.Find(Handle);
+
+		if (Event)
+		{
+			(*Event).Add(Delegate);
+		}
 	}
 }
 
@@ -104,7 +118,12 @@ void UYapSpeechHandleBFL::UnbindToOnSpeechComplete(FYapSpeechHandle Handle, FYap
 {
 	if (ensureAlwaysMsgf(Handle.IsValid(), TEXT("Null/unset Yap Speech Handle!")))
 	{
-		Handle.UnbindToOnSpeechComplete(Delegate);
+		FYapSpeechEvent* Event = UYapSubsystem::Get()->SpeechCompleteEvents.Find(Handle);
+
+		if (Event)
+		{
+			(*Event).Remove(Delegate);
+		}
 	}
 }
 
@@ -114,7 +133,27 @@ void UYapSpeechHandleBFL::BindToOnFragmentComplete(FYapSpeechHandle Handle, FYap
 {
 	if (ensureAlwaysMsgf(Handle.IsValid(), TEXT("Null/unset Yap Speech Handle!")))
 	{
-		Handle.BindToOnFragmentComplete(Delegate);
+		FYapSpeechEvent* Event = UYapSubsystem::Get()->FragmentCompleteEvents.Find(Handle);
+
+		if (Event)
+		{
+			(*Event).Add(Delegate);
+		}
+	}
+}
+
+// ------------------------------------------------------------------------------------------------
+
+void UYapSpeechHandleBFL::UnbindToOnFragmentComplete(FYapSpeechHandle Handle, FYapSpeechEventDelegate Delegate)
+{
+	if (ensureAlwaysMsgf(Handle.IsValid(), TEXT("Null/unset Yap Speech Handle!")))
+	{
+		FYapSpeechEvent* Event = UYapSubsystem::Get()->FragmentCompleteEvents.Find(Handle);
+
+		if (Event)
+		{
+			(*Event).Remove(Delegate);
+		}
 	}
 }
 
@@ -164,6 +203,11 @@ bool UYapSpeechHandleBFL::CanSkipCurrently(const FYapSpeechHandle& Handle)
 bool UYapSpeechHandleBFL::EqualEqual_YapSpeechHandle(FYapSpeechHandle A, FYapSpeechHandle B)
 {
 	return A.GetGuid() == B.GetGuid();
+}
+
+FString UYapSpeechHandleBFL::ToString(const FYapSpeechHandle Handle)
+{
+	return Handle.GetGuid().ToString();
 }
 
 /*

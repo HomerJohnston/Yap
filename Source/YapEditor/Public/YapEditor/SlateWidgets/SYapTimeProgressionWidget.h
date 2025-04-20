@@ -12,9 +12,14 @@
  */
 class SYapTimeProgressionWidget : public SCompoundWidget
 {
+	
+	SLATE_DECLARE_WIDGET_API(SYapTimeProgressionWidget, SCompoundWidget, YAPEDITOR_API)
+	
 public:
+
 	SLATE_USER_ARGS(SYapTimeProgressionWidget)
-		{}
+		: _MaxDisplayTime(0.0)
+	{}
 
 		SLATE_ATTRIBUTE(FLinearColor, BarColor)
 		SLATE_ATTRIBUTE(TOptional<float>, SpeechTime)
@@ -25,10 +30,13 @@ public:
 	
 	SLATE_END_ARGS()
 
+public:
+	SYapTimeProgressionWidget();
+
 	TAttribute<FLinearColor> BarColorAtt;
 	TAttribute<TOptional<float>> SpeechTimeAtt;
 	TAttribute<float> PaddingTimeAtt;
-	TAttribute<float> MaxDisplayTimeAtt;
+	TSlateAttribute<float> MaxDisplayTimeAtt;
 	
 	TAttribute<TOptional<float>> PlaybackTimeAtt;
 

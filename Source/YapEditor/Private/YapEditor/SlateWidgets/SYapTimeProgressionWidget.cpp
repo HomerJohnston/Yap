@@ -7,13 +7,26 @@
 
 #include "YapEditor/YapEditorStyle.h"
 
+SLATE_IMPLEMENT_WIDGET(SYapTimeProgressionWidget)
+
+void SYapTimeProgressionWidget::PrivateRegisterAttributes(FSlateAttributeInitializer& AttributeInitializer)
+{
+	SLATE_ADD_MEMBER_ATTRIBUTE_DEFINITION_WITH_NAME(AttributeInitializer, "Wtf", MaxDisplayTimeAtt, EInvalidateWidgetReason::Paint);
+}
+
+SYapTimeProgressionWidget::SYapTimeProgressionWidget()
+	: MaxDisplayTimeAtt(*this, 0.0f)
+{
+}
+
 void SYapTimeProgressionWidget::Construct(const FArguments& InArgs)
 {
 	BarColorAtt = InArgs._BarColor;
 	
 	SpeechTimeAtt = InArgs._SpeechTime;
 	PaddingTimeAtt = InArgs._PaddingTime;
-	MaxDisplayTimeAtt = InArgs._MaxDisplayTime;
+	//MaxDisplayTimeAtt = InArgs._MaxDisplayTime;
+	MaxDisplayTimeAtt.Assign(*this, InArgs._MaxDisplayTime);
 
 	PlaybackTimeAtt = InArgs._PlaybackTime;
 }
@@ -53,7 +66,7 @@ int32 SYapTimeProgressionWidget::OnPaint(const FPaintArgs& Args, const FGeometry
 
 	float SpeechDuration = SpeechTimeAtt.Get().Get(0.0f);
 	float PaddingDuration = PaddingTimeAtt.Get();
-	float MaxTime = MaxDisplayTimeAtt.Get(1.0f);
+	float MaxTime = MaxDisplayTimeAtt.Get();
 
 	float NegativePaddingShift = FMath::Min(0.0f, PaddingDuration);
 	float AffectedSpeechDuration = SpeechDuration + NegativePaddingShift;
@@ -124,5 +137,5 @@ int32 SYapTimeProgressionWidget::OnPaint(const FPaintArgs& Args, const FGeometry
 
 bool SYapTimeProgressionWidget::IsValid() const
 {
-	return MaxDisplayTimeAtt.IsBound() && SpeechTimeAtt.IsBound() && SpeechTimeAtt.Get().IsSet() && PaddingTimeAtt.IsBound();
+	return /*MaxDisplayTimeAtt.IsBound() &&*/ SpeechTimeAtt.IsBound() && SpeechTimeAtt.Get().IsSet() && PaddingTimeAtt.IsBound();
 }

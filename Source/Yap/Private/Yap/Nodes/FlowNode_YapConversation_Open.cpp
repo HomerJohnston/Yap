@@ -19,9 +19,9 @@ UFlowNode_YapConversation_Open::UFlowNode_YapConversation_Open()
 #endif
 }
 
-void UFlowNode_YapConversation_Open::OnActivate()
+void UFlowNode_YapConversation_Open::ExecuteInput(const FName& PinName)
 {
-	Super::OnActivate();
+	Super::ExecuteInput(PinName);
 	
 	FYapConversation& NewConversation = UYapSubsystem::Get()->OpenConversation(ConversationName, GetFlowAsset());
 
@@ -38,17 +38,10 @@ void UFlowNode_YapConversation_Open::OnActivate()
 	}
 }
 
-void UFlowNode_YapConversation_Open::Finish()
-{
-	Super::Finish();
-
-	UE_LOG(LogYap, Verbose, TEXT("    Entering conversation..."));
-
-	UYapSubsystem::GetConversation(ConversationName).OnConversationOpened.RemoveAll(this);
-}
-
 void UFlowNode_YapConversation_Open::FinishNode()
 {
+	UYapSubsystem::GetConversation(ConversationName).OnConversationOpened.RemoveAll(this);
+	
 	TriggerFirstOutput(true);
 }
 

@@ -30,10 +30,8 @@ protected:
 	// API
 	// ==========================================
 public:
-	
-	void OnActivate() override;
 
-	void Finish() override;
+	void ExecuteInput(const FName& PinName) override;
 
 protected:
 	UFUNCTION()

@@ -137,47 +137,6 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateCentreTextDisplayWid
 			})
 		]
 	];
-	/*
-	return SNew(SYapButtonPopup)
-	.ButtonStyle(FYapEditorStyle::Get(), YapStyles.ButtonStyle_NoBorder)
-	.PopupContentGetter(FPopupContentGetter::CreateSP(this, &ThisClass::PopupContentGetter_ExpandedEditor))
-	.PopupPlacement(MenuPlacement_Center)
-	.ButtonForegroundColor(YapColor::DarkGray_SemiGlass)
-	.ButtonContent()
-	[
-		SNew(SVerticalBox)
-		+ SVerticalBox::Slot()
-		.Padding(0, 0, 0, 0)
-		.VAlign(VAlign_Fill)
-		.HAlign(HAlign_Fill)
-		[
-			SNew(SBox)
-			.MaxDesiredHeight(49)
-			[
-				CreateDialogueDisplayWidget()
-			]
-		]
-		+ SVerticalBox::Slot()
-		.Padding(0, 4, 0, 0)
-		.AutoHeight()
-		[
-			SNew(SBox)
-			.MaxDesiredHeight(20)
-			.Visibility(this, &ThisClass::Visibility_TitleTextWidgets)
-			[
-				CreateTitleTextDisplayWidget()
-			]
-		]
-	]
-	.OnPostPopup_Lambda( [this] (bool& bOverrideFocus)
-	{
-		if (ExpandedDialogueEditor.IsValid())
-		{
-			bOverrideFocus = true;
-			ExpandedDialogueEditor.Pin()->SetFocus_MatureDialogue();
-		}
-	});
-	*/
 }
 
 TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::PopupContentGetter_ExpandedEditor()
@@ -984,8 +943,6 @@ FSlateColor SFlowGraphNode_YapFragmentWidget::ColorAndOpacity_AudioID() const
 TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateDialogueDisplayWidget()
 {
 	int32 TimeSliderSize = 8;
-	//FMargin TimerSliderPadding = GetDialogueNode()->UsesTitleText() ? FMargin(0, 0, 0, -(TimeSliderSize / 2) - 2) : FMargin(0, 0, 0, -(TimeSliderSize / 2));
-	FMargin TimerSliderPadding = FMargin(0, 0, 0, -(TimeSliderSize / 2) - 2);
 
 	FNumberFormattingOptions Args;
 	Args.UseGrouping = false;
@@ -2163,8 +2120,6 @@ bool SFlowGraphNode_YapFragmentWidget::HasCompleteChildSafeData() const
 bool SFlowGraphNode_YapFragmentWidget::FragmentIsRunning() const
 {
 	return GetFragment().GetStartTime() > GetFragment().GetEndTime();
-	
-	//return FragmentIndex == GetDialogueNode()->GetRunningFragmentIndex();
 }
 
 bool SFlowGraphNode_YapFragmentWidget::IsDroppedAsset_YapCharacter(TArrayView<FAssetData> AssetDatas) const

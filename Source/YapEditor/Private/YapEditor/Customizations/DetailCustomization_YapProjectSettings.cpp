@@ -72,7 +72,6 @@ void CustomSortYapProjectSettingsCategories(const TMap<FName, IDetailCategoryBui
 	(*AllCategoryMap.Find(FName("Dialogue Tags")))->SetSortOrder(i++);
 	(*AllCategoryMap.Find(FName("Dialogue Playback")))->SetSortOrder(i++);
 	(*AllCategoryMap.Find(FName("Editor")))->SetSortOrder(i++);
-	//(*AllCategoryMap.Find(FName("Audio")))->SetSortOrder(i++);
 	(*AllCategoryMap.Find(FName("Flow Graph Settings")))->SetSortOrder(i++);
 	(*AllCategoryMap.Find(FName("Error Handling")))->SetSortOrder(i++);
 }
@@ -83,9 +82,6 @@ void FDetailCustomization_YapProjectSettings::CustomizeDetails(IDetailLayoutBuil
 	
 	IDetailCategoryBuilder& MoodTagsCategory = DetailBuilder.EditCategory("Mood Tags");
 	IDetailCategoryBuilder& DialogueTagsCategory = DetailBuilder.EditCategory("Dialogue Tags");
-
-	// ProcessCategory(MoodTagsCategory, &FDetailCustomization_YapProjectSettings::ProcessMoodTagsProperty);
-	// ProcessCategory(DialogueTagsCategory, &FDetailCustomization_YapProjectSettings::ProcessDialogueTagsCategoryProperty);
 }
 
 FReply FDetailCustomization_YapProjectSettings::OnClicked_ResetDefaultMoodTags() const
@@ -102,7 +98,7 @@ FReply FDetailCustomization_YapProjectSettings::OnClicked_ResetDefaultMoodTags()
 	FString DefaultMoodTagsParentString = "Yap.Mood";
 	
 	// Remove any tags that should not be present
-	for (FGameplayTag ExistingTag : ProjectSettings->GetMoodTags())// DefaultTags.CreateIterator(); It; ++It)
+	for (FGameplayTag ExistingTag : ProjectSettings->GetMoodTags())
 	{
 		bool bKeepTag = true;
 

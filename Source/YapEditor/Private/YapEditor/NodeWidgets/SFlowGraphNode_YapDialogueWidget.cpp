@@ -755,13 +755,6 @@ TSharedRef<SBox> SFlowGraphNode_YapDialogueWidget::CreateLeftFragmentPane(uint8 
 	.WidthOverride(32)
 	[
 		SNew(SOverlay)
-		/*
-		+ SOverlay::Slot()
-		.Padding(-72, 0, 0, 0)
-		[
-			CreateFragmentControlsWidget(FragmentIndex)
-		]
-		*/
 		+ SOverlay::Slot()
 		[
 			SNew(SVerticalBox)

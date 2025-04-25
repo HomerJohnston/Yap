@@ -158,12 +158,6 @@ protected:
 	// UObject overrides
 public:
 
-#if WITH_EDITOR
-	void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
-	
-	void PostEditChangeChainProperty(FPropertyChangedChainEvent& PropertyChangedEvent) override;
-#endif
-	
 	// ------------------------------------------
 	// UDeveloperSettings overrides
 public:

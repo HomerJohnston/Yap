@@ -1204,7 +1204,7 @@ void SFlowGraphNode_YapFragmentWidget::OnSetNewSpeakerAsset(const FAssetData& As
 {
 	FYapTransactions::BeginModify(LOCTEXT("SetSpeakerCharacter", "Set speaker character"), GetDialogueNodeMutable());
 
-	GetFragmentMutable().SetSpeaker(AssetData.GetAsset());
+	GetFragmentMutable().SetSpeaker(Cast<UYapCharacter>(AssetData.GetAsset()));
 
 	FYapTransactions::EndModify();
 }
@@ -1643,7 +1643,7 @@ void SFlowGraphNode_YapFragmentWidget::OnSetNewDirectedAtAsset(const FAssetData&
 {
 	FYapTransactions::BeginModify(LOCTEXT("SetDirectedAtCharacter", "Set directed-at character"), GetDialogueNodeMutable());
 
-	GetFragmentMutable().SetDirectedAt(AssetData.GetAsset());
+	GetFragmentMutable().SetDirectedAt(Cast<UYapCharacter>(AssetData.GetAsset()));
 
 	FYapTransactions::EndModify();
 }

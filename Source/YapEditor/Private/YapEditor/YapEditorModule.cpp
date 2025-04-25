@@ -42,6 +42,6 @@ void FYapEditorModule::ShutdownModule()
 	// FGPGEditorModuleBase implementation END
 }
 
-IMPLEMENT_MODULE(FYapEditorModule, FlowYapEditor)
+IMPLEMENT_MODULE(FYapEditorModule, YapEditor)
 
 #undef LOCTEXT_NAMESPACE

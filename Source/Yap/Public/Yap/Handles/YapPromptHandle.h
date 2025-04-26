@@ -40,8 +40,8 @@ public:
 public:
 	FYapPromptHandle();
 
-	FYapPromptHandle(const FGameplayTag& InTypeGroup) { TypeGroup = InTypeGroup; }
-	
+	FYapPromptHandle(const FGameplayTag& InTypeGroup);
+
 	void Invalidate();
 	
 	bool IsValid() { return Guid.IsValid(); }

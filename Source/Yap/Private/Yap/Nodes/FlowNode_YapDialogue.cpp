@@ -416,7 +416,7 @@ bool UFlowNode_YapDialogue::TryBroadcastPrompts()
 	
 	Subsystem->OnPromptChosen.AddDynamic(this, &ThisClass::OnPromptChosen);
 	
-	// TODO
+	// TODO - automatically return if there are no prompts or if there is only one prompt, optional plugin settings 
 	/*
 	if (PromptFragmentIndices.Num() == 0)
 	{
@@ -532,8 +532,6 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 	{
 		float SpeechTime = Fragment.GetSpeechTime(TypeGroup).Get(0.0f);
 		
-		UE_LOG(LogYap, VeryVerbose, TEXT("Speech time: %f"), SpeechTime);
-		
 		if (SpeechTime > 0)
 		{
 			// TODO the subsystem is running a timer too. I need to get rid of this one and slave to the subsystem's progression.
@@ -547,8 +545,6 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 
 	float ProgressionTime = Fragment.GetProgressionTime(TypeGroup);
 
-	UE_LOG(LogYap, VeryVerbose, TEXT("Progression time: %f"), ProgressionTime);
-	
 	if (ProgressionTime > 0)
 	{
 		// TODO the subsystem is running a timer too. I need to get rid of this one and slave to the subsystem's progression.

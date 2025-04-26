@@ -305,6 +305,7 @@ protected:
 			}
 			else
 			{
+				// TODO this should throw smarter errors
 				check(HandlerObj->Implements<TUInterface>());
 				(*TExecFunction)(HandlerObj, Args...);				
 			}

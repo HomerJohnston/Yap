@@ -13,6 +13,15 @@
 FYapPromptHandle::FYapPromptHandle()
 {
 	Guid = FGuid::NewGuid();
+	TypeGroup = FGameplayTag::EmptyTag;
+}
+
+// ------------------------------------------------------------------------------------------------
+
+FYapPromptHandle::FYapPromptHandle(const FGameplayTag& InTypeGroup)
+{
+	Guid = FGuid::NewGuid();
+	TypeGroup = InTypeGroup;
 }
 
 // ------------------------------------------------------------------------------------------------

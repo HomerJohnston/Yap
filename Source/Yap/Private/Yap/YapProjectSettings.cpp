@@ -117,42 +117,6 @@ const FString UYapProjectSettings::GetAudioAssetRootFolder(FGameplayTag TypeGrou
 #endif
 
 #if WITH_EDITOR
-void UYapProjectSettings::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
-{
-	Super::PostEditChangeProperty(PropertyChangedEvent);
-}
-#endif
-
-#if WITH_EDITOR
-void UYapProjectSettings::PostEditChangeChainProperty(FPropertyChangedChainEvent& PropertyChangedEvent)
-{
-	Super::PostEditChangeChainProperty(PropertyChangedEvent);
-
-	/*
-	// TODO better variable names please
-	FName one = PropertyChangedEvent.PropertyChain.GetHead()->GetValue()->GetFName();
-	
-	if (one == GET_MEMBER_NAME_CHECKED(ThisClass, MoodTagIconPath))
-	{
-		FName two = PropertyChangedEvent.PropertyChain.GetTail()->GetValue()->GetFName();
-
-		if (two == "Path")
-		{
-			FString ProjectDir = FPaths::ProjectDir();
-	
-			FString FullPathDir = IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*ProjectDir);
-
-			if (MoodTagIconPath.Path.StartsWith(FullPathDir))
-			{
-				MoodTagIconPath.Path = MoodTagIconPath.Path.RightChop(FullPathDir.Len());
-			}
-		}
-	}
-	*/
-}
-#endif
-
-#if WITH_EDITOR
 FString UYapProjectSettings::GetMoodTagIconPath()
 {
 	// Recache the path if it was never calculated, or if the setting is set and the cached path is not equal to it

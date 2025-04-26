@@ -84,7 +84,6 @@ protected:
 	
 public:
 	TArray<FYapWidgetOverlay> OverlayWidgets;
-	//TArray<TPair<TSharedPtr<SWidget>,TSharedPtr<SWidget>>> OverlayWidgets;
 	
 	void AddOverlayWidget(TSharedPtr<SWidget> ParentWidget, TSharedPtr<SWidget> OverlayWidget, bool bClearExisting = true);
 	void RemoveOverlayWidget(TSharedPtr<SWidget> OverlayWidget);

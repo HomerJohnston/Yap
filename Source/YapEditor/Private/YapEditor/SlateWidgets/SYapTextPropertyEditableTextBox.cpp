@@ -995,9 +995,15 @@ FText SYapTextPropertyEditableTextBox::GetToolTipText() const
 			{
 				check(SourceString);
 
+				
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION < 5
 				const FString Namespace = TextId.GetNamespace().GetChars();
 				const FString Key = TextId.GetKey().GetChars();
-
+#else
+				const FString Namespace = TextId.GetNamespace().ToString();
+				const FString Key = TextId.GetKey().ToString();
+#endif
+				
 				const FString PackageNamespace = TextNamespaceUtil::ExtractPackageNamespace(Namespace);
 				const FString TextNamespace = TextNamespaceUtil::StripPackageNamespace(Namespace);
 
@@ -1462,7 +1468,11 @@ void SYapTextPropertyEditableTextBox::HandleLocalizableCheckStateChanged(ECheckB
 					NewKey
 					);
 
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION < 5
 				EditableTextProperty->SetText(TextIndex, FInternationalization::Get().ForUseOnlyByLocMacroAndGraphNodeTextLiterals_CreateText(*PropertyValue.ToString(), *NewNamespace, *NewKey));
+#else
+				EditableTextProperty->SetText(TextIndex, FText::AsLocalizable_Advanced(*NewNamespace, *NewKey, *PropertyValue.ToString()));
+#endif
 			}
 		}
 	}

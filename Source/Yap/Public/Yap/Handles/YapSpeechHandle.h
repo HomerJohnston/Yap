@@ -19,22 +19,29 @@ public:
 	
     FYapSpeechHandle();
 
-    FYapSpeechHandle(const FYapRunningFragment& RunningFragment);
+    FYapSpeechHandle(UWorld* InWorld, const FGuid& InGuid);
+
+    ~FYapSpeechHandle();
+    
+    //FYapSpeechHandle(const FYapRunningFragment& RunningFragment);
 
     // ==========================================
     // STATE
     // ==========================================
 private:
 	
-    UPROPERTY(Transient, meta = (IgnoreForMemberInitializationTest))
+    UPROPERTY(Transient, BlueprintReadOnly, meta = (IgnoreForMemberInitializationTest, AllowPrivateAccess))
     FGuid Guid;
+
+    UPROPERTY(Transient)
+    TWeakObjectPtr<UWorld> World;
 
     // ==========================================
     // API
     // ==========================================
 public:
 
-    bool IsValid() const { return Guid.IsValid(); }
+    bool IsValid() const { return Guid.IsValid() && World.IsValid(); }
 
     const FGuid& GetGuid() const { return Guid; }
 
@@ -42,11 +49,8 @@ public:
 
    // const TArray<FInstancedStruct>& GetFragmentData();
 
-    void Invalidate()
-    {
-        Guid.Invalidate();   
-    }
-    
+    void Invalidate();
+
     bool operator== (const FYapSpeechHandle& Other) const;
 
     // TODO I would prefer to use these instead of calling the BPFL functions below, but circular reference. Solve later. Use the BPFL funcs below for now instead. 
@@ -78,24 +82,27 @@ class YAP_API UYapSpeechHandleBFL : public UBlueprintFunctionLibrary
 
 public:
     
-    UFUNCTION(BlueprintCallable, Category = "Yap Speech Handle")
-    static void BindToOnSpeechComplete(FYapSpeechHandle Handle, FYapSpeechEventDelegate Delegate);
+    UFUNCTION(BlueprintCallable, Category = "Yap Speech Handle", meta = (WorldContext = "WorldContext"))
+    static void BindToOnSpeechComplete(UObject* WorldContext, FYapSpeechHandle Handle, FYapSpeechEventDelegate Delegate);
 
-    UFUNCTION(BlueprintCallable, Category = "Yap Speech Handle")
-    static void UnbindToOnSpeechComplete(FYapSpeechHandle Handle, FYapSpeechEventDelegate Delegate);
+    UFUNCTION(BlueprintCallable, Category = "Yap Speech Handle", meta = (WorldContext = "WorldContext"))
+    static void UnbindToOnSpeechComplete(UObject* WorldContext, FYapSpeechHandle Handle, FYapSpeechEventDelegate Delegate);
     
-    UFUNCTION(BlueprintCallable, Category = "Yap Speech Handle")
-    static void BindToOnFragmentComplete(FYapSpeechHandle Handle, FYapSpeechEventDelegate Delegate);
+    UFUNCTION(BlueprintCallable, Category = "Yap Speech Handle", meta = (WorldContext = "WorldContext"))
+    static void BindToOnFragmentComplete(UObject* WorldContext, FYapSpeechHandle Handle, FYapSpeechEventDelegate Delegate);
 
-    UFUNCTION(BlueprintCallable, Category = "Yap Speech Handle")
-    static void UnbindToOnFragmentComplete(FYapSpeechHandle Handle, FYapSpeechEventDelegate Delegate);
+    UFUNCTION(BlueprintCallable, Category = "Yap Speech Handle", meta = (WorldContext = "WorldContext"))
+    static void UnbindToOnFragmentComplete(UObject* WorldContext, FYapSpeechHandle Handle, FYapSpeechEventDelegate Delegate);
     
-    UFUNCTION(BlueprintCallable, Category = "Yap Speech Handle")
-    static bool SkipDialogue(const FYapSpeechHandle& Handle);
+    UFUNCTION(BlueprintCallable, Category = "Yap Speech Handle", meta = (WorldContext = "WorldContext"))
+    static bool SkipDialogue(UObject* WorldContext, const FYapSpeechHandle& Handle);
 
-    UFUNCTION(BlueprintCallable, Category = "Yap Speech Handle")
-    static bool CanSkipCurrently(const FYapSpeechHandle& Handle);
+    UFUNCTION(BlueprintCallable, Category = "Yap Speech Handle", meta = (WorldContext = "WorldContext"))
+    static bool CanSkipCurrently(UObject* WorldContext, const FYapSpeechHandle& Handle);
 
+    UFUNCTION(BlueprintCallable, Category = "Yap Speech Handle", meta = (WorldContext = "WorldContext"))
+    static bool IsRunning(UObject* WorldContext, const FYapSpeechHandle& Handle);
+    
     /*
     UFUNCTION(BlueprintCallable, Category = "Yap")
     static const TArray<FInstancedStruct>& GetFragmentData(const FYapSpeechHandle& HandleRef);

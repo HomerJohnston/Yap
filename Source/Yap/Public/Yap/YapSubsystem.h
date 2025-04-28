@@ -17,7 +17,6 @@
 
 class UYapConversationHandler;
 class UYapBroker;
-class UFlowNode_YapDialogue;
 struct FYapPromptHandle;
 class IYapConversationHandler;
 struct FYapBit;
@@ -67,9 +66,6 @@ public:
 	// =========================================
 protected:
 
-	/**  */
-	static TWeakObjectPtr<UWorld> World;
-	
 	/** All registered conversation handlers. It is assumed developers will only have one or two of these at a time, no need for fast lookup. Calling order will be preserved in order of registration. */
 	UPROPERTY(Transient)
 	TMap<FGameplayTag, FYapHandlersArray> ConversationHandlers;
@@ -86,7 +82,7 @@ protected:
 	TOptional<FGameplayTag> ActiveConversationName;
 
 	UPROPERTY(Transient)
-	TSet<FYapPromptHandle> ActivePromptHandles;
+	TMap<FYapPromptHandle, FGameplayTag> ActivePromptHandles;
 	
 	/** Queue of conversations. The top one is always going to be "active". If two "Open Conversation" nodes run, the second one will wait in this queue until the first one closes. */
 	UPROPERTY(Transient)
@@ -110,13 +106,16 @@ protected:
 
 	static bool bGetGameMaturitySettingWarningIssued;
 
+	UPROPERTY(Transient)
+	TSet<FYapSpeechHandle> RunningSpeech;
+	
 public:
 	UPROPERTY(Transient)
 	TMap<FYapSpeechHandle, FYapSpeechEvent> SpeechCompleteEvents;
 	
 	UPROPERTY(Transient)
-	TMap<FYapSpeechHandle, FYapSpeechEvent> FragmentCompleteEvents;
-
+	TMap<FYapSpeechHandle, FTimerHandle> SpeechTimers;
+	
 	UPROPERTY(Transient)
 	FYapPromptChosen OnPromptChosen;
 
@@ -152,32 +151,32 @@ public:
 
 	/** Given a character identity tag, find the character component in the world. */
 	UFUNCTION(BlueprintCallable, Category = "Yap")
-	static UYapCharacterComponent* FindCharacterComponent(FGameplayTag CharacterTag);
+	static UYapCharacterComponent* FindCharacterComponent(UWorld* World, FGameplayTag CharacterTag);
 
 	// =========================================
 	// YAP API - These are called by Yap classes
 	// =========================================
 public:
 
-	static const TWeakObjectPtr<UWorld> GetStaticWorld()
+	static UYapSubsystem* Get(UWorld* World)
 	{
-		return World;
-	}
-
-	static UYapSubsystem* Get()
-	{
-		if (World.IsValid())
+		if (IsValid(World))
 		{
 			return World->GetSubsystem<UYapSubsystem>();
 		}
 
 		return nullptr;
 	}
+
+	static bool IsSpeechRunning(UWorld* World, const FYapSpeechHandle& Handle)
+	{
+		return Get(World)->RunningSpeech.Contains(Handle);
+	}
 	
 public:
-	static UYapBroker* GetBroker();
+	static UYapBroker* GetBroker(UWorld* World);
 	
-	static EYapMaturitySetting GetCurrentMaturitySetting();
+	static EYapMaturitySetting GetCurrentMaturitySetting(UWorld* World);
 
 	/**  */
 	FYapFragment* FindTaggedFragment(const FGameplayTag& FragmentTag);
@@ -212,31 +211,31 @@ protected:
 public:
 	/**  */
 	UFUNCTION(BlueprintCallable)
-	FYapSpeechHandle RunSpeech(const FYapData_SpeechBegins& SpeechData, const FGameplayTag& TypeGroup);
+	FYapSpeechHandle RunSpeech(const FYapData_SpeechBegins& SpeechData, const FGameplayTag& TypeGroup, FYapSpeechHandle& Handle);
 
 	// TODO I hate this thing
 	static FYapConversation NullConversation;
 
 	// TODO I also hate these things
 	/**  */
-	static FYapConversation& GetConversation(UObject* ConversationOwner);
+	static FYapConversation& GetConversation(UWorld* World, UObject* ConversationOwner);
 	
 	/**  */
-	static FYapConversation& GetConversation(FYapConversationHandle Handle);
+	static FYapConversation& GetConversation(UWorld* World, FYapConversationHandle Handle);
 
 	/**  */
-	static FYapConversation& GetConversation(const FGameplayTag& ConversationName);
+	static FYapConversation& GetConversation(UWorld* World, const FGameplayTag& ConversationName);
 
 	/**  */
-	static FGameplayTag GetActiveConversation();
+	static FGameplayTag GetActiveConversation(UWorld* World);
 
 public:
 	// TODO should I make a ref struct for FYapPromptHandle too?
 	/** The prompt handle will call this function, passing in itself. */
-	static bool RunPrompt(const FYapPromptHandle& Handle);
+	static bool RunPrompt(UWorld* World, const FYapPromptHandle& Handle);
 
 	/**  */
-	static bool SkipSpeech(const FYapSpeechHandle& Handle);
+	static bool SkipSpeech(UWorld* World, const FYapSpeechHandle& Handle);
 
 	/**  */ // TODO: ability to instantly playback/skip through multiple nodes until some sort of target point is hit, maybe a custom node? (imagine skipping an entire cutscene)
 	// static bool SkipDialogueTo(???);
@@ -252,13 +251,17 @@ public:
 	/**  */
 	void UnregisterCharacterComponent(UYapCharacterComponent* YapCharacterComponent);
 
-	static TArray<TObjectPtr<UObject>>& FindOrAddConversationHandlerArray(const FGameplayTag& TypeGroup);
+	TArray<TObjectPtr<UObject>>& FindOrAddConversationHandlerArray(const FGameplayTag& TypeGroup);
 
-	static TArray<TObjectPtr<UObject>>* FindConversationHandlerArray(const FGameplayTag& TypeGroup);
+	TArray<TObjectPtr<UObject>>* FindConversationHandlerArray(const FGameplayTag& TypeGroup);
 	
-	static TArray<TObjectPtr<UObject>>& FindOrAddFreeSpeechHandlerArray(const FGameplayTag& TypeGroup);
+	TArray<TObjectPtr<UObject>>& FindOrAddFreeSpeechHandlerArray(const FGameplayTag& TypeGroup);
 	
-	static TArray<TObjectPtr<UObject>>* FindFreeSpeechHandlerArray(const FGameplayTag& TypeGroup);
+	TArray<TObjectPtr<UObject>>* FindFreeSpeechHandlerArray(const FGameplayTag& TypeGroup);
+
+	void RegisterSpeechHandle(FYapSpeechHandle& Handle);
+	
+	void UnregisterSpeechHandle(FYapSpeechHandle& Handle);
 	
 public:
 	/**  */
@@ -273,8 +276,6 @@ public:
 protected:
 	void OnSpeechComplete(FYapSpeechHandle Handle);
 
-	void OnFragmentComplete(FYapSpeechHandle Handle);
-	
 	/**  */
 	bool DoesSupportWorldType(const EWorldType::Type WorldType) const override;
 
@@ -320,5 +321,3 @@ protected:
 		}
 	}
 };
-
-

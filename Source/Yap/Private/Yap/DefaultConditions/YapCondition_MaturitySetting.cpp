@@ -18,7 +18,7 @@ bool UYapCondition_MaturitySetting::EvaluateCondition_Implementation() const
 		return true;
 	}
 	
-	return RequiredSetting == UYapSubsystem::GetCurrentMaturitySetting();
+	return RequiredSetting == UYapSubsystem::GetCurrentMaturitySetting(GetWorld());
 }
 
 // ------------------------------------------------------------------------------------------------

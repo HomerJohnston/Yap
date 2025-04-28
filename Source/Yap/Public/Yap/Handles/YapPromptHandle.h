@@ -32,7 +32,7 @@ protected:
 	// PUBLIC API - Your game should use these
 
 public:
-	void RunPrompt(UObject* WorldContextObject);
+	void RunPrompt(UObject* WorldContext);
 
 	// ------------------------------------------
 	// YAP API - These are called by Yap classes
@@ -70,8 +70,8 @@ class YAP_API UYapPromptHandleBFL : public UBlueprintFunctionLibrary
 	GENERATED_BODY()
 
 public:
-	UFUNCTION(BlueprintCallable, Category = "Yap")
-	static bool RunPrompt(const FYapPromptHandle& Handle);
+	UFUNCTION(BlueprintCallable, Category = "Yap", meta = (WorldContext = "WorldContext"))
+	static bool RunPrompt(UObject* WorldContext, const FYapPromptHandle& Handle);
 
 	UFUNCTION(BlueprintCallable, Category = "Yap")
 	static bool Subscribe(const FYapPromptHandle& Handle, FYapPromptHandleChosen Delegate);

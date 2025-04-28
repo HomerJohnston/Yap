@@ -68,7 +68,7 @@ void UYapBlueprintFunctionLibrary::UnregisterFreeSpeechHandler(UObject* HandlerT
 
 // ------------------------------------------------------------------------------------------------
 
-AActor* UYapBlueprintFunctionLibrary::FindYapCharacterActor(const UYapCharacter* Character)
+AActor* UYapBlueprintFunctionLibrary::FindYapCharacterActor(UObject* WorldContext, const UYapCharacter* Character)
 {
 	if (!IsValid(Character))
 	{
@@ -80,7 +80,7 @@ AActor* UYapBlueprintFunctionLibrary::FindYapCharacterActor(const UYapCharacter*
 		return nullptr;
 	}
 	
-	UYapCharacterComponent* Comp = UYapSubsystem::FindCharacterComponent(Character->GetIdentityTag());
+	UYapCharacterComponent* Comp = UYapSubsystem::FindCharacterComponent(WorldContext->GetWorld(), Character->GetIdentityTag());
 
 	if (!IsValid(Comp))
 	{

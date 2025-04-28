@@ -23,7 +23,7 @@ void UFlowNode_YapConversation_Open::ExecuteInput(const FName& PinName)
 {
 	Super::ExecuteInput(PinName);
 	
-	FYapConversation& NewConversation = UYapSubsystem::Get()->OpenConversation(ConversationName, GetFlowAsset());
+	FYapConversation& NewConversation = UYapSubsystem::Get(GetWorld())->OpenConversation(ConversationName, GetFlowAsset());
 
 	// The subsystem will give conversation listeners a chance to set an interlock. If so, the state will be "Opening" rather than "Open".
 	// When the interlock gets released, the delegate below will get called instead.
@@ -40,7 +40,7 @@ void UFlowNode_YapConversation_Open::ExecuteInput(const FName& PinName)
 
 void UFlowNode_YapConversation_Open::FinishNode()
 {
-	UYapSubsystem::GetConversation(ConversationName).OnConversationOpened.RemoveAll(this);
+	UYapSubsystem::GetConversation(GetWorld(), ConversationName).OnConversationOpened.RemoveAll(this);
 	
 	TriggerFirstOutput(true);
 }

@@ -46,8 +46,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Yap")
 	static void UnregisterFreeSpeechHandler(UObject* HandlerToUnregister);
 
-	UFUNCTION(BlueprintCallable, Category = "Yap")
-	static AActor* FindYapCharacterActor(const UYapCharacter* Character);
+	UFUNCTION(BlueprintCallable, Category = "Yap", meta = (WorldContext = "WorldContext"))
+	static AActor* FindYapCharacterActor(UObject* WorldContext, const UYapCharacter* Character);
 };
 
 

@@ -117,7 +117,7 @@ TOptional<float> FYapBit::GetTextTime(const FGameplayTag& TypeGroup) const
 
 // --------------------------------------------------------------------------------------------
 
-TOptional<float> FYapBit::GetAudioTime(EYapLoadContext LoadContext) const
+TOptional<float> FYapBit::GetAudioTime( EYapLoadContext LoadContext) const
 {
 	if (AudioAsset.IsNull())
 	{
@@ -138,7 +138,7 @@ TOptional<float> FYapBit::GetAudioTime(EYapLoadContext LoadContext) const
 #if WITH_EDITOR
 	if (GEditor && GEditor->IsPlayingSessionInEditor())
 	{
-		Broker = UYapSubsystem::GetBroker();
+		Broker = UYapSubsystem::GetBroker(GEditor->PlayWorld);
 	}
 	else
 	{

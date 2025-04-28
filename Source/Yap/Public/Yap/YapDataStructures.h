@@ -69,9 +69,11 @@ struct FYapData_SpeechBegins
 	UPROPERTY(BlueprintReadOnly)
 	float SpeechTime = 0;
 
+	// TODO: I'm not sure if this data belongs in here. It's here because it might be useful for UI to have... but it's irrelevant to the subsystem and actual dialogue engine, only the flow graph.
+	// I'm going to try taking it out for now and I can put it back in later if it seems necessary for any real purpose.
 	/** Delay after this dialogue completes before carrying on. */
-	UPROPERTY(BlueprintReadOnly)
-	float FragmentTime = 0;
+	//UPROPERTY(BlueprintReadOnly)
+	//float FragmentTime = 0;
 
 	/** Audio asset, you are responsible to cast to your proper type to use. */
 	UPROPERTY(BlueprintReadOnly)

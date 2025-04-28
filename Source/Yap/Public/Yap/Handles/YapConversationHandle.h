@@ -26,17 +26,17 @@ class UYapConversationHandleBlueprintFunctionLibrary : public UBlueprintFunction
 {
     GENERATED_BODY()
 
-    UFUNCTION(BlueprintCallable, Category = Yap)
-    static UPARAM(DisplayName = Handle) FYapConversationHandle BindToConversationOpening(FYapConversationHandle Handle, FYapConversationEventDelegate Delegate);
+    UFUNCTION(BlueprintCallable, Category = Yap, meta = (WorldContext = "WorldContext"))
+    static UPARAM(DisplayName = Handle) FYapConversationHandle BindToConversationOpening(UObject* WorldContext, FYapConversationHandle Handle, FYapConversationEventDelegate Delegate);
     
-    UFUNCTION(BlueprintCallable, Category = Yap)
-    static UPARAM(DisplayName = Handle) FYapConversationHandle BindToConversationOpened(FYapConversationHandle Handle, FYapConversationEventDelegate Delegate);
+    UFUNCTION(BlueprintCallable, Category = Yap, meta = (WorldContext = "WorldContext"))
+    static UPARAM(DisplayName = Handle) FYapConversationHandle BindToConversationOpened(UObject* WorldContext, FYapConversationHandle Handle, FYapConversationEventDelegate Delegate);
     
-    UFUNCTION(BlueprintCallable, Category = Yap)
-    static UPARAM(DisplayName = Handle) FYapConversationHandle BindToConversationClosing(FYapConversationHandle Handle, FYapConversationEventDelegate Delegate);
+    UFUNCTION(BlueprintCallable, Category = Yap, meta = (WorldContext = "WorldContext"))
+    static UPARAM(DisplayName = Handle) FYapConversationHandle BindToConversationClosing(UObject* WorldContext, FYapConversationHandle Handle, FYapConversationEventDelegate Delegate);
 
-    UFUNCTION(BlueprintCallable, Category = Yap)
-    static UPARAM(DisplayName = Handle) FYapConversationHandle BindToConversationClosed(FYapConversationHandle Handle, FYapConversationEventDelegate Delegate);
+    UFUNCTION(BlueprintCallable, Category = Yap, meta = (WorldContext = "WorldContext"))
+    static UPARAM(DisplayName = Handle) FYapConversationHandle BindToConversationClosed(UObject* WorldContext, FYapConversationHandle Handle, FYapConversationEventDelegate Delegate);
 
     /**
      * Apply an interlock once a conversation starts opening to prevent the conversation from actually opening.

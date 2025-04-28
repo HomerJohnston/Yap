@@ -145,5 +145,10 @@ void FYapConversation::ExecuteSkip()
     }
 }
 
+bool FYapConversation::IsNull() const
+{
+    return this == &UYapSubsystem::NullConversation;
+}
+
 // ------------------------------------------------------------------------------------------------
 

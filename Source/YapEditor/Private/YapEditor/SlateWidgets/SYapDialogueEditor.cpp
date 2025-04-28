@@ -981,12 +981,12 @@ TOptional<float> SYapDialogueEditor::Value_TimeSetting_AudioTime(EYapMaturitySet
 
 TOptional<float> SYapDialogueEditor::Value_TimeSetting_TextTime(EYapMaturitySetting MaturitySetting) const
 {
-	return GetFragment().GetBit(MaturitySetting).GetTextTime(DialogueNode->GetTypeGroupTag());
+	return GetFragment().GetBit(GEditor->EditorWorld, MaturitySetting).GetTextTime(DialogueNode->GetTypeGroupTag());
 }
 
 TOptional<float> SYapDialogueEditor::Value_TimeSetting_ManualTime(EYapMaturitySetting MaturitySetting) const
 {
-	return GetFragment().GetBit(MaturitySetting).GetManualTime();
+	return GetFragment().GetBit(GEditor->EditorWorld, MaturitySetting).GetManualTime();
 }
 
 void SYapDialogueEditor::OnValueUpdated_ManualTime(float NewValue, EYapMaturitySetting MaturitySetting)
@@ -1020,7 +1020,7 @@ FSlateColor SYapDialogueEditor::ButtonColorAndOpacity_UseTimeMode(EYapTimeMode T
 		return ColorTint;
 	}
 	
-	if (GetFragment().GetTimeMode(GetDisplayMaturitySetting(), DialogueNode->GetTypeGroupTag()) == TimeMode)
+	if (GetFragment().GetTimeMode(GEditor->EditorWorld, GetDisplayMaturitySetting(), DialogueNode->GetTypeGroupTag()) == TimeMode)
 	{
 		// Implicit match through project defaults
 		return ColorTint.Desaturate(0.50);
@@ -1037,7 +1037,7 @@ FSlateColor SYapDialogueEditor::ForegroundColor_TimeSettingButton(EYapTimeMode T
 		return ColorTint;
 	}
 	
-	if (GetFragment().GetTimeMode(GetDisplayMaturitySetting(), DialogueNode->GetTypeGroupTag()) == TimeMode)
+	if (GetFragment().GetTimeMode(GEditor->EditorWorld, GetDisplayMaturitySetting(), DialogueNode->GetTypeGroupTag()) == TimeMode)
 	{
 		// Implicit match through project defaults
 		return ColorTint;
@@ -1050,7 +1050,7 @@ EYapMaturitySetting SYapDialogueEditor::GetDisplayMaturitySetting() const
 {
 	if (GEditor->PlayWorld)
 	{
-		return UYapSubsystem::GetCurrentMaturitySetting();
+		return UYapSubsystem::GetCurrentMaturitySetting(GEditor->EditorWorld);
 	}
 
 	if (!bNeedsChildSafe)

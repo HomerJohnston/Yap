@@ -142,6 +142,7 @@ protected:
 	UPROPERTY(Transient, BlueprintReadOnly)
 	int32 NodeActivationCount = 0;
 
+	// TODO I feel like this should get removed, ultimately it is possible with this system for multiple fragments to be running simultaneously. The running fragments map below should probably be the source of truth. This could turn into a "latest" running fragment though.
 	/**  */
 	UPROPERTY(Transient)
 	int32 RunningFragmentIndex = INDEX_NONE;
@@ -153,6 +154,12 @@ protected:
 	/**  */
 	UPROPERTY(Transient)
 	FYapSpeechHandle RunningSpeechHandle;
+
+	UPROPERTY(Transient)
+	TMap<FYapSpeechHandle, uint8> RunningFragments;
+
+	UPROPERTY(Transient)
+	FTimerHandle PaddingTimer;
 	
 	// ============================================================================================
 	// PUBLIC API
@@ -250,8 +257,15 @@ protected:
 
 	void OnSpeechComplete(uint8 FragmentIndex);
 
+public:
+	UFUNCTION()
+	void OnSpeechComplete_New(UObject* Instigator, FYapSpeechHandle Handle);
+	
 	void OnProgressionComplete(uint8 FragmentIndex);
 
+	UFUNCTION()
+	void OnProgressionComplete_New(UObject* Instigator, FYapSpeechHandle Handle);
+	
 	void AdvanceFromFragment(uint8 FragmentIndex);
 	
 	bool IsBypassPinRequired() const;

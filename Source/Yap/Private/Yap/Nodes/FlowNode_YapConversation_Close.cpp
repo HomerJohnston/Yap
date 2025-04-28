@@ -18,9 +18,9 @@ void UFlowNode_YapConversation_Close::ExecuteInput(const FName& PinName)
 {
 	Super::ExecuteInput(PinName);
 	
-	FGameplayTag ConversationToClose = Conversation.IsValid() ? Conversation : UYapSubsystem::GetActiveConversation();
+	FGameplayTag ConversationToClose = Conversation.IsValid() ? Conversation : UYapSubsystem::GetActiveConversation(GetWorld());
 	
-	EYapConversationState Result = UYapSubsystem::Get()->RequestCloseConversation(ConversationToClose);
+	EYapConversationState Result = UYapSubsystem::Get(GetWorld())->RequestCloseConversation(ConversationToClose);
 
 	if (Result == EYapConversationState::Closed)
 	{
@@ -29,7 +29,7 @@ void UFlowNode_YapConversation_Close::ExecuteInput(const FName& PinName)
 	}
 	else
 	{
-		FYapConversation& ExistingConversation = UYapSubsystem::GetConversation(ConversationToClose);
+		FYapConversation& ExistingConversation = UYapSubsystem::GetConversation(GetWorld(), ConversationToClose);
 		ExistingConversation.OnConversationClosed.AddDynamic(this, &ThisClass::FinishNode);
 	}
 }
@@ -38,7 +38,7 @@ void UFlowNode_YapConversation_Close::FinishNode()
 {
 	UE_LOG(LogYap, Verbose, TEXT("CONVERSATION CLOSING: %s"), *Conversation.GetTagName().ToString());
 
-	UYapSubsystem::GetConversation(Conversation).OnConversationClosed.RemoveAll(this);
+	UYapSubsystem::GetConversation(GetWorld(), Conversation).OnConversationClosed.RemoveAll(this);
 	
 	TriggerFirstOutput(true);
 }

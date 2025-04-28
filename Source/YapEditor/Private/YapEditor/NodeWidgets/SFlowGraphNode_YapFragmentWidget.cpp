@@ -801,7 +801,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateFragmentWidget()
 				[
 					SNew(SYapTimeProgressionWidget)
 					.BarColor(this, &ThisClass::ColorAndOpacity_FragmentTimeIndicator)
-					.SpeechTime_Lambda( [this] () { return GetFragment().GetSpeechTime(GetDisplayMaturitySetting(), EYapLoadContext::AsyncEditorOnly, GetDialogueNode()->GetTypeGroupTag()); })
+					.SpeechTime_Lambda( [this] () { return GetFragment().GetSpeechTime(GEditor->EditorWorld, GetDisplayMaturitySetting(), EYapLoadContext::AsyncEditorOnly, GetDialogueNode()->GetTypeGroupTag()); })
 					.PaddingTime_Lambda( [this] () { return GetFragment().GetPaddingValue(GetDialogueNode()->GetTypeGroupTag()); } )
 					.MaxDisplayTime_Lambda( [this] () { return UYapProjectSettings::GetDialogueTimeSliderMax(); } )
 					.PlaybackTime_Lambda( [this] () { return Percent_FragmentTime(); } )
@@ -986,7 +986,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateDialogueDisplayWidge
 						.AutoWrapText_Lambda( [this] () { return !GetTypeGroup().GetPreventDialogueTextWrapping(); })
 						.TextStyle(FYapEditorStyle::Get(), YapStyles.TextBlockStyle_DialogueText)
 						.Font(DialogueTextFont)
-						.Text_Lambda( [this] () { return GetFragment().GetDialogueText(GetDisplayMaturitySetting()); } )
+						.Text_Lambda( [this] () { return GetFragment().GetDialogueText(GEditor->EditorWorld, GetDisplayMaturitySetting()); } )
 						.ColorAndOpacity(this, &ThisClass::GetColorAndOpacityForFragmentText, YapColor::LightGray)
 					]
 					+ SOverlay::Slot()
@@ -996,7 +996,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateDialogueDisplayWidge
 						SNew(STextBlock)
 						.Visibility_Lambda( [this] ()
 						{
-							const FText& DialogueText =  GetFragment().GetDialogueText(GetDisplayMaturitySetting());
+							const FText& DialogueText =  GetFragment().GetDialogueText(GEditor->EditorWorld, GetDisplayMaturitySetting());
 							return DialogueText.IsEmpty() ? EVisibility::HitTestInvisible : EVisibility::Hidden;
 						})
 						.Justification(ETextJustify::Center)
@@ -1624,7 +1624,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateTitleTextDisplayWidg
 		[
 			SNew(STextBlock)
 			.TextStyle(FYapEditorStyle::Get(), YapStyles.TextBlockStyle_TitleText)
-			.Text_Lambda( [this] () { return GetFragment().GetTitleText(GetDisplayMaturitySetting()); } )
+			.Text_Lambda( [this] () { return GetFragment().GetTitleText(GEditor->EditorWorld, GetDisplayMaturitySetting()); } )
 			.ToolTipText(LOCTEXT("TitleTextDisplayWidget_ToolTipText", "Title text"))
 			.ColorAndOpacity(this, &ThisClass::GetColorAndOpacityForFragmentText, YapColor::YellowGray)
 		]
@@ -1635,7 +1635,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateTitleTextDisplayWidg
 			SNew(STextBlock)
 			.Visibility_Lambda( [this] ()
 			{
-				const FText& TitleText = GetFragment().GetTitleText(GetDisplayMaturitySetting());
+				const FText& TitleText = GetFragment().GetTitleText(GEditor->EditorWorld, GetDisplayMaturitySetting());
 				return TitleText.IsEmpty() ? EVisibility::HitTestInvisible : EVisibility::Hidden;;
 			})
 			.Justification(ETextJustify::Center)
@@ -1749,7 +1749,7 @@ FSlateColor SFlowGraphNode_YapFragmentWidget::ButtonColorAndOpacity_UseTimeMode(
 		return ColorTint;
 	}
 	
-	if (GetFragment().GetTimeMode(GetDisplayMaturitySetting(), GetDialogueNode()->GetTypeGroupTag()) == TimeMode)
+	if (GetFragment().GetTimeMode(GEditor->EditorWorld, GetDisplayMaturitySetting(), GetDialogueNode()->GetTypeGroupTag()) == TimeMode)
 	{
 		// Implicit match through project defaults
 		return ColorTint.Desaturate(0.50);
@@ -1776,7 +1776,7 @@ FSlateColor SFlowGraphNode_YapFragmentWidget::ForegroundColor_TimeSettingButton(
 		return ColorTint;
 	}
 	
-	if (GetFragment().GetTimeMode(GetDisplayMaturitySetting(), GetDialogueNode()->GetTypeGroupTag()) == TimeMode)
+	if (GetFragment().GetTimeMode(GEditor->EditorWorld, GetDisplayMaturitySetting(), GetDialogueNode()->GetTypeGroupTag()) == TimeMode)
 	{
 		// Implicit match through project defaults
 		return ColorTint;
@@ -2071,7 +2071,7 @@ EYapMaturitySetting SFlowGraphNode_YapFragmentWidget::GetDisplayMaturitySetting(
 {
 	if (GEditor->PlayWorld)
 	{
-		return UYapSubsystem::GetCurrentMaturitySetting();
+		return UYapSubsystem::GetCurrentMaturitySetting(GEditor->PlayWorld);
 	}
 
 	if (!NeedsChildSafeData())

@@ -51,9 +51,9 @@ void FYapFragment::ResetOptionalPins()
 	bShowOnEndPin = false;
 }
 
-void FYapFragment::PreloadContent(EYapMaturitySetting MaturitySetting, EYapLoadContext LoadContext)
+void FYapFragment::PreloadContent(UWorld* World, EYapMaturitySetting MaturitySetting, EYapLoadContext LoadContext)
 {
-	ResolveMaturitySetting(MaturitySetting);
+	ResolveMaturitySetting(World, MaturitySetting);
 	
 	switch (LoadContext)
 	{
@@ -133,9 +133,9 @@ const UYapCharacter* FYapFragment::GetCharacter_Internal(const TSoftObjectPtr<UY
 	return CharacterAsset.Get();
 }
 
-const FText& FYapFragment::GetDialogueText(EYapMaturitySetting MaturitySetting) const
+const FText& FYapFragment::GetDialogueText(UWorld* World, EYapMaturitySetting MaturitySetting) const
 {
-	const FYapBit& Preferredbit = GetBit(MaturitySetting);
+	const FYapBit& Preferredbit = GetBit(World, MaturitySetting);
 	const FYapBit& SecondaryBit = MatureBit; // Always fall back to the mature bit. Never fall back to the child-safe bit.
 
 	if (Preferredbit.HasDialogueText())
@@ -146,9 +146,9 @@ const FText& FYapFragment::GetDialogueText(EYapMaturitySetting MaturitySetting) 
 	return SecondaryBit.GetDialogueText();
 }
 
-const FText& FYapFragment::GetTitleText(EYapMaturitySetting MaturitySetting) const
+const FText& FYapFragment::GetTitleText(UWorld* World, EYapMaturitySetting MaturitySetting) const
 {
-	const FYapBit& Preferredbit = GetBit(MaturitySetting);
+	const FYapBit& Preferredbit = GetBit(World, MaturitySetting);
 	const FYapBit& SecondaryBit = MatureBit; // Always fall back to the mature bit. Never fall back to the child-safe bit.
 
 	if (Preferredbit.HasTitleText())
@@ -159,9 +159,9 @@ const FText& FYapFragment::GetTitleText(EYapMaturitySetting MaturitySetting) con
 	return SecondaryBit.GetTitleText();
 }
 
-const UObject* FYapFragment::GetAudioAsset(EYapMaturitySetting MaturitySetting) const
+const UObject* FYapFragment::GetAudioAsset(UWorld* World, EYapMaturitySetting MaturitySetting) const
 {
-	const FYapBit& Preferredbit = GetBit(MaturitySetting);
+	const FYapBit& Preferredbit = GetBit(World, MaturitySetting);
 	const FYapBit& SecondaryBit = MatureBit; // Always fall back to the mature bit. Never fall back to the child-safe bit.
 
 	if (Preferredbit.HasAudioAsset())
@@ -172,14 +172,14 @@ const UObject* FYapFragment::GetAudioAsset(EYapMaturitySetting MaturitySetting) 
 	return SecondaryBit.GetAudioAsset<UObject>();
 }
 
-const FYapBit& FYapFragment::GetBit() const
+const FYapBit& FYapFragment::GetBit(UWorld* World) const
 {
-	return GetBit(UYapSubsystem::GetCurrentMaturitySetting());
+	return GetBit(World, UYapSubsystem::GetCurrentMaturitySetting(World));
 }
 
-const FYapBit& FYapFragment::GetBit(EYapMaturitySetting MaturitySetting) const
+const FYapBit& FYapFragment::GetBit(UWorld* World, EYapMaturitySetting MaturitySetting) const
 {
-	ResolveMaturitySetting(MaturitySetting);
+	ResolveMaturitySetting(World, MaturitySetting);
 
 	if (MaturitySetting == EYapMaturitySetting::ChildSafe)
 	{
@@ -189,15 +189,16 @@ const FYapBit& FYapFragment::GetBit(EYapMaturitySetting MaturitySetting) const
 	return MatureBit;
 }
 
-TOptional<float> FYapFragment::GetSpeechTime(const FGameplayTag& TypeGroup) const
+TOptional<float> FYapFragment::GetSpeechTime(UWorld* World, const FGameplayTag& TypeGroup) const
 {
-	return GetSpeechTime(UYapSubsystem::GetCurrentMaturitySetting(), EYapLoadContext::Sync, TypeGroup);
+	return GetSpeechTime(World, UYapSubsystem::GetCurrentMaturitySetting(World), EYapLoadContext::Sync, TypeGroup);
 }
 
-TOptional<float> FYapFragment::GetSpeechTime(EYapMaturitySetting MaturitySetting, EYapLoadContext LoadContext, const FGameplayTag& TypeGroup) const
+TOptional<float> FYapFragment::GetSpeechTime(UWorld* World, EYapMaturitySetting MaturitySetting, EYapLoadContext LoadContext, const FGameplayTag& TypeGroup) const
 {
-	EYapTimeMode EffectiveTimeMode = GetTimeMode(MaturitySetting, TypeGroup);
-	return GetBit(MaturitySetting).GetSpeechTime(EffectiveTimeMode, LoadContext, TypeGroup);
+	EYapTimeMode EffectiveTimeMode = GetTimeMode(World, MaturitySetting, TypeGroup);
+	
+	return GetBit(World, MaturitySetting).GetSpeechTime(EffectiveTimeMode, LoadContext, TypeGroup);
 }
 
 float FYapFragment::GetPaddingValue(const FGameplayTag& TypeGroup) const
@@ -215,9 +216,9 @@ float FYapFragment::GetPaddingValue(const FGameplayTag& TypeGroup) const
 	return UYapProjectSettings::GetTypeGroup(TypeGroup).GetDefaultFragmentPaddingTime();
 }
 
-float FYapFragment::GetProgressionTime(const FGameplayTag& TypeGroup) const
+float FYapFragment::GetProgressionTime(UWorld* World, const FGameplayTag& TypeGroup) const
 {
-	float SpeechTime = GetSpeechTime(TypeGroup).Get(0.0f);
+	float SpeechTime = GetSpeechTime(World, TypeGroup).Get(0.0f);
 	float PaddingTime = 0.0f;
 	
 	if (Padding.IsSet())
@@ -281,7 +282,7 @@ FFlowPin FYapFragment::GetStartPin() const
 	return StartPin;
 }
 
-void FYapFragment::ResolveMaturitySetting(EYapMaturitySetting& MaturitySetting) const
+void FYapFragment::ResolveMaturitySetting(UWorld* World, EYapMaturitySetting& MaturitySetting) const
 {
 	if (!bEnableChildSafe)
 	{
@@ -291,9 +292,9 @@ void FYapFragment::ResolveMaturitySetting(EYapMaturitySetting& MaturitySetting) 
 	
 	if (MaturitySetting == EYapMaturitySetting::Unspecified)
 	{
-		if (IsValid(UYapSubsystem::Get()))
+		if (IsValid(UYapSubsystem::Get(World)))
 		{
-			MaturitySetting = UYapSubsystem::GetCurrentMaturitySetting();
+			MaturitySetting = UYapSubsystem::GetCurrentMaturitySetting(World);
 		}
 		else
 		{
@@ -307,18 +308,18 @@ bool FYapFragment::GetSkippable(bool Default) const
 	return Skippable.Get(Default);
 }
 
-EYapTimeMode FYapFragment::GetTimeMode(const FGameplayTag& TypeGroup) const
+EYapTimeMode FYapFragment::GetTimeMode(UWorld* World, const FGameplayTag& TypeGroup) const
 {
-	return GetTimeMode(UYapSubsystem::GetCurrentMaturitySetting(), TypeGroup);
+	return GetTimeMode(World, UYapSubsystem::GetCurrentMaturitySetting(World), TypeGroup);
 }
 
-EYapTimeMode FYapFragment::GetTimeMode(EYapMaturitySetting MaturitySetting, const FGameplayTag& TypeGroup) const
+EYapTimeMode FYapFragment::GetTimeMode(UWorld* World, EYapMaturitySetting MaturitySetting, const FGameplayTag& TypeGroup) const
 {
 	EYapTimeMode EffectiveTimeMode = (TimeMode == EYapTimeMode::Default) ? UYapProjectSettings::GetTypeGroup(TypeGroup).GetDefaultTimeModeSetting() : TimeMode;
 
 	if (EffectiveTimeMode == EYapTimeMode::AudioTime)
 	{
-		if (!GetBit(MaturitySetting).HasAudioAsset())
+		if (!GetBit(World, MaturitySetting).HasAudioAsset())
 		{
 			EYapMissingAudioErrorLevel MissingAudioBehavior = UYapProjectSettings::GetTypeGroup(TypeGroup).GetMissingAudioErrorLevel();
 			

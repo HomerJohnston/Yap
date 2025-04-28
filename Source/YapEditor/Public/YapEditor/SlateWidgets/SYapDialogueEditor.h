@@ -14,6 +14,9 @@ struct FYapBit;
 enum class EYapMaturitySetting : uint8;
 enum class EYapErrorLevel : uint8;
 
+/***
+ * The actual popup editor for dialogue, title text, audio, time settings, etc.
+ */
 class SYapDialogueEditor : public SCompoundWidget
 {
 public:

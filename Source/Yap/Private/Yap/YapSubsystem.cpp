@@ -20,7 +20,6 @@
 
 #define YAP_BROADCAST_EVT_TARGS(NAME, CPPFUNC, K2FUNC) U##NAME, I##NAME, &I##NAME::CPPFUNC, &I##NAME::K2FUNC
 
-TWeakObjectPtr<UWorld> UYapSubsystem::World = nullptr;
 bool UYapSubsystem::bGetGameMaturitySettingWarningIssued = false;
 FYapConversation UYapSubsystem::NullConversation;
 
@@ -36,7 +35,7 @@ void UYapSubsystem::RegisterConversationHandler(UObject* NewHandler, FGameplayTa
 {
 	if (NewHandler->Implements<UYapConversationHandler>())
 	{
-		FindOrAddConversationHandlerArray(TypeGroup).AddUnique(NewHandler);
+		Get(NewHandler->GetWorld())->FindOrAddConversationHandlerArray(TypeGroup).AddUnique(NewHandler);
 	}
 	else
 	{
@@ -48,7 +47,7 @@ void UYapSubsystem::RegisterConversationHandler(UObject* NewHandler, FGameplayTa
 
 void UYapSubsystem::UnregisterConversationHandler(UObject* HandlerToRemove, FGameplayTag TypeGroup)
 {
-	auto* Array = FindConversationHandlerArray(TypeGroup);
+	auto* Array = Get(HandlerToRemove->GetWorld())->FindConversationHandlerArray(TypeGroup);
 
 	if (Array)
 	{
@@ -57,7 +56,7 @@ void UYapSubsystem::UnregisterConversationHandler(UObject* HandlerToRemove, FGam
 
 	if (Array->IsEmpty())
 	{
-		Get()->ConversationHandlers.Remove(TypeGroup);
+		Get(HandlerToRemove->GetWorld())->ConversationHandlers.Remove(TypeGroup);
 	}
 }
 
@@ -67,7 +66,7 @@ void UYapSubsystem::RegisterFreeSpeechHandler(UObject* NewHandler, FGameplayTag 
 {
 	if (NewHandler->Implements<UYapFreeSpeechHandler>())
 	{
-		FindOrAddFreeSpeechHandlerArray(TypeGroup).AddUnique(NewHandler);
+		Get(NewHandler->GetWorld())->FindOrAddFreeSpeechHandlerArray(TypeGroup).AddUnique(NewHandler);
 	}
 	else
 	{
@@ -79,7 +78,7 @@ void UYapSubsystem::RegisterFreeSpeechHandler(UObject* NewHandler, FGameplayTag 
 
 void UYapSubsystem::UnregisterFreeSpeechHandler(UObject* HandlerToRemove, FGameplayTag TypeGroup)
 {
-	auto* Array = FindFreeSpeechHandlerArray(TypeGroup);
+	auto* Array = Get(HandlerToRemove->GetWorld())->FindFreeSpeechHandlerArray(TypeGroup);
 
 	if (Array)
 	{
@@ -88,15 +87,15 @@ void UYapSubsystem::UnregisterFreeSpeechHandler(UObject* HandlerToRemove, FGamep
 	
 	if (Array->IsEmpty())
 	{
-		Get()->FreeSpeechHandlers.Remove(TypeGroup);
+		Get(HandlerToRemove->GetWorld())->FreeSpeechHandlers.Remove(TypeGroup);
 	}
 }
 
 // ------------------------------------------------------------------------------------------------
 
-UYapCharacterComponent* UYapSubsystem::FindCharacterComponent(FGameplayTag CharacterTag)
+UYapCharacterComponent* UYapSubsystem::FindCharacterComponent(UWorld* World, FGameplayTag CharacterTag)
 {
-	TWeakObjectPtr<UYapCharacterComponent>* CharacterComponentPtr = Get()->YapCharacterComponents.Find(CharacterTag);
+	TWeakObjectPtr<UYapCharacterComponent>* CharacterComponentPtr = Get(World)->YapCharacterComponents.Find(CharacterTag);
 
 	if (CharacterComponentPtr && CharacterComponentPtr->IsValid())
 	{
@@ -108,9 +107,9 @@ UYapCharacterComponent* UYapSubsystem::FindCharacterComponent(FGameplayTag Chara
 
 // ------------------------------------------------------------------------------------------------
 
-UYapBroker* UYapSubsystem::GetBroker()
+UYapBroker* UYapSubsystem::GetBroker(UWorld* World)
 {
-	UYapBroker* Broker = Get()->Broker;
+	UYapBroker* Broker = Get(World)->Broker;
 
 #if WITH_EDITOR
 	ensureMsgf(IsValid(Broker), TEXT("Conversation Broker is invalid. Did you create one and assign it in project settings? Docs: https://github.com/HomerJohnston/UE-FlowYap/wiki/Conversation-Broker"));
@@ -121,27 +120,22 @@ UYapBroker* UYapSubsystem::GetBroker()
 
 // ------------------------------------------------------------------------------------------------
 
-EYapMaturitySetting UYapSubsystem::GetCurrentMaturitySetting()
+EYapMaturitySetting UYapSubsystem::GetCurrentMaturitySetting(UWorld* World)
 {
 	EYapMaturitySetting MaturitySetting;
-	
-	if (!ensureMsgf(World.IsValid(), TEXT("World was invalid in UYapSubsystem::GetGameMaturitySetting(). This should never happen! Defaulting to mature.")))
+
+	check(World);
+
+	UYapBroker* Broker = GetBroker(World);
+
+	if (ensureMsgf(IsValid(Broker), TEXT("No broker set in project settings! Defaulting to mature.")))
 	{
-		MaturitySetting = EYapMaturitySetting::Mature; 
+		MaturitySetting = Broker->GetMaturitySetting();
 	}
 	else
 	{
-		UYapBroker* Broker = GetBroker();
-
-		if (ensureMsgf(IsValid(Broker), TEXT("No broker set in project settings! Defaulting to mature.")))
-		{
-			MaturitySetting = Broker->GetMaturitySetting();
-		}
-		else
-		{
-			MaturitySetting = EYapMaturitySetting::Mature;
-		}	
-	}
+		MaturitySetting = EYapMaturitySetting::Mature;
+	}	
 
 	// Something went wrong... we will hard-code default to mature.
 	if (MaturitySetting == EYapMaturitySetting::Unspecified)
@@ -297,7 +291,7 @@ EYapConversationState UYapSubsystem::StartClosingConversation(const FGameplayTag
 		return Conversation.GetConversationName() == ConversationName;
 	};
 
-	FYapConversation& Conversation = GetConversation(ConversationName);
+	FYapConversation& Conversation = GetConversation(GetWorld(), ConversationName);
 
 	Conversation.StartClosing();
 
@@ -332,13 +326,15 @@ FYapPromptHandle UYapSubsystem::BroadcastPrompt(const FYapData_PlayerPromptCreat
 {
 	if (Data.Conversation.IsValid())
 	{
-		FSetElementId Elem = ActivePromptHandles.Emplace({TypeGroup});
+		FYapPromptHandle Handle(TypeGroup);
+		
+		ActivePromptHandles.Add(Handle, Data.Conversation);
 
 		auto* HandlerArray = FindConversationHandlerArray(TypeGroup);
 
-		BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapConversationHandler, OnConversationPlayerPromptCreated, Execute_K2_ConversationPlayerPromptCreated)>(HandlerArray, Data, ActivePromptHandles[Elem]);
+		BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapConversationHandler, OnConversationPlayerPromptCreated, Execute_K2_ConversationPlayerPromptCreated)>(HandlerArray, Data, Handle);
 
-		return ActivePromptHandles[Elem];
+		return Handle;
 	}
 	else
 	{
@@ -368,53 +364,57 @@ void UYapSubsystem::OnFinishedBroadcastingPrompts(const FYapData_PlayerPromptsRe
 
 // ------------------------------------------------------------------------------------------------
 
-FYapSpeechHandle UYapSubsystem::RunSpeech(const FYapData_SpeechBegins& SpeechData, const FGameplayTag& TypeGroup)
+FYapSpeechHandle UYapSubsystem::RunSpeech(const FYapData_SpeechBegins& SpeechData, const FGameplayTag& TypeGroup, FYapSpeechHandle& Handle)
 {
-	// TODO see if I can get rid of this shit
 	FYapRunningFragment RunningFragment;
 
-	FYapSpeechHandle SpeechHandle(RunningFragment);
-
-	SpeechCompleteEvents.Add(SpeechHandle);
-	FragmentCompleteEvents.Add(SpeechHandle);
-	
-	if (SpeechData.SpeechTime > 0)
-	{
-		FTimerHandle SpeechTimerHandle;
-		FTimerDelegate Delegate = FTimerDelegate::CreateUObject(this, &ThisClass::OnSpeechComplete, SpeechHandle);
-		GetWorld()->GetTimerManager().SetTimer(SpeechTimerHandle, Delegate, SpeechData.SpeechTime, false);
-		RunningFragment.SetSpeechTimerHandle(SpeechTimerHandle);
-	}
-
+	/*
 	if (SpeechData.FragmentTime > 0)
 	{
 		FTimerHandle FragmentTimerHandle;
 		FTimerDelegate Delegate = FTimerDelegate::CreateUObject(this, &ThisClass::OnFragmentComplete, SpeechHandle);
-		GetWorld()->GetTimerManager().SetTimer(FragmentTimerHandle, Delegate, SpeechData.SpeechTime, false);
+		GetWorld()->GetTimerManager().SetTimer(FragmentTimerHandle, Delegate, SpeechData.FragmentTime, false);
 		RunningFragment.SetFragmentTimerHandle(FragmentTimerHandle);
+
+		FragmentTimers.Add(SpeechHandle, FragmentTimerHandle);
 	}
+	*/
 	
 	if (SpeechData.Conversation.IsValid())
 	{
 		auto* HandlerArray = FindConversationHandlerArray(TypeGroup);
 		
-		BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapConversationHandler, OnConversationSpeechBegins, Execute_K2_ConversationSpeechBegins)>(HandlerArray, SpeechData, SpeechHandle);
+		BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapConversationHandler, OnConversationSpeechBegins, Execute_K2_ConversationSpeechBegins)>(HandlerArray, SpeechData, Handle);
 	}
 	else
 	{
 		auto* HandlerArray = FindFreeSpeechHandlerArray(TypeGroup);
 		
-		BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapFreeSpeechHandler, OnTalkSpeechBegins, Execute_K2_TalkSpeechBegins)>(HandlerArray, SpeechData, SpeechHandle);
+		BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapFreeSpeechHandler, OnTalkSpeechBegins, Execute_K2_TalkSpeechBegins)>(HandlerArray, SpeechData, Handle);
 	}
 
-	return SpeechHandle;
+	if (SpeechData.SpeechTime > 0)
+	{
+		FTimerHandle SpeechTimerHandle;
+		FTimerDelegate Delegate = FTimerDelegate::CreateUObject(this, &ThisClass::OnSpeechComplete, Handle);
+		GetWorld()->GetTimerManager().SetTimer(SpeechTimerHandle, Delegate, SpeechData.SpeechTime, false);
+		RunningFragment.SetSpeechTimerHandle(SpeechTimerHandle);
+
+		SpeechTimers.Add(Handle, SpeechTimerHandle);
+	}
+	else
+	{
+		OnSpeechComplete(Handle);
+	}
+
+	return Handle;
 }
 
 // ------------------------------------------------------------------------------------------------
 
-FYapConversation& UYapSubsystem::GetConversation(UObject* ConversationOwner)
+FYapConversation& UYapSubsystem::GetConversation(UWorld* World, UObject* ConversationOwner)
 {
-	for (FYapConversation& Conversation : Get()->ConversationQueue)
+	for (FYapConversation& Conversation : Get(World)->ConversationQueue)
 	{
 		if (Conversation.GetOwner() == ConversationOwner)
 		{
@@ -427,9 +427,9 @@ FYapConversation& UYapSubsystem::GetConversation(UObject* ConversationOwner)
 
 // ------------------------------------------------------------------------------------------------
 
-FYapConversation& UYapSubsystem::GetConversation(FYapConversationHandle Handle)
+FYapConversation& UYapSubsystem::GetConversation(UWorld* World, FYapConversationHandle Handle)
 {
-	for (FYapConversation& Conversation : Get()->ConversationQueue)
+	for (FYapConversation& Conversation : Get(World)->ConversationQueue)
 	{
 		if (Conversation.GetGuid() == Handle.Guid)
 		{
@@ -442,9 +442,9 @@ FYapConversation& UYapSubsystem::GetConversation(FYapConversationHandle Handle)
 
 // ------------------------------------------------------------------------------------------------
 
-FYapConversation& UYapSubsystem::GetConversation(const FGameplayTag& ConversationName)
+FYapConversation& UYapSubsystem::GetConversation(UWorld* World, const FGameplayTag& ConversationName)
 {
-	for (FYapConversation& Conversation : Get()->ConversationQueue)
+	for (FYapConversation& Conversation : Get(World)->ConversationQueue)
 	{
 		if (Conversation.GetConversationName() == ConversationName)
 		{
@@ -457,9 +457,9 @@ FYapConversation& UYapSubsystem::GetConversation(const FGameplayTag& Conversatio
 
 // ------------------------------------------------------------------------------------------------
 
-FGameplayTag UYapSubsystem::GetActiveConversation()
+FGameplayTag UYapSubsystem::GetActiveConversation(UWorld* World)
 {
-	UYapSubsystem* Subsystem = Get();
+	UYapSubsystem* Subsystem = Get(World);
 	
 	if (Subsystem->ConversationQueue.IsEmpty())
 	{
@@ -471,38 +471,73 @@ FGameplayTag UYapSubsystem::GetActiveConversation()
 
 // ------------------------------------------------------------------------------------------------
 
-bool UYapSubsystem::RunPrompt(const FYapPromptHandle& Handle)
+bool UYapSubsystem::RunPrompt(UWorld* World, const FYapPromptHandle& Handle)
 {
 	// TODO handle invalid handles gracefully
 
-	UYapSubsystem* Subsystem = Get();
+	UYapSubsystem* Subsystem = Get(World);
 	
 	// Broadcast to Yap systems
 	Subsystem->OnPromptChosen.Broadcast(Subsystem, Handle);
 
 	// Broadcast to game listeners
 	FYapData_PlayerPromptChosen Data;
-	
-	auto* HandlerArray = FindFreeSpeechHandlerArray(Handle.GetTypeGroup());
-	
-	BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapConversationHandler, OnConversationPlayerPromptChosen, Execute_K2_ConversationPlayerPromptChosen)>(HandlerArray, Data, Handle);
 
-	return true;
+	FGameplayTag* ConversationTag = Subsystem->ActivePromptHandles.Find(Handle);
+	
+	if (ConversationTag)
+	{
+		const FYapConversation& Conversation = GetConversation(World, *ConversationTag);
+
+		if (!Conversation.IsNull())
+		{
+			auto* HandlerArray = Get(World)->FindConversationHandlerArray(Conversation.GetTypeGroup());
+		
+			BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapConversationHandler, OnConversationPlayerPromptChosen, Execute_K2_ConversationPlayerPromptChosen)>(HandlerArray, Data, Handle);
+
+			return true;
+		}
+		else
+		{
+			// TODO error handling!
+		}
+	}
+	else
+	{
+		auto* HandlerArray = Get(World)->FindFreeSpeechHandlerArray(Handle.GetTypeGroup());
+	
+		BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapConversationHandler, OnConversationPlayerPromptChosen, Execute_K2_ConversationPlayerPromptChosen)>(HandlerArray, Data, Handle);
+
+		return true;
+	}
+
+	// TODO error handling!
+	return false;
 }
 
 // ------------------------------------------------------------------------------------------------
 
-bool UYapSubsystem::SkipSpeech(const FYapSpeechHandle& Handle)
+bool UYapSubsystem::SkipSpeech(UWorld* World, const FYapSpeechHandle& Handle)
 {
+	UE_LOG(LogYap, VeryVerbose, TEXT("Subsystem: SkipSpeech [%s]"), *Handle.GetGuid().ToString());
+
 	// TODO handle invalid handles gracefully
 	
-	UYapSubsystem* Subsystem = Get();
+	UYapSubsystem* Subsystem = Get(World);
+
+	if (FTimerHandle* TimerHandle = Subsystem->SpeechTimers.Find(Handle))
+	{
+		World->GetTimerManager().ClearTimer(*TimerHandle);
+	}
+	
+	Subsystem->OnSpeechComplete(Handle);
+	//Subsystem->OnFragmentComplete(Handle);
 	
 	// Broadcast to Yap systems
-	Subsystem->OnSpeechSkip.Broadcast(Subsystem, Handle);
-
+	//Subsystem->OnSpeechSkip.Broadcast(Subsystem, Handle);
+	
 	// Broadcast to game listeners
-	// TODO
+	// TODO???
 	
 	return true;
 }
@@ -545,12 +580,12 @@ void UYapSubsystem::UnregisterCharacterComponent(UYapCharacterComponent* YapChar
 
 TArray<TObjectPtr<UObject>>& UYapSubsystem::FindOrAddConversationHandlerArray(const FGameplayTag& TypeGroup)
 {
-	return Get()->ConversationHandlers.FindOrAdd(TypeGroup).Array;
+	return ConversationHandlers.FindOrAdd(TypeGroup).Array;
 }
 
 TArray<TObjectPtr<UObject>>* UYapSubsystem::FindConversationHandlerArray(const FGameplayTag& TypeGroup)
 {
-	FYapHandlersArray* Handlers = Get()->ConversationHandlers.Find(TypeGroup);
+	FYapHandlersArray* Handlers = ConversationHandlers.Find(TypeGroup);
 
 	if (Handlers)
 	{
@@ -562,12 +597,12 @@ TArray<TObjectPtr<UObject>>* UYapSubsystem::FindConversationHandlerArray(const F
 
 TArray<TObjectPtr<UObject>>& UYapSubsystem::FindOrAddFreeSpeechHandlerArray(const FGameplayTag& TypeGroup)
 {
-	return Get()->FreeSpeechHandlers.FindOrAdd(TypeGroup).Array;
+	return FreeSpeechHandlers.FindOrAdd(TypeGroup).Array;
 }
 
 TArray<TObjectPtr<UObject>>* UYapSubsystem::FindFreeSpeechHandlerArray(const FGameplayTag& TypeGroup)
 {
-	FYapHandlersArray* Handlers = Get()->FreeSpeechHandlers.Find(TypeGroup);
+	FYapHandlersArray* Handlers = FreeSpeechHandlers.Find(TypeGroup);
 
 	if (Handlers)
 	{
@@ -579,10 +614,22 @@ TArray<TObjectPtr<UObject>>* UYapSubsystem::FindFreeSpeechHandlerArray(const FGa
 
 // ------------------------------------------------------------------------------------------------
 
+void UYapSubsystem::RegisterSpeechHandle(FYapSpeechHandle& Handle)
+{
+	SpeechCompleteEvents.Add(Handle);
+}
+
+// ------------------------------------------------------------------------------------------------
+
+void UYapSubsystem::UnregisterSpeechHandle(FYapSpeechHandle& Handle)
+{
+	SpeechCompleteEvents.Remove(Handle);
+}
+
+// ------------------------------------------------------------------------------------------------
+
 void UYapSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
-	World = Cast<UWorld>(GetOuter());
-
 	// TODO handle null unset values
 	TSubclassOf<UYapBroker> BrokerClass = UYapProjectSettings::GetBrokerClass().LoadSynchronous();
 
@@ -598,7 +645,6 @@ void UYapSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
 void UYapSubsystem::Deinitialize()
 {
-	World = nullptr;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -615,14 +661,24 @@ void UYapSubsystem::OnWorldBeginPlay(UWorld& InWorld)
 
 void UYapSubsystem::OnSpeechComplete(FYapSpeechHandle Handle)
 {
-	SpeechCompleteEvents[Handle].Broadcast(this, Handle);
-	SpeechCompleteEvents.Remove(Handle);
-}
+	auto* Delegate = SpeechCompleteEvents.Find(Handle);
 
-void UYapSubsystem::OnFragmentComplete(FYapSpeechHandle Handle)
-{
-	FragmentCompleteEvents[Handle].Broadcast(this, Handle);
-	FragmentCompleteEvents.Remove(Handle);
+	if (Delegate)
+	{
+		SpeechCompleteEvents[Handle].Broadcast(this, Handle);
+		SpeechCompleteEvents.Remove(Handle);
+	}
+	else
+	{
+		UE_LOG(LogYap, Warning, TEXT("Handle was not registered into SpeechCompleteEvents! %s"), *Handle.GetGuid().ToString());
+	}
+	
+	FTimerHandle* Timer = SpeechTimers.Find(Handle);
+
+	if (Timer)
+	{
+		GetWorld()->GetTimerManager().ClearTimer(*Timer);
+	}
 }
 
 // ------------------------------------------------------------------------------------------------

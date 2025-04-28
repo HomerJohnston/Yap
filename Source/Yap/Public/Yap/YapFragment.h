@@ -176,13 +176,6 @@ protected:
 	bool bFragmentAwaitingManualAdvance = false;
 
 public:
-	/**  */
-	UPROPERTY(Transient)
-	FTimerHandle SpeechTimerHandle;
-
-	/**  */
-	UPROPERTY(Transient)
-	FTimerHandle ProgressionTimerHandle;
 	
 	// ASSET LOADING
 protected:
@@ -205,7 +198,7 @@ public:
 	
 	void ResetOptionalPins();
 	
-	void PreloadContent(EYapMaturitySetting MaturitySetting, EYapLoadContext LoadContext);
+	void PreloadContent(UWorld* World, EYapMaturitySetting MaturitySetting, EYapLoadContext LoadContext);
 	
 	const UYapCharacter* GetSpeaker(EYapLoadContext LoadContext); // Non-const because of async loading handle
 
@@ -234,15 +227,15 @@ public:
 
 	bool IsActivationLimitMet() const { if (ActivationLimit <= 0) return false; return ActivationCount >= ActivationLimit; }
 
-	const FText& GetDialogueText(EYapMaturitySetting MaturitySetting) const;
+	const FText& GetDialogueText(UWorld* World, EYapMaturitySetting MaturitySetting) const;
 	
-	const FText& GetTitleText(EYapMaturitySetting MaturitySetting) const;
+	const FText& GetTitleText(UWorld* World, EYapMaturitySetting MaturitySetting) const;
 	
-	const UObject* GetAudioAsset(EYapMaturitySetting MaturitySetting) const;
+	const UObject* GetAudioAsset(UWorld* World, EYapMaturitySetting MaturitySetting) const;
 	
-	const FYapBit& GetBit() const;
+	const FYapBit& GetBit(UWorld* World) const;
 
-	const FYapBit& GetBit(EYapMaturitySetting MaturitySetting) const;
+	const FYapBit& GetBit(UWorld* World, EYapMaturitySetting MaturitySetting) const;
 
 	const FYapBit& GetMatureBit() const { return MatureBit; }
 
@@ -252,7 +245,7 @@ public:
 
 	FYapBit& GetChildSafeBitMutable() { return ChildSafeBit; }
 
-	TOptional<float> GetSpeechTime(const FGameplayTag& TypeGroup) const;
+	TOptional<float> GetSpeechTime(UWorld* World, const FGameplayTag& TypeGroup) const;
 
 	double GetStartTime() const { return StartTime; }
 
@@ -267,14 +260,14 @@ public:
 	void SetAwaitingManualAdvance() { bFragmentAwaitingManualAdvance = true; };
 
 protected:
-	TOptional<float> GetSpeechTime(EYapMaturitySetting MaturitySetting, EYapLoadContext LoadContext, const FGameplayTag& TypeGroup) const;
+	TOptional<float> GetSpeechTime(UWorld* World, EYapMaturitySetting MaturitySetting, EYapLoadContext LoadContext, const FGameplayTag& TypeGroup) const;
 
 public:
 	TOptional<float> GetPaddingSetting() const { return Padding; };
 	
 	float GetPaddingValue(const FGameplayTag& TypeGroup) const;
 
-	float GetProgressionTime(const FGameplayTag& TypeGroup) const;
+	float GetProgressionTime(UWorld* World, const FGameplayTag& TypeGroup) const;
 	
 	void IncrementActivations();
 
@@ -301,7 +294,7 @@ public:
 
 	FFlowPin GetStartPin() const;;
 
-	void ResolveMaturitySetting(EYapMaturitySetting& MaturitySetting) const;
+	void ResolveMaturitySetting(UWorld* World, EYapMaturitySetting& MaturitySetting) const;
 	
 	TOptional<bool> GetSkippableSetting() const { return Skippable; }
 	
@@ -315,9 +308,9 @@ public:
 	bool GetSkippable(bool Default) const;
 	
 	/** Gets the evaluated time mode to be used for this bit (incorporating project default settings and fallbacks) */
-	EYapTimeMode GetTimeMode(const FGameplayTag& TypeGroup) const;
+	EYapTimeMode GetTimeMode(UWorld* World, const FGameplayTag& TypeGroup) const;
 	
-	EYapTimeMode GetTimeMode(EYapMaturitySetting MaturitySetting, const FGameplayTag& TypeGroup) const;
+	EYapTimeMode GetTimeMode(UWorld* World, EYapMaturitySetting MaturitySetting, const FGameplayTag& TypeGroup) const;
 
 	FGameplayTag GetMoodTag() const { return MoodTag; }
 

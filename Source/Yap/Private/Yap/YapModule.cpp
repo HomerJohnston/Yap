@@ -3,6 +3,8 @@
 
 #include "Yap/YapModule.h"
 
+#include "Yap/Interfaces/IYapHandleReactor.h"
+
 #define LOCTEXT_NAMESPACE "Yap"
 
 void FYapModule::StartupModule()

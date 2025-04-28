@@ -135,8 +135,12 @@ public:
     
     void ExecuteSkip();
 
+    bool IsNull() const;
+    
 private:
     void FinishOpening();
     
     void FinishClosing();
+
+    
 };

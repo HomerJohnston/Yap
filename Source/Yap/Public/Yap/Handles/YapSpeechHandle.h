@@ -61,6 +61,11 @@ public:
     //void BindToOnFragmentComplete(FYapSpeechEventDelegate Delegate) const;
 
     //void UnbindToOnFragmentComplete(FYapSpeechEventDelegate Delegate) const;
+
+    FString ToString() const
+    {
+        return Guid.ToString();
+    }
 };
 
 FORCEINLINE uint32 GetTypeHash(const FYapSpeechHandle& Struct)

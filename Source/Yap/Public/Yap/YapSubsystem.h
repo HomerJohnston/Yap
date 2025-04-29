@@ -81,8 +81,9 @@ protected:
 	UPROPERTY(Transient)
 	TOptional<FGameplayTag> ActiveConversationName;
 
+	/**  */
 	UPROPERTY(Transient)
-	TMap<FYapPromptHandle, FGameplayTag> ActivePromptHandles;
+	TMap<FYapPromptHandle, FGameplayTag> PromptHandleConversationTags;
 	
 	/** Queue of conversations. The top one is always going to be "active". If two "Open Conversation" nodes run, the second one will wait in this queue until the first one closes. */
 	UPROPERTY(Transient)
@@ -232,9 +233,9 @@ public:
 public:
 	// TODO should I make a ref struct for FYapPromptHandle too?
 	/** The prompt handle will call this function, passing in itself. */
-	static bool RunPrompt(UWorld* World, const FYapPromptHandle& Handle);
+	static void RunPrompt(UWorld* World, const FYapPromptHandle& Handle);
 
-	/**  */
+	/** Send a skip or manual advance signal. Returns true if */
 	static bool SkipSpeech(UWorld* World, const FYapSpeechHandle& Handle);
 
 	/**  */ // TODO: ability to instantly playback/skip through multiple nodes until some sort of target point is hit, maybe a custom node? (imagine skipping an entire cutscene)

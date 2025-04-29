@@ -44,7 +44,7 @@ public:
 
 	void Invalidate();
 	
-	bool IsValid() { return Guid.IsValid(); }
+	bool IsValid() const { return Guid.IsValid(); }
 
 	FGuid GetGuid() const { return Guid; }
 
@@ -53,6 +53,11 @@ public:
 	bool operator==(const FYapPromptHandle& Other) const
 	{
 		return Guid == Other.Guid;
+	}
+	
+	FString ToString()
+	{
+		return Guid.ToString();
 	}
 };
 
@@ -71,7 +76,7 @@ class YAP_API UYapPromptHandleBFL : public UBlueprintFunctionLibrary
 
 public:
 	UFUNCTION(BlueprintCallable, Category = "Yap", meta = (WorldContext = "WorldContext"))
-	static bool RunPrompt(UObject* WorldContext, const FYapPromptHandle& Handle);
+	static void RunPrompt(UObject* WorldContext, const FYapPromptHandle& Handle);
 
 	UFUNCTION(BlueprintCallable, Category = "Yap")
 	static bool Subscribe(const FYapPromptHandle& Handle, FYapPromptHandleChosen Delegate);

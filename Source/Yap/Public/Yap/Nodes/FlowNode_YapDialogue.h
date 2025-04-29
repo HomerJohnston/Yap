@@ -157,9 +157,6 @@ protected:
 
 	UPROPERTY(Transient)
 	TMap<FYapSpeechHandle, uint8> RunningFragments;
-
-	UPROPERTY(Transient)
-	FTimerHandle PaddingTimer;
 	
 	// ============================================================================================
 	// PUBLIC API
@@ -255,13 +252,11 @@ protected:
 
 	bool RunFragment(uint8 FragmentIndex);
 
-	void OnSpeechComplete(uint8 FragmentIndex);
-
 public:
 	UFUNCTION()
-	void OnSpeechComplete_New(UObject* Instigator, FYapSpeechHandle Handle);
-	
-	void OnProgressionComplete(uint8 FragmentIndex);
+	void OnSpeechComplete(UObject* Instigator, FYapSpeechHandle Handle);
+
+	void OnPaddingComplete(uint8 FragmentIndex);
 
 	UFUNCTION()
 	void OnProgressionComplete_New(UObject* Instigator, FYapSpeechHandle Handle);

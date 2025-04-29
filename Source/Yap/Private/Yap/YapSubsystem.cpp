@@ -328,7 +328,7 @@ FYapPromptHandle UYapSubsystem::BroadcastPrompt(const FYapData_PlayerPromptCreat
 	{
 		FYapPromptHandle Handle(TypeGroup);
 		
-		ActivePromptHandles.Add(Handle, Data.Conversation);
+		PromptHandleConversationTags.Add(Handle, Data.Conversation);
 
 		auto* HandlerArray = FindConversationHandlerArray(TypeGroup);
 
@@ -367,18 +367,6 @@ void UYapSubsystem::OnFinishedBroadcastingPrompts(const FYapData_PlayerPromptsRe
 FYapSpeechHandle UYapSubsystem::RunSpeech(const FYapData_SpeechBegins& SpeechData, const FGameplayTag& TypeGroup, FYapSpeechHandle& Handle)
 {
 	FYapRunningFragment RunningFragment;
-
-	/*
-	if (SpeechData.FragmentTime > 0)
-	{
-		FTimerHandle FragmentTimerHandle;
-		FTimerDelegate Delegate = FTimerDelegate::CreateUObject(this, &ThisClass::OnFragmentComplete, SpeechHandle);
-		GetWorld()->GetTimerManager().SetTimer(FragmentTimerHandle, Delegate, SpeechData.FragmentTime, false);
-		RunningFragment.SetFragmentTimerHandle(FragmentTimerHandle);
-
-		FragmentTimers.Add(SpeechHandle, FragmentTimerHandle);
-	}
-	*/
 	
 	if (SpeechData.Conversation.IsValid())
 	{
@@ -471,20 +459,21 @@ FGameplayTag UYapSubsystem::GetActiveConversation(UWorld* World)
 
 // ------------------------------------------------------------------------------------------------
 
-bool UYapSubsystem::RunPrompt(UWorld* World, const FYapPromptHandle& Handle)
+void UYapSubsystem::RunPrompt(UWorld* World, const FYapPromptHandle& Handle)
 {
-	// TODO handle invalid handles gracefully
+	if (!Handle.IsValid())
+	{
+		UE_LOG(LogYap, Error, TEXT("Tried to call UYapSubsystem::RunPrompt with a null handle, ignoring!"));
+		return;
+	}
 
 	UYapSubsystem* Subsystem = Get(World);
 	
-	// Broadcast to Yap systems
-	Subsystem->OnPromptChosen.Broadcast(Subsystem, Handle);
-
 	// Broadcast to game listeners
 	FYapData_PlayerPromptChosen Data;
 
-	FGameplayTag* ConversationTag = Subsystem->ActivePromptHandles.Find(Handle);
-	
+	FGameplayTag* ConversationTag = Subsystem->PromptHandleConversationTags.Find(Handle);
+
 	if (ConversationTag)
 	{
 		const FYapConversation& Conversation = GetConversation(World, *ConversationTag);
@@ -494,8 +483,6 @@ bool UYapSubsystem::RunPrompt(UWorld* World, const FYapPromptHandle& Handle)
 			auto* HandlerArray = Get(World)->FindConversationHandlerArray(Conversation.GetTypeGroup());
 		
 			BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapConversationHandler, OnConversationPlayerPromptChosen, Execute_K2_ConversationPlayerPromptChosen)>(HandlerArray, Data, Handle);
-
-			return true;
 		}
 		else
 		{
@@ -507,19 +494,17 @@ bool UYapSubsystem::RunPrompt(UWorld* World, const FYapPromptHandle& Handle)
 		auto* HandlerArray = Get(World)->FindFreeSpeechHandlerArray(Handle.GetTypeGroup());
 	
 		BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapConversationHandler, OnConversationPlayerPromptChosen, Execute_K2_ConversationPlayerPromptChosen)>(HandlerArray, Data, Handle);
-
-		return true;
 	}
 
-	// TODO error handling!
-	return false;
+	// Broadcast to Yap systems
+	Subsystem->OnPromptChosen.Broadcast(Subsystem, Handle);
 }
 
 // ------------------------------------------------------------------------------------------------
 
 bool UYapSubsystem::SkipSpeech(UWorld* World, const FYapSpeechHandle& Handle)
 {
-	UE_LOG(LogYap, VeryVerbose, TEXT("Subsystem: SkipSpeech [%s]"), *Handle.GetGuid().ToString());
+	UE_LOG(LogYap, VeryVerbose, TEXT("Subsystem: SkipSpeech [%s]"), *Handle.ToString());
 
 	// TODO handle invalid handles gracefully
 	
@@ -670,7 +655,7 @@ void UYapSubsystem::OnSpeechComplete(FYapSpeechHandle Handle)
 	}
 	else
 	{
-		UE_LOG(LogYap, Warning, TEXT("Handle was not registered into SpeechCompleteEvents! %s"), *Handle.GetGuid().ToString());
+		UE_LOG(LogYap, Warning, TEXT("Handle was not registered into SpeechCompleteEvents! %s"), *Handle.ToString());
 	}
 	
 	FTimerHandle* Timer = SpeechTimers.Find(Handle);

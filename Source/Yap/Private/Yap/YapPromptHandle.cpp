@@ -47,9 +47,9 @@ void FYapPromptHandle::RunPrompt(UObject* WorldContext)
 
 // ------------------------------------------------------------------------------------------------
 
-bool UYapPromptHandleBFL::RunPrompt(UObject* WorldContext, const FYapPromptHandle& Handle)
+void UYapPromptHandleBFL::RunPrompt(UObject* WorldContext, const FYapPromptHandle& Handle)
 {
-	return UYapSubsystem::RunPrompt(WorldContext->GetWorld(), Handle);
+	UYapSubsystem::RunPrompt(WorldContext->GetWorld(), Handle);
 }
 
 bool UYapPromptHandleBFL::Subscribe(const FYapPromptHandle& Handle, FYapPromptHandleChosen Delegate)

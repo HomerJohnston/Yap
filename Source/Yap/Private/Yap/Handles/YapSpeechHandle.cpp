@@ -63,7 +63,7 @@ void UYapSpeechHandleBFL::BindToOnSpeechComplete(UObject* WorldContext, FYapSpee
 
 		if (Event)
 		{
-			UE_LOG(LogYap, VeryVerbose, TEXT("%s: Binding delegate %s for handle {%s}"), *Delegate.GetUObject()->GetName(), *Delegate.GetFunctionName().ToString(), *Handle.GetGuid().ToString());
+			UE_LOG(LogYap, VeryVerbose, TEXT("%s: Binding delegate %s for handle {%s}"), *Delegate.GetUObject()->GetName(), *Delegate.GetFunctionName().ToString(), *Handle.ToString());
 			Event->Add(Delegate);
 		}
 	}
@@ -79,7 +79,7 @@ void UYapSpeechHandleBFL::UnbindToOnSpeechComplete(UObject* WorldContext, FYapSp
 		
 		if (Event)
 		{
-			UE_LOG(LogYap, VeryVerbose, TEXT("%s: Unbinding delegate %s for handle {%s}"), *Delegate.GetUObject()->GetName(), *Delegate.GetFunctionName().ToString(), *Handle.GetGuid().ToString());
+			UE_LOG(LogYap, VeryVerbose, TEXT("%s: Unbinding delegate %s for handle {%s}"), *Delegate.GetUObject()->GetName(), *Delegate.GetFunctionName().ToString(), *Handle.ToString());
 			Event->Remove(Delegate);
 		}
 	}
@@ -178,7 +178,7 @@ bool UYapSpeechHandleBFL::EqualEqual_YapSpeechHandle(FYapSpeechHandle A, FYapSpe
 
 FString UYapSpeechHandleBFL::ToString(const FYapSpeechHandle Handle)
 {
-	return Handle.GetGuid().ToString();
+	return Handle.ToString();
 }
 
 /*

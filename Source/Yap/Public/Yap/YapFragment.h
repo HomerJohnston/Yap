@@ -174,8 +174,12 @@ protected:
 	/**  */
 	UPROPERTY(Transient)
 	bool bFragmentAwaitingManualAdvance = false;
-
+	
 public:
+	
+	/**  */
+	UPROPERTY(Transient)
+	FTimerHandle PaddingTimerHandle;
 	
 	// ASSET LOADING
 protected:

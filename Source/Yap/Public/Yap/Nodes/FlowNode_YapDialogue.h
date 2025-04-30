@@ -157,6 +157,9 @@ protected:
 
 	UPROPERTY(Transient)
 	TMap<FYapSpeechHandle, uint8> RunningFragments;
+
+	UPROPERTY(Transient)
+	TSet<uint8> FragmentIndicesUsingPadding;
 	
 	// ============================================================================================
 	// PUBLIC API
@@ -256,13 +259,8 @@ public:
 	UFUNCTION()
 	void OnSpeechComplete(UObject* Instigator, FYapSpeechHandle Handle);
 
-	void OnPaddingComplete(uint8 FragmentIndex);
-
-	UFUNCTION()
-	void OnProgressionComplete_New(UObject* Instigator, FYapSpeechHandle Handle);
-	
 	void AdvanceFromFragment(uint8 FragmentIndex);
-	
+
 	bool IsBypassPinRequired() const;
 
 	bool IsOutputConnectedToPromptNode() const;

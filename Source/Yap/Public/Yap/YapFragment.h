@@ -271,6 +271,8 @@ public:
 	
 	float GetPaddingValue(const FGameplayTag& TypeGroup) const;
 
+	bool GetUsesPadding(const FGameplayTag& TypeGroup) const { return !FMath::IsNearlyZero(GetPaddingValue(TypeGroup)); }
+
 	float GetProgressionTime(UWorld* World, const FGameplayTag& TypeGroup) const;
 	
 	void IncrementActivations();

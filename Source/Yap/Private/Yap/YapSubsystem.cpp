@@ -650,6 +650,7 @@ void UYapSubsystem::OnSpeechComplete(FYapSpeechHandle Handle)
 
 	if (Delegate)
 	{
+		UE_LOG(LogYap, VeryVerbose, TEXT("%s: OnSpeechComplete {%s}"), *GetName(), *Handle.ToString());
 		SpeechCompleteEvents[Handle].Broadcast(this, Handle);
 		SpeechCompleteEvents.Remove(Handle);
 	}

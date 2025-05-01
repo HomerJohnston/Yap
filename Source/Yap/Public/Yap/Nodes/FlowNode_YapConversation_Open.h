@@ -35,7 +35,9 @@ public:
 
 protected:
 	UFUNCTION()
-	void FinishNode();
+	void FinishNode(UObject* Instigator, FYapConversationHandle Handle);
+
+	void FinishNode_Internal();
 	
 #if WITH_EDITOR
 public:

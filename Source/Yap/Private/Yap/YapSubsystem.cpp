@@ -272,14 +272,12 @@ void UYapSubsystem::StartOpeningConversation(FYapConversation& Conversation)
 	FYapData_ConversationOpened Data;
 	Data.Conversation = ActiveConversationName.GetValue();
 
-	FYapConversationHandle Handle(Conversation.GetGuid());
-
 	auto* HandlerArray = FindConversationHandlerArray(Conversation.GetTypeGroup());
 
 	// Game code may add opening locks to the conversation here
-	BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapConversationHandler, OnConversationOpened, Execute_K2_ConversationOpened)>(HandlerArray, Data, Handle);
+	BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapConversationHandler, OnConversationOpened, Execute_K2_ConversationOpened)>(HandlerArray, Data, Conversation.GetHandle());
 
-	Conversation.StartOpening();
+	Conversation.StartOpening(this);
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -293,7 +291,7 @@ EYapConversationState UYapSubsystem::StartClosingConversation(const FGameplayTag
 
 	FYapConversation& Conversation = GetConversation(GetWorld(), ConversationName);
 
-	Conversation.StartClosing();
+	Conversation.StartClosing(this);
 
 	if (Conversation.GetState() == EYapConversationState::Closed)
 	{
@@ -308,7 +306,7 @@ EYapConversationState UYapSubsystem::StartClosingConversation(const FGameplayTag
 	return EYapConversationState::Closing;
 }
 
-void UYapSubsystem::OnActiveConversationClosed()
+void UYapSubsystem::OnActiveConversationClosed(UObject* Instigator, FYapConversationHandle Handle)
 {
 	auto Find = [this] (const FYapConversation& Conversation)
 	{
@@ -419,7 +417,7 @@ FYapConversation& UYapSubsystem::GetConversation(UWorld* World, FYapConversation
 {
 	for (FYapConversation& Conversation : Get(World)->ConversationQueue)
 	{
-		if (Conversation.GetGuid() == Handle.Guid)
+		if (Conversation.GetHandle() == Handle)
 		{
 			return Conversation;
 		}
@@ -506,25 +504,36 @@ bool UYapSubsystem::SkipSpeech(UWorld* World, const FYapSpeechHandle& Handle)
 {
 	UE_LOG(LogYap, VeryVerbose, TEXT("Subsystem: SkipSpeech [%s]"), *Handle.ToString());
 
-	// TODO handle invalid handles gracefully
+	if (!Handle.IsValid())
+	{
+		UE_LOG(LogYap, VeryVerbose, TEXT("Subsystem: SkipSpeech [%s] ignored - handle was invalid"), *Handle.ToString());
+		
+		return false;
+	}
 	
 	UYapSubsystem* Subsystem = Get(World);
 
 	if (FTimerHandle* TimerHandle = Subsystem->SpeechTimers.Find(Handle))
 	{
 		World->GetTimerManager().ClearTimer(*TimerHandle);
+
+		Subsystem->SpeechTimers.Remove(Handle);
+		
+		Subsystem->OnSpeechComplete(Handle);
+		//Subsystem->OnFragmentComplete(Handle);
+	
+		// Broadcast to Yap systems
+		Subsystem->OnSpeechSkip.Broadcast(Subsystem, Handle);
+
+		// Broadcast to game listeners
+		// TODO???
+	
+		return true;
 	}
+
+	UE_LOG(LogYap, Warning, TEXT("Subsystem: SkipSpeech [%s] ignored - SpeechTimers array did not contain an entry for this handle"), *Handle.ToString());
 	
-	Subsystem->OnSpeechComplete(Handle);
-	//Subsystem->OnFragmentComplete(Handle);
-	
-	// Broadcast to Yap systems
-	Subsystem->OnSpeechSkip.Broadcast(Subsystem, Handle);
-	
-	// Broadcast to game listeners
-	// TODO???
-	
-	return true;
+	return false;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -665,6 +674,8 @@ void UYapSubsystem::OnSpeechComplete(FYapSpeechHandle Handle)
 	{
 		GetWorld()->GetTimerManager().ClearTimer(*Timer);
 	}
+
+	SpeechTimers.Remove(Handle);
 }
 
 // ------------------------------------------------------------------------------------------------

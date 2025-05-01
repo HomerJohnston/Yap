@@ -87,41 +87,6 @@ void UYapSpeechHandleBFL::UnbindToOnSpeechComplete(UObject* WorldContext, FYapSp
 
 // ------------------------------------------------------------------------------------------------
 
-
-void UYapSpeechHandleBFL::BindToOnFragmentComplete(UObject* WorldContext, FYapSpeechHandle Handle, FYapSpeechEventDelegate Delegate)
-{
-	/*
-	if (ensureAlwaysMsgf(Handle.IsValid(), TEXT("Null/unset Yap Speech Handle!")))
-	{
-		FYapSpeechEvent* Event = UYapSubsystem::Get(WorldContext->GetWorld())->FragmentCompleteEvents.Find(Handle);
-
-		if (Event)
-		{
-			(*Event).Add(Delegate);
-		}
-	}
-	*/
-}
-
-// ------------------------------------------------------------------------------------------------
-
-void UYapSpeechHandleBFL::UnbindToOnFragmentComplete(UObject* WorldContext, FYapSpeechHandle Handle, FYapSpeechEventDelegate Delegate)
-{
-	/*
-	if (ensureAlwaysMsgf(Handle.IsValid(), TEXT("Null/unset Yap Speech Handle!")))
-	{
-		FYapSpeechEvent* Event = UYapSubsystem::Get(WorldContext->GetWorld())->FragmentCompleteEvents.Find(Handle);
-
-		if (Event)
-		{
-			(*Event).Remove(Delegate);
-		}
-	}
-	*/
-}
-
-// ------------------------------------------------------------------------------------------------
-
 bool UYapSpeechHandleBFL::SkipDialogue(UObject* WorldContext, const FYapSpeechHandle& Handle)
 {
 	if (Handle.IsValid())

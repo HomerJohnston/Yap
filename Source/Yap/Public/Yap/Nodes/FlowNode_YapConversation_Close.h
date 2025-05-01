@@ -4,6 +4,7 @@
 #pragma once
 
 #include "Nodes/FlowNode.h"
+#include "Yap/Handles/YapConversationHandle.h"
 
 #include "FlowNode_YapConversation_Close.generated.h"
 
@@ -19,10 +20,12 @@ public:
 	UFlowNode_YapConversation_Close();
 
 	void ExecuteInput(const FName& PinName) override;
-	
+
 	UFUNCTION()
-	void FinishNode();
-	
+	void FinishNode(UObject* Instigator, FYapConversationHandle Handle);
+
+	void FinishNode_Internal();
+
 #if WITH_EDITOR
 	FText GetNodeTitle() const override;
 #endif

@@ -30,7 +30,7 @@ void UFlowNode_YapConversation_Open::ExecuteInput(const FName& PinName)
 	if (NewConversation.GetState() == EYapConversationState::Open)
 	{
 		UE_LOG(LogYap, Verbose, TEXT("Conversation Opened: %s"), *ConversationName.GetTagName().ToString());
-		FinishNode();
+		FinishNode_Internal();
 	}
 	else
 	{
@@ -38,7 +38,12 @@ void UFlowNode_YapConversation_Open::ExecuteInput(const FName& PinName)
 	}
 }
 
-void UFlowNode_YapConversation_Open::FinishNode()
+void UFlowNode_YapConversation_Open::FinishNode(UObject* Instigator, FYapConversationHandle Handle)
+{
+	FinishNode_Internal();
+}
+
+void UFlowNode_YapConversation_Open::FinishNode_Internal()
 {
 	UYapSubsystem::GetConversation(GetWorld(), ConversationName).OnConversationOpened.RemoveAll(this);
 	

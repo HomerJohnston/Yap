@@ -25,16 +25,22 @@ void UFlowNode_YapConversation_Close::ExecuteInput(const FName& PinName)
 	if (Result == EYapConversationState::Closed)
 	{
 		UE_LOG(LogYap, Verbose, TEXT("Conversation closed: %s"), *ConversationToClose.GetTagName().ToString());
-		FinishNode();
+		FinishNode_Internal();
 	}
 	else
 	{
 		FYapConversation& ExistingConversation = UYapSubsystem::GetConversation(GetWorld(), ConversationToClose);
+		
 		ExistingConversation.OnConversationClosed.AddDynamic(this, &ThisClass::FinishNode);
 	}
 }
 
-void UFlowNode_YapConversation_Close::FinishNode()
+void UFlowNode_YapConversation_Close::FinishNode(UObject* Instigator, FYapConversationHandle)
+{
+	FinishNode_Internal();
+}
+
+void UFlowNode_YapConversation_Close::FinishNode_Internal()
 {
 	UE_LOG(LogYap, Verbose, TEXT("CONVERSATION CLOSING: %s"), *Conversation.GetTagName().ToString());
 

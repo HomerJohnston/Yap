@@ -15,6 +15,11 @@ FYapConversationHandle::FYapConversationHandle(const FGuid& InGuid)
 {
 }
 
+bool FYapConversationHandle::operator==(const FYapConversationHandle& Other) const
+{
+    return Guid == Other.Guid;
+}
+
 FYapConversationHandle UYapConversationHandleBlueprintFunctionLibrary::BindToConversationOpening(UObject* WorldContext, FYapConversationHandle Handle, FYapConversationEventDelegate Delegate)
 {
     FYapConversation& Conversation = UYapSubsystem::GetConversation(WorldContext->GetWorld(), Handle);
@@ -76,6 +81,13 @@ FYapConversationHandle UYapConversationHandleBlueprintFunctionLibrary::ReleaseCl
     FYapConversation& Conversation = UYapSubsystem::GetConversation(LockObject->GetWorld(), Handle);
     Conversation.ReleaseClosingInterlock(LockObject);
 
+    return Handle;
+}
+
+FYapConversationHandle UYapConversationHandleBlueprintFunctionLibrary::SkipDialogue(UObject* Instigator, FYapConversationHandle Handle)
+{
+    UYapSubsystem::Get(Instigator)->OnConversationSkip.Broadcast(Instigator, Handle);
+    
     return Handle;
 }
 

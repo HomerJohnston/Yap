@@ -6,6 +6,7 @@
 #include "Nodes/FlowNode.h"
 #include "Yap/Handles/YapRunningFragment.h"
 #include "Yap/YapFragment.h"
+#include "Yap/Handles/YapConversationHandle.h"
 #include "Yap/Handles/YapPromptHandle.h"
 #include "Yap/Handles/YapSpeechHandle.h"
 
@@ -159,7 +160,7 @@ protected:
 	TMap<FYapSpeechHandle, uint8> RunningFragments;
 
 	UPROPERTY(Transient)
-	TSet<uint8> FragmentIndicesUsingPadding;
+	TSet<uint8> FragmentsUsingPadding;
 	
 	// ============================================================================================
 	// PUBLIC API
@@ -279,6 +280,11 @@ protected:
 	
 	UFUNCTION()
 	void OnSkipAction(UObject* Instigator, FYapSpeechHandle Handle);
+
+	UFUNCTION()
+	void OnConversationSkip(UObject* Instigator, FYapConversationHandle Handle);
+	
+	void FinishNode(FName OutputPinToTrigger);
 	
 #if WITH_EDITOR
 public:

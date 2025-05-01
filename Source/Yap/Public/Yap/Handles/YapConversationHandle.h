@@ -19,6 +19,8 @@ struct FYapConversationHandle
     
     UPROPERTY(Transient)
     FGuid Guid;
+    
+    bool operator== (const FYapConversationHandle& Other) const;
 };
 
 UCLASS()
@@ -64,4 +66,10 @@ class UYapConversationHandleBlueprintFunctionLibrary : public UBlueprintFunction
      */
     UFUNCTION(BlueprintCallable, Category = Yap, meta = (DefaultToSelf = "LockObject"))
     static UPARAM(DisplayName = Handle) FYapConversationHandle ReleaseClosingInterlock(FYapConversationHandle Handle, UObject* LockObject);
+
+    /**
+     * Sends a skip signal to the current running conversation.
+     */
+    UFUNCTION(BlueprintCallable, Category = Yap, meta = (WorldContext = "Instigator"))
+    static UPARAM(DisplayName = Handle) FYapConversationHandle SkipDialogue(UObject* Instigator, FYapConversationHandle Handle);
 };

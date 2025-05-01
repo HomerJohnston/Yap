@@ -14,7 +14,7 @@ struct FGameplayTag;
 struct FYapConversation;
 
 UDELEGATE()
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FYapConversationEvent);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FYapConversationEvent, UObject*, Instigator, FYapConversationHandle, Handle);
 
 // ================================================================================================
 
@@ -44,6 +44,9 @@ struct FYapConversation
 protected:
 
     UPROPERTY(Transient)
+    FYapConversationHandle Handle;
+    
+    UPROPERTY(Transient)
     FGameplayTag ConversationName;
 
     UPROPERTY(Transient)
@@ -54,9 +57,6 @@ protected:
 
     UPROPERTY(Transient)
     TArray<FYapPromptHandle> OpenPrompts;
-
-    UPROPERTY(Transient)
-    FGuid Guid;
 
     UPROPERTY(Transient)
     TArray<TWeakObjectPtr<UObject>> OpeningLocks;   
@@ -103,7 +103,7 @@ public:
     
     const TArray<FYapSpeechHandle>& GetRunningFragments() const { return RunningFragments; }
 
-    const FGuid& GetGuid() const { return Guid; }
+    const FYapConversationHandle& GetHandle() const { return Handle; }
 
     const EYapConversationState GetState() const { return State; }
 
@@ -112,12 +112,10 @@ public:
     void AddRunningFragment(FYapSpeechHandle Handle);
 
     void RemoveRunningFragment(FYapSpeechHandle Handle);
-
-    void AddPrompt(FYapPromptHandle Handle);
     
     // -----
     
-    void StartOpening();
+    void StartOpening(UObject* Instigator);
     
     void ApplyOpeningInterlock(UObject* Object);
 
@@ -125,7 +123,7 @@ public:
     
     // -----
     
-    void StartClosing();
+    void StartClosing(UObject* Instigator);
 
     void ApplyClosingInterlock(UObject* Object);
 
@@ -138,9 +136,9 @@ public:
     bool IsNull() const;
     
 private:
-    void FinishOpening();
+    void FinishOpening(UObject* Instigator);
     
-    void FinishClosing();
+    void FinishClosing(UObject* Instigator);
 
     
 };

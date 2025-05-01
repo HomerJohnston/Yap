@@ -20,7 +20,7 @@ FYapConversation::FYapConversation(const FGameplayTag& InConversationName, UObje
     : ConversationName(InConversationName)
     , Owner(ConversationOwner)
 {
-    Guid = FGuid::NewGuid();
+    Handle = FYapConversationHandle();
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -43,17 +43,17 @@ void FYapConversation::RemoveRunningFragment(FYapSpeechHandle FragmentHandle)
 
 // ------------------------------------------------------------------------------------------------
 
-void FYapConversation::StartOpening()
+void FYapConversation::StartOpening(UObject* Instigator)
 {
     bWantsToOpen = true;
     bWantsToClose = false;
     State = EYapConversationState::Opening;
 
-    OnConversationOpening.Broadcast();
+    OnConversationOpening.Broadcast(Instigator, Handle);
     
     if (OpeningLocks.Num() == 0)
     {
-        FinishOpening();
+        FinishOpening(Instigator);
     }
 }
 
@@ -72,23 +72,23 @@ void FYapConversation::ReleaseOpeningInterlock(UObject* Object)
 
     if (bWantsToOpen && OpeningLocks.Num() == 0)
     {
-        FinishOpening();
+        FinishOpening(Object);
     }
 }
 
 // ------------------------------------------------------------------------------------------------
 
-void FYapConversation::StartClosing()
+void FYapConversation::StartClosing(UObject* Instigator)
 {
     State = EYapConversationState::Closing;
     bWantsToOpen = false;
     bWantsToClose = true;
     
-    OnConversationClosing.Broadcast();
+    OnConversationClosing.Broadcast(Instigator, Handle);
 
     if (ClosingLocks.Num() == 0)
     {
-        FinishClosing();
+        FinishClosing(Instigator);
     }
 }
 
@@ -107,32 +107,32 @@ void FYapConversation::ReleaseClosingInterlock(UObject* Object)
 
     if (bWantsToClose && ClosingLocks.Num() == 0)
     {
-        FinishClosing();
+        FinishClosing(Object);
     }
 }
 
 // ------------------------------------------------------------------------------------------------
 
-void FYapConversation::FinishOpening()
+void FYapConversation::FinishOpening(UObject* Instigator)
 {
     bWantsToOpen = false;
     bWantsToClose = false;
     
     State = EYapConversationState::Open;
     
-    OnConversationOpened.Broadcast();
+    OnConversationOpened.Broadcast(Instigator, Handle);
 }
 
 // ------------------------------------------------------------------------------------------------
 
-void FYapConversation::FinishClosing()
+void FYapConversation::FinishClosing(UObject* Instigator)
 {
     bWantsToOpen = false;
     bWantsToClose = false;
     
     State = EYapConversationState::Closed;
     
-    OnConversationClosed.Broadcast();
+    OnConversationClosed.Broadcast(Instigator, Handle);
 }
 
 // ------------------------------------------------------------------------------------------------

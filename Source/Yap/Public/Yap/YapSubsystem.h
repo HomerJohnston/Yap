@@ -122,6 +122,9 @@ public:
 
 	UPROPERTY(Transient)
 	FYapSpeechEvent OnSpeechSkip;
+
+	UPROPERTY(Transient)
+	FYapConversationEvent OnConversationSkip;
 	
 	/*
 	UPROPERTY(BlueprintAssignable, Transient)
@@ -159,6 +162,16 @@ public:
 	// =========================================
 public:
 
+	static UYapSubsystem* Get(UObject* WorldContext)
+	{
+		if (IsValid(WorldContext))
+		{
+			return Get(WorldContext->GetWorld());
+		}
+
+		return nullptr;
+	}
+	
 	static UYapSubsystem* Get(UWorld* World)
 	{
 		if (IsValid(World))
@@ -201,7 +214,7 @@ protected:
 	void StartNextQueuedConversation();
 
 	UFUNCTION()
-	void OnActiveConversationClosed();
+	void OnActiveConversationClosed(UObject* Instigator, FYapConversationHandle Handle);
 	
 	/**  */
 	FYapPromptHandle BroadcastPrompt(const FYapData_PlayerPromptCreated& Data, const FGameplayTag& TypeGroup);

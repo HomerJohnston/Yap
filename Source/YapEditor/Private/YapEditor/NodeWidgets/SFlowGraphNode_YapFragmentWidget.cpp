@@ -1047,7 +1047,15 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateDialogueDisplayWidge
 			[
 				SNew(STextBlock)
 				.ColorAndOpacity(this, &ThisClass::ColorAndOpacity_AudioID)
-				.Text_Lambda( [FragmentIndexText, DialogueNode] () { return FText::AsCultureInvariant(DialogueNode->GetAudioID() + "-" + FragmentIndexText); } )
+				.Text_Lambda( [FragmentIndexText, DialogueNode] ()
+				{
+					if (DialogueNode)
+					{
+						return FText::AsCultureInvariant(DialogueNode->GetAudioID() + "-" + FragmentIndexText);
+					}
+
+					return INVTEXT("");
+				} )
 			]
 		]
 	]

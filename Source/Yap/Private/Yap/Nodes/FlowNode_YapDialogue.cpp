@@ -80,6 +80,8 @@ FYapFragment* UFlowNode_YapDialogue::FindTaggedFragment(const FGameplayTag& Tag)
 	return nullptr;
 }
 
+// ------------------------------------------------------------------------------------------------
+
 void UFlowNode_YapDialogue::OnSkipAction(UObject* Instigator, FYapSpeechHandle Handle)
 {
 	UE_LOG(LogYap, VeryVerbose, TEXT("%s: OnSkipAction for handle {%s}"), *GetName(), *Handle.ToString())
@@ -104,34 +106,38 @@ void UFlowNode_YapDialogue::OnSkipAction(UObject* Instigator, FYapSpeechHandle H
 		UE_LOG(LogYap, VeryVerbose, TEXT("%s [%i]: Skipping running fragment..."), *GetName(), SkippedRunningFragmentIndex);
 	}
 #endif
-
-	auto RunningFragmentsCopy = RunningFragments;
 	
-
-	// Because Yap supports negative padding (overlapping speech), we want skip to attempt to finish all upstream fragments.
-	// TODO: this does not work to skip fragments running in a previous node; each node only manages itself. Somehow the subsystem should also make sure it sends skip to any previous running nodes?
-	for (uint8 i = 0; i <= SkippedRunningFragmentIndex; ++i)
+	for (uint8 Index : FragmentsUsingPadding)
 	{
-		//FYapFragment& Fragment = Fragments[i];
-
-		//AdvanceFromFragment(i);
+		GetWorld()->GetTimerManager().ClearTimer(Fragments[Index].PaddingTimerHandle);
 	}
 
-	FYapSpeechEventDelegate Delegate;
-	Delegate.BindUFunction(this, GET_FUNCTION_NAME_CHECKED_TwoParams(ThisClass, OnSpeechComplete, UObject*, FYapSpeechHandle));
-	UYapSpeechHandleBFL::UnbindToOnSpeechComplete(GetWorld(), Handle, Delegate);
+	FragmentsUsingPadding.Empty();
 	
-	for (auto& [RunningHandle, Index] : RunningFragmentsCopy)
-	{
-		// I don't like that I have the index here and I pass the handle and do another stupid lookup.
-		// TODO OnSpeechComplete should be index based and handle based function is higher-level?
-		OnSpeechComplete(Instigator, RunningHandle);
+	AdvanceFromFragment(RunningFragmentIndex);
+}
 
-		GetWorld()->GetTimerManager().ClearTimer(Fragments[Index].PaddingTimerHandle);
+// ------------------------------------------------------------------------------------------------
+
+void UFlowNode_YapDialogue::OnConversationSkip(UObject* Instigator, FYapConversationHandle Handle)
+{
+	if (RunningFragmentIndex == INDEX_NONE)
+	{
+		UE_LOG(LogYap, Warning, TEXT("OnConversationSkip was called, but running fragment was unset, ignoring"));
+		return;
 	}
 	
 	AdvanceFromFragment(RunningFragmentIndex);
 }
+
+void UFlowNode_YapDialogue::FinishNode(FName OutputPinToTrigger)
+{
+	UYapSubsystem::Get(this)->OnConversationSkip.RemoveDynamic(this, &ThisClass::OnConversationSkip);
+	
+	TriggerOutput(OutputPinToTrigger, true, EFlowPinActivationType::Default);
+}
+
+// ------------------------------------------------------------------------------------------------
 
 bool UFlowNode_YapDialogue::CanSkip(FYapSpeechHandle Handle) const
 {
@@ -220,21 +226,24 @@ void UFlowNode_YapDialogue::InitializeInstance()
 
 void UFlowNode_YapDialogue::ExecuteInput(const FName& PinName)
 {
-	if (!CanEnterNode())
+	if (CanEnterNode())
 	{
-		TriggerOutput("Bypass", true, EFlowPinActivationType::Default);
-		return;	
-	}
+		bool bStartedSuccessfully = IsPlayerPrompt() ? TryBroadcastPrompts() : TryStartFragments();
 
-	bool bStartedSuccessfully = IsPlayerPrompt() ? TryBroadcastPrompts() : TryStartFragments();
+		if (bStartedSuccessfully)
+		{
+			++NodeActivationCount;
 
-	if (bStartedSuccessfully)
-	{
-		++NodeActivationCount;
+			UYapSubsystem::Get(this)->OnConversationSkip.AddDynamic(this, &ThisClass::OnConversationSkip);
+		}
+		else
+		{
+			FinishNode(BypassPinName);
+		}
 	}
 	else
 	{
-		TriggerOutput(BypassPinName, true);
+		FinishNode(BypassPinName);
 	}
 }
 
@@ -466,9 +475,11 @@ void UFlowNode_YapDialogue::RunPrompt(uint8 FragmentIndex)
 {	
 	if (!RunFragment(FragmentIndex))
 	{
-		UE_LOG(LogYap, Warning, TEXT("%s [%i]: RunPrompt failed; setting RunningFragmentIndex = INDEX_NONE"), *GetName(), FragmentIndex);
+		UE_LOG(LogYap, Error, TEXT("%s [%i]: RunPrompt failed!"), *GetName(), FragmentIndex);
+		
 		RunningFragmentIndex = INDEX_NONE;
-		TriggerOutput(BypassPinName, true);
+
+		FinishNode(BypassPinName);
 	}
 }
 
@@ -579,6 +590,8 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 	{
 		float PaddingCompletionTime = Fragment.GetProgressionTime(GetWorld(), TypeGroup);
 		GetWorld()->GetTimerManager().SetTimer(Fragment.PaddingTimerHandle, FTimerDelegate::CreateUObject(this, &ThisClass::TryAdvanceFromFragment, FragmentIndex), PaddingCompletionTime, false);
+		
+		FragmentsUsingPadding.Add(FragmentIndex);
 	}
 
 	return true;
@@ -653,7 +666,7 @@ void UFlowNode_YapDialogue::AdvanceFromFragment(uint8 FragmentIndex)
 	
 	if (IsPlayerPrompt())
 	{
-		TriggerOutput(Fragment.GetPromptPin().PinName, true);
+		FinishNode(Fragment.GetPromptPinName());
 	}
 	else
 	{
@@ -661,7 +674,8 @@ void UFlowNode_YapDialogue::AdvanceFromFragment(uint8 FragmentIndex)
 		{
 			case EYapDialogueTalkSequencing::SelectOne:
 			{
-				TriggerOutput(OutputPinName, true);
+				FinishNode(OutputPinName);
+				
 				break;
 			}
 			case EYapDialogueTalkSequencing::RunAll:
@@ -675,7 +689,7 @@ void UFlowNode_YapDialogue::AdvanceFromFragment(uint8 FragmentIndex)
 					}
 				}
 			
-				TriggerOutput(OutputPinName, true);
+				FinishNode(OutputPinName);
 					
 				break;
 			}
@@ -685,12 +699,15 @@ void UFlowNode_YapDialogue::AdvanceFromFragment(uint8 FragmentIndex)
 				{
 					if (!RunFragment(NextIndex))
 					{					
-						TriggerOutput(OutputPinName, true);
+						FinishNode(OutputPinName);
+						
 						return;
 					}
 				}
-			
-				TriggerOutput(OutputPinName, true);
+				
+				FinishNode(OutputPinName);
+
+				break;
 			}
 			default:
 			{

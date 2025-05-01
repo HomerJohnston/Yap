@@ -29,7 +29,7 @@ enum class EYapFragmentRunState : uint8
 {
 	Idle		= 0,
 	Running		= 1,
-	InPadding	= 2,
+	//InPadding	= 2,
 };
 
 // ================================================================================================

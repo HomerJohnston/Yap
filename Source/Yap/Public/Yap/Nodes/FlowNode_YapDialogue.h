@@ -260,6 +260,8 @@ public:
 	UFUNCTION()
 	void OnSpeechComplete(UObject* Instigator, FYapSpeechHandle Handle);
 
+	void FinishFragment(uint8 FragmentIndex);
+	
 	void TryAdvanceFromFragment(uint8 FragmentIndex);
 
 	void AdvanceFromFragment(uint8 FragmentIndex);

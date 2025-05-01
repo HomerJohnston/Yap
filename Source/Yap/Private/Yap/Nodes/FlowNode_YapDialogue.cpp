@@ -92,18 +92,16 @@ void UFlowNode_YapDialogue::OnSkipAction(UObject* Instigator, FYapSpeechHandle H
 		return;
 	}
 
-	int32 SkippedRunningFragmentIndex = RunningFragmentIndex;
-
-	FYapFragment& SkippedFragment = Fragments[SkippedRunningFragmentIndex];
+	FYapFragment& SkippedFragment = Fragments[RunningFragmentIndex];
 
 #if !UE_BUILD_SHIPPING
 	if (SkippedFragment.GetIsAwaitingManualAdvance())
 	{
-		UE_LOG(LogYap, VeryVerbose, TEXT("%s [%i]: Manually advancing..."), *GetName(), SkippedRunningFragmentIndex);
+		UE_LOG(LogYap, VeryVerbose, TEXT("%s [%i]: Manually advancing..."), *GetName(), RunningFragmentIndex);
 	}
 	else
 	{
-		UE_LOG(LogYap, VeryVerbose, TEXT("%s [%i]: Skipping running fragment..."), *GetName(), SkippedRunningFragmentIndex);
+		UE_LOG(LogYap, VeryVerbose, TEXT("%s [%i]: Skipping running fragment..."), *GetName(), RunningFragmentIndex);
 	}
 #endif
 	
@@ -121,6 +119,25 @@ void UFlowNode_YapDialogue::OnSkipAction(UObject* Instigator, FYapSpeechHandle H
 
 void UFlowNode_YapDialogue::OnConversationSkip(UObject* Instigator, FYapConversationHandle Handle)
 {
+	for (uint8 i = 0; i < Fragments.Num(); ++i)
+	{
+		FYapFragment& Fragment = Fragments[i];
+		
+		FTimerHandle& PaddingTimerHandle = Fragment.PaddingTimerHandle;
+
+		if (PaddingTimerHandle.IsValid())
+		{
+			GetWorld()->GetTimerManager().ClearTimer(PaddingTimerHandle);
+		}
+
+		if (Fragment.GetRunState() != EYapFragmentRunState::Idle)
+		{
+			FinishFragment(i);
+		}
+	}
+
+	RunningFragments.Empty();
+	
 	if (RunningFragmentIndex == INDEX_NONE)
 	{
 		UE_LOG(LogYap, Warning, TEXT("OnConversationSkip was called, but running fragment was unset, ignoring"));
@@ -133,7 +150,7 @@ void UFlowNode_YapDialogue::OnConversationSkip(UObject* Instigator, FYapConversa
 void UFlowNode_YapDialogue::FinishNode(FName OutputPinToTrigger)
 {
 	UYapSubsystem::Get(this)->OnConversationSkip.RemoveDynamic(this, &ThisClass::OnConversationSkip);
-	
+		
 	TriggerOutput(OutputPinToTrigger, true, EFlowPinActivationType::Default);
 }
 
@@ -238,12 +255,12 @@ void UFlowNode_YapDialogue::ExecuteInput(const FName& PinName)
 		}
 		else
 		{
-			FinishNode(BypassPinName);
+			TriggerOutput(BypassPinName, true, EFlowPinActivationType::Default);
 		}
 	}
 	else
 	{
-		FinishNode(BypassPinName);
+		TriggerOutput(BypassPinName, true, EFlowPinActivationType::Default);
 	}
 }
 
@@ -525,6 +542,8 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 		return false;
 	}
 
+	Fragment.SetRunState(EYapFragmentRunState::Running);
+	
 	const FYapBit& Bit = Fragment.GetBit(GetWorld());
 
 	UE_LOG(LogYap, VeryVerbose, TEXT("%s [%i]: Running... %s"), *GetName(), FragmentIndex, *Bit.GetDialogueText().ToString());
@@ -559,10 +578,6 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 	// Make a handle for the pending speech and bind to completion events of it
 	RunningSpeechHandle = FYapSpeechHandle(GetWorld(), Fragment.GetGuid());
 
-	FYapSpeechEventDelegate Delegate;
-	Delegate.BindUFunction(this, GET_FUNCTION_NAME_CHECKED_TwoParams(ThisClass, OnSpeechComplete, UObject*, FYapSpeechHandle));
-	UYapSpeechHandleBFL::BindToOnSpeechComplete(GetWorld(), RunningSpeechHandle, Delegate);
-
 	UE_LOG(LogYap, VeryVerbose, TEXT("%s [%i]: RunFragment; setting RunningFragmentIndex"), *GetName(), FragmentIndex);
 	RunningFragmentIndex = FragmentIndex;
 
@@ -571,6 +586,11 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 	UE_LOG(LogYap, VeryVerbose, TEXT("%s [%i]: Subscribing to OnSpeechSkip"), *GetName(), FragmentIndex);
 	Subsystem->OnSpeechSkip.AddDynamic(this, &ThisClass::OnSkipAction);
 
+	// TODO clean this crap up
+	FYapSpeechEventDelegate Delegate;
+	Delegate.BindUFunction(this, GET_FUNCTION_NAME_CHECKED_TwoParams(ThisClass, OnSpeechComplete, UObject*, FYapSpeechHandle));
+	UYapSpeechHandleBFL::BindToOnSpeechComplete(GetWorld(), RunningSpeechHandle, Delegate);
+	
 	UE_LOG(LogYap, VeryVerbose, TEXT("%s [%i]: RunFragment; adding handle to RunningFragments {%s}"), *GetName(), FragmentIndex, *RunningSpeechHandle.ToString());
 	RunningFragments.Add(RunningSpeechHandle, RunningFragmentIndex);
 
@@ -612,10 +632,22 @@ void UFlowNode_YapDialogue::OnSpeechComplete(UObject* Instigator, FYapSpeechHand
 		return;
 	}
 	
+	UYapSubsystem::Get(GetWorld())->OnSpeechSkip.RemoveDynamic(this, &ThisClass::OnSkipAction);
+	
+	// TODO clean this crap up
+	FYapSpeechEventDelegate Delegate;
+	Delegate.BindUFunction(this, GET_FUNCTION_NAME_CHECKED_TwoParams(ThisClass, OnSpeechComplete, UObject*, FYapSpeechHandle));
+	UYapSpeechHandleBFL::UnbindToOnSpeechComplete(GetWorld(), RunningSpeechHandle, Delegate);
+	
 	UE_LOG(LogYap, VeryVerbose, TEXT("%s: RunFragment; removing handle from RunningFragments {%s}"), *GetName(), *Handle.ToString());
 	RunningFragments.Remove(Handle);
-	
-	FYapFragment& Fragment = Fragments[*FragmentIndex];
+
+	FinishFragment(*FragmentIndex);
+}
+
+void UFlowNode_YapDialogue::FinishFragment(uint8 FragmentIndex)
+{
+	FYapFragment& Fragment = Fragments[FragmentIndex];
 	
 	if (Fragment.UsesEndPin())
 	{
@@ -628,7 +660,7 @@ void UFlowNode_YapDialogue::OnSpeechComplete(UObject* Instigator, FYapSpeechHand
 	// TODO this is a hack. I should instead store a set of "padded" fragments during this node's run to check against. It should get reset on input trigger.
 	if (!Fragment.GetUsesPadding(TypeGroup))
 	{
-		TryAdvanceFromFragment(*FragmentIndex);
+		TryAdvanceFromFragment(FragmentIndex);
 	}
 }
 
@@ -654,9 +686,7 @@ void UFlowNode_YapDialogue::TryAdvanceFromFragment(uint8 FragmentIndex)
 }
 
 void UFlowNode_YapDialogue::AdvanceFromFragment(uint8 FragmentIndex)
-{
-	UYapSubsystem::Get(GetWorld())->OnSpeechSkip.RemoveDynamic(this, &ThisClass::OnSkipAction);
-	
+{	
 	FYapFragment& Fragment = Fragments[FragmentIndex];
 	
 	Fragment.SetRunState(EYapFragmentRunState::Idle);

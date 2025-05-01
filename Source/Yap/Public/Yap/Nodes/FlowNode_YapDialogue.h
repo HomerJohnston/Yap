@@ -259,8 +259,10 @@ public:
 	UFUNCTION()
 	void OnSpeechComplete(UObject* Instigator, FYapSpeechHandle Handle);
 
-	void AdvanceFromFragment(uint8 FragmentIndex);
+	void TryAdvanceFromFragment(uint8 FragmentIndex);
 
+	void AdvanceFromFragment(uint8 FragmentIndex);
+	
 	bool IsBypassPinRequired() const;
 
 	bool IsOutputConnectedToPromptNode() const;

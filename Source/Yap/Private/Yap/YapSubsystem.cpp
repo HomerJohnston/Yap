@@ -519,7 +519,7 @@ bool UYapSubsystem::SkipSpeech(UWorld* World, const FYapSpeechHandle& Handle)
 	//Subsystem->OnFragmentComplete(Handle);
 	
 	// Broadcast to Yap systems
-	//Subsystem->OnSpeechSkip.Broadcast(Subsystem, Handle);
+	Subsystem->OnSpeechSkip.Broadcast(Subsystem, Handle);
 	
 	// Broadcast to game listeners
 	// TODO???

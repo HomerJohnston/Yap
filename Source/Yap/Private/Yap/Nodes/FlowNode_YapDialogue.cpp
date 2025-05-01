@@ -83,6 +83,7 @@ FYapFragment* UFlowNode_YapDialogue::FindTaggedFragment(const FGameplayTag& Tag)
 void UFlowNode_YapDialogue::OnSkipAction(UObject* Instigator, FYapSpeechHandle Handle)
 {
 	UE_LOG(LogYap, VeryVerbose, TEXT("%s: OnSkipAction for handle {%s}"), *GetName(), *Handle.ToString())
+	
 	if (!CanSkip(Handle))
 	{
 		UE_LOG(LogYap, Warning, TEXT("%s: Failed to skip!"), *GetName());
@@ -93,6 +94,7 @@ void UFlowNode_YapDialogue::OnSkipAction(UObject* Instigator, FYapSpeechHandle H
 
 	FYapFragment& SkippedFragment = Fragments[SkippedRunningFragmentIndex];
 
+#if !UE_BUILD_SHIPPING
 	if (SkippedFragment.GetIsAwaitingManualAdvance())
 	{
 		UE_LOG(LogYap, VeryVerbose, TEXT("%s [%i]: Manually advancing..."), *GetName(), SkippedRunningFragmentIndex);
@@ -101,19 +103,34 @@ void UFlowNode_YapDialogue::OnSkipAction(UObject* Instigator, FYapSpeechHandle H
 	{
 		UE_LOG(LogYap, VeryVerbose, TEXT("%s [%i]: Skipping running fragment..."), *GetName(), SkippedRunningFragmentIndex);
 	}
+#endif
 
-	// Because Yap supports negative padding (overlapping speech), we want skip to attempt to flush all upstream fragments.
+	auto RunningFragmentsCopy = RunningFragments;
+	
+
+	// Because Yap supports negative padding (overlapping speech), we want skip to attempt to finish all upstream fragments.
 	// TODO: this does not work to skip fragments running in a previous node; each node only manages itself. Somehow the subsystem should also make sure it sends skip to any previous running nodes?
 	for (uint8 i = 0; i <= SkippedRunningFragmentIndex; ++i)
 	{
-		FYapFragment& Fragment = Fragments[i];
+		//FYapFragment& Fragment = Fragments[i];
 
-//		OnPaddingComplete(i);
+		//AdvanceFromFragment(i);
 	}
 
 	FYapSpeechEventDelegate Delegate;
 	Delegate.BindUFunction(this, GET_FUNCTION_NAME_CHECKED_TwoParams(ThisClass, OnSpeechComplete, UObject*, FYapSpeechHandle));
 	UYapSpeechHandleBFL::UnbindToOnSpeechComplete(GetWorld(), Handle, Delegate);
+	
+	for (auto& [RunningHandle, Index] : RunningFragmentsCopy)
+	{
+		// I don't like that I have the index here and I pass the handle and do another stupid lookup.
+		// TODO OnSpeechComplete should be index based and handle based function is higher-level?
+		OnSpeechComplete(Instigator, RunningHandle);
+
+		GetWorld()->GetTimerManager().ClearTimer(Fragments[Index].PaddingTimerHandle);
+	}
+	
+	AdvanceFromFragment(RunningFragmentIndex);
 }
 
 bool UFlowNode_YapDialogue::CanSkip(FYapSpeechHandle Handle) const
@@ -561,7 +578,7 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 	if (Fragment.GetUsesPadding(TypeGroup))
 	{
 		float PaddingCompletionTime = Fragment.GetProgressionTime(GetWorld(), TypeGroup);
-		GetWorld()->GetTimerManager().SetTimer(Fragment.PaddingTimerHandle, FTimerDelegate::CreateUObject(this, &ThisClass::AdvanceFromFragment, FragmentIndex), PaddingCompletionTime, false);
+		GetWorld()->GetTimerManager().SetTimer(Fragment.PaddingTimerHandle, FTimerDelegate::CreateUObject(this, &ThisClass::TryAdvanceFromFragment, FragmentIndex), PaddingCompletionTime, false);
 	}
 
 	return true;
@@ -594,110 +611,92 @@ void UFlowNode_YapDialogue::OnSpeechComplete(UObject* Instigator, FYapSpeechHand
 	}
 	
 	Fragment.SetEndTime(GetWorld()->GetTimeSeconds());
-	
+
+	// TODO this is a hack. I should instead store a set of "padded" fragments during this node's run to check against. It should get reset on input trigger.
 	if (!Fragment.GetUsesPadding(TypeGroup))
 	{
-		AdvanceFromFragment(*FragmentIndex);
+		TryAdvanceFromFragment(*FragmentIndex);
 	}
 }
 
 // ------------------------------------------------------------------------------------------------
 
-void UFlowNode_YapDialogue::AdvanceFromFragment(uint8 FragmentIndex)
+void UFlowNode_YapDialogue::TryAdvanceFromFragment(uint8 FragmentIndex)
 {
 	UE_LOG(LogYap, VeryVerbose, TEXT("%s [%i]: AdvanceFromFragment"), *GetName(), FragmentIndex);
 
 	FYapFragment& Fragment = Fragments[FragmentIndex];
 
 	Fragment.PaddingTimerHandle.Invalidate();
-	
+
+	// TODO When calling AdvanceFromFragment in Skip function, if the game is set to do manual advancement, this won't run. Push this into a separate function I can call or add another route into this.
 	if (GetFragmentAutoAdvance(FragmentIndex))
 	{
-		UE_LOG(LogYap, VeryVerbose, TEXT("%s [%i]: AdvanceFromFragment"), *GetName(), FragmentIndex);
-	
-		UYapSubsystem::Get(GetWorld())->OnSpeechSkip.RemoveDynamic(this, &ThisClass::OnSkipAction);
-	
-		Fragment.SetRunState(EYapFragmentRunState::Idle);
-	
-		UE_LOG(LogYap, VeryVerbose, TEXT("%s [%i]: AdvanceFromFragment; setting RunningFragmentIndex = INDEX_NONE"), *GetName(), FragmentIndex)
-		RunningFragmentIndex = INDEX_NONE;
-	
-		if (IsPlayerPrompt())
-		{
-			TriggerOutput(Fragment.GetPromptPin().PinName, true);
-		}
-		else
-		{
-			switch (TalkSequencing)
-			{
-				case EYapDialogueTalkSequencing::SelectOne:
-				{
-					TriggerOutput(OutputPinName, true);
-					break;
-				}
-				case EYapDialogueTalkSequencing::RunAll:
-				{
-					for (uint8 NextIndex = FragmentIndex + 1; NextIndex < Fragments.Num(); ++NextIndex)
-					{
-						if (RunFragment(NextIndex))
-						{
-							return;
-						}
-					}
-			
-					// No more fragments to try and run
-					TriggerOutput(OutputPinName, true);
-					
-					break;
-				}
-				case EYapDialogueTalkSequencing::RunUntilFailure:
-				{
-					for (uint8 NextIndex = FragmentIndex + 1; NextIndex < Fragments.Num(); ++NextIndex)
-					{
-						if (!RunFragment(NextIndex))
-						{					
-							TriggerOutput(OutputPinName, true);
-							return;
-						}
-					}
-			
-					// No more fragments to try and run
-					TriggerOutput(OutputPinName, true);
-				}
-			}
-
-			
-			/*
-			if (TalkSequencing == EYapDialogueTalkSequencing::SelectOne)
-			{			
-				TriggerOutput(OutputPinName, true);
-			}
-			else
-			{
-				for (uint8 NextIndex = FragmentIndex + 1; NextIndex < Fragments.Num(); ++NextIndex)
-				{
-					bool bRanNextFragment = RunFragment(NextIndex);
-
-					if (!bRanNextFragment && TalkSequencing == EYapDialogueTalkSequencing::RunUntilFailure)
-					{					
-						TriggerOutput(OutputPinName, true);
-						return;
-					}
-					else if (bRanNextFragment)
-					{
-						// We'll delegate further behavior to the next running fragment
-						return;
-					}
-				}
-			
-				// No more fragments to try and run
-				TriggerOutput(OutputPinName, true);
-			}*/
-		}
+		AdvanceFromFragment(FragmentIndex);
 	}
 	else
 	{
 		Fragment.SetAwaitingManualAdvance();
+	}
+}
+
+void UFlowNode_YapDialogue::AdvanceFromFragment(uint8 FragmentIndex)
+{
+	UYapSubsystem::Get(GetWorld())->OnSpeechSkip.RemoveDynamic(this, &ThisClass::OnSkipAction);
+	
+	FYapFragment& Fragment = Fragments[FragmentIndex];
+	
+	Fragment.SetRunState(EYapFragmentRunState::Idle);
+	
+	UE_LOG(LogYap, VeryVerbose, TEXT("%s [%i]: AdvanceFromFragment; setting RunningFragmentIndex = INDEX_NONE"), *GetName(), FragmentIndex)
+	RunningFragmentIndex = INDEX_NONE;
+	
+	if (IsPlayerPrompt())
+	{
+		TriggerOutput(Fragment.GetPromptPin().PinName, true);
+	}
+	else
+	{
+		switch (TalkSequencing)
+		{
+			case EYapDialogueTalkSequencing::SelectOne:
+			{
+				TriggerOutput(OutputPinName, true);
+				break;
+			}
+			case EYapDialogueTalkSequencing::RunAll:
+			{
+				for (uint8 NextIndex = FragmentIndex + 1; NextIndex < Fragments.Num(); ++NextIndex)
+				{
+					if (RunFragment(NextIndex))
+					{
+						// The next fragment will continue execution
+						return;
+					}
+				}
+			
+				TriggerOutput(OutputPinName, true);
+					
+				break;
+			}
+			case EYapDialogueTalkSequencing::RunUntilFailure:
+			{
+				for (uint8 NextIndex = FragmentIndex + 1; NextIndex < Fragments.Num(); ++NextIndex)
+				{
+					if (!RunFragment(NextIndex))
+					{					
+						TriggerOutput(OutputPinName, true);
+						return;
+					}
+				}
+			
+				TriggerOutput(OutputPinName, true);
+			}
+			default:
+			{
+				checkNoEntry();
+			}
+		}
 	}
 }
 

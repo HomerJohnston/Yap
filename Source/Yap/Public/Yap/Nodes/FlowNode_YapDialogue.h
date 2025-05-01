@@ -146,7 +146,7 @@ protected:
 	// TODO I feel like this should get removed, ultimately it is possible with this system for multiple fragments to be running simultaneously. The running fragments map below should probably be the source of truth. This could turn into a "latest" running fragment though.
 	/**  */
 	UPROPERTY(Transient)
-	int32 RunningFragmentIndex = INDEX_NONE;
+	TOptional<uint8> RunningFragmentIndex;
 
 	/**  */
 	UPROPERTY(Transient)
@@ -197,7 +197,7 @@ public:
 	
 	bool GetFragmentAutoAdvance(uint8 FragmentIndex) const;
 
-	int32 GetRunningFragmentIndex() const { return RunningFragmentIndex; }
+	int32 GetRunningFragmentIndex() const { return RunningFragmentIndex.Get(INDEX_NONE); }
 	
 	// TODO this sucks can I register the fragments some other way instead
 	/** Finds the first fragment on this dialogue containing a tag. */
@@ -259,7 +259,7 @@ protected:
 public:
 	UFUNCTION()
 	void OnSpeechComplete(UObject* Instigator, FYapSpeechHandle Handle);
-
+	
 	void FinishFragment(uint8 FragmentIndex);
 	
 	void TryAdvanceFromFragment(uint8 FragmentIndex);

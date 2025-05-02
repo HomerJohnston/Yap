@@ -49,12 +49,12 @@ private:
 	/** Where to look for flow assets when auto-assigning audio to dialogue. */
 	UPROPERTY(Config, EditAnywhere, Category = "Audio")
 	FDirectoryPath FlowAssetsRootFolder;
+#endif
 
 	// TODO make error not package
 	/** Controls how missing audio fields are handled. */ 
 	UPROPERTY(Config, EditAnywhere, Category = "Audio", DisplayName = "Missing Audio Handling")
 	EYapMissingAudioErrorLevel MissingAudioErrorLevel = EYapMissingAudioErrorLevel::Warning;
-#endif
 	
 	// - - - - - DIALOGUE TAGS - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
 
@@ -172,7 +172,7 @@ private:
 public:
 	UPROPERTY(EditAnywhere, meta = (DefaultOverride = MissingAudioErrorLevel))
 	bool bMissingAudioErrorLevel_Override = false;
-
+	
 	UPROPERTY(EditAnywhere, meta = (DefaultOverride = DefaultTimeModeSetting))
 	bool bDefaultTimeModeSetting_Override = false;
 	

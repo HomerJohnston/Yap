@@ -707,7 +707,7 @@ void UFlowNode_YapDialogue::AdvanceFromFragment(uint8 FragmentIndex)
 	
 	if (IsPlayerPrompt())
 	{
-		FinishNode(Fragment.GetPromptPinName());
+		FinishNode(Fragment.GetPromptPin().PinName);
 	}
 	else
 	{

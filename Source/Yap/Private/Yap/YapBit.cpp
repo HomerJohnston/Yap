@@ -33,7 +33,7 @@ bool FYapBit::HasAudioAsset() const
 
 // --------------------------------------------------------------------------------------------
 
-TOptional<float> FYapBit::GetSpeechTime(EYapTimeMode TimeMode, EYapLoadContext LoadContext, const FGameplayTag& TypeGroup) const
+TOptional<float> FYapBit::GetSpeechTime(UWorld* World, EYapTimeMode TimeMode, EYapLoadContext LoadContext, const FGameplayTag& TypeGroup) const
 {
 	// TODO clamp minimums from project settings?
 	TOptional<float> Time;
@@ -47,7 +47,7 @@ TOptional<float> FYapBit::GetSpeechTime(EYapTimeMode TimeMode, EYapLoadContext L
 		}
 		case EYapTimeMode::AudioTime:
 		{
-			Time = GetAudioTime(LoadContext);
+			Time = GetAudioTime(World, LoadContext);
 			break;
 		}
 		case EYapTimeMode::TextTime:
@@ -117,7 +117,7 @@ TOptional<float> FYapBit::GetTextTime(const FGameplayTag& TypeGroup) const
 
 // --------------------------------------------------------------------------------------------
 
-TOptional<float> FYapBit::GetAudioTime( EYapLoadContext LoadContext) const
+TOptional<float> FYapBit::GetAudioTime(UObject* WorldContext, EYapLoadContext LoadContext) const
 {
 	if (AudioAsset.IsNull())
 	{
@@ -157,7 +157,7 @@ TOptional<float> FYapBit::GetAudioTime( EYapLoadContext LoadContext) const
 		}
 	}
 #else
-	Broker = UYapSubsystem::GetBroker();
+	Broker = UYapSubsystem::GetBroker(WorldContext);
 #endif
 
 	if (!Broker)

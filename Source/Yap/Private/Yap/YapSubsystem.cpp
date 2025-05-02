@@ -107,9 +107,9 @@ UYapCharacterComponent* UYapSubsystem::FindCharacterComponent(UWorld* World, FGa
 
 // ------------------------------------------------------------------------------------------------
 
-UYapBroker* UYapSubsystem::GetBroker(UWorld* World)
+UYapBroker* UYapSubsystem::GetBroker(UObject* WorldContext)
 {
-	UYapBroker* Broker = Get(World)->Broker;
+	UYapBroker* Broker = Get(WorldContext->GetWorld())->Broker;
 
 #if WITH_EDITOR
 	ensureMsgf(IsValid(Broker), TEXT("Conversation Broker is invalid. Did you create one and assign it in project settings? Docs: https://github.com/HomerJohnston/UE-FlowYap/wiki/Conversation-Broker"));

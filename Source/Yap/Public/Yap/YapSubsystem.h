@@ -199,7 +199,7 @@ public:
 	}
 	
 public:
-	static UYapBroker* GetBroker(UWorld* World);
+	static UYapBroker* GetBroker(UObject* WorldContext);
 	
 	static EYapMaturitySetting GetCurrentMaturitySetting(UWorld* World);
 

@@ -129,19 +129,25 @@ FString UYapProjectSettings::GetMoodTagIconPath()
 		return FPaths::ProjectDir() / Get().MoodTagEditorIconsPath.Path;
 	}
 }
+#endif
 
+#if WITH_EDITOR
 FLinearColor UYapProjectSettings::GetGroupColor(FGameplayTag GroupName)
 {
 	return GetTypeGroup(GroupName).GetGroupColor();
 }
+#endif
 
+#if WITH_EDITOR
 void UYapProjectSettings::RegisterTagFilter(UObject* ClassSource, FName PropertyName, EYap_TagFilter Filter)
 {
 	TMap<UClass*, EYap_TagFilter>& ClassFiltersForProperty = Get().TagFilterSubscriptions.FindOrAdd(PropertyName);
 
 	ClassFiltersForProperty.Add(ClassSource->GetClass(), Filter);
 }
+#endif
 
+#if WITH_EDITOR
 void UYapProjectSettings::OnGetCategoriesMetaFromPropertyHandle(TSharedPtr<IPropertyHandle> PropertyHandle, FString& MetaString) const
 {
 	if (!PropertyHandle)
@@ -171,6 +177,7 @@ void UYapProjectSettings::OnGetCategoriesMetaFromPropertyHandle(TSharedPtr<IProp
 		MetaString = TagContainers[*Filter]->ToString();
 	}
 }
+#endif
 
 const FYapTypeGroupSettings& UYapProjectSettings::GetTypeGroup(FGameplayTag TypeGroup)
 {
@@ -210,6 +217,7 @@ const FYapTypeGroupSettings* UYapProjectSettings::GetTypeGroupPtr(FGameplayTag T
 	return Group;
 }
 
+#if WITH_EDITOR
 // TODO someone posted a nicer way to do this in Slackers without this... something about simple name? using the node?? can't remember
 FString UYapProjectSettings::GetTrimmedGameplayTagString(EYap_TagFilter Filter, const FGameplayTag& PropertyTag)
 {
@@ -227,7 +235,6 @@ FString UYapProjectSettings::GetTrimmedGameplayTagString(EYap_TagFilter Filter, 
 	
 	return PropertyTag.ToString();
 }
-
 #endif
 
 #undef LOCTEXT_NAMESPACE

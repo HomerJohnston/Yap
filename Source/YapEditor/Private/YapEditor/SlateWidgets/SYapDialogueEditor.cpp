@@ -976,7 +976,14 @@ EYapErrorLevel SYapDialogueEditor::GetAudioAssetErrorLevel(const TSoftObjectPtr<
 
 TOptional<float> SYapDialogueEditor::Value_TimeSetting_AudioTime(EYapMaturitySetting MaturitySetting) const
 {
-	return GetFragment().GetBitMutable(MaturitySetting).GetAudioTime(EYapLoadContext::AsyncEditorOnly);
+	if (GEditor && GEditor->IsPlaySessionInProgress())
+	{
+		return GetFragment().GetBitMutable(MaturitySetting).GetAudioTime(GEditor->GetCurrentPlayWorld(), EYapLoadContext::AsyncEditorOnly);
+	}
+	else
+	{
+		return GetFragment().GetBitMutable(MaturitySetting).GetAudioTime(GEditor->EditorWorld, EYapLoadContext::AsyncEditorOnly);
+	}
 }
 
 TOptional<float> SYapDialogueEditor::Value_TimeSetting_TextTime(EYapMaturitySetting MaturitySetting) const

@@ -198,7 +198,7 @@ TOptional<float> FYapFragment::GetSpeechTime(UWorld* World, EYapMaturitySetting 
 {
 	EYapTimeMode EffectiveTimeMode = GetTimeMode(World, MaturitySetting, TypeGroup);
 	
-	return GetBit(World, MaturitySetting).GetSpeechTime(EffectiveTimeMode, LoadContext, TypeGroup);
+	return GetBit(World, MaturitySetting).GetSpeechTime(World, EffectiveTimeMode, LoadContext, TypeGroup);
 }
 
 float FYapFragment::GetPaddingValue(const FGameplayTag& TypeGroup) const

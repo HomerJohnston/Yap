@@ -346,6 +346,11 @@ bool UFlowNode_YapDialogue::GetSkippable() const
 
 bool UFlowNode_YapDialogue::GetNodeAutoAdvance() const
 {
+	if (IsPlayerPrompt() && UYapProjectSettings::GetTypeGroup(TypeGroup).GetPromptAutoAdvance())
+	{
+		return true;
+	}
+	
 	return AutoAdvance.Get(!UYapProjectSettings::GetTypeGroup(TypeGroup).GetManualAdvanceOnly());
 }
 
@@ -358,7 +363,8 @@ bool UFlowNode_YapDialogue::GetFragmentAutoAdvance(uint8 FragmentIndex) const
 	const FYapFragment& Fragment = Fragments[FragmentIndex]; 
 
 	UWorld* World = GetWorld();
-	
+
+	/*
 #if WITH_EDITOR
 	if (GEditor && GEditor->IsPlaySessionInProgress())
 	{
@@ -368,12 +374,11 @@ bool UFlowNode_YapDialogue::GetFragmentAutoAdvance(uint8 FragmentIndex) const
 		// Only check for these during play, never at editor time
 		
 		// TODO If this dialogue is occurring outside of a conversation it must auto advance
-		/*
-		if (!UYapSubsystem::IsAssetInConversation(GetFlowAsset()))
-		{
-			return true;
-		}
-		*/
+		//
+		//if (!UYapSubsystem::IsAssetInConversation(GetFlowAsset()))
+		//{
+		//	return true;
+		//}
 		
 		// Fragments that have no speech time must always be manual-advance
 		if (Fragment.GetTimeMode(World, TypeGroup) == EYapTimeMode::None)
@@ -383,7 +388,8 @@ bool UFlowNode_YapDialogue::GetFragmentAutoAdvance(uint8 FragmentIndex) const
 #if WITH_EDITOR
 	}
 #endif	
-
+	*/
+	
 	// Use fragment override
 	if (Fragment.GetAutoAdvanceSetting().IsSet())
 	{

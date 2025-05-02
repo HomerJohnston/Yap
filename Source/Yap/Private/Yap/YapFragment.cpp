@@ -202,7 +202,7 @@ TOptional<float> FYapFragment::GetSpeechTime(UWorld* World, EYapMaturitySetting 
 }
 
 float FYapFragment::GetPaddingValue(const FGameplayTag& TypeGroup) const
-{
+{	
 	if (IsTimeModeNone())
 	{
 		return 0;

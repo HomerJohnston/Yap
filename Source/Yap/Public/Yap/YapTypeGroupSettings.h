@@ -73,24 +73,25 @@ private:
 	bool bConversationsRequireAdvanceTriggerToStart = false;
 	
 	/** If set, dialogue will be non-skippable by default and must play for its entire duration. */
-	UPROPERTY(Config, EditAnywhere, Category = "Dialogue Playback")
+	UPROPERTY(Config, EditAnywhere, Category = "Dialogue Playback", meta = (EditCondition = "!bDoNotUseSpeechTime", EditConditionHides))
 	bool bForcedDialogueDuration = false;
 	
 	/** If set, dialogue will not auto-advance when its duration finishes and will require advancement by using the Dialogue Handle. */
-	UPROPERTY(Config, EditAnywhere, Category = "Dialogue Playback")
+	UPROPERTY(Config, EditAnywhere, Category = "Dialogue Playback", meta = (EditCondition = "!bDoNotUseSpeechTime", EditConditionHides))
 	bool bManualAdvanceOnly = false;
-	
-	/** If set, Manual Advance Only will be ignored for the last fragment of any talk nodes which are connected to a prompt node. */
-	UPROPERTY(Config, EditAnywhere, Category = "Dialogue Playback", DisplayName = " >>> Auto Advance To Prompt Nodes", meta = (EditCondition = "bManualAdvanceOnly", EditConditionHides))
-	bool bAutoAdvanceToPromptNodes = false;
+
+	/** If set, prompt nodes will always default to auto-advance. */
+	UPROPERTY(Config, EditAnywhere, Category = "Dialogue Playback")
+	bool bPromptAutoAdvance = false;
 	
 	/**
 	 * If set, the *last* fragment of an auto-advancing talk node will check if the fragment is playing into a player prompt node. If it is, it will immediately advance into the player prompt node after starting speech.
+	 * This lets prompt options pop-up immediately upon starting that speech. This is roughly equivalent to using the last fragment's "Start" pin to move into the Prompt node.
 	 * WARNING: This setting cause all activation conditions of the last fragment of any talk nodes which flow into player prompt nodes to be ignored! This ensures consistent game behavior.
 	 */
-	UPROPERTY(Config, EditAnywhere, Category = "Dialogue Playback")
-	bool bAdvanceImmediatelyIntoPromptNodes = false;
-		
+	UPROPERTY(Config, EditAnywhere, Category = "Dialogue Playback", DisplayName = "Auto-advance to Prompt Nodes", meta = (EditCondition = "bDoNotUseSpeechTime || bManualAdvanceOnly", EditConditionHides))
+	bool bAutoAdvanceToPromptNodes = false;
+	
 	/** By default, a player prompt node will auto-select the prompt when only one is displayed. This setting prevents that. */
 	UPROPERTY(Config, EditAnywhere, Category = "Dialogue Playback")
 	bool bPreventAutoSelectLastPrompt = false;
@@ -193,11 +194,11 @@ public:
 	UPROPERTY(EditAnywhere, meta = (DefaultOverride = bManualAdvanceOnly))
 	bool bManualAdvanceOnly_Override = false;
 
+	UPROPERTY(EditAnywhere, meta = (DefaultOverride = bPromptAutoAdvance))
+	bool bPromptAutoAdvance_Override = false;
+	
 	UPROPERTY(EditAnywhere, meta = (DefaultOverride = bAutoAdvanceToPromptNodes))
 	bool bAutoAdvanceToPromptNodes_Override = false;
-	
-	UPROPERTY(EditAnywhere, meta = (DefaultOverride = bAdvanceImmediatelyIntoPromptNodes))
-	bool bAdvanceImmediatelyIntoPromptNodes_Override = false;
 	
 	UPROPERTY(EditAnywhere, meta = (DefaultOverride = bPreventAutoSelectLastPrompt))
 	bool bPreventAutoSelectLastPrompt_Override = false;
@@ -278,15 +279,15 @@ public:
 	EYapMissingAudioErrorLevel GetMissingAudioErrorLevel() RETURN(bMissingAudioErrorLevel_Override, MissingAudioErrorLevel)
 	
 	bool GetConversationsRequireAdvanceTriggerToStart() RETURN(bConversationsRequireAdvanceTriggerToStart_Override, bConversationsRequireAdvanceTriggerToStart)
-	
+
 	bool GetForcedDialogueDuration() RETURN(bForcedDialogueDuration_Override, bForcedDialogueDuration)
 	
 	bool GetManualAdvanceOnly() RETURN(bManualAdvanceOnly_Override, bManualAdvanceOnly)
+
+	bool GetPromptAutoAdvance() RETURN(bPromptAutoAdvance_Override, bPromptAutoAdvance)
 	
 	bool GetAutoAdvanceToPromptNodes() RETURN(bAutoAdvanceToPromptNodes_Override, bAutoAdvanceToPromptNodes)
 	
-	bool GetAdvanceImmediatelyIntoPromptNodes() RETURN(bAdvanceImmediatelyIntoPromptNodes_Override, bAdvanceImmediatelyIntoPromptNodes)
-		
 	bool GetPreventAutoSelectLastPrompt() RETURN(bPreventAutoSelectLastPrompt_Override, bPreventAutoSelectLastPrompt)
 	
 	float GetDefaultFragmentPaddingTime() RETURN(bDefaultFragmentPaddingTime_Override, DefaultFragmentPaddingTime)

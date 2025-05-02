@@ -187,57 +187,168 @@ FYapFragment* UYapSubsystem::FindTaggedFragment(const FGameplayTag& FragmentTag)
 }
 
 // ------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------
 
 FYapConversation& UYapSubsystem::OpenConversation(const FGameplayTag& ConversationName, UObject* ConversationOwner)
 {
-	// Return existing conversation by same name
-	auto Match = [&ConversationName] (const FYapConversation& Conversation)
+	// Check if this conversation already exists, if so just return it. Yap assumes there will be a few conversations open at a time (at most!), so iteration is cheap.
+	for (auto& [Handle, Conversation] : Conversations)
 	{
-		return Conversation.GetConversationName() == ConversationName;
-	};
-	
-	int32 Index = ConversationQueue.IndexOfByPredicate(Match);
-	if (Index != INDEX_NONE)
-	{
-		UE_LOG(LogYap, Display, TEXT("Tried to start a new conversation but converation was already open or in queue!"), *ConversationName.ToString());
-		return ConversationQueue[Index];
+		if (Conversation.GetConversationName() == ConversationName)
+		{
+			UE_LOG(LogYap, Warning, TEXT("Tried to start a new conversation {%s} but conversation was already open, or in queue!"), *ConversationName.ToString());
+			return Conversation;
+		}
 	}
-	
-	// Conversation structs will usually be small, a few bytes. Using arrays as queues for easier serialization.
-	ConversationQueue.EmplaceAt(0, FYapConversation(ConversationName, ConversationOwner));
 
+	FYapConversationHandle NewHandle = ConversationQueue.EmplaceAt_GetRef(0);
+	FYapConversation& NewConversation = Conversations.Emplace(NewHandle, {ConversationName, ConversationOwner, NewHandle});
+	
 	if (ConversationQueue.Num() == 1)
 	{
-		StartOpeningConversation(ConversationQueue[0]);
+		StartOpeningConversation(NewConversation);
 	}
 
-	return ConversationQueue[0];
+	return NewConversation;
 }
 
 // ------------------------------------------------------------------------------------------------
 
-EYapConversationState UYapSubsystem::RequestCloseConversation(const FGameplayTag& ConversationName)
+EYapConversationState UYapSubsystem::CloseConversation(const FYapConversationHandle& Handle)
 {
-	if (ConversationQueue.Num() == 0)
+	FYapConversation* ConversationPtr = Conversations.Find(Handle);
+
+	if (ConversationPtr)
 	{
-		return EYapConversationState::Closed;
+		check(ConversationQueue.Contains(Handle));
+
+		return StartClosingConversation(Handle);
 	}
 
-	auto Match = [&ConversationName] (const FYapConversation& Conversation)
-	{
-		return Conversation.GetConversationName() == ConversationName;
-	};
+	UE_LOG(LogYap, Warning, TEXT("Tried to close conversation handle {%s} but it did not exist!"), *Handle.ToString());
 	
-	if (ActiveConversationName == ConversationName)
+	return EYapConversationState::Undefined;
+}
+
+// ------------------------------------------------------------------------------------------------
+
+EYapConversationState UYapSubsystem::CloseConversation(const FGameplayTag& ConversationName)
+{
+	for (auto& [Handle, Conversation] : Conversations)
 	{
-		// Don't remove it from the queue yet, let it actually finish
-		return StartClosingConversation(ConversationName);
+		if (Conversation.GetConversationName() == ConversationName)
+		{
+			return CloseConversation(Handle);
+		}
+	}
+
+	UE_LOG(LogYap, Warning, TEXT("Tried to close conversation named {%s} but it did not exist!"), *ConversationName.ToString());
+
+	return EYapConversationState::Undefined;
+}
+
+// ------------------------------------------------------------------------------------------------
+
+EYapConversationState UYapSubsystem::CloseConversation(const UObject* Owner)
+{
+	for (auto& [Handle, Conversation] : Conversations)
+	{
+		if (Conversation.GetOwner() == Owner)
+		{
+			return CloseConversation(Handle);
+		}
+	}
+
+	UE_LOG(LogYap, Warning, TEXT("Tried to close conversation for owner {%s} but it did not exist!"), *Owner->GetName());
+
+	return EYapConversationState::Undefined;
+}
+
+// ------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------
+
+void UYapSubsystem::StartOpeningConversation(const FYapConversationHandle& Handle)
+{
+	if (ActiveConversation == Handle)
+	{
+		UE_LOG(LogYap, Display, TEXT("Tried to start a new conversation but conversation was already active!"));
+		return;
+	}
+	
+	FYapConversation* ConversationPtr = Conversations.Find(Handle);
+
+	if (ConversationPtr)
+	{
+		if (StartOpeningConversation(*ConversationPtr))
+		{
+			ActiveConversation = Handle;
+		}
+	}
+}
+
+bool UYapSubsystem::StartOpeningConversation(FYapConversation& Conversation)
+{
+	if (Conversation.GetState() == EYapConversationState::Open || Conversation.GetState() == EYapConversationState::Opening)
+	{
+		UE_LOG(LogYap, Display, TEXT("Tried to start a new conversation but conversation was already active!"));
+		return false;
+	}
+	
+	UE_LOG(LogYap, Display, TEXT("Subsystem: Starting conversation %s"), *Conversation.GetConversationName().ToString());
+	
+	FYapData_ConversationOpened Data;
+	Data.Conversation = Conversation.GetConversationName();
+
+	auto* HandlerArray = FindConversationHandlerArray(Conversation.GetTypeGroup());
+
+	// Game code may add opening locks to the conversation here
+	BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapConversationHandler, OnConversationOpened, Execute_K2_ConversationOpened)>(HandlerArray, Data, Conversation.GetHandle());
+
+	Conversation.StartOpening(this);
+
+	return true;
+}
+
+// ------------------------------------------------------------------------------------------------
+
+// ------------------------------------------------------------------------------------------------
+
+EYapConversationState UYapSubsystem::StartClosingConversation(const FYapConversationHandle& Handle)
+{
+	FYapConversation* ConversationPtr = Conversations.Find(Handle);
+
+	if (ConversationPtr)
+	{
+		ConversationPtr->StartClosing(this);
+
+		if (ConversationPtr->GetState() == EYapConversationState::Closed)
+		{
+			ConversationQueue.Remove(Handle);
+			
+			Conversations.Remove(Handle);
+
+			if (ActiveConversation == Handle)
+			{
+				ActiveConversation.Invalidate();
+			}
+			
+			StartNextQueuedConversation();
+
+			return EYapConversationState::Closed;
+		}
+		else
+		{
+			ConversationPtr->OnConversationClosed.AddDynamic(this, &UYapSubsystem::OnActiveConversationClosed);
+	
+			return EYapConversationState::Closing;	
+		}
 	}
 	else
 	{
-		// Just remove this conversation from queues.
-		ConversationQueue.RemoveAll(Match);
-		return EYapConversationState::Closed;
+		UE_LOG(LogYap, Error, TEXT("Failed to close conversation {s}, conversation does not exist!"));
+		return EYapConversationState::Undefined;
 	}
 }
 
@@ -255,66 +366,19 @@ void UYapSubsystem::StartNextQueuedConversation()
 	}
 }
 
-
 // ------------------------------------------------------------------------------------------------
-
-void UYapSubsystem::StartOpeningConversation(FYapConversation& Conversation)
-{
-	if (ActiveConversationName == Conversation.GetConversationName())
-	{
-		UE_LOG(LogYap, Display, TEXT("Tried to start a new conversation but converation was already active!"), *Conversation.GetConversationName().ToString());
-		return;
-	}
-
-	UE_LOG(LogYap, Display, TEXT("Subsystem: Starting conversation %s!"), *Conversation.GetConversationName().ToString());
-	ActiveConversationName = Conversation.GetConversationName();
-	
-	FYapData_ConversationOpened Data;
-	Data.Conversation = ActiveConversationName.GetValue();
-
-	auto* HandlerArray = FindConversationHandlerArray(Conversation.GetTypeGroup());
-
-	// Game code may add opening locks to the conversation here
-	BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapConversationHandler, OnConversationOpened, Execute_K2_ConversationOpened)>(HandlerArray, Data, Conversation.GetHandle());
-
-	Conversation.StartOpening(this);
-}
-
-// ------------------------------------------------------------------------------------------------
-
-EYapConversationState UYapSubsystem::StartClosingConversation(const FGameplayTag& ConversationName)
-{
-	auto Find = [&ConversationName] (const FYapConversation& Conversation)
-	{
-		return Conversation.GetConversationName() == ConversationName;
-	};
-
-	FYapConversation& Conversation = GetConversation(GetWorld(), ConversationName);
-
-	Conversation.StartClosing(this);
-
-	if (Conversation.GetState() == EYapConversationState::Closed)
-	{
-		ActiveConversationName.Reset();
-		ConversationQueue.RemoveAll(Find);
-		StartNextQueuedConversation();
-		return EYapConversationState::Closed;
-	}
-
-	Conversation.OnConversationClosed.AddDynamic(this, &UYapSubsystem::OnActiveConversationClosed);
-	
-	return EYapConversationState::Closing;
-}
 
 void UYapSubsystem::OnActiveConversationClosed(UObject* Instigator, FYapConversationHandle Handle)
-{
-	auto Find = [this] (const FYapConversation& Conversation)
-	{
-		return Conversation.GetConversationName() == ActiveConversationName;
-	};
+{	
+	ConversationQueue.Remove(Handle);
 	
-	ConversationQueue.RemoveAll(Find);
-	ActiveConversationName.Reset();
+	Conversations.Remove(Handle);
+	
+	if (ActiveConversation == Handle)
+	{
+		ActiveConversation.Invalidate();
+	}
+	
 	StartNextQueuedConversation();
 }
 
@@ -398,11 +462,11 @@ FYapSpeechHandle UYapSubsystem::RunSpeech(const FYapData_SpeechBegins& SpeechDat
 
 // ------------------------------------------------------------------------------------------------
 
-FYapConversation& UYapSubsystem::GetConversation(UWorld* World, UObject* ConversationOwner)
+FYapConversation& UYapSubsystem::GetConversation(UObject* WorldContext, UObject* Owner)
 {
-	for (FYapConversation& Conversation : Get(World)->ConversationQueue)
+	for (auto& [Handle, Conversation] : Get(WorldContext->GetWorld())->Conversations)
 	{
-		if (Conversation.GetOwner() == ConversationOwner)
+		if (Conversation.GetOwner() == Owner)
 		{
 			return Conversation;
 		}
@@ -413,14 +477,13 @@ FYapConversation& UYapSubsystem::GetConversation(UWorld* World, UObject* Convers
 
 // ------------------------------------------------------------------------------------------------
 
-FYapConversation& UYapSubsystem::GetConversation(UWorld* World, FYapConversationHandle Handle)
+FYapConversation& UYapSubsystem::GetConversation(UObject* WorldContext, FYapConversationHandle Handle)
 {
-	for (FYapConversation& Conversation : Get(World)->ConversationQueue)
+	FYapConversation* ConversationPtr = Get(WorldContext->GetWorld())->Conversations.Find(Handle);
+
+	if (ConversationPtr)
 	{
-		if (Conversation.GetHandle() == Handle)
-		{
-			return Conversation;
-		}
+		return *ConversationPtr;
 	}
 
 	return NullConversation;
@@ -428,9 +491,9 @@ FYapConversation& UYapSubsystem::GetConversation(UWorld* World, FYapConversation
 
 // ------------------------------------------------------------------------------------------------
 
-FYapConversation& UYapSubsystem::GetConversation(UWorld* World, const FGameplayTag& ConversationName)
+FYapConversation& UYapSubsystem::GetConversation(UObject* WorldContext, const FGameplayTag& ConversationName)
 {
-	for (FYapConversation& Conversation : Get(World)->ConversationQueue)
+	for (auto& [Handle, Conversation] : Get(WorldContext->GetWorld())->Conversations)
 	{
 		if (Conversation.GetConversationName() == ConversationName)
 		{
@@ -443,7 +506,7 @@ FYapConversation& UYapSubsystem::GetConversation(UWorld* World, const FGameplayT
 
 // ------------------------------------------------------------------------------------------------
 
-FGameplayTag UYapSubsystem::GetActiveConversation(UWorld* World)
+FGameplayTag UYapSubsystem::GetActiveConversationName(UWorld* World)
 {
 	UYapSubsystem* Subsystem = Get(World);
 	
@@ -452,7 +515,20 @@ FGameplayTag UYapSubsystem::GetActiveConversation(UWorld* World)
 		return FGameplayTag::EmptyTag;
 	}
 
-	return Subsystem->ConversationQueue[Subsystem->ConversationQueue.Num() - 1].GetConversationName();
+	int32 ActiveIndex = Subsystem->ConversationQueue.Num() - 1;
+	
+	const FYapConversationHandle& ActiveHandle = Subsystem->ConversationQueue[ActiveIndex]; 
+
+	const FYapConversation* ActiveConversationPtr = Subsystem->Conversations.Find(ActiveHandle); 
+
+	if (ActiveConversationPtr)
+	{
+		return ActiveConversationPtr->GetConversationName();
+	}
+	else
+	{
+		return FGameplayTag::EmptyTag;
+	}
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -537,6 +613,11 @@ bool UYapSubsystem::SkipSpeech(UWorld* World, const FYapSpeechHandle& Handle)
 }
 
 // ------------------------------------------------------------------------------------------------
+
+void UYapSubsystem::ConversationSkip(UObject* Instigator, FYapConversationHandle Handle)
+{
+	OnConversationSkip.Broadcast(Instigator, Handle);
+}
 
 /*
 FYapRunningFragment& UYapSubsystem::GetFragmentHandle(FYapSpeechHandle HandleRef)
@@ -660,8 +741,14 @@ void UYapSubsystem::OnSpeechComplete(FYapSpeechHandle Handle)
 	if (Delegate)
 	{
 		UE_LOG(LogYap, VeryVerbose, TEXT("%s: OnSpeechComplete {%s}"), *GetName(), *Handle.ToString());
-		SpeechCompleteEvents[Handle].Broadcast(this, Handle);
-		SpeechCompleteEvents.Remove(Handle);
+
+		FYapSpeechEvent Evt;
+		SpeechCompleteEvents.RemoveAndCopyValue(Handle, Evt);
+		Evt.Broadcast(this, Handle);
+		
+		//This more rudimentary method was throwing an ensure in MTAccessDetector.h destructor, Line ~502. 
+		//SpeechCompleteEvents[Handle].Broadcast(this, Handle);
+		//SpeechCompleteEvents.Remove(Handle);
 	}
 	else
 	{

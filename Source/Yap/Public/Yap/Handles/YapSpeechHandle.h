@@ -53,6 +53,11 @@ public:
 
     bool operator== (const FYapSpeechHandle& Other) const;
 
+    FString ToString() const
+    {
+        return Guid.ToString();
+    }
+    
     // TODO I would prefer to use these instead of calling the BPFL functions below, but circular reference. Solve later. Use the BPFL funcs below for now instead. 
     //void BindToOnSpeechComplete(FYapSpeechEventDelegate Delegate) const;
 
@@ -61,11 +66,6 @@ public:
     //void BindToOnFragmentComplete(FYapSpeechEventDelegate Delegate) const;
 
     //void UnbindToOnFragmentComplete(FYapSpeechEventDelegate Delegate) const;
-
-    FString ToString() const
-    {
-        return Guid.ToString();
-    }
 };
 
 FORCEINLINE uint32 GetTypeHash(const FYapSpeechHandle& Struct)

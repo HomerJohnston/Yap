@@ -88,7 +88,9 @@ void UFlowNode_YapDialogue::OnSkipAction(UObject* Instigator, FYapSpeechHandle H
 	
 	if (!CanSkip(Handle))
 	{
-		UE_LOG(LogYap, Warning, TEXT("%s: Failed to skip!"), *GetName());
+		// The skip event wasn't for this node, ignore it
+		// This system is designed under the assumption that there will usually only be a few pieces of dialogue running simultaneously, at most.
+		// It's pretty cheap to just send the event to everyone and ignore the skip request if it wasn't for us.
 		return;
 	}
 
@@ -124,6 +126,8 @@ void UFlowNode_YapDialogue::OnConversationSkip(UObject* Instigator, FYapConversa
 		UE_LOG(LogYap, Warning, TEXT("OnConversationSkip was called, but running fragment was unset, ignoring"));
 		return;
 	}
+
+	// TODO make sure this dialogue node is actually in the conversation
 	
 	// It will be reset during iteration! Cache it
 	uint8 ToIndex = RunningFragmentIndex.GetValue();
@@ -159,6 +163,7 @@ void UFlowNode_YapDialogue::OnConversationSkip(UObject* Instigator, FYapConversa
 void UFlowNode_YapDialogue::FinishNode(FName OutputPinToTrigger)
 {
 	UYapSubsystem::Get(this)->OnConversationSkip.RemoveDynamic(this, &ThisClass::OnConversationSkip);
+	UYapSubsystem::Get(this)->OnSpeechSkip.RemoveDynamic(this, &ThisClass::OnSkipAction);
 		
 	TriggerOutput(OutputPinToTrigger, true, EFlowPinActivationType::Default);
 }
@@ -167,20 +172,12 @@ void UFlowNode_YapDialogue::FinishNode(FName OutputPinToTrigger)
 
 bool UFlowNode_YapDialogue::CanSkip(FYapSpeechHandle Handle) const
 {
-	if (!RunningSpeechHandle.IsValid() || !Handle.IsValid())
+	if (RunningSpeechHandle != Handle || !Handle.IsValid())
 	{
 		return false;
 	}
 
-	if (RunningSpeechHandle != Handle)
-	{
-		return false;
-	}
-
-	if (!RunningFragmentIndex.IsSet())
-	{
-		return false;
-	}
+	check(RunningFragmentIndex.IsSet());
 	
 	const FYapFragment& Fragment = Fragments[RunningFragmentIndex.GetValue()];
 	
@@ -266,6 +263,7 @@ void UFlowNode_YapDialogue::ExecuteInput(const FName& PinName)
 			++NodeActivationCount;
 
 			UYapSubsystem::Get(this)->OnConversationSkip.AddDynamic(this, &ThisClass::OnConversationSkip);
+			UYapSubsystem::Get(this)->OnSpeechSkip.AddDynamic(this, &ThisClass::OnSkipAction);
 		}
 		else
 		{
@@ -460,7 +458,7 @@ bool UFlowNode_YapDialogue::TryBroadcastPrompts()
 
  		const FYapBit& Bit = Fragment.GetBit(GetWorld());
 
- 		const FYapConversation& Conversation = Subsystem->GetConversation(GetWorld(), GetFlowAsset()); 
+ 		const FYapConversation& Conversation = Subsystem->GetConversation(this, GetFlowAsset()); 
  		
  		FYapData_PlayerPromptCreated Data;
  		Data.Conversation = Conversation.GetConversationName();
@@ -477,7 +475,7 @@ bool UFlowNode_YapDialogue::TryBroadcastPrompts()
 	
 	{
 		FYapData_PlayerPromptsReady Data;
-		Data.Conversation = Subsystem->GetConversation(GetWorld(), GetFlowAsset()).GetConversationName();
+		Data.Conversation = Subsystem->GetConversation(this, GetFlowAsset()).GetConversationName();
 		Subsystem->OnFinishedBroadcastingPrompts(Data, TypeGroup);
 	}
 	
@@ -594,9 +592,6 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 
 	Fragment.IncrementActivations();
 	
-	UE_LOG(LogYap, VeryVerbose, TEXT("%s [%i]: Subscribing to OnSpeechSkip"), *GetName(), FragmentIndex);
-	Subsystem->OnSpeechSkip.AddDynamic(this, &ThisClass::OnSkipAction);
-
 	// TODO clean this crap up
 	FYapSpeechEventDelegate Delegate;
 	Delegate.BindUFunction(this, GET_FUNCTION_NAME_CHECKED_TwoParams(ThisClass, OnSpeechComplete, UObject*, FYapSpeechHandle));
@@ -644,9 +639,7 @@ void UFlowNode_YapDialogue::OnSpeechComplete(UObject* Instigator, FYapSpeechHand
 	}
 
 	RunningFragments.Remove(Handle);
-	
-	UYapSubsystem::Get(GetWorld())->OnSpeechSkip.RemoveDynamic(this, &ThisClass::OnSkipAction);
-	
+		
 	// TODO clean this crap up, is there any other method I can use to achieve this that isn't so dumb looking?
 	FYapSpeechEventDelegate Delegate;
 	Delegate.BindUFunction(this, GET_FUNCTION_NAME_CHECKED_TwoParams(ThisClass, OnSpeechComplete, UObject*, FYapSpeechHandle));

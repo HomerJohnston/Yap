@@ -17,21 +17,36 @@ UFlowNode_YapConversation_Close::UFlowNode_YapConversation_Close()
 void UFlowNode_YapConversation_Close::ExecuteInput(const FName& PinName)
 {
 	Super::ExecuteInput(PinName);
-	
-	FGameplayTag ConversationToClose = Conversation.IsValid() ? Conversation : UYapSubsystem::GetActiveConversation(GetWorld());
-	
-	EYapConversationState Result = UYapSubsystem::Get(GetWorld())->RequestCloseConversation(ConversationToClose);
 
-	if (Result == EYapConversationState::Closed)
+	UYapSubsystem* Subsystem = UYapSubsystem::Get(this);
+
+	FYapConversation& ConversationInst = (Conversation.IsValid()) ? Subsystem->GetConversation(this, Conversation) : Subsystem->GetConversation(this, GetFlowAsset());
+
+	if (ConversationInst.IsNull())
 	{
-		UE_LOG(LogYap, Verbose, TEXT("Conversation closed: %s"), *ConversationToClose.GetTagName().ToString());
-		FinishNode_Internal();
+		UE_LOG(LogYap, Warning, TEXT("Found no conversation to close! Conversation name: %s, owner: %s"), *Conversation.ToString(), *GetName());
+		return;
 	}
-	else
+	
+	EYapConversationState Result = Subsystem->CloseConversation(ConversationInst.GetHandle());
+
+	switch (Result)
 	{
-		FYapConversation& ExistingConversation = UYapSubsystem::GetConversation(GetWorld(), ConversationToClose);
-		
-		ExistingConversation.OnConversationClosed.AddDynamic(this, &ThisClass::FinishNode);
+		case EYapConversationState::Closed:
+		{
+			FinishNode_Internal();
+			break;
+		}
+		case EYapConversationState::Closing:
+		{
+			ConversationInst.OnConversationClosed.AddDynamic(this, &ThisClass::FinishNode);
+			break;
+		}
+		default:
+		{
+			UE_LOG(LogYap, Warning, TEXT("Failed to close conversation - unknown error! Conversation name: %s, owner: %s"), *Conversation.ToString(), *GetName());
+			break;
+		}
 	}
 }
 
@@ -42,7 +57,7 @@ void UFlowNode_YapConversation_Close::FinishNode(UObject* Instigator, FYapConver
 
 void UFlowNode_YapConversation_Close::FinishNode_Internal()
 {
-	UE_LOG(LogYap, Verbose, TEXT("CONVERSATION CLOSING: %s"), *Conversation.GetTagName().ToString());
+	UE_LOG(LogYap, Verbose, TEXT("Conversation closed: %s for owner: %s"), *Conversation.GetTagName().ToString(), *GetFlowAsset()->GetName());
 
 	UYapSubsystem::GetConversation(GetWorld(), Conversation).OnConversationClosed.RemoveAll(this);
 	

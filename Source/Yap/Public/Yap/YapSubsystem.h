@@ -78,16 +78,25 @@ protected:
 	UPROPERTY(Transient)
 	TObjectPtr<UYapBroker> Broker;
 
-	UPROPERTY(Transient)
-	TOptional<FGameplayTag> ActiveConversationName;
-
 	/**  */
 	UPROPERTY(Transient)
 	TMap<FYapPromptHandle, FGameplayTag> PromptHandleConversationTags;
+
+	// ----------------------
+	
+	/** Master container of conversations */
+	UPROPERTY(Transient)
+	TMap<FYapConversationHandle, FYapConversation> Conversations;
 	
 	/** Queue of conversations. The top one is always going to be "active". If two "Open Conversation" nodes run, the second one will wait in this queue until the first one closes. */
 	UPROPERTY(Transient)
-	TArray<FYapConversation> ConversationQueue;
+	TArray<FYapConversationHandle> ConversationQueue;
+
+	/** The current focused conversation */
+	UPROPERTY(Transient)
+	FYapConversationHandle ActiveConversation;
+
+	// ----------------------
 	
 	/** Stores the tag of a fragment and the owning dialogue node where that fragment can be found */
 	UPROPERTY(Transient)
@@ -116,6 +125,8 @@ public:
 	
 	UPROPERTY(Transient)
 	TMap<FYapSpeechHandle, FTimerHandle> SpeechTimers;
+
+	// TODO these should probably all be maps for more robust behavior in case multiple things are running!
 	
 	UPROPERTY(Transient)
 	FYapPromptChosen OnPromptChosen;
@@ -194,23 +205,43 @@ public:
 
 	/**  */
 	FYapFragment* FindTaggedFragment(const FGameplayTag& FragmentTag);
-
+	
 protected:  // TODO should some of these be public?
 	/**  */
 	void RegisterTaggedFragment(const FGameplayTag& FragmentTag, UFlowNode_YapDialogue* DialogueNode);
 
 public:
-	/**  */
+	// Main open conversation function, and is called by the Open Conversation flow node
 	FYapConversation& OpenConversation(const FGameplayTag& ConversationName, UObject* ConversationOwner); // Called by Open Conversation node
 
-	EYapConversationState RequestCloseConversation(const FGameplayTag& ConversationName);
-
-protected:
-	void StartOpeningConversation(FYapConversation& Conversation);
+	// Main close conversation function
+	EYapConversationState CloseConversation(const FYapConversationHandle& Handle);
 	
-	/**  */
-	EYapConversationState StartClosingConversation(const FGameplayTag& ConversationName); // Called by Close Conversation node
+	// Exists primarily to be called by the Close Conversation flow node (with a conversation name)
+	EYapConversationState CloseConversation(const FGameplayTag& ConversationName);
 
+	// Exists primarily to be called by the Close Conversation flow node (with an unset conversation name)
+	EYapConversationState CloseConversation(const UObject* Owner);
+protected:
+	// Actually opens a conversation
+	void StartOpeningConversation(const FYapConversationHandle& Handle);
+	
+	// Actually opens a conversation
+	bool StartOpeningConversation(FYapConversation& Conversation);
+
+	// Actually closes a conversation
+	EYapConversationState StartClosingConversation(const FYapConversationHandle& Handle);
+
+
+
+
+
+
+
+
+
+
+	
 	void StartNextQueuedConversation();
 
 	UFUNCTION()
@@ -232,16 +263,16 @@ public:
 
 	// TODO I also hate these things
 	/**  */
-	static FYapConversation& GetConversation(UWorld* World, UObject* ConversationOwner);
+	static FYapConversation& GetConversation(UObject* WorldContext, UObject* Owner);
 	
 	/**  */
-	static FYapConversation& GetConversation(UWorld* World, FYapConversationHandle Handle);
+	static FYapConversation& GetConversation(UObject* WorldContext, FYapConversationHandle Handle);
 
 	/**  */
-	static FYapConversation& GetConversation(UWorld* World, const FGameplayTag& ConversationName);
+	static FYapConversation& GetConversation(UObject* WorldContext, const FGameplayTag& ConversationName);
 
 	/**  */
-	static FGameplayTag GetActiveConversation(UWorld* World);
+	static FGameplayTag GetActiveConversationName(UWorld* World);
 
 public:
 	// TODO should I make a ref struct for FYapPromptHandle too?
@@ -251,6 +282,8 @@ public:
 	/** Send a skip or manual advance signal. Returns true if */
 	static bool SkipSpeech(UWorld* World, const FYapSpeechHandle& Handle);
 
+	void ConversationSkip(UObject* Instigator, FYapConversationHandle Handle);
+	
 	/**  */ // TODO: ability to instantly playback/skip through multiple nodes until some sort of target point is hit, maybe a custom node? (imagine skipping an entire cutscene)
 	// static bool SkipDialogueTo(???);
 

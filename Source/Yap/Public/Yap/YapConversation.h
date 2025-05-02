@@ -21,6 +21,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FYapConversationEvent, UObject*, In
 UENUM()
 enum class EYapConversationState : uint8
 {
+    Undefined,
     Opening,
     Open,
     Closing,
@@ -36,13 +37,14 @@ struct FYapConversation
 
     FYapConversation();
 
-    FYapConversation(const FGameplayTag& InConversationName, UObject* ConversationOwner);
+    FYapConversation(const FGameplayTag& InConversationName, UObject* ConversationOwner, const FYapConversationHandle& InHandle);
 
     // ==========================================
     // STATE
     // ==========================================
 protected:
 
+    // TODO I don't know if conversations should store their own handle. Reconsider?
     UPROPERTY(Transient)
     FYapConversationHandle Handle;
     

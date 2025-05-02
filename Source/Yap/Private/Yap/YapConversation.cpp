@@ -16,11 +16,11 @@ FYapConversation::FYapConversation()
 
 // ------------------------------------------------------------------------------------------------
 
-FYapConversation::FYapConversation(const FGameplayTag& InConversationName, UObject* ConversationOwner)
+FYapConversation::FYapConversation(const FGameplayTag& InConversationName, UObject* ConversationOwner, const FYapConversationHandle& InHandle)
     : ConversationName(InConversationName)
     , Owner(ConversationOwner)
 {
-    Handle = FYapConversationHandle();
+    Handle = InHandle;
 }
 
 // ------------------------------------------------------------------------------------------------

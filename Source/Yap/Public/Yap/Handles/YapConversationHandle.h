@@ -13,15 +13,49 @@ struct FYapConversationHandle
 {
     GENERATED_BODY()
 
+    // ==========================================
+    // CONSTRUCTION
+    // ==========================================
+    
+public:
+	
     FYapConversationHandle();
 
     FYapConversationHandle(const FGuid& InGuid);
+
+    // ==========================================
+    // STATE
+    // ==========================================
+    
+private:
     
     UPROPERTY(Transient)
     FGuid Guid;
+
+    // ==========================================
+    // API
+    // ==========================================
+    
+public:
+
+    bool IsValid() const { return Guid.IsValid(); }
+    
+    const FGuid& GetGuid() const { return Guid; }
+    
+    void Invalidate() { Guid.Invalidate(); }
     
     bool operator== (const FYapConversationHandle& Other) const;
+
+    FString ToString() const
+    {
+        return Guid.ToString();
+    }
 };
+
+FORCEINLINE uint32 GetTypeHash(const FYapConversationHandle& Struct)
+{
+    return GetTypeHash(Struct.GetGuid());
+}
 
 UCLASS()
 class UYapConversationHandleBlueprintFunctionLibrary : public UBlueprintFunctionLibrary

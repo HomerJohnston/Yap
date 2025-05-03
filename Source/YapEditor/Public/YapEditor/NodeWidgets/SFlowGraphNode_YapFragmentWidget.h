@@ -141,7 +141,7 @@ protected:
 	bool 					OnAreAssetsAcceptableForDrop_ChildSafeButton(TArrayView<FAssetData> AssetDatas) const;
 	void 					OnAssetsDropped_ChildSafeButton(const FDragDropEvent& DragDropEvent, TArrayView<FAssetData> AssetDatas);
 	// ------------------------------------------
-	
+
 	TSharedRef<SWidget>		CreateFragmentWidget();
 
 	// ------------------------------------------
@@ -149,6 +149,7 @@ protected:
 	EVisibility 			Visibility_AudioSettingsButton() const;
 	EVisibility 			Visibility_DialogueErrorState() const;
 	FSlateColor 			ColorAndOpacity_AudioID() const;
+	EVisibility				Visibility_TimeProgressionWidget() const;
 	
 	// ------------------------------------------
 	
@@ -279,6 +280,8 @@ protected:
 	bool HasCompleteChildSafeData() const;
 
 	bool FragmentIsRunning() const;
+
+	bool FragmentRecentlyRan() const;
 	
 	// ------------
 	bool IsDroppedAsset_YapCharacter(TArrayView<FAssetData> AssetDatas) const;

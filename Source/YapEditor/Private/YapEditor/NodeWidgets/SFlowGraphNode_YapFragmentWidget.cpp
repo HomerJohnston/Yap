@@ -407,7 +407,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateFragmentHighlightWid
 
 EVisibility SFlowGraphNode_YapFragmentWidget::Visibility_FragmentHighlight() const
 {
-	if (FragmentIsRunning())
+	if (FragmentRecentlyRan())
 	{
 		return EVisibility::HitTestInvisible;
 	}
@@ -442,7 +442,23 @@ FSlateColor SFlowGraphNode_YapFragmentWidget::BorderBackgroundColor_FragmentHigh
 		return YapColor::Red_Glass;
 	}
 
-	return YapColor::White_Glass;
+	FLinearColor C = YapColor::White_Glass;
+	
+	UWorld* World = GEditor->GetCurrentPlayWorld(GEditor->PlayWorld);
+	
+	if (World)// && GetFragment().GetStartTime() >= 0.0)
+	{
+		float MinOpaqueTime = 1.0f;
+		float FadeTime = 0.5f;
+
+		float EndTime = FMath::Max(GetFragment().GetStartTime() + MinOpaqueTime, GetFragment().GetEndTime());
+
+		float Elapsed = World->GetTimeSeconds() - EndTime;
+
+		C.A *= FMath::Lerp(1.0f, 0.0f, FMath::Clamp(Elapsed / FadeTime, 0.0f, 1.0f));
+	}
+
+	return C;
 }
 
 
@@ -798,6 +814,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateFragmentWidget()
 			[
 				SNew(SBox)
 				.HeightOverride(3)
+				.Visibility(this, &ThisClass::Visibility_TimeProgressionWidget)
 				[
 					SNew(SYapTimeProgressionWidget)
 					.BarColor(this, &ThisClass::ColorAndOpacity_FragmentTimeIndicator)
@@ -933,6 +950,16 @@ FSlateColor SFlowGraphNode_YapFragmentWidget::ColorAndOpacity_AudioID() const
 	}
 
 	return Color;
+}
+
+EVisibility SFlowGraphNode_YapFragmentWidget::Visibility_TimeProgressionWidget() const
+{
+	if (GetTypeGroup().GetDefaultTimeModeSetting() == EYapTimeMode::None)
+	{
+		return EVisibility::Collapsed;
+	}
+
+	return EVisibility::SelfHitTestInvisible;
 }
 
 // ================================================================================================
@@ -2128,6 +2155,24 @@ bool SFlowGraphNode_YapFragmentWidget::HasCompleteChildSafeData() const
 bool SFlowGraphNode_YapFragmentWidget::FragmentIsRunning() const
 {
 	return GetFragment().GetStartTime() > GetFragment().GetEndTime();
+}
+
+bool SFlowGraphNode_YapFragmentWidget::FragmentRecentlyRan() const
+{
+	if (FragmentIsRunning())
+	{
+		return true;
+	}
+	
+	UWorld* World = GEditor->GetCurrentPlayWorld(GEditor->PlayWorld);
+	
+	if (World && GetFragment().GetStartTime() >= 0.0)
+	{
+		float Elapsed = World->GetTimeSeconds() - GetFragment().GetEndTime();
+		return Elapsed <= 2.0f;
+	}
+
+	return false;
 }
 
 bool SFlowGraphNode_YapFragmentWidget::IsDroppedAsset_YapCharacter(TArrayView<FAssetData> AssetDatas) const

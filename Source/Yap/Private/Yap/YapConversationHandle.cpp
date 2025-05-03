@@ -22,7 +22,7 @@ bool FYapConversationHandle::operator==(const FYapConversationHandle& Other) con
 
 FYapConversationHandle UYapConversationHandleBlueprintFunctionLibrary::BindToConversationOpening(UObject* WorldContext, FYapConversationHandle Handle, FYapConversationEventDelegate Delegate)
 {
-    FYapConversation& Conversation = UYapSubsystem::GetConversation(WorldContext->GetWorld(), Handle);
+    FYapConversation& Conversation = UYapSubsystem::GetConversationByHandle(WorldContext->GetWorld(), Handle);
     Conversation.OnConversationOpening.Add(Delegate);
 
     return Handle;
@@ -30,7 +30,7 @@ FYapConversationHandle UYapConversationHandleBlueprintFunctionLibrary::BindToCon
 
 FYapConversationHandle UYapConversationHandleBlueprintFunctionLibrary::BindToConversationOpened(UObject* WorldContext, FYapConversationHandle Handle, FYapConversationEventDelegate Delegate)
 {
-    FYapConversation& Conversation = UYapSubsystem::GetConversation(WorldContext->GetWorld(), Handle);
+    FYapConversation& Conversation = UYapSubsystem::GetConversationByHandle(WorldContext->GetWorld(), Handle);
     Conversation.OnConversationOpened.Add(Delegate);
 
     return Handle;
@@ -38,7 +38,7 @@ FYapConversationHandle UYapConversationHandleBlueprintFunctionLibrary::BindToCon
 
 FYapConversationHandle UYapConversationHandleBlueprintFunctionLibrary::BindToConversationClosing(UObject* WorldContext, FYapConversationHandle Handle, FYapConversationEventDelegate Delegate)
 {
-    FYapConversation& Conversation = UYapSubsystem::GetConversation(WorldContext->GetWorld(), Handle);
+    FYapConversation& Conversation = UYapSubsystem::GetConversationByHandle(WorldContext->GetWorld(), Handle);
     Conversation.OnConversationClosing.Add(Delegate);
 
     return Handle;
@@ -46,7 +46,7 @@ FYapConversationHandle UYapConversationHandleBlueprintFunctionLibrary::BindToCon
 
 FYapConversationHandle UYapConversationHandleBlueprintFunctionLibrary::BindToConversationClosed(UObject* WorldContext, FYapConversationHandle Handle, FYapConversationEventDelegate Delegate)
 {
-    FYapConversation& Conversation = UYapSubsystem::GetConversation(WorldContext->GetWorld(), Handle);
+    FYapConversation& Conversation = UYapSubsystem::GetConversationByHandle(WorldContext->GetWorld(), Handle);
     Conversation.OnConversationClosed.Add(Delegate);
     
     return Handle;
@@ -54,7 +54,7 @@ FYapConversationHandle UYapConversationHandleBlueprintFunctionLibrary::BindToCon
 
 FYapConversationHandle UYapConversationHandleBlueprintFunctionLibrary::ApplyOpeningInterlock(FYapConversationHandle Handle, UObject* LockObject)
 {
-    FYapConversation& Conversation = UYapSubsystem::GetConversation(LockObject->GetWorld(), Handle);
+    FYapConversation& Conversation = UYapSubsystem::GetConversationByHandle(LockObject->GetWorld(), Handle);
     Conversation.ApplyOpeningInterlock(LockObject);
 
     return Handle;
@@ -62,7 +62,7 @@ FYapConversationHandle UYapConversationHandleBlueprintFunctionLibrary::ApplyOpen
 
 FYapConversationHandle UYapConversationHandleBlueprintFunctionLibrary::ReleaseOpeningInterlock(FYapConversationHandle Handle, UObject* LockObject)
 {
-    FYapConversation& Conversation = UYapSubsystem::GetConversation(LockObject->GetWorld(), Handle);
+    FYapConversation& Conversation = UYapSubsystem::GetConversationByHandle(LockObject->GetWorld(), Handle);
     Conversation.ReleaseOpeningInterlock(LockObject);
 
     return Handle;
@@ -70,7 +70,7 @@ FYapConversationHandle UYapConversationHandleBlueprintFunctionLibrary::ReleaseOp
 
 FYapConversationHandle UYapConversationHandleBlueprintFunctionLibrary::ApplyClosingInterlock(FYapConversationHandle Handle, UObject* LockObject)
 {
-    FYapConversation& Conversation = UYapSubsystem::GetConversation(LockObject->GetWorld(), Handle);
+    FYapConversation& Conversation = UYapSubsystem::GetConversationByHandle(LockObject->GetWorld(), Handle);
     Conversation.ApplyClosingInterlock(LockObject);
 
     return Handle;
@@ -78,7 +78,7 @@ FYapConversationHandle UYapConversationHandleBlueprintFunctionLibrary::ApplyClos
 
 FYapConversationHandle UYapConversationHandleBlueprintFunctionLibrary::ReleaseClosingInterlock(FYapConversationHandle Handle, UObject* LockObject)
 {
-    FYapConversation& Conversation = UYapSubsystem::GetConversation(LockObject->GetWorld(), Handle);
+    FYapConversation& Conversation = UYapSubsystem::GetConversationByHandle(LockObject->GetWorld(), Handle);
     Conversation.ReleaseClosingInterlock(LockObject);
 
     return Handle;

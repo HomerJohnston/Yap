@@ -78,10 +78,6 @@ protected:
 	UPROPERTY(Transient)
 	TObjectPtr<UYapBroker> Broker;
 
-	/**  */
-	UPROPERTY(Transient)
-	TMap<FYapPromptHandle, FGameplayTag> PromptHandleConversationTags;
-
 	// ----------------------
 	
 	/** Master container of conversations */
@@ -92,9 +88,26 @@ protected:
 	UPROPERTY(Transient)
 	TArray<FYapConversationHandle> ConversationQueue;
 
-	/** The current focused conversation */
+	/** The current focused conversation; same as Con */
+	const FYapConversationHandle& GetActiveConversation()
+	{
+		int32 Index = ConversationQueue.Num() - 1;
+
+		if (Index == INDEX_NONE)
+		{
+			return FYapConversationHandle::GetNullHandle();
+		}
+		
+		return ConversationQueue[ConversationQueue.Num() - 1];
+	};
+
+	/** Stores which conversation a given speech is a part of */
 	UPROPERTY(Transient)
-	FYapConversationHandle ActiveConversation;
+	TMap<FYapSpeechHandle, FYapConversationHandle> SpeechConversationMapping;
+	
+	/** Stores which conversation a given prompt is a part of */
+	UPROPERTY(Transient)
+	TMap<FYapPromptHandle, FYapConversationHandle> PromptHandleConversationTags;
 
 	// ----------------------
 	
@@ -263,13 +276,13 @@ public:
 
 	// TODO I also hate these things
 	/**  */
-	static FYapConversation& GetConversation(UObject* WorldContext, UObject* Owner);
+	static FYapConversation& GetConversationByOwner(UObject* WorldContext, UObject* Owner);
 	
 	/**  */
-	static FYapConversation& GetConversation(UObject* WorldContext, FYapConversationHandle Handle);
+	static FYapConversation& GetConversationByHandle(UObject* WorldContext, FYapConversationHandle Handle);
 
 	/**  */
-	static FYapConversation& GetConversation(UObject* WorldContext, const FGameplayTag& ConversationName);
+	static FYapConversation& GetConversationByName(UObject* WorldContext, const FGameplayTag& ConversationName);
 
 	/**  */
 	static FGameplayTag GetActiveConversationName(UWorld* World);

@@ -187,8 +187,6 @@ FYapFragment* UYapSubsystem::FindTaggedFragment(const FGameplayTag& FragmentTag)
 }
 
 // ------------------------------------------------------------------------------------------------
-// ------------------------------------------------------------------------------------------------
-// ------------------------------------------------------------------------------------------------
 
 FYapConversation& UYapSubsystem::OpenConversation(const FGameplayTag& ConversationName, UObject* ConversationOwner)
 {
@@ -266,12 +264,10 @@ EYapConversationState UYapSubsystem::CloseConversation(const UObject* Owner)
 }
 
 // ------------------------------------------------------------------------------------------------
-// ------------------------------------------------------------------------------------------------
-// ------------------------------------------------------------------------------------------------
 
 void UYapSubsystem::StartOpeningConversation(const FYapConversationHandle& Handle)
 {
-	if (ActiveConversation == Handle)
+	if (GetActiveConversation() == Handle)
 	{
 		UE_LOG(LogYap, Display, TEXT("Tried to start a new conversation but conversation was already active!"));
 		return;
@@ -281,12 +277,11 @@ void UYapSubsystem::StartOpeningConversation(const FYapConversationHandle& Handl
 
 	if (ConversationPtr)
 	{
-		if (StartOpeningConversation(*ConversationPtr))
-		{
-			ActiveConversation = Handle;
-		}
+		(void) StartOpeningConversation(*ConversationPtr);
 	}
 }
+
+// ------------------------------------------------------------------------------------------------
 
 bool UYapSubsystem::StartOpeningConversation(FYapConversation& Conversation)
 {
@@ -313,8 +308,6 @@ bool UYapSubsystem::StartOpeningConversation(FYapConversation& Conversation)
 
 // ------------------------------------------------------------------------------------------------
 
-// ------------------------------------------------------------------------------------------------
-
 EYapConversationState UYapSubsystem::StartClosingConversation(const FYapConversationHandle& Handle)
 {
 	FYapConversation* ConversationPtr = Conversations.Find(Handle);
@@ -328,11 +321,6 @@ EYapConversationState UYapSubsystem::StartClosingConversation(const FYapConversa
 			ConversationQueue.Remove(Handle);
 			
 			Conversations.Remove(Handle);
-
-			if (ActiveConversation == Handle)
-			{
-				ActiveConversation.Invalidate();
-			}
 			
 			StartNextQueuedConversation();
 
@@ -374,11 +362,6 @@ void UYapSubsystem::OnActiveConversationClosed(UObject* Instigator, FYapConversa
 	
 	Conversations.Remove(Handle);
 	
-	if (ActiveConversation == Handle)
-	{
-		ActiveConversation.Invalidate();
-	}
-	
 	StartNextQueuedConversation();
 }
 
@@ -389,8 +372,12 @@ FYapPromptHandle UYapSubsystem::BroadcastPrompt(const FYapData_PlayerPromptCreat
 	if (Data.Conversation.IsValid())
 	{
 		FYapPromptHandle Handle(TypeGroup);
+
+		const FGameplayTag& ConversationTag = Data.Conversation;
 		
-		PromptHandleConversationTags.Add(Handle, Data.Conversation);
+		const FYapConversationHandle& ConversationHandle = GetConversationByName(this, ConversationTag).GetHandle();
+		
+		PromptHandleConversationTags.Add(Handle, ConversationHandle);
 
 		auto* HandlerArray = FindConversationHandlerArray(TypeGroup);
 
@@ -429,9 +416,19 @@ void UYapSubsystem::OnFinishedBroadcastingPrompts(const FYapData_PlayerPromptsRe
 FYapSpeechHandle UYapSubsystem::RunSpeech(const FYapData_SpeechBegins& SpeechData, const FGameplayTag& TypeGroup, FYapSpeechHandle& Handle)
 {
 	FYapRunningFragment RunningFragment;
-	
+
+	// TODO should SpeechData contain the conversation handle instead of the name?
 	if (SpeechData.Conversation.IsValid())
 	{
+		for (auto& [ConversationHandle, Conversation] : Conversations)
+		{
+			if (Conversation.GetConversationName() == SpeechData.Conversation)
+			{
+				SpeechConversationMapping.Add(Handle, ConversationHandle);
+				Conversation.AddRunningFragment(Handle);
+			}
+		}
+		
 		auto* HandlerArray = FindConversationHandlerArray(TypeGroup);
 		
 		BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapConversationHandler, OnConversationSpeechBegins, Execute_K2_ConversationSpeechBegins)>(HandlerArray, SpeechData, Handle);
@@ -454,7 +451,7 @@ FYapSpeechHandle UYapSubsystem::RunSpeech(const FYapData_SpeechBegins& SpeechDat
 	}
 	else
 	{
-		OnSpeechComplete(Handle);
+		//OnSpeechComplete(Handle);
 	}
 
 	return Handle;
@@ -462,7 +459,7 @@ FYapSpeechHandle UYapSubsystem::RunSpeech(const FYapData_SpeechBegins& SpeechDat
 
 // ------------------------------------------------------------------------------------------------
 
-FYapConversation& UYapSubsystem::GetConversation(UObject* WorldContext, UObject* Owner)
+FYapConversation& UYapSubsystem::GetConversationByOwner(UObject* WorldContext, UObject* Owner)
 {
 	for (auto& [Handle, Conversation] : Get(WorldContext->GetWorld())->Conversations)
 	{
@@ -477,7 +474,7 @@ FYapConversation& UYapSubsystem::GetConversation(UObject* WorldContext, UObject*
 
 // ------------------------------------------------------------------------------------------------
 
-FYapConversation& UYapSubsystem::GetConversation(UObject* WorldContext, FYapConversationHandle Handle)
+FYapConversation& UYapSubsystem::GetConversationByHandle(UObject* WorldContext, FYapConversationHandle Handle)
 {
 	FYapConversation* ConversationPtr = Get(WorldContext->GetWorld())->Conversations.Find(Handle);
 
@@ -491,7 +488,7 @@ FYapConversation& UYapSubsystem::GetConversation(UObject* WorldContext, FYapConv
 
 // ------------------------------------------------------------------------------------------------
 
-FYapConversation& UYapSubsystem::GetConversation(UObject* WorldContext, const FGameplayTag& ConversationName)
+FYapConversation& UYapSubsystem::GetConversationByName(UObject* WorldContext, const FGameplayTag& ConversationName)
 {
 	for (auto& [Handle, Conversation] : Get(WorldContext->GetWorld())->Conversations)
 	{
@@ -546,11 +543,11 @@ void UYapSubsystem::RunPrompt(UWorld* World, const FYapPromptHandle& Handle)
 	// Broadcast to game listeners
 	FYapData_PlayerPromptChosen Data;
 
-	FGameplayTag* ConversationTag = Subsystem->PromptHandleConversationTags.Find(Handle);
+	FYapConversationHandle* ConversationHandle = Subsystem->PromptHandleConversationTags.Find(Handle);
 
-	if (ConversationTag)
+	if (ConversationHandle)
 	{
-		const FYapConversation& Conversation = GetConversation(World, *ConversationTag);
+		const FYapConversation& Conversation = GetConversationByHandle(World, *ConversationHandle);
 
 		if (!Conversation.IsNull())
 		{
@@ -593,8 +590,6 @@ bool UYapSubsystem::SkipSpeech(UWorld* World, const FYapSpeechHandle& Handle)
 	{
 		World->GetTimerManager().ClearTimer(*TimerHandle);
 
-		Subsystem->SpeechTimers.Remove(Handle);
-		
 		Subsystem->OnSpeechComplete(Handle);
 		//Subsystem->OnFragmentComplete(Handle);
 	
@@ -603,7 +598,7 @@ bool UYapSubsystem::SkipSpeech(UWorld* World, const FYapSpeechHandle& Handle)
 
 		// Broadcast to game listeners
 		// TODO???
-	
+		
 		return true;
 	}
 
@@ -617,16 +612,27 @@ bool UYapSubsystem::SkipSpeech(UWorld* World, const FYapSpeechHandle& Handle)
 void UYapSubsystem::ConversationSkip(UObject* Instigator, FYapConversationHandle Handle)
 {
 	UE_LOG(LogYap, VeryVerbose, TEXT("Subsystem: ConversationSkip [%s]"), *Handle.ToString());
-	
-	OnConversationSkip.Broadcast(Instigator, Handle);
-}
 
-/*
-FYapRunningFragment& UYapSubsystem::GetFragmentHandle(FYapSpeechHandle HandleRef)
-{
-	return Get()->RunningFragments.FindChecked(HandleRef);
+	if (!Handle.IsValid())
+	{
+		UE_LOG(LogYap, VeryVerbose, TEXT("Subsystem: ConversationSkip {%s} ignored - handle was invalid"), *Handle.ToString());
+	}
+	
+	UYapSubsystem* Subsystem = Get(Instigator);
+
+	FYapConversation* ConversationPtr = Conversations.Find(Handle);
+
+	TArray<FYapSpeechHandle> RunningFragments = ConversationPtr->GetRunningFragments();
+
+	// Broadcast to Yap systems; in dialogue nodes, this will kill any running paddings
+	OnConversationSkip.Broadcast(Instigator, Handle);
+
+	// Finish all running speeches
+	for (const FYapSpeechHandle& SpeechHandle : RunningFragments)
+	{
+		Subsystem->OnSpeechComplete(SpeechHandle);
+	}
 }
-*/
 
 // ------------------------------------------------------------------------------------------------
 
@@ -645,6 +651,8 @@ void UYapSubsystem::RegisterCharacterComponent(UYapCharacterComponent* YapCharac
 	RegisteredYapCharacterActors.Add(Actor);
 }
 
+// ------------------------------------------------------------------------------------------------
+
 void UYapSubsystem::UnregisterCharacterComponent(UYapCharacterComponent* YapCharacterComponent)
 {
 	AActor* Actor = YapCharacterComponent->GetOwner();
@@ -660,6 +668,8 @@ TArray<TObjectPtr<UObject>>& UYapSubsystem::FindOrAddConversationHandlerArray(co
 	return ConversationHandlers.FindOrAdd(TypeGroup).Array;
 }
 
+// ------------------------------------------------------------------------------------------------
+
 TArray<TObjectPtr<UObject>>* UYapSubsystem::FindConversationHandlerArray(const FGameplayTag& TypeGroup)
 {
 	FYapHandlersArray* Handlers = ConversationHandlers.Find(TypeGroup);
@@ -672,10 +682,14 @@ TArray<TObjectPtr<UObject>>* UYapSubsystem::FindConversationHandlerArray(const F
 	return nullptr;
 }
 
+// ------------------------------------------------------------------------------------------------
+
 TArray<TObjectPtr<UObject>>& UYapSubsystem::FindOrAddFreeSpeechHandlerArray(const FGameplayTag& TypeGroup)
 {
 	return FreeSpeechHandlers.FindOrAdd(TypeGroup).Array;
 }
+
+// ------------------------------------------------------------------------------------------------
 
 TArray<TObjectPtr<UObject>>* UYapSubsystem::FindFreeSpeechHandlerArray(const FGameplayTag& TypeGroup)
 {
@@ -748,7 +762,7 @@ void UYapSubsystem::OnSpeechComplete(FYapSpeechHandle Handle)
 		SpeechCompleteEvents.RemoveAndCopyValue(Handle, Evt);
 		Evt.Broadcast(this, Handle);
 		
-		//This more rudimentary method was throwing an ensure in MTAccessDetector.h destructor, Line ~502. 
+		//This more rudimentary method was throwing an ensure in MTAccessDetector.h destructor, Line ~502. I have no idea why, though.
 		//SpeechCompleteEvents[Handle].Broadcast(this, Handle);
 		//SpeechCompleteEvents.Remove(Handle);
 	}
@@ -765,6 +779,20 @@ void UYapSubsystem::OnSpeechComplete(FYapSpeechHandle Handle)
 	}
 
 	SpeechTimers.Remove(Handle);
+
+	FYapConversationHandle* ConversationHandle = SpeechConversationMapping.Find(Handle);
+
+	if (ConversationHandle && ConversationHandle->IsValid())
+	{
+		FYapConversation* ConversationPtr = Conversations.Find(*ConversationHandle);
+
+		if (ConversationPtr)
+		{
+			ConversationPtr->RemoveRunningFragment(Handle);
+		}
+		
+		SpeechConversationMapping.Remove(Handle);
+	}
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -773,5 +801,7 @@ bool UYapSubsystem::DoesSupportWorldType(const EWorldType::Type WorldType) const
 {
 	return WorldType == EWorldType::GamePreview || WorldType == EWorldType::Game || WorldType == EWorldType::PIE;
 }
+
+// ------------------------------------------------------------------------------------------------
 
 #undef LOCTEXT_NAMESPACE

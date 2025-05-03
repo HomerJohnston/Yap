@@ -50,6 +50,12 @@ public:
     {
         return Guid.ToString();
     }
+    
+    static const FYapConversationHandle& GetNullHandle()
+    {
+        static FYapConversationHandle NullConversationHandle = FYapConversationHandle(FGuid(0, 0, 0, 0));
+        return NullConversationHandle;
+    }
 };
 
 FORCEINLINE uint32 GetTypeHash(const FYapConversationHandle& Struct)

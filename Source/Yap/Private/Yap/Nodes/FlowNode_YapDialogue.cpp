@@ -5,6 +5,7 @@
 
 #include "GameplayTagsManager.h"
 #include "GameplayTagsModule.h"
+#include "Nodes/Route/FlowNode_Reroute.h"
 #include "Yap/YapBit.h"
 #include "Yap/YapCondition.h"
 #include "Yap/YapFragment.h"
@@ -94,27 +95,27 @@ void UFlowNode_YapDialogue::OnSkipAction(UObject* Instigator, FYapSpeechHandle H
 		return;
 	}
 
-	FYapFragment& SkippedFragment = Fragments[RunningFragmentIndex.Get(INDEX_NONE)];
+	FYapFragment& SkippedFragment = Fragments[FocusedFragmentIndex.Get(INDEX_NONE)];
 
 #if !UE_BUILD_SHIPPING
 	if (SkippedFragment.GetIsAwaitingManualAdvance())
 	{
-		UE_LOG(LogYap, VeryVerbose, TEXT("%s [%i]: Manually advancing..."), *GetName(), RunningFragmentIndex.Get(INDEX_NONE));
+		UE_LOG(LogYap, VeryVerbose, TEXT("%s [%i]: Manually advancing..."), *GetName(), FocusedFragmentIndex.Get(INDEX_NONE));
 	}
 	else
 	{
-		UE_LOG(LogYap, VeryVerbose, TEXT("%s [%i]: Skipping running fragment..."), *GetName(), RunningFragmentIndex.Get(INDEX_NONE));
+		UE_LOG(LogYap, VeryVerbose, TEXT("%s [%i]: Skipping running fragment..."), *GetName(), FocusedFragmentIndex.Get(INDEX_NONE));
 	}
 #endif
 	
-	for (uint8 i = 0; i <= RunningFragmentIndex.Get(0); ++i)
+	for (uint8 i = 0; i <= FocusedFragmentIndex.Get(0); ++i)
 	{
 		GetWorld()->GetTimerManager().ClearTimer(Fragments[i].PaddingTimerHandle);
 	}
 
-	FragmentsUsingPadding.Empty();
+	FragmentsInPadding.Empty();
 	
-	AdvanceFromFragment(RunningFragmentIndex.Get(INDEX_NONE));
+	AdvanceFromFragment(FocusedFragmentIndex.Get(INDEX_NONE));
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -124,14 +125,14 @@ void UFlowNode_YapDialogue::OnConversationSkip(UObject* Instigator, FYapConversa
 	UE_LOG(LogYap, VeryVerbose, TEXT("%s: OnConversationSkip received"), *GetName())
 
 	// TODO make sure this dialogue node is actually in this conversation, URGENT
-	if (!RunningFragmentIndex.IsSet())
+	if (!FocusedFragmentIndex.IsSet())
 	{		
 		UE_LOG(LogYap, Warning, TEXT("OnConversationSkip was called, but running fragment was unset; ignoring"));
 		return;
 	}
 	
 	// RunningFragmentIndex will be reset during iteration! Cache it
-	uint8 ToIndex = RunningFragmentIndex.GetValue();
+	uint8 ToIndex = FocusedFragmentIndex.GetValue();
 	
 	for (uint8 i = 0; i <= ToIndex; ++i)
 	{
@@ -146,19 +147,24 @@ void UFlowNode_YapDialogue::OnConversationSkip(UObject* Instigator, FYapConversa
 
 		if (Fragment.GetRunState() != EYapFragmentRunState::Idle)
 		{
-			FYapSpeechHandle TempHandle(GetWorld(), Fragment.GetGuid());
-		
-			OnSpeechComplete(Instigator, TempHandle);
+			/*
+			if (FragmentsInPadding.Contains(TempHandle))
+			{
+				//OnPaddingComplete(TempHandle);
+			}
+			*/
 		}
 	}
-
-	//RunningFragments.Empty();
+	
+	//#if 0
+	FragmentsInPadding.Empty();
 
 	// OnSpeechComplete may have advanced us; if it didn't, do it manually
-	if (RunningFragmentIndex == ToIndex)
+	if (FocusedFragmentIndex == ToIndex)
 	{
 		AdvanceFromFragment(ToIndex);
 	}
+	//#endif
 }
 
 void UFlowNode_YapDialogue::FinishNode(FName OutputPinToTrigger)
@@ -169,18 +175,39 @@ void UFlowNode_YapDialogue::FinishNode(FName OutputPinToTrigger)
 	TriggerOutput(OutputPinToTrigger, true, EFlowPinActivationType::Default);
 }
 
+void UFlowNode_YapDialogue::SetActive()
+{
+	return;
+	
+	// TODO is there another way I can do this. This is ugly looking.
+	FYapSpeechEventDelegate Delegate;
+	Delegate.BindUFunction(this, GET_FUNCTION_NAME_CHECKED_TwoParams(ThisClass, OnSpeechComplete, UObject*, FYapSpeechHandle));
+	UYapSpeechHandleBFL::BindToOnSpeechComplete(GetWorld(), FocusedSpeechHandle, Delegate);	
+}
+
+void UFlowNode_YapDialogue::SetInactive()
+{
+	return;
+	
+	// Unbind this node from speech complete events
+	// TODO clean this crap up, is there any other method I can use to achieve this that isn't so dumb looking?
+	FYapSpeechEventDelegate Delegate;
+	Delegate.BindUFunction(this, GET_FUNCTION_NAME_CHECKED_TwoParams(ThisClass, OnSpeechComplete, UObject*, FYapSpeechHandle));
+	UYapSpeechHandleBFL::UnbindToOnSpeechComplete(GetWorld(), FocusedSpeechHandle, Delegate);
+}
+
 // ------------------------------------------------------------------------------------------------
 
 bool UFlowNode_YapDialogue::CanSkip(FYapSpeechHandle Handle) const
 {
-	if (RunningSpeechHandle != Handle || !Handle.IsValid())
+	if (FocusedSpeechHandle != Handle || !Handle.IsValid())
 	{
 		return false;
 	}
 
-	check(RunningFragmentIndex.IsSet());
+	check(FocusedFragmentIndex.IsSet());
 	
-	const FYapFragment& Fragment = Fragments[RunningFragmentIndex.GetValue()];
+	const FYapFragment& Fragment = Fragments[FocusedFragmentIndex.GetValue()];
 	
 	// The fragment is finished running, and this feature is only being used for manual advance
 	if (Fragment.GetIsAwaitingManualAdvance())
@@ -465,7 +492,7 @@ bool UFlowNode_YapDialogue::TryBroadcastPrompts()
 
  		const FYapBit& Bit = Fragment.GetBit(GetWorld());
 
- 		const FYapConversation& Conversation = Subsystem->GetConversation(this, GetFlowAsset()); 
+ 		const FYapConversation& Conversation = Subsystem->GetConversationByOwner(this, GetFlowAsset()); 
  		
  		FYapData_PlayerPromptCreated Data;
  		Data.Conversation = Conversation.GetConversationName();
@@ -482,7 +509,7 @@ bool UFlowNode_YapDialogue::TryBroadcastPrompts()
 	
 	{
 		FYapData_PlayerPromptsReady Data;
-		Data.Conversation = Subsystem->GetConversation(this, GetFlowAsset()).GetConversationName();
+		Data.Conversation = Subsystem->GetConversationByOwner(this, GetFlowAsset()).GetConversationName();
 		Subsystem->OnFinishedBroadcastingPrompts(Data, TypeGroup);
 	}
 	
@@ -580,7 +607,7 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 	UYapSubsystem* Subsystem = GetWorld()->GetSubsystem<UYapSubsystem>();
 
 	FYapData_SpeechBegins Data;
-	Data.Conversation = Subsystem->GetConversation(GetWorld(), GetFlowAsset()).GetConversationName();
+	Data.Conversation = Subsystem->GetConversationByOwner(GetWorld(), GetFlowAsset()).GetConversationName();
 	Data.DirectedAt = Fragment.GetDirectedAt(EYapLoadContext::Sync);
 	Data.Speaker = Fragment.GetSpeaker(EYapLoadContext::Sync);
 	Data.MoodTag = Fragment.GetMoodTag();
@@ -592,35 +619,35 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 	Data.bSkippable = Fragment.GetSkippable(GetSkippable());
 
 	// Make a handle for the pending speech and bind to completion events of it
-	RunningSpeechHandle = FYapSpeechHandle(GetWorld(), Fragment.GetGuid());
+	FocusedSpeechHandle = FYapSpeechHandle(GetWorld(), Fragment.GetGuid());
 
+	FYapSpeechEventDelegate Delegate;
+	Delegate.BindUFunction(this, GET_FUNCTION_NAME_CHECKED_TwoParams(ThisClass, OnSpeechComplete, UObject*, FYapSpeechHandle));
+	UYapSpeechHandleBFL::BindToOnSpeechComplete(GetWorld(), FocusedSpeechHandle, Delegate);	
+	
 	UE_LOG(LogYap, VeryVerbose, TEXT("%s [%i]: RunFragment; setting RunningFragmentIndex"), *GetName(), FragmentIndex);
-	RunningFragmentIndex = FragmentIndex;
+	FocusedFragmentIndex = FragmentIndex;
 
 	Fragment.IncrementActivations();
+	float PaddingCompletionTime = Fragment.GetProgressionTime(GetWorld(), TypeGroup);
 	
 	if (Fragment.GetUsesPadding(TypeGroup))
 	{
-		float PaddingCompletionTime = Fragment.GetProgressionTime(GetWorld(), TypeGroup);
-		GetWorld()->GetTimerManager().SetTimer(Fragment.PaddingTimerHandle, FTimerDelegate::CreateUObject(this, &ThisClass::OnPaddingComplete, RunningSpeechHandle), PaddingCompletionTime, false);
-		FragmentsUsingPadding.Add(RunningSpeechHandle);
+		
+		GetWorld()->GetTimerManager().SetTimer(Fragment.PaddingTimerHandle, FTimerDelegate::CreateUObject(this, &ThisClass::OnPaddingComplete, FocusedSpeechHandle), PaddingCompletionTime, false);
+		FragmentsInPadding.Add(FocusedSpeechHandle);
 	}
-	else
-	{
-		// TODO clean this crap up
-		FYapSpeechEventDelegate Delegate;
-		Delegate.BindUFunction(this, GET_FUNCTION_NAME_CHECKED_TwoParams(ThisClass, OnSpeechComplete, UObject*, FYapSpeechHandle));
-		UYapSpeechHandleBFL::BindToOnSpeechComplete(GetWorld(), RunningSpeechHandle, Delegate);
-	}
-	
-	UE_LOG(LogYap, VeryVerbose, TEXT("%s [%i]: RunFragment; adding handle to RunningFragments {%s}"), *GetName(), FragmentIndex, *RunningSpeechHandle.ToString());
-	RunningFragments.Add(RunningSpeechHandle, FragmentIndex);
+		
+	UE_LOG(LogYap, VeryVerbose, TEXT("%s [%i]: RunFragment; adding handle to RunningFragments {%s}"), *GetName(), FragmentIndex, *FocusedSpeechHandle.ToString());
+	RunningFragments.Add(FocusedSpeechHandle, FragmentIndex);
+
+	SpeakingFragments.Add(FocusedSpeechHandle);
 
 	Fragment.SetStartTime(GetWorld()->GetTimeSeconds());
 	Fragment.SetEntryState(EYapFragmentEntryStateFlags::Success);
 	
 	// We must actually run the speech last in this function
-	Subsystem->RunSpeech(Data, TypeGroup, RunningSpeechHandle);
+	Subsystem->RunSpeech(Data, TypeGroup, FocusedSpeechHandle);
 
 	if (Fragment.UsesStartPin())
 	{
@@ -628,6 +655,10 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 		TriggerOutput(StartPin.PinName, false);
 	}
 
+	if (GetFragmentAutoAdvance(FragmentIndex) && PaddingCompletionTime == 0)
+	{
+		OnSpeechComplete(this, FocusedSpeechHandle);
+	}
 	
 	return true;
 }
@@ -643,21 +674,35 @@ void UFlowNode_YapDialogue::OnSpeechComplete(UObject* Instigator, FYapSpeechHand
 		UE_LOG(LogYap, VeryVerbose, TEXT("%s: OnSpeechComplete; ignored; handle {%s} was not running"), *GetName(), *Handle.ToString());
 		return;
 	}
+
+	UE_LOG(LogYap, VeryVerbose, TEXT("%s: OnSpeechComplete {%s}"), *GetName(), *Handle.ToString());
+
+	OnSpeechComplete_Internal(Handle, *FragmentIndex);
+
+	// No positive padding - this fragment is done
+	if (!FragmentsInPadding.Contains(Handle))
+	{
+		FinishFragment(Handle, *FragmentIndex);		
+	}
 	
-	OnSpeechComplete(Handle, *FragmentIndex);
-	
-	FinishFragment(Handle, *FragmentIndex);
-		
 	TryAdvanceFromFragment(*FragmentIndex);
 }
 
-void UFlowNode_YapDialogue::OnSpeechComplete(FYapSpeechHandle Handle, uint8 FragmentIndex)
+void UFlowNode_YapDialogue::OnSpeechComplete_Internal(FYapSpeechHandle Handle, uint8 FragmentIndex)
 {
-	// Unbind this node from speech complete events
-	// TODO clean this crap up, is there any other method I can use to achieve this that isn't so dumb looking?
 	FYapSpeechEventDelegate Delegate;
 	Delegate.BindUFunction(this, GET_FUNCTION_NAME_CHECKED_TwoParams(ThisClass, OnSpeechComplete, UObject*, FYapSpeechHandle));
-	UYapSpeechHandleBFL::UnbindToOnSpeechComplete(GetWorld(), RunningSpeechHandle, Delegate);
+	UYapSpeechHandleBFL::UnbindToOnSpeechComplete(GetWorld(), Handle, Delegate);
+	
+	FYapFragment& Fragment = Fragments[FragmentIndex];
+	
+	if (Fragment.UsesEndPin())
+	{
+		const FFlowPin EndPin = Fragment.GetEndPin();
+		TriggerOutput(EndPin.PinName, false);
+	}
+
+	SpeakingFragments.Remove(Handle);
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -668,16 +713,20 @@ void UFlowNode_YapDialogue::OnPaddingComplete(FYapSpeechHandle Handle)
 	
 	uint8* FragmentIndex = RunningFragments.Find(Handle);
 
+	FragmentsInPadding.Remove(Handle);
+	
 	if (!FragmentIndex)
 	{
 		UE_LOG(LogYap, VeryVerbose, TEXT("%s: OnPaddingComplete call ignored; handle {%s} was not running"), *GetName(), *Handle.ToString());
 		return;
 	}
 
-	OnSpeechComplete(Handle, *FragmentIndex);
+	// Positive padding - we've already finished speaking, this fragment is done
+	if (!SpeakingFragments.Contains(Handle))
+	{
+		FinishFragment(Handle, *FragmentIndex);
+	}
 
-	FinishFragment(Handle, *FragmentIndex);
-	
 	TryAdvanceFromFragment(*FragmentIndex);
 }
 
@@ -689,12 +738,6 @@ void UFlowNode_YapDialogue::FinishFragment(const FYapSpeechHandle& Handle,uint8 
 	
 	FYapFragment& Fragment = Fragments[FragmentIndex];
 	
-	if (Fragment.UsesEndPin())
-	{
-		const FFlowPin EndPin = Fragment.GetEndPin();
-		TriggerOutput(EndPin.PinName, false);
-	}
-	
 	Fragment.SetEndTime(GetWorld()->GetTimeSeconds());
 	
 	RunningFragments.Remove(Handle);
@@ -704,8 +747,9 @@ void UFlowNode_YapDialogue::FinishFragment(const FYapSpeechHandle& Handle,uint8 
 
 void UFlowNode_YapDialogue::TryAdvanceFromFragment(uint8 FragmentIndex)
 {
-	if (RunningFragmentIndex != FragmentIndex)
+	if (FocusedFragmentIndex != FragmentIndex)
 	{
+		UE_LOG(LogYap, VeryVerbose, TEXT("%s [%i]: TryAdvanceFromFragment failed; current focused fragment is: %s"), *GetName(), FragmentIndex, FocusedFragmentIndex.IsSet() ? *FString::FromInt(FocusedFragmentIndex.GetValue()) : TEXT("UNSET") );
 		return;
 	}
 	
@@ -734,7 +778,7 @@ void UFlowNode_YapDialogue::AdvanceFromFragment(uint8 FragmentIndex)
 	
 	Fragment.SetRunState(EYapFragmentRunState::Idle);
 	
-	RunningFragmentIndex.Reset();
+	FocusedFragmentIndex.Reset();
 	
 	if (IsPlayerPrompt())
 	{
@@ -818,20 +862,57 @@ bool UFlowNode_YapDialogue::IsOutputConnectedToPromptNode() const
 		return false;
 	}
 	
-	FConnectedPin OutputConnection = GetConnection(OutputPinName);
+	TArray<const UFlowNode*> NodesToCheck = {this} ;
 
+	while (NodesToCheck.Num() > 0)
+	{
+		const UFlowNode* Node = NodesToCheck.Pop(EAllowShrinking::No);
+
+		const TArray<FFlowPin>& OutputPinsToCheck = Node->GetOutputPins();
+
+		for (const FFlowPin& Pin : OutputPinsToCheck)
+		{
+			FConnectedPin OutputConnection = Node->GetConnection(Pin.PinName);
+
+			UFlowNode* ConnectedNode = GetFlowAsset()->GetNode(OutputConnection.NodeGuid);
+
+			if (!IsValid(ConnectedNode))
+			{
+				continue;
+			}
+			
+			if (UFlowNode_YapDialogue* DialogueNode = Cast<UFlowNode_YapDialogue>(ConnectedNode))
+			{
+				if (DialogueNode->DialogueNodeType == EYapDialogueNodeType::PlayerPrompt)
+				{
+					return true;
+				}
+			}
+
+			// TODO use a project setting to make it possible to add more "pass through" types - for example if Flow or a custom project adds a "portal" node in the future
+			if (ConnectedNode->IsA(UFlowNode_Reroute::StaticClass()))
+			{
+				NodesToCheck.Add(ConnectedNode);
+			}
+		}
+		
+	}
+	
+	/*
 	if (OutputConnection.NodeGuid.IsValid())
 	{
-		UFlowNode* Node = GetFlowAsset()->GetNode(OutputConnection.NodeGuid);
+		UFlowNode* ConnectedNode = GetFlowAsset()->GetNode(OutputConnection.NodeGuid);
 
-		if (UFlowNode_YapDialogue* DialogueNode = Cast<UFlowNode_YapDialogue>(Node))
+		if (UFlowNode_YapDialogue* DialogueNode = Cast<UFlowNode_YapDialogue>(ConnectedNode))
 		{
 			if (DialogueNode->DialogueNodeType == EYapDialogueNodeType::PlayerPrompt)
 			{
 				return true;
 			}
 		}
+		else if (UFlowNode_Reroute* RerouteNode = Cast<UFlo)
 	}
+	*/
 
 	return false;
 }

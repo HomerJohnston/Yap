@@ -77,6 +77,7 @@ class YAP_API UFlowNode_YapDialogue : public UFlowNode
 	friend class SYapConditionDetailsViewWidget;
 	friend class UFlowGraphNode_YapDialogue;
 #endif
+	friend struct FYapDialogueActiveSmartObject;
 
 	// TODO should I get rid of this?
 	friend class UYapSubsystem;
@@ -139,28 +140,34 @@ protected:
 	// ============================================================================================
 	
 protected:
+	// TODO what happens if I enter a node before it finishes playing? Should I use the activation count to reseed new GUIDs for fragments? This is an extreme edge case
 	/** How many times this node has been successfully ran. */
 	UPROPERTY(Transient, BlueprintReadOnly)
 	int32 NodeActivationCount = 0;
 
-	// TODO I feel like this should get removed, ultimately it is possible with this system for multiple fragments to be running simultaneously. The running fragments map below should probably be the source of truth. This could turn into a "latest" running fragment though.
-	/**  */
+	/** The most recent running fragment */
 	UPROPERTY(Transient)
-	TOptional<uint8> RunningFragmentIndex;
+	TOptional<uint8> FocusedFragmentIndex;
 
 	/**  */
 	UPROPERTY(Transient)
 	TMap<FYapPromptHandle, uint8> PromptIndices;
 
-	/**  */
+	/** The most recent running speech handle */
 	UPROPERTY(Transient)
-	FYapSpeechHandle RunningSpeechHandle;
+	FYapSpeechHandle FocusedSpeechHandle;
 
+	/** Fragments which are either speaking or in padding time will be in here */
 	UPROPERTY(Transient)
 	TMap<FYapSpeechHandle, uint8> RunningFragments;
 
+	/** Fragments which are in active speech (including after passing a negative padding time) will be in here */
 	UPROPERTY(Transient)
-	TSet<FYapSpeechHandle> FragmentsUsingPadding;
+	TSet<FYapSpeechHandle> SpeakingFragments;
+
+	/**  */
+	UPROPERTY(Transient)
+	TSet<FYapSpeechHandle> FragmentsInPadding;
 	
 	// ============================================================================================
 	// PUBLIC API
@@ -197,7 +204,7 @@ public:
 	
 	bool GetFragmentAutoAdvance(uint8 FragmentIndex) const;
 
-	int32 GetRunningFragmentIndex() const { return RunningFragmentIndex.Get(INDEX_NONE); }
+	int32 GetRunningFragmentIndex() const { return FocusedFragmentIndex.Get(INDEX_NONE); }
 	
 	// TODO this sucks can I register the fragments some other way instead
 	/** Finds the first fragment on this dialogue containing a tag. */
@@ -260,11 +267,12 @@ public:
 	UFUNCTION()
 	void OnSpeechComplete(UObject* Instigator, FYapSpeechHandle Handle);
 	
-	void OnSpeechComplete(FYapSpeechHandle Handle, uint8 FragmentIndex);
+	void OnSpeechComplete_Internal(FYapSpeechHandle Handle, uint8 FragmentIndex);
 	
 	UFUNCTION()
 	void OnPaddingComplete(FYapSpeechHandle Handle);
-	
+
+	/** Called when a fragment is completely done - speech is done, padding is done */
 	void FinishFragment(const FYapSpeechHandle& Handle, uint8 FragmentIndex);
 	
 	void TryAdvanceFromFragment(uint8 FragmentIndex);
@@ -292,6 +300,10 @@ protected:
 	void OnConversationSkip(UObject* Instigator, FYapConversationHandle Handle);
 	
 	void FinishNode(FName OutputPinToTrigger);
+
+	void SetActive();
+
+	void SetInactive();
 	
 #if WITH_EDITOR
 public:

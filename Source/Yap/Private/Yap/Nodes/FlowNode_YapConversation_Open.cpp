@@ -45,7 +45,7 @@ void UFlowNode_YapConversation_Open::FinishNode(UObject* Instigator, FYapConvers
 
 void UFlowNode_YapConversation_Open::FinishNode_Internal()
 {
-	UYapSubsystem::GetConversation(GetWorld(), ConversationName).OnConversationOpened.RemoveAll(this);
+	UYapSubsystem::GetConversationByName(GetWorld(), ConversationName).OnConversationOpened.RemoveAll(this);
 	
 	TriggerFirstOutput(true);
 }

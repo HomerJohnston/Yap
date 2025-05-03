@@ -616,6 +616,8 @@ bool UYapSubsystem::SkipSpeech(UWorld* World, const FYapSpeechHandle& Handle)
 
 void UYapSubsystem::ConversationSkip(UObject* Instigator, FYapConversationHandle Handle)
 {
+	UE_LOG(LogYap, VeryVerbose, TEXT("Subsystem: ConversationSkip [%s]"), *Handle.ToString());
+	
 	OnConversationSkip.Broadcast(Instigator, Handle);
 }
 

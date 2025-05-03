@@ -128,7 +128,7 @@ protected:
 
 	/** Unique node ID for audio system. */
 	UPROPERTY(EditAnywhere)
-	FString AudioID;
+	FString AudioID = "";
 	
 	/** Actual dialogue contents. */
 	UPROPERTY(EditAnywhere)
@@ -260,10 +260,12 @@ public:
 	UFUNCTION()
 	void OnSpeechComplete(UObject* Instigator, FYapSpeechHandle Handle);
 	
+	void OnSpeechComplete(FYapSpeechHandle Handle, uint8 FragmentIndex);
+	
 	UFUNCTION()
 	void OnPaddingComplete(FYapSpeechHandle Handle);
 	
-	void FinishFragment(uint8 FragmentIndex);
+	void FinishFragment(const FYapSpeechHandle& Handle, uint8 FragmentIndex);
 	
 	void TryAdvanceFromFragment(uint8 FragmentIndex);
 

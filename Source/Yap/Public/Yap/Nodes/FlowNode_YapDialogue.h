@@ -160,7 +160,7 @@ protected:
 	TMap<FYapSpeechHandle, uint8> RunningFragments;
 
 	UPROPERTY(Transient)
-	TSet<uint8> FragmentsUsingPadding;
+	TSet<FYapSpeechHandle> FragmentsUsingPadding;
 	
 	// ============================================================================================
 	// PUBLIC API
@@ -259,6 +259,9 @@ protected:
 public:
 	UFUNCTION()
 	void OnSpeechComplete(UObject* Instigator, FYapSpeechHandle Handle);
+	
+	UFUNCTION()
+	void OnPaddingComplete(FYapSpeechHandle Handle);
 	
 	void FinishFragment(uint8 FragmentIndex);
 	

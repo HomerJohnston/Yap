@@ -107,9 +107,9 @@ void UFlowNode_YapDialogue::OnSkipAction(UObject* Instigator, FYapSpeechHandle H
 	}
 #endif
 	
-	for (uint8 Index : FragmentsUsingPadding)
+	for (uint8 i = 0; i <= RunningFragmentIndex.Get(0); ++i)
 	{
-		GetWorld()->GetTimerManager().ClearTimer(Fragments[Index].PaddingTimerHandle);
+		GetWorld()->GetTimerManager().ClearTimer(Fragments[i].PaddingTimerHandle);
 	}
 
 	FragmentsUsingPadding.Empty();
@@ -617,15 +617,15 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 		const FFlowPin StartPin = Fragment.GetStartPin();
 		TriggerOutput(StartPin.PinName, false);
 	}
-	
+
 	if (Fragment.GetUsesPadding(TypeGroup))
 	{
 		float PaddingCompletionTime = Fragment.GetProgressionTime(GetWorld(), TypeGroup);
-		GetWorld()->GetTimerManager().SetTimer(Fragment.PaddingTimerHandle, FTimerDelegate::CreateUObject(this, &ThisClass::TryAdvanceFromFragment, FragmentIndex), PaddingCompletionTime, false);
+		GetWorld()->GetTimerManager().SetTimer(Fragment.PaddingTimerHandle, FTimerDelegate::CreateUObject(this, &ThisClass::OnPaddingComplete, RunningSpeechHandle), PaddingCompletionTime, false);
 		
-		FragmentsUsingPadding.Add(FragmentIndex);
+		FragmentsUsingPadding.Add(RunningSpeechHandle);
 	}
-
+	
 	return true;
 }
 
@@ -644,7 +644,35 @@ void UFlowNode_YapDialogue::OnSpeechComplete(UObject* Instigator, FYapSpeechHand
 		return;
 	}
 
-	RunningFragments.Remove(Handle);
+	// TODO clean this crap up, is there any other method I can use to achieve this that isn't so dumb looking?
+	FYapSpeechEventDelegate Delegate;
+	Delegate.BindUFunction(this, GET_FUNCTION_NAME_CHECKED_TwoParams(ThisClass, OnSpeechComplete, UObject*, FYapSpeechHandle));
+	UYapSpeechHandleBFL::UnbindToOnSpeechComplete(GetWorld(), RunningSpeechHandle, Delegate);
+	
+	UE_LOG(LogYap, VeryVerbose, TEXT("%s: RunFragment; removing handle from RunningFragments {%s}"), *GetName(), *Handle.ToString());
+
+	if (!FragmentsUsingPadding.Contains(Handle))
+	{
+		RunningFragments.Remove(Handle);
+		FinishFragment(*FragmentIndex);
+		TryAdvanceFromFragment(*FragmentIndex);
+	}
+}
+
+// ------------------------------------------------------------------------------------------------
+
+void UFlowNode_YapDialogue::OnPaddingComplete(FYapSpeechHandle Handle)
+{
+	UE_LOG(LogYap, VeryVerbose, TEXT("%s: OnSpeechComplete [%s]"), *GetName(), *Handle.ToString());
+	
+	uint8* FragmentIndex = RunningFragments.Find(Handle);
+
+	if (!FragmentIndex)
+	{
+		UE_LOG(LogYap, VeryVerbose, TEXT("%s: OnPaddingComplete call ignored; handle {%s} was not running"), *GetName(), *Handle.ToString());
+		return;
+	}
+
 		
 	// TODO clean this crap up, is there any other method I can use to achieve this that isn't so dumb looking?
 	FYapSpeechEventDelegate Delegate;
@@ -654,6 +682,7 @@ void UFlowNode_YapDialogue::OnSpeechComplete(UObject* Instigator, FYapSpeechHand
 	UE_LOG(LogYap, VeryVerbose, TEXT("%s: RunFragment; removing handle from RunningFragments {%s}"), *GetName(), *Handle.ToString());
 
 	FinishFragment(*FragmentIndex);
+	RunningFragments.Remove(Handle);
 	
 	// TODO this is a hack. I should instead store a set of "padded" fragments during this node's run to check against. It should get reset on input trigger.
 	if (RunningFragmentIndex == *FragmentIndex)// && !Fragments[*FragmentIndex].GetUsesPadding(TypeGroup))
@@ -661,6 +690,8 @@ void UFlowNode_YapDialogue::OnSpeechComplete(UObject* Instigator, FYapSpeechHand
 		TryAdvanceFromFragment(*FragmentIndex);
 	}
 }
+
+// ------------------------------------------------------------------------------------------------
 
 void UFlowNode_YapDialogue::FinishFragment(uint8 FragmentIndex)
 {

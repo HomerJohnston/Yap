@@ -82,6 +82,10 @@ struct FYapData_SpeechBegins
 	/** Can this dialogue be skipped? */
 	UPROPERTY(BlueprintReadOnly)
 	bool bSkippable = false;
+
+	/** Should this dialogue automatically advance? */
+	UPROPERTY(BlueprintReadOnly)
+	bool bAutoAdvance = false;
 };
 
 // ------------------------------------------------------------------------------------------------

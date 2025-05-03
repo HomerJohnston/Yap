@@ -589,6 +589,7 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 	//Data.FragmentTime = Fragment.GetProgressionTime(TypeGroup); // Removed; // TODO further consideration needed; See notes in YapDataStructures.h
 	Data.DialogueAudioAsset = Bit.GetAudioAsset<UObject>();
 	Data.bSkippable = Fragment.GetSkippable(GetSkippable());
+	Data.bAutoAdvance = GetNodeAutoAdvance();
 
 	// Make a handle for the pending speech and bind to completion events of it
 	RunningSpeechHandle = FYapSpeechHandle(GetWorld(), Fragment.GetGuid());

@@ -428,8 +428,6 @@ void UYapSubsystem::OnFinishedBroadcastingPrompts(const FYapData_PlayerPromptsRe
 
 FYapSpeechHandle UYapSubsystem::RunSpeech(const FYapData_SpeechBegins& SpeechData, const FGameplayTag& TypeGroup, FYapSpeechHandle& Handle)
 {
-	FYapRunningFragment RunningFragment;
-	
 	if (SpeechData.Conversation.IsValid())
 	{
 		auto* HandlerArray = FindConversationHandlerArray(TypeGroup);
@@ -443,12 +441,16 @@ FYapSpeechHandle UYapSubsystem::RunSpeech(const FYapData_SpeechBegins& SpeechDat
 		BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapFreeSpeechHandler, OnTalkSpeechBegins, Execute_K2_TalkSpeechBegins)>(HandlerArray, SpeechData, Handle);
 	}
 
+	if (!SpeechData.bAutoAdvance)
+	{
+		return Handle;	
+	}
+	
 	if (SpeechData.SpeechTime > 0)
 	{
 		FTimerHandle SpeechTimerHandle;
 		FTimerDelegate Delegate = FTimerDelegate::CreateUObject(this, &ThisClass::OnSpeechComplete, Handle);
 		GetWorld()->GetTimerManager().SetTimer(SpeechTimerHandle, Delegate, SpeechData.SpeechTime, false);
-		RunningFragment.SetSpeechTimerHandle(SpeechTimerHandle);
 
 		SpeechTimers.Add(Handle, SpeechTimerHandle);
 	}
@@ -592,24 +594,19 @@ bool UYapSubsystem::SkipSpeech(UWorld* World, const FYapSpeechHandle& Handle)
 	if (FTimerHandle* TimerHandle = Subsystem->SpeechTimers.Find(Handle))
 	{
 		World->GetTimerManager().ClearTimer(*TimerHandle);
-
 		Subsystem->SpeechTimers.Remove(Handle);
-		
-		Subsystem->OnSpeechComplete(Handle);
-		//Subsystem->OnFragmentComplete(Handle);
-	
-		// Broadcast to Yap systems
-		Subsystem->OnSpeechSkip.Broadcast(Subsystem, Handle);
-
-		// Broadcast to game listeners
-		// TODO???
-	
-		return true;
 	}
 
-	UE_LOG(LogYap, Warning, TEXT("Subsystem: SkipSpeech [%s] ignored - SpeechTimers array did not contain an entry for this handle"), *Handle.ToString());
+	Subsystem->OnSpeechComplete(Handle);
+	//Subsystem->OnFragmentComplete(Handle);
 	
-	return false;
+	// Broadcast to Yap systems
+	Subsystem->OnSpeechSkip.Broadcast(Subsystem, Handle);
+
+	// Broadcast to game listeners
+	// TODO???
+	
+	return true;
 }
 
 // ------------------------------------------------------------------------------------------------

@@ -144,7 +144,7 @@ void UFlowNode_YapDialogue::OnAdvanceConversation(UObject* Instigator, FYapConve
 
 	auto RunningFragmentsCopy = RunningFragments;
 	
-	for (auto& [Handle, Index] : RunningFragmentsCopy)
+	for (auto& [SpeechHandle, Index] : RunningFragmentsCopy)
 	{
 		FYapFragment& Fragment = Fragments[Index];
 		FTimerHandle& PaddingTimerHandle = Fragment.PaddingTimerHandle;
@@ -156,10 +156,10 @@ void UFlowNode_YapDialogue::OnAdvanceConversation(UObject* Instigator, FYapConve
 
 		if (Index == ToIndex)
 		{
-			AdvanceFromFragment(Handle, ToIndex);
+			AdvanceFromFragment(SpeechHandle, ToIndex);
 		}
 
-		FinishFragment(Handle, Index);
+		FinishFragment(SpeechHandle, Index);
 	}
 }
 
@@ -470,7 +470,9 @@ bool UFlowNode_YapDialogue::TryBroadcastPrompts()
 	PromptIndices.Empty(Fragments.Num());
 	
 	UYapSubsystem* Subsystem = GetWorld()->GetSubsystem<UYapSubsystem>();
-	
+
+	const FYapConversation& Conversation = Subsystem->GetConversationByOwner(this, GetFlowAsset()); 
+
  	for (uint8 i = 0; i < Fragments.Num(); ++i)
 	{
 		FYapFragment& Fragment = Fragments[i];
@@ -487,10 +489,8 @@ bool UFlowNode_YapDialogue::TryBroadcastPrompts()
 
  		const FYapBit& Bit = Fragment.GetBit(GetWorld());
 
- 		const FYapConversation& Conversation = Subsystem->GetConversationByOwner(this, GetFlowAsset()); 
- 		
  		FYapData_PlayerPromptCreated Data;
- 		Data.Conversation = Conversation.GetConversationName();
+ 		Data.Conversation = Conversation.GetHandle();
  		Data.DirectedAt = Fragment.GetDirectedAt(EYapLoadContext::Sync);
  		Data.Speaker = Fragment.GetSpeaker(EYapLoadContext::Sync);
  		Data.MoodTag = Fragment.GetMoodTag();
@@ -508,7 +508,7 @@ bool UFlowNode_YapDialogue::TryBroadcastPrompts()
 	
 	{
 		FYapData_PlayerPromptsReady Data;
-		Data.Conversation = Subsystem->GetConversationByOwner(this, GetFlowAsset()).GetConversationName();
+		Data.Conversation = Conversation.GetHandle();
 		Subsystem->OnFinishedBroadcastingPrompts(Data, TypeGroup);
 	}
 	
@@ -735,11 +735,11 @@ void UFlowNode_YapDialogue::FinishFragment(const FYapSpeechHandle& Handle, uint8
 {
 	UE_LOG(LogYap, VeryVerbose, TEXT("%s [%i]: FinishFragment {%s}"), *GetName(), FragmentIndex, *Handle.ToString());
 	
+	RunningFragments.Remove(Handle);
+	
 	FYapFragment& Fragment = Fragments[FragmentIndex];
 	
 	Fragment.SetEndTime(GetWorld()->GetTimeSeconds());
-	
-	RunningFragments.Remove(Handle);
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -784,7 +784,11 @@ void UFlowNode_YapDialogue::AdvanceFromFragment(const FYapSpeechHandle& Handle, 
 	
 	FocusedFragmentIndex.Reset();
 
-	FinishFragment(Handle, FragmentIndex);
+	// Check if the fragment speech is still running (negative padding)
+	if (!SpeakingFragments.Contains(Handle))
+	{
+		FinishFragment(Handle, FragmentIndex);
+	}
 	
 	if (IsPlayerPrompt())
 	{

@@ -10,8 +10,7 @@ struct FYapPromptHandle;
 struct FYapRunningFragment;
 struct FYapBit;
 
-#include "Yap/Handles/YapPromptHandle.h"
-#include "Yap/YapRunningFragment.h"
+#include "Yap/Handles/YapConversationHandle.h"
 
 #include "YapDataStructures.generated.h"
 
@@ -94,7 +93,7 @@ struct FYapData_PlayerPromptCreated
 
 	/** Conversation name. */
 	UPROPERTY(BlueprintReadOnly)
-	FGameplayTag Conversation;
+	FYapConversationHandle Conversation;
 	
 	/** Who will be spoken to. */
 	UPROPERTY(BlueprintReadOnly)
@@ -127,7 +126,7 @@ struct FYapData_PlayerPromptsReady
 
 	/** Conversation name. */
 	UPROPERTY(BlueprintReadOnly)
-	FGameplayTag Conversation;
+	FYapConversationHandle Conversation;
 };
 
 // ------------------------------------------------------------------------------------------------

@@ -142,5 +142,9 @@ private:
     
     void FinishClosing(UObject* Instigator);
 
-    
+public:
+    bool operator== (const FYapConversation& Other)
+    {
+        return this->Owner == Other.Owner && this->ConversationName == Other.ConversationName;
+    }
 };

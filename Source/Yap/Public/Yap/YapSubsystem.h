@@ -60,7 +60,7 @@ friend struct FYapPromptHandle;
 	
 public:
 	UYapSubsystem();
-	
+
 	// =========================================
 	// STATE
 	// =========================================
@@ -224,7 +224,7 @@ protected:  // TODO should some of these be public?
 
 public:
 	// Main open conversation function, and is called by the Open Conversation flow node
-	FYapConversation& OpenConversation(const FGameplayTag& ConversationName, UObject* ConversationOwner); // Called by Open Conversation node
+	FYapConversation& OpenConversation(FGameplayTag ConversationName, UObject* ConversationOwner); // Called by Open Conversation node
 
 	// Main close conversation function
 	EYapConversationState CloseConversation(const FYapConversationHandle& Handle);
@@ -281,7 +281,7 @@ public:
 	static FYapConversation& GetConversationByHandle(UObject* WorldContext, FYapConversationHandle Handle);
 
 	/**  */
-	static FYapConversation& GetConversationByName(UObject* WorldContext, const FGameplayTag& ConversationName);
+	static FYapConversation& GetConversationByName(const FGameplayTag& ConversationName, UObject* Owner);
 
 	/**  */
 	static FGameplayTag GetActiveConversationName(UWorld* World);

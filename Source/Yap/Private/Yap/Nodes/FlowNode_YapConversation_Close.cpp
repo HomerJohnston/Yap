@@ -20,7 +20,7 @@ void UFlowNode_YapConversation_Close::ExecuteInput(const FName& PinName)
 
 	UYapSubsystem* Subsystem = UYapSubsystem::Get(this);
 
-	FYapConversation& ConversationInst = (Conversation.IsValid()) ? Subsystem->GetConversationByName(this, Conversation) : Subsystem->GetConversationByOwner(this, GetFlowAsset());
+	FYapConversation& ConversationInst = (Conversation.IsValid()) ? Subsystem->GetConversationByName(Conversation, GetFlowAsset()) : Subsystem->GetConversationByOwner(this, GetFlowAsset());
 
 	if (ConversationInst.IsNull())
 	{
@@ -59,7 +59,7 @@ void UFlowNode_YapConversation_Close::FinishNode_Internal()
 {
 	UE_LOG(LogYap, Verbose, TEXT("Conversation closed: %s for owner: %s"), *Conversation.GetTagName().ToString(), *GetFlowAsset()->GetName());
 
-	UYapSubsystem::GetConversationByName(GetWorld(), Conversation).OnConversationClosed.RemoveAll(this);
+	UYapSubsystem::GetConversationByName(Conversation, GetFlowAsset()).OnConversationClosed.RemoveAll(this);
 	
 	TriggerFirstOutput(true);
 }

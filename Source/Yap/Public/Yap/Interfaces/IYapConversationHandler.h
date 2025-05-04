@@ -12,7 +12,7 @@ struct FYapRunningFragment;
 struct FYapBit;
 
 #include "Yap/YapDataStructures.h"
-#include "Yap/YapRunningFragment.h"
+#include "Yap/Handles/YapPromptHandle.h"
 
 #include "IYapConversationHandler.generated.h"
 

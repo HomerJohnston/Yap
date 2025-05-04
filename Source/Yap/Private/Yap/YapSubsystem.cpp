@@ -20,6 +20,8 @@
 
 #define YAP_BROADCAST_EVT_TARGS(NAME, CPPFUNC, K2FUNC) U##NAME, I##NAME, &I##NAME::CPPFUNC, &I##NAME::K2FUNC
 
+UE_DEFINE_GAMEPLAY_TAG_STATIC(Yap_UnnamedConvo, "Yap.Conversation.__UnnamedConvo__");
+
 bool UYapSubsystem::bGetGameMaturitySettingWarningIssued = false;
 FYapConversation UYapSubsystem::NullConversation;
 
@@ -27,6 +29,7 @@ FYapConversation UYapSubsystem::NullConversation;
 
 UYapSubsystem::UYapSubsystem()
 {
+	UGameplayTagsManager& TagsManager = UGameplayTagsManager::Get();
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -188,14 +191,19 @@ FYapFragment* UYapSubsystem::FindTaggedFragment(const FGameplayTag& FragmentTag)
 
 // ------------------------------------------------------------------------------------------------
 
-FYapConversation& UYapSubsystem::OpenConversation(const FGameplayTag& ConversationName, UObject* ConversationOwner)
+FYapConversation& UYapSubsystem::OpenConversation(FGameplayTag ConversationName, UObject* ConversationOwner)
 {
+	if (!ConversationName.IsValid())
+	{
+		ConversationName = Yap_UnnamedConvo;
+	}
+	
 	// Check if this conversation already exists, if so just return it. Yap assumes there will be a few conversations open at a time (at most!), so iteration is cheap.
 	for (auto& [Handle, Conversation] : Conversations)
 	{
-		if (Conversation.GetConversationName() == ConversationName)
+		if (Conversation.GetConversationName() == ConversationName && Conversation.GetOwner() == ConversationOwner)
 		{
-			UE_LOG(LogYap, Warning, TEXT("Tried to start a new conversation {%s} but conversation was already open, or in queue!"), *ConversationName.ToString());
+			UE_LOG(LogYap, Warning, TEXT("Tried to start a new conversation {%s} owned by {%s} but conversation was already open or in queue!"), *ConversationName.ToString(), *ConversationOwner->GetName());
 			return Conversation;
 		}
 	}
@@ -369,46 +377,35 @@ void UYapSubsystem::OnActiveConversationClosed(UObject* Instigator, FYapConversa
 
 FYapPromptHandle UYapSubsystem::BroadcastPrompt(const FYapData_PlayerPromptCreated& Data, const FGameplayTag& TypeGroup)
 {
-	if (Data.Conversation.IsValid())
-	{
-		FYapPromptHandle Handle(TypeGroup);
+	FYapPromptHandle Handle(TypeGroup);
 
-		const FGameplayTag& ConversationTag = Data.Conversation;
-		
-		const FYapConversationHandle& ConversationHandle = GetConversationByName(this, ConversationTag).GetHandle();
-		
-		PromptHandleConversationTags.Add(Handle, ConversationHandle);
-
-		auto* HandlerArray = FindConversationHandlerArray(TypeGroup);
-
-		BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapConversationHandler, OnConversationPlayerPromptCreated, Execute_K2_ConversationPlayerPromptCreated)>(HandlerArray, Data, Handle);
-
-		return Handle;
-	}
-	else
+	const FYapConversationHandle& ConversationHandle = Data.Conversation;
+	
+	if (!ConversationHandle.IsValid())
 	{
 		UE_LOG(LogYap, Error, TEXT("Tried to create a player prompt, but there is no active conversation!"));
+		
+		static FYapPromptHandle NullHandle;
+		NullHandle.Invalidate();
+		return NullHandle;
 	}
+	
+	PromptHandleConversationTags.Add(Handle, ConversationHandle);
 
-	static FYapPromptHandle NullHandle;
-	NullHandle.Invalidate();
-	return NullHandle;
+	auto* HandlerArray = FindConversationHandlerArray(TypeGroup);
+
+	BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapConversationHandler, OnConversationPlayerPromptCreated, Execute_K2_ConversationPlayerPromptCreated)>(HandlerArray, Data, Handle);
+
+	return Handle;
 }
 
 // ------------------------------------------------------------------------------------------------
 
 void UYapSubsystem::OnFinishedBroadcastingPrompts(const FYapData_PlayerPromptsReady& Data, const FGameplayTag& TypeGroup)
 {
-	if (Data.Conversation.IsValid())
-	{
-		auto* HandlerArray = FindConversationHandlerArray(TypeGroup);
+	auto* HandlerArray = FindConversationHandlerArray(TypeGroup);
 
-		BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapConversationHandler, OnConversationPlayerPromptsReady, Execute_K2_ConversationPlayerPromptsReady)>(HandlerArray, Data);
-	}
-	else
-	{
-		UE_LOG(LogYap, Error, TEXT("Tried to broadcast player prompts created, but there is no active conversation!"));
-	}
+	BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapConversationHandler, OnConversationPlayerPromptsReady, Execute_K2_ConversationPlayerPromptsReady)>(HandlerArray, Data);
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -488,11 +485,11 @@ FYapConversation& UYapSubsystem::GetConversationByHandle(UObject* WorldContext, 
 
 // ------------------------------------------------------------------------------------------------
 
-FYapConversation& UYapSubsystem::GetConversationByName(UObject* WorldContext, const FGameplayTag& ConversationName)
+FYapConversation& UYapSubsystem::GetConversationByName(const FGameplayTag& ConversationName, UObject* Owner)
 {
-	for (auto& [Handle, Conversation] : Get(WorldContext->GetWorld())->Conversations)
+	for (auto& [Handle, Conversation] : Get(Owner->GetWorld())->Conversations)
 	{
-		if (Conversation.GetConversationName() == ConversationName)
+		if (Conversation.GetOwner() == Owner && Conversation.GetConversationName() == ConversationName)
 		{
 			return Conversation;
 		}

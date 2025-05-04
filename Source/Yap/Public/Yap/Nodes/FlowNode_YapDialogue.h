@@ -294,10 +294,10 @@ protected:
 	void OnPromptChosen(UObject* Instigator, FYapPromptHandle Handle);
 	
 	UFUNCTION()
-	void OnSkipAction(UObject* Instigator, FYapSpeechHandle Handle);
+	void OnCancel(UObject* Instigator, FYapSpeechHandle Handle);
 
 	UFUNCTION()
-	void OnConversationSkip(UObject* Instigator, FYapConversationHandle Handle);
+	void OnAdvanceConversation(UObject* Instigator, FYapConversationHandle Handle);
 	
 	void FinishNode(FName OutputPinToTrigger);
 

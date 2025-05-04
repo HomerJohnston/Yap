@@ -613,14 +613,14 @@ bool UYapSubsystem::CancelSpeech(UObject* WorldContext, const FYapSpeechHandle& 
 		WorldContext->GetWorld()->GetTimerManager().ClearTimer(*TimerHandle);
 
 		// Broadcast to Yap systems; in dialogue nodes, this will kill any running paddings
-		Subsystem->OnSpeechSkip.Broadcast(Subsystem, Handle);
+		Subsystem->OnCancelDelegate.Broadcast(Subsystem, Handle);
 
 		Subsystem->OnSpeechComplete(Handle);
 	
 		return true;
 	}
 
-	UE_LOG(LogYap, Warning, TEXT("Subsystem: SkipSpeech [%s] ignored - SpeechTimers array did not contain an entry for this handle"), *Handle.ToString());
+	UE_LOG(LogYap, Warning, TEXT("Subsystem: CancelSpeech [%s] ignored - SpeechTimers array did not contain an entry for this handle"), *Handle.ToString());
 	
 	return false;
 }
@@ -629,11 +629,11 @@ bool UYapSubsystem::CancelSpeech(UObject* WorldContext, const FYapSpeechHandle& 
 
 void UYapSubsystem::AdvanceConversation(UObject* Instigator, FYapConversationHandle Handle)
 {
-	UE_LOG(LogYap, VeryVerbose, TEXT("Subsystem: ConversationSkip [%s]"), *Handle.ToString());
+	UE_LOG(LogYap, VeryVerbose, TEXT("Subsystem: AdvanceConversation [%s]"), *Handle.ToString());
 
 	if (!Handle.IsValid())
 	{
-		UE_LOG(LogYap, VeryVerbose, TEXT("Subsystem: ConversationSkip {%s} ignored - handle was invalid"), *Handle.ToString());
+		UE_LOG(LogYap, VeryVerbose, TEXT("Subsystem: AdvanceConversation {%s} ignored - handle was invalid"), *Handle.ToString());
 	}
 	
 	UYapSubsystem* Subsystem = Get(Instigator);
@@ -649,7 +649,7 @@ void UYapSubsystem::AdvanceConversation(UObject* Instigator, FYapConversationHan
 	}
 	
 	// Broadcast to Yap systems; in dialogue nodes, this will kill any running paddings
-	Subsystem->OnConversationSkip.Broadcast(Instigator, Handle);
+	Subsystem->OnAdvanceConversationDelegate.Broadcast(Instigator, Handle);
 }
 
 // ------------------------------------------------------------------------------------------------

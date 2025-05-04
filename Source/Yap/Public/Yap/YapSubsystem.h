@@ -145,10 +145,10 @@ public:
 	FYapPromptChosen OnPromptChosen;
 
 	UPROPERTY(Transient)
-	FYapSpeechEvent OnSpeechSkip;
+	FYapSpeechEvent OnCancelDelegate;
 
 	UPROPERTY(Transient)
-	FYapConversationEvent OnConversationSkip;
+	FYapConversationEvent OnAdvanceConversationDelegate;
 	
 	/*
 	UPROPERTY(BlueprintAssignable, Transient)

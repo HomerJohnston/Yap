@@ -93,12 +93,12 @@ bool UYapSpeechHandleBFL::CancelSpeech(UObject* WorldContext, const FYapSpeechHa
 	{
 		if (!UYapSubsystem::CancelSpeech(WorldContext, Handle))
 		{
-			UE_LOG(LogYap, Display, TEXT("Failed to skip dialogue!"))
+			UE_LOG(LogYap, Display, TEXT("Failed to cancel speech!"))
 		}
 	}
 	else
 	{
-		UE_LOG(LogYap, Warning, TEXT("Attempted to skip with invalid handle!"))
+		UE_LOG(LogYap, Warning, TEXT("Attempted to cancel an invalid speech handle!"))
 	}
 	
 	return false;

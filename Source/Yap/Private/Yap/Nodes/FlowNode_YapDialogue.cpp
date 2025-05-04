@@ -83,10 +83,15 @@ FYapFragment* UFlowNode_YapDialogue::FindTaggedFragment(const FGameplayTag& Tag)
 
 // ------------------------------------------------------------------------------------------------
 
-void UFlowNode_YapDialogue::OnSkipAction(UObject* Instigator, FYapSpeechHandle Handle)
+void UFlowNode_YapDialogue::OnCancel(UObject* Instigator, FYapSpeechHandle Handle)
 {
-	UE_LOG(LogYap, VeryVerbose, TEXT("%s: OnSkipAction for handle {%s}"), *GetName(), *Handle.ToString())
-	
+	UE_LOG(LogYap, VeryVerbose, TEXT("%s: OnCancelAction for handle {%s}"), *GetName(), *Handle.ToString())
+
+	UE_LOG(LogYap, Error, TEXT("%s: SPEECH CANCELLING IS NOT IMPLEMENTED YET {%s}"), *GetName(), *Handle.ToString())
+
+	// TODO
+
+	/*
 	if (!CanSkip(Handle))
 	{
 		// The skip event wasn't for this node, ignore it
@@ -116,18 +121,19 @@ void UFlowNode_YapDialogue::OnSkipAction(UObject* Instigator, FYapSpeechHandle H
 	FragmentsInPadding.Empty();
 	
 	AdvanceFromFragment(Handle, FocusedFragmentIndex.Get(INDEX_NONE));
+	*/
 }
 
 // ------------------------------------------------------------------------------------------------
 
-void UFlowNode_YapDialogue::OnConversationSkip(UObject* Instigator, FYapConversationHandle Handle)
+void UFlowNode_YapDialogue::OnAdvanceConversation(UObject* Instigator, FYapConversationHandle Handle)
 {
-	UE_LOG(LogYap, VeryVerbose, TEXT("%s: OnConversationSkip received"), *GetName())
+	UE_LOG(LogYap, VeryVerbose, TEXT("%s: OnAdvanceConversation received"), *GetName())
 
 	// TODO make sure this dialogue node is actually in this conversation, URGENT
 	if (!FocusedFragmentIndex.IsSet())
 	{
-		UE_LOG(LogYap, Warning, TEXT("OnConversationSkip was called, but running fragment was unset; ignoring"));
+		UE_LOG(LogYap, Warning, TEXT("OnAdvanceConversation was called, but running fragment was unset; ignoring"));
 		return;
 	}
 	
@@ -159,8 +165,8 @@ void UFlowNode_YapDialogue::OnConversationSkip(UObject* Instigator, FYapConversa
 
 void UFlowNode_YapDialogue::FinishNode(FName OutputPinToTrigger)
 {
-	UYapSubsystem::Get(this)->OnConversationSkip.RemoveDynamic(this, &ThisClass::OnConversationSkip);
-	UYapSubsystem::Get(this)->OnSpeechSkip.RemoveDynamic(this, &ThisClass::OnSkipAction);
+	UYapSubsystem::Get(this)->OnAdvanceConversationDelegate.RemoveDynamic(this, &ThisClass::OnAdvanceConversation);
+	UYapSubsystem::Get(this)->OnCancelDelegate.RemoveDynamic(this, &ThisClass::OnCancel);
 		
 	TriggerOutput(OutputPinToTrigger, true, EFlowPinActivationType::Default);
 }
@@ -280,8 +286,8 @@ void UFlowNode_YapDialogue::ExecuteInput(const FName& PinName)
 		{
 			++NodeActivationCount;
 
-			UYapSubsystem::Get(this)->OnConversationSkip.AddDynamic(this, &ThisClass::OnConversationSkip);
-			UYapSubsystem::Get(this)->OnSpeechSkip.AddDynamic(this, &ThisClass::OnSkipAction);
+			UYapSubsystem::Get(this)->OnAdvanceConversationDelegate.AddDynamic(this, &ThisClass::OnAdvanceConversation);
+			UYapSubsystem::Get(this)->OnCancelDelegate.AddDynamic(this, &ThisClass::OnCancel);
 		}
 		else
 		{

@@ -689,9 +689,8 @@ void UFlowNode_YapDialogue::OnSpeechComplete(UObject* Instigator, FYapSpeechHand
 	if (!FragmentsInPadding.Contains(Handle))
 	{
 		FinishFragment(Handle, *FragmentIndex);		
+		TryAdvanceFromFragment(*FragmentIndex);
 	}
-	
-	TryAdvanceFromFragment(*FragmentIndex);
 }
 
 void UFlowNode_YapDialogue::OnSpeechComplete_Internal(FYapSpeechHandle Handle, uint8 FragmentIndex)

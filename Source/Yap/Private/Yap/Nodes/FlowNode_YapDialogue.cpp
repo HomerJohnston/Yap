@@ -386,34 +386,6 @@ bool UFlowNode_YapDialogue::GetFragmentAutoAdvance(uint8 FragmentIndex) const
 
 	const FYapFragment& Fragment = Fragments[FragmentIndex]; 
 
-	UWorld* World = GetWorld();
-
-	/*
-#if WITH_EDITOR
-	if (GEditor && GEditor->IsPlaySessionInProgress())
-	{
-		// TODO hack, is this safe?
-		if (World == nullptr) { World = GEditor->PlayWorld; }
-#endif
-		// Only check for these during play, never at editor time
-		
-		// TODO If this dialogue is occurring outside of a conversation it must auto advance
-		//
-		//if (!UYapSubsystem::IsAssetInConversation(GetFlowAsset()))
-		//{
-		//	return true;
-		//}
-		
-		// Fragments that have no speech time must always be manual-advance
-		if (Fragment.GetTimeMode(World, TypeGroup) == EYapTimeMode::None)
-		{
-			return false;
-		}
-#if WITH_EDITOR
-	}
-#endif	
-	*/
-	
 	// Use fragment override
 	if (Fragment.GetAutoAdvanceSetting().IsSet())
 	{
@@ -657,13 +629,6 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 		TriggerOutput(StartPin.PinName, false);
 	}
 
-	/*
-	if (GetFragmentAutoAdvance(FragmentIndex) && PaddingCompletionTime == 0)
-	{
-		OnSpeechComplete(this, FocusedSpeechHandle);
-	}
-	*/
-	
 	return true;
 }
 
@@ -681,22 +646,11 @@ void UFlowNode_YapDialogue::OnSpeechComplete(UObject* Instigator, FYapSpeechHand
 
 	UE_LOG(LogYap, VeryVerbose, TEXT("%s: OnSpeechComplete {%s}"), *GetName(), *Handle.ToString());
 
-	OnSpeechComplete_Internal(Handle, *FragmentIndex);
-
-	// No positive padding - this fragment is done
-	if (!FragmentsInPadding.Contains(Handle))
-	{
-		TryAdvanceFromFragment(Handle, *FragmentIndex);
-	}
-}
-
-void UFlowNode_YapDialogue::OnSpeechComplete_Internal(FYapSpeechHandle Handle, uint8 FragmentIndex)
-{
 	FYapSpeechEventDelegate Delegate;
 	Delegate.BindUFunction(this, GET_FUNCTION_NAME_CHECKED_TwoParams(ThisClass, OnSpeechComplete, UObject*, FYapSpeechHandle));
 	UYapSpeechHandleBFL::UnbindToOnSpeechComplete(GetWorld(), Handle, Delegate);
 	
-	FYapFragment& Fragment = Fragments[FragmentIndex];
+	FYapFragment& Fragment = Fragments[*FragmentIndex];
 	
 	if (Fragment.UsesEndPin())
 	{
@@ -705,6 +659,12 @@ void UFlowNode_YapDialogue::OnSpeechComplete_Internal(FYapSpeechHandle Handle, u
 	}
 
 	SpeakingFragments.Remove(Handle);
+	
+	// No positive padding - this fragment is done
+	if (!FragmentsInPadding.Contains(Handle))
+	{
+		TryAdvanceFromFragment(Handle, *FragmentIndex);
+	}
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -727,18 +687,7 @@ void UFlowNode_YapDialogue::OnPaddingComplete(FYapSpeechHandle Handle)
 	if (!SpeakingFragments.Contains(Handle))
 	{
 		TryAdvanceFromFragment(Handle, *FragmentIndex);
-
-		/*
-		FinishFragment(Handle, *FragmentIndex);
-
-		if (!Fragments[*FragmentIndex].IsAwaitingManualAdvance())
-		{
-			AdvanceFromFragment(Handle, *FragmentIndex);
-		}
-		*/
 	}
-
-	
 }
 
 // ------------------------------------------------------------------------------------------------

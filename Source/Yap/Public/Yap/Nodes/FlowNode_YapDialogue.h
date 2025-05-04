@@ -267,15 +267,13 @@ public:
 	UFUNCTION()
 	void OnSpeechComplete(UObject* Instigator, FYapSpeechHandle Handle);
 	
-	void OnSpeechComplete_Internal(FYapSpeechHandle Handle, uint8 FragmentIndex);
-	
 	UFUNCTION()
 	void OnPaddingComplete(FYapSpeechHandle Handle);
 
-	/** Called when a fragment is completely done - speech is done, padding is done */
+	/** Called when a fragment is completely done - speech is done AND padding is done */
 	void FinishFragment(const FYapSpeechHandle& Handle, uint8 FragmentIndex);
 
-	/** This should be called when the time bar finishes - either speech completes (zero or negative padding) or padding completes (positive padding) */
+	/** This should be called whenever speech finishes OR padding finishes */
 	void TryAdvanceFromFragment(const FYapSpeechHandle& Handle, uint8 FragmentIndex);
 
 	void AdvanceFromFragment(const FYapSpeechHandle& Handle, uint8 FragmentIndex);

@@ -206,7 +206,7 @@ bool UFlowNode_YapDialogue::CanSkip(FYapSpeechHandle Handle) const
 	const FYapFragment& Fragment = Fragments[FocusedFragmentIndex.GetValue()];
 	
 	// The fragment is finished running, and this feature is only being used for manual advance
-	if (Fragment.GetIsAwaitingManualAdvance())
+	if (Fragment.IsAwaitingManualAdvance())
 	{
 		return true;
 	}
@@ -585,6 +585,7 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 	}
 
 	Fragment.SetRunState(EYapFragmentRunState::Running);
+	Fragment.ClearAwaitingManualAdvance();
 	
 	const FYapBit& Bit = Fragment.GetBit(GetWorld());
 
@@ -656,10 +657,12 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 		TriggerOutput(StartPin.PinName, false);
 	}
 
+	/*
 	if (GetFragmentAutoAdvance(FragmentIndex) && PaddingCompletionTime == 0)
 	{
 		OnSpeechComplete(this, FocusedSpeechHandle);
 	}
+	*/
 	
 	return true;
 }
@@ -719,14 +722,23 @@ void UFlowNode_YapDialogue::OnPaddingComplete(FYapSpeechHandle Handle)
 		UE_LOG(LogYap, VeryVerbose, TEXT("%s: OnPaddingComplete call ignored; handle {%s} was not running"), *GetName(), *Handle.ToString());
 		return;
 	}
-
+	
 	// Positive padding - we've already finished speaking, this fragment is done
 	if (!SpeakingFragments.Contains(Handle))
 	{
+		TryAdvanceFromFragment(Handle, *FragmentIndex);
+
+		/*
 		FinishFragment(Handle, *FragmentIndex);
+
+		if (!Fragments[*FragmentIndex].IsAwaitingManualAdvance())
+		{
+			AdvanceFromFragment(Handle, *FragmentIndex);
+		}
+		*/
 	}
 
-	TryAdvanceFromFragment(Handle, *FragmentIndex);
+	
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -734,9 +746,7 @@ void UFlowNode_YapDialogue::OnPaddingComplete(FYapSpeechHandle Handle)
 void UFlowNode_YapDialogue::FinishFragment(const FYapSpeechHandle& Handle, uint8 FragmentIndex)
 {
 	UE_LOG(LogYap, VeryVerbose, TEXT("%s [%i]: FinishFragment {%s}"), *GetName(), FragmentIndex, *Handle.ToString());
-	
-	RunningFragments.Remove(Handle);
-	
+		
 	FYapFragment& Fragment = Fragments[FragmentIndex];
 	
 	Fragment.SetEndTime(GetWorld()->GetTimeSeconds());
@@ -758,6 +768,8 @@ void UFlowNode_YapDialogue::TryAdvanceFromFragment(const FYapSpeechHandle& Handl
 
 	Fragment.PaddingTimerHandle.Invalidate();
 
+	FinishFragment(Handle, FragmentIndex);
+	
 	// TODO When calling AdvanceFromFragment in Skip function, if the game is set to do manual advancement, this won't run. Push this into a separate function I can call or add another route into this.
 	if (GetFragmentAutoAdvance(FragmentIndex))
 	{
@@ -784,11 +796,13 @@ void UFlowNode_YapDialogue::AdvanceFromFragment(const FYapSpeechHandle& Handle, 
 	
 	FocusedFragmentIndex.Reset();
 
+	RunningFragments.Remove(Handle);
+	
 	// Check if the fragment speech is still running (negative padding)
-	if (!SpeakingFragments.Contains(Handle))
-	{
-		FinishFragment(Handle, FragmentIndex);
-	}
+	//if (!SpeakingFragments.Contains(Handle))
+	//{
+	//	FinishFragment(Handle, FragmentIndex);
+	//}
 	
 	if (IsPlayerPrompt())
 	{

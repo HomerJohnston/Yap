@@ -448,7 +448,7 @@ FYapSpeechHandle UYapSubsystem::RunSpeech(const FYapData_SpeechBegins& SpeechDat
 	}
 	else
 	{
-		//OnSpeechComplete(Handle);
+		OnSpeechComplete(Handle);
 	}
 
 	return Handle;

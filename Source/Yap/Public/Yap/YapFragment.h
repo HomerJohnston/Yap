@@ -259,9 +259,11 @@ public:
 
 	void SetEndTime(double InTime) { EndTime = InTime; }
 
-	bool GetIsAwaitingManualAdvance() const { return bFragmentAwaitingManualAdvance; };
+	bool IsAwaitingManualAdvance() const;
 
-	void SetAwaitingManualAdvance();;
+	void SetAwaitingManualAdvance();
+	
+	void ClearAwaitingManualAdvance();
 
 protected:
 	TOptional<float> GetSpeechTime(UWorld* World, EYapMaturitySetting MaturitySetting, EYapLoadContext LoadContext, const FGameplayTag& TypeGroup) const;

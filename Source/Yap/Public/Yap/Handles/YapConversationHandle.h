@@ -68,48 +68,42 @@ class UYapConversationHandleBlueprintFunctionLibrary : public UBlueprintFunction
 {
     GENERATED_BODY()
 
-    UFUNCTION(BlueprintCallable, Category = Yap, meta = (WorldContext = "WorldContext"))
+    UFUNCTION(BlueprintCallable, Category = "Yap|ConversationHandle", meta = (WorldContext = "WorldContext"))
     static UPARAM(DisplayName = Handle) FYapConversationHandle BindToConversationOpening(UObject* WorldContext, FYapConversationHandle Handle, FYapConversationEventDelegate Delegate);
     
-    UFUNCTION(BlueprintCallable, Category = Yap, meta = (WorldContext = "WorldContext"))
+    UFUNCTION(BlueprintCallable, Category = "Yap|ConversationHandle", meta = (WorldContext = "WorldContext"))
     static UPARAM(DisplayName = Handle) FYapConversationHandle BindToConversationOpened(UObject* WorldContext, FYapConversationHandle Handle, FYapConversationEventDelegate Delegate);
     
-    UFUNCTION(BlueprintCallable, Category = Yap, meta = (WorldContext = "WorldContext"))
+    UFUNCTION(BlueprintCallable, Category = "Yap|ConversationHandle", meta = (WorldContext = "WorldContext"))
     static UPARAM(DisplayName = Handle) FYapConversationHandle BindToConversationClosing(UObject* WorldContext, FYapConversationHandle Handle, FYapConversationEventDelegate Delegate);
 
-    UFUNCTION(BlueprintCallable, Category = Yap, meta = (WorldContext = "WorldContext"))
+    UFUNCTION(BlueprintCallable, Category = "Yap|ConversationHandle", meta = (WorldContext = "WorldContext"))
     static UPARAM(DisplayName = Handle) FYapConversationHandle BindToConversationClosed(UObject* WorldContext, FYapConversationHandle Handle, FYapConversationEventDelegate Delegate);
 
     /**
      * Apply an interlock once a conversation starts opening to prevent the conversation from actually opening.
      * Use this to play animations or await other conditions before actually entering the conversation.
      */
-    UFUNCTION(BlueprintCallable, Category = Yap, meta = (DefaultToSelf = "LockObject"))
+    UFUNCTION(BlueprintCallable, Category = "Yap|ConversationHandle", meta = (DefaultToSelf = "LockObject"))
     static UPARAM(DisplayName = Handle) FYapConversationHandle ApplyOpeningInterlock(FYapConversationHandle Handle, UObject* LockObject);
 
     /**
      * Allow this conversation to open. This causes the conversation to open immediately, at this function call.
      */
-    UFUNCTION(BlueprintCallable, Category = Yap, meta = (DefaultToSelf = "LockObject"))
+    UFUNCTION(BlueprintCallable, Category = "Yap|ConversationHandle", meta = (DefaultToSelf = "LockObject"))
     static UPARAM(DisplayName = Handle) FYapConversationHandle ReleaseOpeningInterlock(FYapConversationHandle Handle, UObject* LockObject);
 
     /**
      * Apply an interlock once a conversation starts closing to prevent the conversation from actually closing.
      * Use this to play animations or await other conditions before actually closing the conversation.
      */
-    UFUNCTION(BlueprintCallable, Category = Yap, meta = (DefaultToSelf = "LockObject"))
+    UFUNCTION(BlueprintCallable, Category = "Yap|ConversationHandle", meta = (DefaultToSelf = "LockObject"))
     static UPARAM(DisplayName = Handle) FYapConversationHandle ApplyClosingInterlock(FYapConversationHandle Handle, UObject* LockObject);
     
     /**
      * Allow this conversation to close. This causes the conversation to close immediately, at this function call.
      * If there is another queued conversation, it will open immediately; do not run additional closing logic for your UI pane after releasing an interlock!
      */
-    UFUNCTION(BlueprintCallable, Category = Yap, meta = (DefaultToSelf = "LockObject"))
+    UFUNCTION(BlueprintCallable, Category = "Yap|ConversationHandle", meta = (DefaultToSelf = "LockObject"))
     static UPARAM(DisplayName = Handle) FYapConversationHandle ReleaseClosingInterlock(FYapConversationHandle Handle, UObject* LockObject);
-
-    /**
-     * Sends a skip signal to the current running conversation.
-     */
-    UFUNCTION(BlueprintCallable, Category = Yap, meta = (WorldContext = "Instigator"))
-    static UPARAM(DisplayName = Handle) FYapConversationHandle SkipDialogue(UObject* Instigator, FYapConversationHandle Handle);
 };

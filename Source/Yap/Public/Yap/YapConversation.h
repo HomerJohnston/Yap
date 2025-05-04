@@ -6,7 +6,7 @@
 #include "Handles/YapPromptHandle.h"
 #include "Yap/Handles/YapConversationHandle.h"
 #include "Yap/Handles/YapSpeechHandle.h"
-#include "Yap/Handles/YapRunningFragment.h"
+#include "Yap/YapRunningFragment.h"
 
 #include "YapConversation.generated.h"
 

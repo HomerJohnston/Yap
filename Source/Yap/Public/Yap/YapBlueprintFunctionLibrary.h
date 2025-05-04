@@ -4,7 +4,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Yap/Handles/YapRunningFragment.h"
+#include "Yap/YapRunningFragment.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "YapBlueprintFunctionLibrary.generated.h"
 
@@ -26,27 +26,27 @@ public:
 	
 #if WITH_EDITOR
 	/** Built-in simple helper function to play an Unreal sound. */
-	UFUNCTION(BlueprintCallable, Category = "Yap")
+	UFUNCTION(BlueprintCallable, Category = "Yap|EditorOnly")
 	static void PlaySoundInEditor(USoundBase* Sound);
 #endif
 	
 	/** Built-in simple helper function to retrieve the length of an Unreal sound. */
-	UFUNCTION(BlueprintCallable, Category = "Yap")
+	UFUNCTION(BlueprintCallable, Category = "Yap|Audio")
 	static float GetSoundLength(USoundBase* Sound);
 	
-	UFUNCTION(BlueprintCallable, Category = "Yap")
+	UFUNCTION(BlueprintCallable, Category = "Yap|Registration")
 	static void RegisterConversationHandler(UObject* NewHandler, FGameplayTag TypeGroup);
 	
-	UFUNCTION(BlueprintCallable, Category = "Yap")
+	UFUNCTION(BlueprintCallable, Category = "Yap|Registration")
 	static void RegisterFreeSpeechHandler(UObject* NewHandler);
 	
-	UFUNCTION(BlueprintCallable, Category = "Yap")
+	UFUNCTION(BlueprintCallable, Category = "Yap|Registration")
 	static void UnregisterConversationHandler(UObject* HandlerToUnregister);
 	
-	UFUNCTION(BlueprintCallable, Category = "Yap")
+	UFUNCTION(BlueprintCallable, Category = "Yap|Registration")
 	static void UnregisterFreeSpeechHandler(UObject* HandlerToUnregister);
 
-	UFUNCTION(BlueprintCallable, Category = "Yap", meta = (WorldContext = "WorldContext"))
+	UFUNCTION(BlueprintCallable, Category = "Yap|Character", meta = (WorldContext = "WorldContext"))
 	static AActor* FindYapCharacterActor(UObject* WorldContext, const UYapCharacter* Character);
 };
 

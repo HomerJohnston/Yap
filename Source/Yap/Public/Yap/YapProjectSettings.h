@@ -98,6 +98,12 @@ protected:
 	UPROPERTY(Config, EditAnywhere, Category = "Dialogue Playback", meta = (ClampMin = 1, ClampMax = 1000, UIMin = 60, UIMax = 180, Delta = 5))
 	int32 TextWordsPerMinute = 120;
 
+	/** This is used when setting AutoAdvanceToPromptNodes is enabled; the graph will attempt to search through these nodes for Prompt nodes. */
+	TArray<TSubclassOf<UFlowNode>> PassThroughNodeTypes;
+
+	/** This is used when setting AutoAdvanceToPromptNodes is enabled; the graph will only recursively visit this many child nodes looking for Prompt nodes. */
+	int32 MaxPassthroughSearchDepth = 2;
+
 	// - - - - - EDITOR - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	
 	/** Normally, when assigning dialogue text, Yap will parse the text and attempt to cache a word count to use for determine text time length. Set this to prevent that. */

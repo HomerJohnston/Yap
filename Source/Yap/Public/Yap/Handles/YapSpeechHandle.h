@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "Yap/Handles/YapRunningFragment.h"
+#include "Yap/YapRunningFragment.h"
 #include "YapSpeechHandle.generated.h"
 
 /** Since I can't store handles in structs by ref, I pass around a simpler version of it containing only the GUID and look up the actual handle (which could become "large" with more data) from the subsystem as needed. */
@@ -87,19 +87,19 @@ class YAP_API UYapSpeechHandleBFL : public UBlueprintFunctionLibrary
 
 public:
     
-    UFUNCTION(BlueprintCallable, Category = "Yap Speech Handle", meta = (WorldContext = "WorldContext"))
+    UFUNCTION(BlueprintCallable, Category = "Yap|Speech Handle", meta = (WorldContext = "WorldContext"))
     static void BindToOnSpeechComplete(UObject* WorldContext, FYapSpeechHandle Handle, FYapSpeechEventDelegate Delegate);
 
-    UFUNCTION(BlueprintCallable, Category = "Yap Speech Handle", meta = (WorldContext = "WorldContext"))
+    UFUNCTION(BlueprintCallable, Category = "Yap|Speech Handle", meta = (WorldContext = "WorldContext"))
     static void UnbindToOnSpeechComplete(UObject* WorldContext, FYapSpeechHandle Handle, FYapSpeechEventDelegate Delegate);
     
-    UFUNCTION(BlueprintCallable, Category = "Yap Speech Handle", meta = (WorldContext = "WorldContext"))
+    UFUNCTION(BlueprintCallable, Category = "Yap|Speech Handle", meta = (WorldContext = "WorldContext"))
     static bool SkipDialogue(UObject* WorldContext, const FYapSpeechHandle& Handle);
 
-    UFUNCTION(BlueprintCallable, Category = "Yap Speech Handle", meta = (WorldContext = "WorldContext"))
+    UFUNCTION(BlueprintCallable, Category = "Yap|Speech Handle", meta = (WorldContext = "WorldContext"))
     static bool CanSkipCurrently(UObject* WorldContext, const FYapSpeechHandle& Handle);
 
-    UFUNCTION(BlueprintCallable, Category = "Yap Speech Handle", meta = (WorldContext = "WorldContext"))
+    UFUNCTION(BlueprintCallable, Category = "Yap|Speech Handle", meta = (WorldContext = "WorldContext"))
     static bool IsRunning(UObject* WorldContext, const FYapSpeechHandle& Handle);
     
     /*
@@ -107,17 +107,17 @@ public:
     static const TArray<FInstancedStruct>& GetFragmentData(const FYapSpeechHandle& HandleRef);
     */
 
-    UFUNCTION(BlueprintCallable, Category = "Yap Speech Handle")
+    UFUNCTION(BlueprintCallable, Category = "Yap|Speech Handle")
     static void Invalidate(UPARAM(ref) FYapSpeechHandle& Handle)
     {
         Handle.Invalidate();
     };
     
     /** Returns true if the values are equal (A == B) */
-    UFUNCTION(BlueprintPure, meta=(DisplayName="Equal (YapSpeechHandle)", CompactNodeTitle="==", BlueprintThreadSafe), Category="Yap")
+    UFUNCTION(BlueprintPure, Category = "Yap|Speech Handle", meta=(DisplayName="Equal (YapSpeechHandle)", CompactNodeTitle="==", BlueprintThreadSafe))
     static bool EqualEqual_YapSpeechHandle(FYapSpeechHandle A, FYapSpeechHandle B);
 
-    UFUNCTION(BlueprintCallable, Category = "Yap Speech Handle")
+    UFUNCTION(BlueprintCallable, Category = "Yap|Speech Handle")
     static FString ToString(const FYapSpeechHandle Handle);
 };
 

@@ -5,7 +5,7 @@
 
 #include "Yap/YapConversation.h"
 
-#include "Yap/Handles/YapRunningFragment.h"
+#include "Yap/YapRunningFragment.h"
 #include "Yap/YapSubsystem.h"
 
 // ------------------------------------------------------------------------------------------------

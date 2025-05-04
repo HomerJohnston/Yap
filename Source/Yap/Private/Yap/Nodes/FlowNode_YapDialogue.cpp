@@ -432,7 +432,6 @@ bool UFlowNode_YapDialogue::GetFragmentAutoAdvance(uint8 FragmentIndex) const
 
 	bool bAutoAdvance = GetNodeAutoAdvance();
 
-	// TODO this needs to parse through reroute nodes somehow :\
 	// Check if this fragment is going to progress into a prompt node...
 	if (DialogueNodeType == EYapDialogueNodeType::Talk && !bAutoAdvance && FragmentIndex == Fragments.Num() - 1 && UYapProjectSettings::GetTypeGroup(TypeGroup).GetAutoAdvanceToPromptNodes())
 	{
@@ -500,7 +499,11 @@ bool UFlowNode_YapDialogue::TryBroadcastPrompts()
  		Data.Speaker = Fragment.GetSpeaker(EYapLoadContext::Sync);
  		Data.MoodTag = Fragment.GetMoodTag();
  		Data.DialogueText = Bit.GetDialogueText();
- 		Data.TitleText = Bit.GetTitleText();
+
+ 		if (!UYapProjectSettings::GetTypeGroup(TypeGroup).GetHideTitleTextOnPromptNodes())
+ 		{
+ 			Data.TitleText = Bit.GetTitleText();
+ 		}
  		
 		FYapPromptHandle PromptHandle = Subsystem->BroadcastPrompt(Data, TypeGroup);
 
@@ -612,12 +615,15 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 	Data.Speaker = Fragment.GetSpeaker(EYapLoadContext::Sync);
 	Data.MoodTag = Fragment.GetMoodTag();
 	Data.DialogueText = Bit.GetDialogueText();
-	Data.TitleText = Bit.GetTitleText();
 	Data.SpeechTime = EffectiveTime;
-	//Data.FragmentTime = Fragment.GetProgressionTime(TypeGroup); // Removed; // TODO further consideration needed; See notes in YapDataStructures.h
 	Data.DialogueAudioAsset = Bit.GetAudioAsset<UObject>();
 	Data.bSkippable = Fragment.GetSkippable(GetSkippable());
 
+	if (!UYapProjectSettings::GetTypeGroup(TypeGroup).GetShowTitleTextOnTalkNodes())
+	{
+		Data.TitleText = Bit.GetTitleText();
+	}
+	
 	// Make a handle for the pending speech and bind to completion events of it
 	FocusedSpeechHandle = FYapSpeechHandle(GetWorld(), Fragment.GetGuid());
 
@@ -895,7 +901,6 @@ bool UFlowNode_YapDialogue::IsOutputConnectedToPromptNode() const
 				NodesToCheck.Add(ConnectedNode);
 			}
 		}
-		
 	}
 	
 	/*

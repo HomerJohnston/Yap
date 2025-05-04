@@ -91,7 +91,7 @@ bool UYapSpeechHandleBFL::SkipDialogue(UObject* WorldContext, const FYapSpeechHa
 {
 	if (Handle.IsValid())
 	{
-		if (!UYapSubsystem::SkipSpeech(WorldContext->GetWorld(), Handle))
+		if (!UYapSubsystem::SkipSpeech(WorldContext, Handle))
 		{
 			UE_LOG(LogYap, Display, TEXT("Failed to skip dialogue!"))
 		}

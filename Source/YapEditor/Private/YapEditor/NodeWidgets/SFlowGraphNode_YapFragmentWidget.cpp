@@ -976,7 +976,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateDialogueDisplayWidge
 	Args.MinimumIntegralDigits = 3;
 
 	const FString FragmentIndexText = FText::AsNumber(FragmentIndex, &Args).ToString();
-	UFlowNode_YapDialogue* DialogueNode = GetDialogueNodeMutable();
+	TWeakObjectPtr<UFlowNode_YapDialogue> DialogueNode = GetDialogueNodeMutable();
 	
 	TSharedRef<SWidget> Widget = SNew(SLevelOfDetailBranchNode)
 	.UseLowDetailSlot(Owner, &SFlowGraphNode_YapDialogueWidget::UseLowDetail)
@@ -1076,7 +1076,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateDialogueDisplayWidge
 				.ColorAndOpacity(this, &ThisClass::ColorAndOpacity_AudioID)
 				.Text_Lambda( [FragmentIndexText, DialogueNode] ()
 				{
-					if (DialogueNode)
+					if (DialogueNode.IsValid())
 					{
 						return FText::AsCultureInvariant(DialogueNode->GetAudioID() + "-" + FragmentIndexText);
 					}

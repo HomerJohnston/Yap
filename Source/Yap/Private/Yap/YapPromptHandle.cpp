@@ -35,27 +35,21 @@ void FYapPromptHandle::Invalidate()
 
 void FYapPromptHandle::RunPrompt(UObject* WorldContext)
 {
-	UWorld* World = WorldContext->GetWorld();
-
-	if (!World)
-	{
-		return;
-	}
-	
-	UYapSubsystem::RunPrompt(WorldContext->GetWorld(), *this);
+	UYapSubsystem::RunPrompt(WorldContext, *this);
 }
 
 // ------------------------------------------------------------------------------------------------
 
 void UYapPromptHandleBFL::RunPrompt(UObject* WorldContext, const FYapPromptHandle& Handle)
 {
-	UYapSubsystem::RunPrompt(WorldContext->GetWorld(), Handle);
+	UYapSubsystem::RunPrompt(WorldContext, Handle);
 }
 
+/*
 bool UYapPromptHandleBFL::Subscribe(const FYapPromptHandle& Handle, FYapPromptHandleChosen Delegate)
 {
-	// TODO URGENT C++ implementation required!
-	return true;
+	
 }
+*/
 
 #undef LOCTEXT_NAMESPACE

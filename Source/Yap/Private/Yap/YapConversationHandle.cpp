@@ -84,10 +84,3 @@ FYapConversationHandle UYapConversationHandleBlueprintFunctionLibrary::ReleaseCl
     return Handle;
 }
 
-FYapConversationHandle UYapConversationHandleBlueprintFunctionLibrary::SkipDialogue(UObject* Instigator, FYapConversationHandle Handle)
-{
-    UYapSubsystem::Get(Instigator)->ConversationSkip(Instigator, Handle);
-    
-    return Handle;
-}
-

@@ -9,7 +9,7 @@
 #include "Yap/YapFragment.h"
 #include "Yap/YapLog.h"
 #include "Yap/Interfaces/IYapConversationHandler.h"
-#include "Yap/Handles/YapRunningFragment.h"
+#include "Yap/YapRunningFragment.h"
 #include "Yap/YapProjectSettings.h"
 #include "Yap/Handles/YapPromptHandle.h"
 #include "Yap/Enums/YapLoadContext.h"
@@ -530,15 +530,22 @@ FGameplayTag UYapSubsystem::GetActiveConversationName(UWorld* World)
 
 // ------------------------------------------------------------------------------------------------
 
-void UYapSubsystem::RunPrompt(UWorld* World, const FYapPromptHandle& Handle)
+void UYapSubsystem::RunPrompt(UObject* WorldContext, const FYapPromptHandle& Handle)
 {
+	if (!IsValid(WorldContext))
+	{
+		UE_LOG(LogYap, Error, TEXT("Tried to call UYapSubsystem::RunPrompt with a null world context, ignoring!"));
+	}
+	
 	if (!Handle.IsValid())
 	{
 		UE_LOG(LogYap, Error, TEXT("Tried to call UYapSubsystem::RunPrompt with a null handle, ignoring!"));
 		return;
 	}
 
-	UYapSubsystem* Subsystem = Get(World);
+	
+
+	UYapSubsystem* Subsystem = Get(WorldContext);
 	
 	// Broadcast to game listeners
 	FYapData_PlayerPromptChosen Data;
@@ -547,11 +554,11 @@ void UYapSubsystem::RunPrompt(UWorld* World, const FYapPromptHandle& Handle)
 
 	if (ConversationHandle)
 	{
-		const FYapConversation& Conversation = GetConversationByHandle(World, *ConversationHandle);
+		const FYapConversation& Conversation = GetConversationByHandle(WorldContext, *ConversationHandle);
 
 		if (!Conversation.IsNull())
 		{
-			auto* HandlerArray = Get(World)->FindConversationHandlerArray(Conversation.GetTypeGroup());
+			auto* HandlerArray = Subsystem->FindConversationHandlerArray(Conversation.GetTypeGroup());
 		
 			BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapConversationHandler, OnConversationPlayerPromptChosen, Execute_K2_ConversationPlayerPromptChosen)>(HandlerArray, Data, Handle);
 		}
@@ -562,7 +569,7 @@ void UYapSubsystem::RunPrompt(UWorld* World, const FYapPromptHandle& Handle)
 	}
 	else
 	{
-		auto* HandlerArray = Get(World)->FindFreeSpeechHandlerArray(Handle.GetTypeGroup());
+		auto* HandlerArray = Subsystem->FindFreeSpeechHandlerArray(Handle.GetTypeGroup());
 	
 		BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapConversationHandler, OnConversationPlayerPromptChosen, Execute_K2_ConversationPlayerPromptChosen)>(HandlerArray, Data, Handle);
 	}
@@ -573,32 +580,41 @@ void UYapSubsystem::RunPrompt(UWorld* World, const FYapPromptHandle& Handle)
 
 // ------------------------------------------------------------------------------------------------
 
-bool UYapSubsystem::SkipSpeech(UWorld* World, const FYapSpeechHandle& Handle)
+bool UYapSubsystem::SkipSpeech(UObject* WorldContext, const FYapSpeechHandle& Handle)
 {
-	UE_LOG(LogYap, VeryVerbose, TEXT("Subsystem: SkipSpeech [%s]"), *Handle.ToString());
+	if (!IsValid(WorldContext))
+	{
+		UE_LOG(LogYap, Warning, TEXT("Subsystem: SkipSpeech failed - world context was invalid"));
+		return false;
+	}
 
 	if (!Handle.IsValid())
 	{
-		UE_LOG(LogYap, VeryVerbose, TEXT("Subsystem: SkipSpeech [%s] ignored - handle was invalid"), *Handle.ToString());
-		
+		UE_LOG(LogYap, Display, TEXT("Subsystem: SkipSpeech failed - speech handle was invalid"));
 		return false;
 	}
 	
-	UYapSubsystem* Subsystem = Get(World);
+	UYapSubsystem* Subsystem = Get(WorldContext);
 
+	FYapConversationHandle* ConversationHandlePtr = Subsystem->SpeechConversationMapping.Find(Handle);
+	
+	if (ConversationHandlePtr)
+	{
+		Subsystem->SkipSpeech_Conversation(Subsystem, *ConversationHandlePtr);
+		return true;
+	}
+	
+	UE_LOG(LogYap, VeryVerbose, TEXT("Subsystem: SkipSpeech [%s]"), *Handle.ToString());
+	
 	if (FTimerHandle* TimerHandle = Subsystem->SpeechTimers.Find(Handle))
 	{
-		World->GetTimerManager().ClearTimer(*TimerHandle);
+		WorldContext->GetWorld()->GetTimerManager().ClearTimer(*TimerHandle);
 
-		Subsystem->OnSpeechComplete(Handle);
-		//Subsystem->OnFragmentComplete(Handle);
-	
-		// Broadcast to Yap systems
+		// Broadcast to Yap systems; in dialogue nodes, this will kill any running paddings
 		Subsystem->OnSpeechSkip.Broadcast(Subsystem, Handle);
 
-		// Broadcast to game listeners
-		// TODO???
-		
+		Subsystem->OnSpeechComplete(Handle);
+	
 		return true;
 	}
 
@@ -609,7 +625,7 @@ bool UYapSubsystem::SkipSpeech(UWorld* World, const FYapSpeechHandle& Handle)
 
 // ------------------------------------------------------------------------------------------------
 
-void UYapSubsystem::ConversationSkip(UObject* Instigator, FYapConversationHandle Handle)
+void UYapSubsystem::SkipSpeech_Conversation(UObject* Instigator, FYapConversationHandle Handle)
 {
 	UE_LOG(LogYap, VeryVerbose, TEXT("Subsystem: ConversationSkip [%s]"), *Handle.ToString());
 

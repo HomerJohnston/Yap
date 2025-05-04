@@ -91,7 +91,7 @@ private:
 	 */
 	UPROPERTY(Config, EditAnywhere, Category = "Dialogue Playback", DisplayName = "Auto-advance to Prompt Nodes", meta = (EditCondition = "bDoNotUseSpeechTime || bManualAdvanceOnly", EditConditionHides))
 	bool bAutoAdvanceToPromptNodes = false;
-	
+
 	/** By default, a player prompt node will auto-select the prompt when only one is displayed. This setting prevents that. */
 	UPROPERTY(Config, EditAnywhere, Category = "Dialogue Playback")
 	bool bPreventAutoSelectLastPrompt = false;

@@ -9,7 +9,7 @@
 #include "YapBroker.h"
 #include "Yap/Handles/YapPromptHandle.h"
 #include "Enums/YapMaturitySetting.h"
-#include "Yap/Handles/YapRunningFragment.h"
+#include "Yap/YapRunningFragment.h"
 #include "Yap/YapBitReplacement.h"
 #include "Yap/YapDataStructures.h"
 
@@ -178,7 +178,6 @@ public:
 	//static void UnregisterFreeSpeechHandlerAllTypeGroups(UObject* HandlerToRemove);
 
 	/** Given a character identity tag, find the character component in the world. */
-	UFUNCTION(BlueprintCallable, Category = "Yap")
 	static UYapCharacterComponent* FindCharacterComponent(UWorld* World, FGameplayTag CharacterTag);
 
 	// =========================================
@@ -290,12 +289,12 @@ public:
 public:
 	// TODO should I make a ref struct for FYapPromptHandle too?
 	/** The prompt handle will call this function, passing in itself. */
-	static void RunPrompt(UWorld* World, const FYapPromptHandle& Handle);
+	static void RunPrompt(UObject* WorldContext, const FYapPromptHandle& Handle);
 
 	/** Send a skip or manual advance signal. Returns true if */
-	static bool SkipSpeech(UWorld* World, const FYapSpeechHandle& Handle);
+	static bool SkipSpeech(UObject* WorldContext, const FYapSpeechHandle& Handle);
 
-	void ConversationSkip(UObject* Instigator, FYapConversationHandle Handle);
+	void SkipSpeech_Conversation(UObject* Instigator, FYapConversationHandle Handle);
 	
 	/**  */ // TODO: ability to instantly playback/skip through multiple nodes until some sort of target point is hit, maybe a custom node? (imagine skipping an entire cutscene)
 	// static bool SkipDialogueTo(???);

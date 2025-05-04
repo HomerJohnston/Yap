@@ -75,9 +75,12 @@ class YAP_API UYapPromptHandleBFL : public UBlueprintFunctionLibrary
 	GENERATED_BODY()
 
 public:
-	UFUNCTION(BlueprintCallable, Category = "Yap", meta = (WorldContext = "WorldContext"))
+	UFUNCTION(BlueprintCallable, Category = "Yap|PromptHandle", meta = (WorldContext = "WorldContext"))
 	static void RunPrompt(UObject* WorldContext, const FYapPromptHandle& Handle);
 
-	UFUNCTION(BlueprintCallable, Category = "Yap")
+	// TODO this might be useful? Add a way to react to selection of specific prompts?
+	/*
+	UFUNCTION(BlueprintCallable, Category = "Yap|PromptHandle")
 	static bool Subscribe(const FYapPromptHandle& Handle, FYapPromptHandleChosen Delegate);
+	*/
 };

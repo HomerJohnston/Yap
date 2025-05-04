@@ -89,7 +89,7 @@ private:
 	 * This lets prompt options pop-up immediately upon starting that speech. This is roughly equivalent to using the last fragment's "Start" pin to move into the Prompt node.
 	 * WARNING: This setting cause all activation conditions of the last fragment of any talk nodes which flow into player prompt nodes to be ignored! This ensures consistent game behavior.
 	 */
-	UPROPERTY(Config, EditAnywhere, Category = "Dialogue Playback", DisplayName = "Auto-advance to Prompt Nodes", meta = (EditCondition = "bDoNotUseSpeechTime || bManualAdvanceOnly", EditConditionHides))
+	UPROPERTY(Config, EditAnywhere, Category = "Dialogue Playback", DisplayName = "Auto-advance to Prompt Nodes", meta = (EditCondition = "bManualAdvanceOnly", EditConditionHides))
 	bool bAutoAdvanceToPromptNodes = false;
 
 	/** By default, a player prompt node will auto-select the prompt when only one is displayed. This setting prevents that. */

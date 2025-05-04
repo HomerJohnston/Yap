@@ -33,7 +33,7 @@ FYapSpeechHandle::~FYapSpeechHandle()
 
 bool FYapSpeechHandle::SkipDialogue()
 {
-    return UYapSpeechHandleBFL::SkipDialogue(World.Get(), *this);
+    return UYapSpeechHandleBFL::CancelSpeech(World.Get(), *this);
 }
 
 void FYapSpeechHandle::Invalidate()
@@ -87,11 +87,11 @@ void UYapSpeechHandleBFL::UnbindToOnSpeechComplete(UObject* WorldContext, FYapSp
 
 // ------------------------------------------------------------------------------------------------
 
-bool UYapSpeechHandleBFL::SkipDialogue(UObject* WorldContext, const FYapSpeechHandle& Handle)
+bool UYapSpeechHandleBFL::CancelSpeech(UObject* WorldContext, const FYapSpeechHandle& Handle)
 {
 	if (Handle.IsValid())
 	{
-		if (!UYapSubsystem::SkipSpeech(WorldContext, Handle))
+		if (!UYapSubsystem::CancelSpeech(WorldContext, Handle))
 		{
 			UE_LOG(LogYap, Display, TEXT("Failed to skip dialogue!"))
 		}

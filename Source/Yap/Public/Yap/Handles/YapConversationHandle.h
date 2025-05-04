@@ -80,6 +80,9 @@ class UYapConversationHandleBlueprintFunctionLibrary : public UBlueprintFunction
     UFUNCTION(BlueprintCallable, Category = "Yap|ConversationHandle", meta = (WorldContext = "WorldContext"))
     static UPARAM(DisplayName = Handle) FYapConversationHandle BindToConversationClosed(UObject* WorldContext, FYapConversationHandle Handle, FYapConversationEventDelegate Delegate);
 
+    UFUNCTION(BlueprintCallable, Category = "Yap|ConversationHandle", meta = (WorldContext = "WorldContext"))
+    static UPARAM(DisplayName = Handle) FYapConversationHandle AdvanceConversation(UObject* WorldContext, FYapConversationHandle Handle);
+    
     /**
      * Apply an interlock once a conversation starts opening to prevent the conversation from actually opening.
      * Use this to play animations or await other conditions before actually entering the conversation.

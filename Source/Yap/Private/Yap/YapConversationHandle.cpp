@@ -52,6 +52,13 @@ FYapConversationHandle UYapConversationHandleBlueprintFunctionLibrary::BindToCon
     return Handle;
 }
 
+FYapConversationHandle UYapConversationHandleBlueprintFunctionLibrary::AdvanceConversation(UObject* WorldContext, FYapConversationHandle Handle)
+{
+    UYapSubsystem::AdvanceConversation(WorldContext, Handle);
+    
+    return Handle;
+}
+
 FYapConversationHandle UYapConversationHandleBlueprintFunctionLibrary::ApplyOpeningInterlock(FYapConversationHandle Handle, UObject* LockObject)
 {
     FYapConversation& Conversation = UYapSubsystem::GetConversationByHandle(LockObject->GetWorld(), Handle);

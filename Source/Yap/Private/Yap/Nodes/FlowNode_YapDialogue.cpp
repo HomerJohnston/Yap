@@ -115,7 +115,7 @@ void UFlowNode_YapDialogue::OnSkipAction(UObject* Instigator, FYapSpeechHandle H
 
 	FragmentsInPadding.Empty();
 	
-	AdvanceFromFragment(FocusedFragmentIndex.Get(INDEX_NONE));
+	AdvanceFromFragment(Handle, FocusedFragmentIndex.Get(INDEX_NONE));
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -126,18 +126,21 @@ void UFlowNode_YapDialogue::OnConversationSkip(UObject* Instigator, FYapConversa
 
 	// TODO make sure this dialogue node is actually in this conversation, URGENT
 	if (!FocusedFragmentIndex.IsSet())
-	{		
+	{
 		UE_LOG(LogYap, Warning, TEXT("OnConversationSkip was called, but running fragment was unset; ignoring"));
 		return;
 	}
 	
-	// RunningFragmentIndex will be reset during iteration! Cache it
+	// FocusedFragmentIndex could be reset during this function, cache it
 	uint8 ToIndex = FocusedFragmentIndex.GetValue();
+
+	FragmentsInPadding.Empty();
+
+	auto RunningFragmentsCopy = RunningFragments;
 	
-	for (uint8 i = 0; i <= ToIndex; ++i)
+	for (auto& [Handle, Index] : RunningFragmentsCopy)
 	{
-		FYapFragment& Fragment = Fragments[i];
-	
+		FYapFragment& Fragment = Fragments[Index];
 		FTimerHandle& PaddingTimerHandle = Fragment.PaddingTimerHandle;
 
 		if (PaddingTimerHandle.IsValid())
@@ -145,26 +148,13 @@ void UFlowNode_YapDialogue::OnConversationSkip(UObject* Instigator, FYapConversa
 			GetWorld()->GetTimerManager().ClearTimer(PaddingTimerHandle);
 		}
 
-		if (Fragment.GetRunState() != EYapFragmentRunState::Idle)
+		if (Index == ToIndex)
 		{
-			/*
-			if (FragmentsInPadding.Contains(TempHandle))
-			{
-				//OnPaddingComplete(TempHandle);
-			}
-			*/
+			AdvanceFromFragment(Handle, ToIndex);
 		}
-	}
-	
-	//#if 0
-	FragmentsInPadding.Empty();
 
-	// OnSpeechComplete may have advanced us; if it didn't, do it manually
-	if (FocusedFragmentIndex == ToIndex)
-	{
-		AdvanceFromFragment(ToIndex);
+		FinishFragment(Handle, Index);
 	}
-	//#endif
 }
 
 void UFlowNode_YapDialogue::FinishNode(FName OutputPinToTrigger)
@@ -631,7 +621,6 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 	Delegate.BindUFunction(this, GET_FUNCTION_NAME_CHECKED_TwoParams(ThisClass, OnSpeechComplete, UObject*, FYapSpeechHandle));
 	UYapSpeechHandleBFL::BindToOnSpeechComplete(GetWorld(), FocusedSpeechHandle, Delegate);	
 	
-	UE_LOG(LogYap, VeryVerbose, TEXT("%s [%i]: RunFragment; setting RunningFragmentIndex"), *GetName(), FragmentIndex);
 	FocusedFragmentIndex = FragmentIndex;
 
 	Fragment.IncrementActivations();
@@ -688,8 +677,7 @@ void UFlowNode_YapDialogue::OnSpeechComplete(UObject* Instigator, FYapSpeechHand
 	// No positive padding - this fragment is done
 	if (!FragmentsInPadding.Contains(Handle))
 	{
-		FinishFragment(Handle, *FragmentIndex);		
-		TryAdvanceFromFragment(*FragmentIndex);
+		TryAdvanceFromFragment(Handle, *FragmentIndex);
 	}
 }
 
@@ -732,12 +720,12 @@ void UFlowNode_YapDialogue::OnPaddingComplete(FYapSpeechHandle Handle)
 		FinishFragment(Handle, *FragmentIndex);
 	}
 
-	TryAdvanceFromFragment(*FragmentIndex);
+	TryAdvanceFromFragment(Handle, *FragmentIndex);
 }
 
 // ------------------------------------------------------------------------------------------------
 
-void UFlowNode_YapDialogue::FinishFragment(const FYapSpeechHandle& Handle,uint8 FragmentIndex)
+void UFlowNode_YapDialogue::FinishFragment(const FYapSpeechHandle& Handle, uint8 FragmentIndex)
 {
 	UE_LOG(LogYap, VeryVerbose, TEXT("%s [%i]: FinishFragment {%s}"), *GetName(), FragmentIndex, *Handle.ToString());
 	
@@ -750,7 +738,7 @@ void UFlowNode_YapDialogue::FinishFragment(const FYapSpeechHandle& Handle,uint8 
 
 // ------------------------------------------------------------------------------------------------
 
-void UFlowNode_YapDialogue::TryAdvanceFromFragment(uint8 FragmentIndex)
+void UFlowNode_YapDialogue::TryAdvanceFromFragment(const FYapSpeechHandle& Handle, uint8 FragmentIndex)
 {
 	if (FocusedFragmentIndex != FragmentIndex)
 	{
@@ -767,7 +755,7 @@ void UFlowNode_YapDialogue::TryAdvanceFromFragment(uint8 FragmentIndex)
 	// TODO When calling AdvanceFromFragment in Skip function, if the game is set to do manual advancement, this won't run. Push this into a separate function I can call or add another route into this.
 	if (GetFragmentAutoAdvance(FragmentIndex))
 	{
-		AdvanceFromFragment(FragmentIndex);
+		AdvanceFromFragment(Handle, FragmentIndex);
 	}
 	else
 	{
@@ -775,15 +763,22 @@ void UFlowNode_YapDialogue::TryAdvanceFromFragment(uint8 FragmentIndex)
 	}
 }
 
-void UFlowNode_YapDialogue::AdvanceFromFragment(uint8 FragmentIndex)
+void UFlowNode_YapDialogue::AdvanceFromFragment(const FYapSpeechHandle& Handle, uint8 FragmentIndex)
 {
 	UE_LOG(LogYap, VeryVerbose, TEXT("%s [%i]: AdvanceFromFragment"), *GetName(), FragmentIndex);
-
+	
 	FYapFragment& Fragment = Fragments[FragmentIndex];
 	
 	Fragment.SetRunState(EYapFragmentRunState::Idle);
 	
+	if (FragmentIndex != FocusedFragmentIndex)
+	{
+		return;
+	}
+	
 	FocusedFragmentIndex.Reset();
+
+	FinishFragment(Handle, FragmentIndex);
 	
 	if (IsPlayerPrompt())
 	{

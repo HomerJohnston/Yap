@@ -194,6 +194,13 @@ TOptional<float> FYapFragment::GetSpeechTime(UWorld* World, const FGameplayTag& 
 	return GetSpeechTime(World, UYapSubsystem::GetCurrentMaturitySetting(World), EYapLoadContext::Sync, TypeGroup);
 }
 
+void FYapFragment::SetAwaitingManualAdvance()
+{
+	UE_LOG(LogYap, VeryVerbose, TEXT("Fragment awaiting manual advance {%s}"), *GetGuid().ToString());
+	
+	bFragmentAwaitingManualAdvance = true;
+}
+
 TOptional<float> FYapFragment::GetSpeechTime(UWorld* World, EYapMaturitySetting MaturitySetting, EYapLoadContext LoadContext, const FGameplayTag& TypeGroup) const
 {
 	EYapTimeMode EffectiveTimeMode = GetTimeMode(World, MaturitySetting, TypeGroup);

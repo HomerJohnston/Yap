@@ -94,7 +94,7 @@ public:
     static void UnbindToOnSpeechComplete(UObject* WorldContext, FYapSpeechHandle Handle, FYapSpeechEventDelegate Delegate);
     
     UFUNCTION(BlueprintCallable, Category = "Yap|Speech Handle", meta = (WorldContext = "WorldContext"))
-    static bool SkipDialogue(UObject* WorldContext, const FYapSpeechHandle& Handle);
+    static bool CancelSpeech(UObject* WorldContext, const FYapSpeechHandle& Handle);
 
     UFUNCTION(BlueprintCallable, Category = "Yap|Speech Handle", meta = (WorldContext = "WorldContext"))
     static bool CanSkipCurrently(UObject* WorldContext, const FYapSpeechHandle& Handle);

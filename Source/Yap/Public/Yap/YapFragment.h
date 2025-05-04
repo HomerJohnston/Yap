@@ -261,7 +261,7 @@ public:
 
 	bool GetIsAwaitingManualAdvance() const { return bFragmentAwaitingManualAdvance; };
 
-	void SetAwaitingManualAdvance() { bFragmentAwaitingManualAdvance = true; };
+	void SetAwaitingManualAdvance();;
 
 protected:
 	TOptional<float> GetSpeechTime(UWorld* World, EYapMaturitySetting MaturitySetting, EYapLoadContext LoadContext, const FGameplayTag& TypeGroup) const;

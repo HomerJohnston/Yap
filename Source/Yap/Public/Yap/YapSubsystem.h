@@ -291,17 +291,14 @@ public:
 	/** The prompt handle will call this function, passing in itself. */
 	static void RunPrompt(UObject* WorldContext, const FYapPromptHandle& Handle);
 
-	/** Send a skip or manual advance signal. Returns true if */
-	static bool SkipSpeech(UObject* WorldContext, const FYapSpeechHandle& Handle);
+	/** Used to complete a single speech early; supposed to be used for free world speech */
+	static bool CancelSpeech(UObject* WorldContext, const FYapSpeechHandle& Handle);
 
-	void SkipSpeech_Conversation(UObject* Instigator, FYapConversationHandle Handle);
+	/** Used to complete all running speech within a given conversation; supposed to be used for "skip" or "continue/advance" type buttons */
+	static void AdvanceConversation(UObject* Instigator, FYapConversationHandle Handle);
 	
-	/**  */ // TODO: ability to instantly playback/skip through multiple nodes until some sort of target point is hit, maybe a custom node? (imagine skipping an entire cutscene)
-	// static bool SkipDialogueTo(???);
-
-	/*
-	static FYapRunningFragment& GetFragmentHandle(FYapSpeechHandle HandleRef);
-	*/
+	// TODO: ability to instantly playback/skip through multiple nodes until some sort of target point is hit, maybe a custom node? (imagine skipping an entire cutscene)
+	// static bool SkipConversationTo(???);
 	
 public:
 	/**  */

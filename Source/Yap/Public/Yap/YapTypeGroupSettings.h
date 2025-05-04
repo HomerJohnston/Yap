@@ -73,11 +73,11 @@ private:
 	bool bConversationsRequireAdvanceTriggerToStart = false;
 	
 	/** If set, dialogue will be non-skippable by default and must play for its entire duration. */
-	UPROPERTY(Config, EditAnywhere, Category = "Dialogue Playback", meta = (EditCondition = "!bDoNotUseSpeechTime", EditConditionHides))
+	UPROPERTY(Config, EditAnywhere, Category = "Dialogue Playback", meta = (EditCondition = "DefaultTimeModeSetting != EYapTimeMode::None", EditConditionHides))
 	bool bForcedDialogueDuration = false;
 	
 	/** If set, dialogue will not auto-advance when its duration finishes and will require advancement by using the Dialogue Handle. */
-	UPROPERTY(Config, EditAnywhere, Category = "Dialogue Playback", meta = (EditCondition = "!bDoNotUseSpeechTime", EditConditionHides))
+	UPROPERTY(Config, EditAnywhere, Category = "Dialogue Playback", meta = (EditCondition = "DefaultTimeModeSetting != EYapTimeMode::None", EditConditionHides))
 	bool bManualAdvanceOnly = false;
 
 	/** If set, prompt nodes will always default to auto-advance. */
@@ -282,7 +282,17 @@ public:
 
 	bool GetForcedDialogueDuration() RETURN(bForcedDialogueDuration_Override, bForcedDialogueDuration)
 	
-	bool GetManualAdvanceOnly() RETURN(bManualAdvanceOnly_Override, bManualAdvanceOnly)
+	bool GetManualAdvanceOnly() const
+	{
+		EYapTimeMode TimeMode = GetDefaultTimeModeSetting();
+		
+		if (TimeMode == EYapTimeMode::None)
+		{
+			return true;
+		}
+		
+		return bManualAdvanceOnly_Override ? bManualAdvanceOnly : Default().bManualAdvanceOnly;
+	}
 
 	bool GetPromptAutoAdvance() RETURN(bPromptAutoAdvance_Override, bPromptAutoAdvance)
 	

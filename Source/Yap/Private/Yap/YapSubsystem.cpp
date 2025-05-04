@@ -580,31 +580,33 @@ void UYapSubsystem::RunPrompt(UObject* WorldContext, const FYapPromptHandle& Han
 
 // ------------------------------------------------------------------------------------------------
 
-bool UYapSubsystem::SkipSpeech(UObject* WorldContext, const FYapSpeechHandle& Handle)
+bool UYapSubsystem::CancelSpeech(UObject* WorldContext, const FYapSpeechHandle& Handle)
 {
 	if (!IsValid(WorldContext))
 	{
-		UE_LOG(LogYap, Warning, TEXT("Subsystem: SkipSpeech failed - world context was invalid"));
+		UE_LOG(LogYap, Warning, TEXT("Subsystem: CancelSpeech failed - world context was invalid"));
 		return false;
 	}
 
 	if (!Handle.IsValid())
 	{
-		UE_LOG(LogYap, Display, TEXT("Subsystem: SkipSpeech failed - speech handle was invalid"));
+		UE_LOG(LogYap, Display, TEXT("Subsystem: CancelSpeech failed - speech handle was invalid"));
 		return false;
 	}
+
+	UE_LOG(LogYap, VeryVerbose, TEXT("Subsystem: CancelSpeech {%s}"), *Handle.ToString());
 	
 	UYapSubsystem* Subsystem = Get(WorldContext);
 
 	FYapConversationHandle* ConversationHandlePtr = Subsystem->SpeechConversationMapping.Find(Handle);
-	
+
+	/*
 	if (ConversationHandlePtr)
 	{
-		Subsystem->SkipSpeech_Conversation(Subsystem, *ConversationHandlePtr);
+		//Subsystem->AdvanceConversation(Subsystem, *ConversationHandlePtr);
 		return true;
 	}
-	
-	UE_LOG(LogYap, VeryVerbose, TEXT("Subsystem: SkipSpeech [%s]"), *Handle.ToString());
+	*/
 	
 	if (FTimerHandle* TimerHandle = Subsystem->SpeechTimers.Find(Handle))
 	{
@@ -625,7 +627,7 @@ bool UYapSubsystem::SkipSpeech(UObject* WorldContext, const FYapSpeechHandle& Ha
 
 // ------------------------------------------------------------------------------------------------
 
-void UYapSubsystem::SkipSpeech_Conversation(UObject* Instigator, FYapConversationHandle Handle)
+void UYapSubsystem::AdvanceConversation(UObject* Instigator, FYapConversationHandle Handle)
 {
 	UE_LOG(LogYap, VeryVerbose, TEXT("Subsystem: ConversationSkip [%s]"), *Handle.ToString());
 
@@ -636,18 +638,18 @@ void UYapSubsystem::SkipSpeech_Conversation(UObject* Instigator, FYapConversatio
 	
 	UYapSubsystem* Subsystem = Get(Instigator);
 
-	FYapConversation* ConversationPtr = Conversations.Find(Handle);
+	FYapConversation* ConversationPtr = Subsystem->Conversations.Find(Handle);
 
 	TArray<FYapSpeechHandle> RunningFragments = ConversationPtr->GetRunningFragments();
-
-	// Broadcast to Yap systems; in dialogue nodes, this will kill any running paddings
-	OnConversationSkip.Broadcast(Instigator, Handle);
 
 	// Finish all running speeches
 	for (const FYapSpeechHandle& SpeechHandle : RunningFragments)
 	{
 		Subsystem->OnSpeechComplete(SpeechHandle);
 	}
+	
+	// Broadcast to Yap systems; in dialogue nodes, this will kill any running paddings
+	Subsystem->OnConversationSkip.Broadcast(Instigator, Handle);
 }
 
 // ------------------------------------------------------------------------------------------------

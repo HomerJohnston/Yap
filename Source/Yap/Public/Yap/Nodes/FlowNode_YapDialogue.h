@@ -275,9 +275,9 @@ public:
 	/** Called when a fragment is completely done - speech is done, padding is done */
 	void FinishFragment(const FYapSpeechHandle& Handle, uint8 FragmentIndex);
 	
-	void TryAdvanceFromFragment(uint8 FragmentIndex);
+	void TryAdvanceFromFragment(const FYapSpeechHandle& Handle, uint8 FragmentIndex);
 
-	void AdvanceFromFragment(uint8 FragmentIndex);
+	void AdvanceFromFragment(const FYapSpeechHandle& Handle, uint8 FragmentIndex);
 	
 	bool IsBypassPinRequired() const;
 

@@ -264,18 +264,21 @@ protected:
 	bool RunFragment(uint8 FragmentIndex);
 
 public:
+	/** This gets run by the subsystem when the actual speaking finishes */
 	UFUNCTION()
 	void OnSpeechComplete(UObject* Instigator, FYapSpeechHandle Handle);
-	
+
+	/** This gets run by the dialogue node's own timers, only if the fragment is set to use padding */
 	UFUNCTION()
 	void OnPaddingComplete(FYapSpeechHandle Handle);
 
-	/** Called when a fragment is completely done - speech is done AND padding is done */
+	/** Called when a fragment is done running - speech is done AND padding is done */
 	void FinishFragment(const FYapSpeechHandle& Handle, uint8 FragmentIndex);
 
 	/** This should be called whenever speech finishes OR padding finishes */
 	void TryAdvanceFromFragment(const FYapSpeechHandle& Handle, uint8 FragmentIndex);
 
+	/** Forcefully begins playing the next fragment or triggers the output node */
 	void AdvanceFromFragment(const FYapSpeechHandle& Handle, uint8 FragmentIndex);
 	
 	bool IsBypassPinRequired() const;
@@ -285,6 +288,14 @@ public:
 	int16 FindFragmentIndex(const FGuid& InFragmentGuid) const;
 
 protected:
+	void TriggerSpeechStartPin(uint8 FragmentIndex);
+
+	void TriggerSpeechEndPin(uint8 FragmentIndex);
+
+	void BindToSubsystemSpeechCompleteEvent(const FYapSpeechHandle& Handle);
+
+	void UnbindToSubsystemSpeechCompleteEvent(const FYapSpeechHandle& Handle);
+	
 	bool FragmentCanRun(uint8 FragmentIndex);
 	
 	const FYapFragment& GetFragmentByIndex(uint8 Index) const;

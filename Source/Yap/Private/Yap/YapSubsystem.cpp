@@ -720,6 +720,17 @@ TArray<TObjectPtr<UObject>>* UYapSubsystem::FindFreeSpeechHandlerArray(const FGa
 
 // ------------------------------------------------------------------------------------------------
 
+FYapSpeechHandle UYapSubsystem::GetNewSpeechHandle(FGuid Guid)
+{
+	FYapSpeechHandle NewHandle(GetWorld(), Guid);
+	
+	FYapSpeechEvent& X = SpeechCompleteEvents.Add(NewHandle);
+
+	return NewHandle;
+}
+
+// ------------------------------------------------------------------------------------------------
+
 void UYapSubsystem::RegisterSpeechHandle(FYapSpeechHandle& Handle)
 {
 	SpeechCompleteEvents.Add(Handle);

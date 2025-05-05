@@ -18,13 +18,11 @@ FYapSpeechHandle::FYapSpeechHandle()
 	Guid.Invalidate();
 }
 
-FYapSpeechHandle::FYapSpeechHandle(UWorld* InWorld, const FGuid& InGuid)
+FYapSpeechHandle::FYapSpeechHandle(UWorld* InWorld, FGuid InGuid)
 {
 	check(::IsValid(InWorld));
 	World = InWorld;
-	Guid = InGuid;
-
-	UYapSubsystem::Get(InWorld)->RegisterSpeechHandle(*this);
+	Guid = InGuid; //FGuid::NewGuid();
 }
 
 FYapSpeechHandle::~FYapSpeechHandle()

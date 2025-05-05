@@ -12,6 +12,8 @@ struct YAP_API FYapSpeechHandle
 {
     GENERATED_BODY()
 
+    friend class UYapSpeechHandleBFL;
+    
     // ==========================================
     // CONSTRUCTION
     // ==========================================
@@ -19,7 +21,7 @@ public:
 	
     FYapSpeechHandle();
 
-    FYapSpeechHandle(UWorld* InWorld, const FGuid& InGuid);
+    FYapSpeechHandle(UWorld* InWorld, FGuid InGuid);
 
     ~FYapSpeechHandle();
     
@@ -36,12 +38,15 @@ private:
     UPROPERTY(Transient)
     TWeakObjectPtr<UWorld> World;
 
+    UPROPERTY(Transient)
+    bool bActive = true;
+    
     // ==========================================
     // API
     // ==========================================
 public:
 
-    bool IsValid() const { return Guid.IsValid() && World.IsValid(); }
+    bool IsValid() const { return bActive && Guid.IsValid() && World.IsValid(); }
 
     const FGuid& GetGuid() const { return Guid; }
 
@@ -110,7 +115,7 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Yap|Speech Handle")
     static void Invalidate(UPARAM(ref) FYapSpeechHandle& Handle)
     {
-        Handle.Invalidate();
+        Handle.bActive = false;
     };
     
     /** Returns true if the values are equal (A == B) */

@@ -315,6 +315,8 @@ public:
 	
 	TArray<TObjectPtr<UObject>>* FindFreeSpeechHandlerArray(const FGameplayTag& TypeGroup);
 
+	FYapSpeechHandle GetNewSpeechHandle(FGuid Guid);
+	
 	void RegisterSpeechHandle(FYapSpeechHandle& Handle);
 	
 	void UnregisterSpeechHandle(FYapSpeechHandle& Handle);

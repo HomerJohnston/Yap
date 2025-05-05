@@ -201,8 +201,6 @@ bool FYapFragment::IsAwaitingManualAdvance() const
 
 void FYapFragment::SetAwaitingManualAdvance()
 {
-	UE_LOG(LogYap, VeryVerbose, TEXT("Fragment awaiting manual advance {%s}"), *GetGuid().ToString());
-	
 	bFragmentAwaitingManualAdvance = true;
 }
 

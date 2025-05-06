@@ -809,7 +809,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateFragmentWidget()
 				]
 			]
 			+ SOverlay::Slot()
-			.Padding(32, 0, 32, -6)
+			.Padding(32, 0, 32, -7)
 			.VAlign(EVerticalAlignment::VAlign_Bottom)
 			[
 				SNew(SBox)
@@ -954,11 +954,15 @@ FSlateColor SFlowGraphNode_YapFragmentWidget::ColorAndOpacity_AudioID() const
 
 EVisibility SFlowGraphNode_YapFragmentWidget::Visibility_TimeProgressionWidget() const
 {
-	if (GetTypeGroup().GetDefaultTimeModeSetting() == EYapTimeMode::None)
+	UWorld* World = GetDialogueNode()->GetWorld();
+
+	const FGameplayTag& TypeGroup = GetDialogueNode()->GetTypeGroupTag();
+	
+	if (GetFragment().GetTimeMode(World, TypeGroup) == EYapTimeMode::None)
 	{
 		return EVisibility::Collapsed;
 	}
-
+		
 	return EVisibility::SelfHitTestInvisible;
 }
 
@@ -1135,15 +1139,18 @@ FLinearColor SFlowGraphNode_YapFragmentWidget::ColorAndOpacity_FragmentTimeIndic
 	
 	EYapTimeMode TimeMode = GetFragment().GetTimeModeSetting();
 
+	Color = TimeModeButtonColors[TimeMode];
+
 	if (TimeMode == EYapTimeMode::Default)
 	{
-		Color = YapColor::DimGray;
+		Color = Color.Desaturate(0.4f);
 	}
 	else
 	{
-		Color = TimeModeButtonColors[GetFragment().GetTimeModeSetting()];
-	}		
-	
+		Color = Color.Desaturate(0.2f);
+	}
+
+	// Darken it during play if it isn't running
 	if (GEditor->IsPlaySessionInProgress() && !FragmentIsRunning())
 	{
 		Color *= YapColor::Gray;

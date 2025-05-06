@@ -127,8 +127,11 @@ EYapMaturitySetting UYapSubsystem::GetCurrentMaturitySetting(UWorld* World)
 {
 	EYapMaturitySetting MaturitySetting;
 
-	check(World);
-
+	if (!IsValid(World))
+	{
+		return EYapMaturitySetting::Mature;
+	}
+	
 	UYapBroker* Broker = GetBroker(World);
 
 	if (ensureMsgf(IsValid(Broker), TEXT("No broker set in project settings! Defaulting to mature.")))

@@ -5,42 +5,113 @@
 
 #include "DetailLayoutBuilder.h"
 #include "DetailWidgetRow.h"
-#include "GameplayTagsEditorModule.h"
 #include "IDetailChildrenBuilder.h"
 #include "IDetailGroup.h"
+#include "ObjectEditorUtils.h"
 #include "SGameplayTagPicker.h"
 #include "Widgets/Layout/SWidgetSwitcher.h"
 #include "Yap/YapTypeGroupSettings.h"
 #include "Yap/YapProjectSettings.h"
-#include "Yap/Globals/YapFileUtilities.h"
 #include "YapEditor/YapEditorColor.h"
 #include "YapEditor/YapEditorLog.h"
 #include "YapEditor/YapEditorStyle.h"
-#include "YapEditor/YapEditorSubsystem.h"
-#include "YapEditor/YapTransactions.h"
-#include "YapEditor/Globals/YapEditorFuncs.h"
-#include "YapEditor/Globals/YapTagHelpers.h"
 
 #define LOCTEXT_NAMESPACE "YapEditor"
 
 TMap<FName, TSharedPtr<IPropertyHandle>> FPropertyCustomization_YapGroupSettings::DefaultPropertyHandles;
 
+TArray<FName> FPropertyCustomization_YapGroupSettings::IgnoredProperties = 
+{
+	GET_MEMBER_NAME_CHECKED(FYapTypeGroupSettings, bDefault),
+	GET_MEMBER_NAME_CHECKED(FYapTypeGroupSettings, GroupColor)
+};
+
+// ========
+
+// Pleasantly borrowed from PostProcessSettingsCustomization.cpp
+struct FYapCategoryOrGroup
+{
+	IDetailCategoryBuilder* Category;
+	IDetailGroup* Group;
+
+	FYapCategoryOrGroup(IDetailCategoryBuilder& NewCategory)
+		: Category(&NewCategory)
+		, Group(nullptr)
+	{}
+
+	FYapCategoryOrGroup(IDetailGroup& NewGroup)
+		: Category(nullptr)
+		, Group(&NewGroup)
+	{}
+
+	FYapCategoryOrGroup()
+		: Category(nullptr)
+		, Group(nullptr)
+	{}
+
+	void AddProperty(FPropertyCustomization_YapGroupSettings& Drawer, IDetailChildrenBuilder& StructBuilder, TSharedPtr<IPropertyHandle>& Property)
+	{
+		if (Category)
+		{
+			Category->AddProperty(Property);
+		}
+		else
+		{
+			Drawer.DrawProperty(StructBuilder, *Group, Property);
+		}
+	}
+
+	IDetailGroup& AddGroup(FName GroupName, const FText& DisplayName)
+	{
+		if (Category)
+		{
+			return Category->AddGroup(GroupName, DisplayName);
+		}
+		else
+		{
+			return Group->AddGroup(GroupName, DisplayName);
+		}
+	}
+
+	bool IsValid() const
+	{
+		return Group || Category;
+	}
+};
+
+struct FYapGroupSettingsGroup
+{
+	FString RawGroupName;
+	FString DisplayName;
+	FYapCategoryOrGroup RootCategory;
+	TArray<TSharedPtr<IPropertyHandle>> SimplePropertyHandles;
+	TArray<TSharedPtr<IPropertyHandle>> AdvancedPropertyHandles;
+
+	bool IsValid() const
+	{
+		return !RawGroupName.IsEmpty() && !DisplayName.IsEmpty() && RootCategory.IsValid();
+	}
+
+	FYapGroupSettingsGroup()
+		: RootCategory()
+	{}
+};
+
+// ========
+
 // ------------------------------------------------------------------------------------------------
 void FPropertyCustomization_YapGroupSettings::CustomizeHeader(TSharedRef<class IPropertyHandle> StructPropertyHandle, class FDetailWidgetRow& HeaderRow, IPropertyTypeCustomizationUtils& StructCustomizationUtils)
 {
-	GrabOriginalStructPtr(StructPropertyHandle);
-	
-	IndexChildrenProperties(StructPropertyHandle);
-	
-	GatherOverrides();
+	UE_LOG(LogYapEditor, VeryVerbose, TEXT("========================================================================="));
+	UE_LOG(LogYapEditor, VeryVerbose, TEXT("GROUP SETTINGS CUSTOMIZATION START"));
+
+	IndexAllProperties(StructPropertyHandle);
 	
 	GroupProperties();
 	
 	SortGroups();
 	
 	UpdateOverriddenCounts();
-
-	HookUpPropertyChangeDelegates();
 
 	HeaderColorPropertyHolder = SNew(SBox)
 		[
@@ -93,32 +164,137 @@ void FPropertyCustomization_YapGroupSettings::CustomizeChildren(TSharedRef<IProp
 {
 	HeaderColorPropertyHolder->SetContent(StructBuilder.GenerateStructValueWidget(GroupColorPropertyHandle.ToSharedRef()));
 	
-	for (auto& [CategoryString, PropertyHandles] : PropertyGroups)
+	///*
+	uint32 NumChildren = 0;
+	FPropertyAccess::Result Result = StructPropertyHandle->GetNumChildren(NumChildren);
+
+	FProperty* Prop = StructPropertyHandle->GetProperty();
+	FStructProperty* StructProp = CastField<FStructProperty>(Prop);
+
+	TMap<FString, FYapCategoryOrGroup> NameToCategoryBuilderMap;
+	TMap<FString, FYapGroupSettingsGroup> NameToGroupMap;
+
+	if(Result == FPropertyAccess::Success && NumChildren > 0)
 	{
-		DrawGroup(StructBuilder, CategoryString, PropertyHandles);
+		for( uint32 ChildIndex = 0; ChildIndex < NumChildren; ++ChildIndex )
+		{
+			TSharedPtr<IPropertyHandle> ChildHandle = StructPropertyHandle->GetChildHandle( ChildIndex );
+
+			if( ChildHandle.IsValid() && ChildHandle->GetProperty() )
+			{
+				if (ChildHandle->HasMetaData("DoNotDraw"))
+				{
+					continue;
+				}
+				
+				if (ChildHandle->HasMetaData("DefaultOverride"))
+				{
+					continue;
+				}
+				
+				FProperty* Property = ChildHandle->GetProperty();
+
+				FName CategoryFName = FObjectEditorUtils::GetCategoryFName(Property);
+				
+				FString RawCategoryName = CategoryFName.ToString();
+
+				TArray<FString> CategoryAndGroups;
+				RawCategoryName.ParseIntoArray(CategoryAndGroups, TEXT("|"), 1);
+
+				FString RootCategoryName = CategoryAndGroups.Num() > 0 ? CategoryAndGroups[0] : RawCategoryName;
+
+				FYapCategoryOrGroup* Category = NameToCategoryBuilderMap.Find(RootCategoryName);
+				
+				if(!Category)
+				{
+					IDetailGroup& NewGroup = StructBuilder.AddGroup(*RootCategoryName, FText::FromString(RootCategoryName));
+					Category = &NameToCategoryBuilderMap.Emplace(RootCategoryName, NewGroup);
+				}
+
+				if(CategoryAndGroups.Num() > 1)
+				{
+					// Only handling one group for now
+					// There are sub groups so add them now
+					FYapGroupSettingsGroup& PPGroup = NameToGroupMap.FindOrAdd(RawCategoryName);
+					
+					// Is this a new group? It wont be valid if it is
+					if(!PPGroup.IsValid())
+					{
+						PPGroup.RootCategory = *Category;
+						PPGroup.RawGroupName = RawCategoryName;
+						PPGroup.DisplayName = CategoryAndGroups[1].TrimStartAndEnd();
+					}
+	
+					bool bIsSimple = !ChildHandle->GetProperty()->HasAnyPropertyFlags(CPF_AdvancedDisplay);
+					if(bIsSimple)
+					{
+						PPGroup.SimplePropertyHandles.Add(ChildHandle);
+					}
+					else
+					{
+						PPGroup.AdvancedPropertyHandles.Add(ChildHandle);
+					}
+				}
+				else
+				{
+					// This draws pretty much all of the properties
+					Category->AddProperty(*this, StructBuilder, ChildHandle);
+				}
+			}
+		}
+
+		for(auto& NameAndGroup : NameToGroupMap)
+		{
+			FYapGroupSettingsGroup& YapGroup = NameAndGroup.Value;
+
+			if(YapGroup.SimplePropertyHandles.Num() > 0 || YapGroup.AdvancedPropertyHandles.Num() > 0 )
+			{
+				// This is drawing a subcategory "like DialoguePlayback|Timed"
+				IDetailGroup& SimpleGroup = YapGroup.RootCategory.AddGroup(*YapGroup.RawGroupName, FText::FromString(YapGroup.DisplayName));
+				/*
+				SimpleGroup.HeaderRow()
+				[
+					SNew(SBox)
+					.HAlign(HAlign_Left)
+					.VAlign(VAlign_Center)
+					[
+						SNew(STextBlock)
+						.Text(FText::FromString(YapGroup.DisplayName))
+						.Font(FAppStyle::Get().GetFontStyle("SmallFont"))
+					]
+				];
+				*/
+				for(auto& SimpleProperty : YapGroup.SimplePropertyHandles)
+				{
+					//SimpleGroup.AddPropertyRow(SimpleProperty.ToSharedRef());
+					DrawProperty(StructBuilder, SimpleGroup, SimpleProperty);
+				}
+
+				if(YapGroup.AdvancedPropertyHandles.Num() > 0)
+				{
+					IDetailGroup& AdvancedGroup = SimpleGroup.AddGroup(*(YapGroup.RawGroupName+TEXT("Advanced")), LOCTEXT("YapAdvancedGroup", "Advanced"));
+					
+					for(auto& AdvancedProperty : YapGroup.AdvancedPropertyHandles)
+					{
+						//AdvancedGroup.AddPropertyRow(AdvancedProperty.ToSharedRef());
+						DrawProperty(StructBuilder, AdvancedGroup, AdvancedProperty);
+					}
+				}
+			}
+		}
 	}
 }
 
 // ------------------------------------------------------------------------------------------------
-void FPropertyCustomization_YapGroupSettings::GrabOriginalStructPtr(TSharedRef<IPropertyHandle> StructPropertyHandle)
+
+void FPropertyCustomization_YapGroupSettings::IndexAllProperties(TSharedRef<class IPropertyHandle> StructPropertyHandle)
 {
-	void* StructData;
-
-	FPropertyAccess::Result Result = StructPropertyHandle->GetValueData(StructData);
-
-	if (Result == FPropertyAccess::Success)
-	{
-		Settings = reinterpret_cast<FYapTypeGroupSettings*>(StructData);
-	}
-}
-
-// ------------------------------------------------------------------------------------------------
-void FPropertyCustomization_YapGroupSettings::IndexChildrenProperties(TSharedRef<class IPropertyHandle> StructPropertyHandle)
-{
+	IndexImportantProperties(StructPropertyHandle);
+	
 	uint32 NumChildren;
 	StructPropertyHandle->GetNumChildren(NumChildren);
 
-	IndexedPropertyHandles.Empty(NumChildren);
+	AllPropertyHandles.Empty(NumChildren);
 
 	// Iterate through all of the properties and add them to the array. We're doing this so that we can always pull identical IPropertyHandles for the properties from one source
 	// GetChildHandle always returns a unique handle object, so you can't grab the same property and find in a map (== isn't implemented, only IsSamePropertyNode() which is useless).
@@ -126,33 +302,74 @@ void FPropertyCustomization_YapGroupSettings::IndexChildrenProperties(TSharedRef
 	{
 		TSharedPtr<IPropertyHandle> ChildHandle = StructPropertyHandle->GetChildHandle(ChildIndex);
 
-		IndexedPropertyHandles.Add(ChildHandle);
+		AllPropertyHandles.Add(ChildHandle);
 
-		static const FName GroupColorName = GET_MEMBER_NAME_CHECKED(FYapTypeGroupSettings, GroupColor);
-
-		FName PropertyName = ChildHandle->GetProperty()->GetFName();
-
-		if (PropertyName == GroupColorName)
-		{
-			GroupColorPropertyHandle = ChildHandle;
-		}
-
+		// Discover default properties and discover override properties
 		if (IsDefault())
 		{
-			DefaultPropertyHandles.Add(ChildHandle->GetProperty()->GetFName(), ChildHandle);
+			if (!ChildHandle->HasMetaData("DefaultOverride"))
+			{
+				DefaultPropertyHandles.Add(ChildHandle->GetProperty()->GetFName(), ChildHandle);
+			}
+		}
+		else
+		{
+			if (ChildHandle->HasMetaData("DefaultOverride"))
+			{
+				FString OverriddenPropertyNameAsString = ChildHandle->GetMetaData(FName("DefaultOverride"));
+
+				if (OverriddenPropertyNameAsString.IsEmpty())
+				{
+					// Forgot to specify a property name to override?
+					checkNoEntry();
+				}
+			
+				FName OverriddenPropertyName(OverriddenPropertyNameAsString);
+
+				PropertyBoolControlHandles.Add(OverriddenPropertyName, ChildHandle);
+			}
 		}
 	}
 }
 
 // ------------------------------------------------------------------------------------------------
+
+void FPropertyCustomization_YapGroupSettings::IndexImportantProperties(TSharedRef<IPropertyHandle> StructPropertyHandle)
+{
+	uint32 NumChildren;
+	StructPropertyHandle->GetNumChildren(NumChildren);
+	
+	for (uint32 ChildIndex = 0; ChildIndex < NumChildren; ++ChildIndex)
+	{
+		TSharedPtr<IPropertyHandle> ChildHandle = StructPropertyHandle->GetChildHandle(ChildIndex);
+
+		static const FName GroupColorName = GET_MEMBER_NAME_CHECKED(FYapTypeGroupSettings, GroupColor);
+		static const FName DefaultName = GET_MEMBER_NAME_CHECKED(FYapTypeGroupSettings, bDefault);
+
+		FName PropertyName = ChildHandle->GetProperty()->GetFName();
+
+		// Discover important properties
+		if (PropertyName == GroupColorName)
+		{
+			GroupColorPropertyHandle = ChildHandle;
+		}
+		else if (PropertyName == DefaultName)
+		{
+			DefaultPropertyHandle = ChildHandle;
+		}
+	}
+}
+
+// ------------------------------------------------------------------------------------------------
+
 void FPropertyCustomization_YapGroupSettings::UpdateOverriddenCounts()
 {
 	GroupOverridenCounts.Empty();
 	TotalOverrides = 0;
 	
-	for (int32 ChildIndex = 0; ChildIndex < IndexedPropertyHandles.Num(); ++ChildIndex)
+	for (int32 ChildIndex = 0; ChildIndex < AllPropertyHandles.Num(); ++ChildIndex)
 	{
-		TSharedPtr<IPropertyHandle> ChildHandle = IndexedPropertyHandles[ChildIndex];
+		TSharedPtr<IPropertyHandle> ChildHandle = AllPropertyHandles[ChildIndex];
 
 		if (IsOverridden(ChildHandle->GetProperty()->GetFName()))
 		{
@@ -166,27 +383,11 @@ void FPropertyCustomization_YapGroupSettings::UpdateOverriddenCounts()
 }
 
 // ------------------------------------------------------------------------------------------------
-void FPropertyCustomization_YapGroupSettings::HookUpPropertyChangeDelegates()
-{
-	/*
-	for (int32 ChildIndex = 0; ChildIndex < IndexedPropertyHandles.Num(); ++ChildIndex)
-	{
-		TSharedPtr<IPropertyHandle> ChildHandle = IndexedPropertyHandles[ChildIndex];
-	}
-	*/
-}
-
-// ------------------------------------------------------------------------------------------------
 bool FPropertyCustomization_YapGroupSettings::IsDefault() const
 {
-	if (Settings)
-	{
-		return Settings->bDefault;
-	}
-
-	checkNoEntry();
-
-	return false;
+	bool bIsDefault;
+	DefaultPropertyHandle->GetValue(bIsDefault);
+	return bIsDefault;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -215,70 +416,9 @@ bool FPropertyCustomization_YapGroupSettings::IsOverridden(FName PropertyName) c
 // ------------------------------------------------------------------------------------------------
 FLinearColor FPropertyCustomization_YapGroupSettings::GetGroupColor()
 {
-	return Settings->GroupColor;
-}
-
-// ------------------------------------------------------------------------------------------------
-void FPropertyCustomization_YapGroupSettings::GroupProperties()
-{
-	TArray<FName> IgnoredProperties
-	{
-		GET_MEMBER_NAME_CHECKED(FYapTypeGroupSettings, bDefault),
-		GET_MEMBER_NAME_CHECKED(FYapTypeGroupSettings, GroupColor)
-	};
-	
-	// Iterate through all of the properties and find initial information
-	for (int32 ChildIndex = 0; ChildIndex < IndexedPropertyHandles.Num(); ++ChildIndex)
-	{
-		TSharedPtr<IPropertyHandle> ChildHandle = IndexedPropertyHandles[ChildIndex];
-
-		// Don't draw the default property, keep it hidden
-		if (IgnoredProperties.Contains(ChildHandle->GetProperty()->GetFName()))
-		{
-			continue;
-		}
-
-		// Don't group up bools used to enable named group overrides
-		if (ChildHandle->HasMetaData("DefaultOverride"))
-		{
-			continue;	
-		}
-		
-		FString Category = ChildHandle->GetMetaData("Category");
-
-		TArray<TSharedPtr<IPropertyHandle>>& Group = PropertyGroups.FindOrAdd(Category);
-
-		Group.Emplace(ChildHandle);
-	}
-}
-
-// ------------------------------------------------------------------------------------------------
-void FPropertyCustomization_YapGroupSettings::GatherOverrides()
-{
-	if (IsDefault())
-	{
-		return;
-	}
-	
-	for (int32 ChildIndex = 0; ChildIndex < IndexedPropertyHandles.Num(); ++ChildIndex)
-	{
-		TSharedPtr<IPropertyHandle> ChildHandle = IndexedPropertyHandles[ChildIndex];
-		
-		if (ChildHandle->HasMetaData("DefaultOverride"))
-		{
-			FString OverriddenPropertyNameAsString = ChildHandle->GetMetaData(FName("DefaultOverride"));
-
-			if (OverriddenPropertyNameAsString.IsEmpty())
-			{
-				// Forgot to specify a property name to override?
-				checkNoEntry();
-			}
-			
-			FName OverriddenPropertyName(OverriddenPropertyNameAsString);
-
-			PropertyBoolControlHandles.Add(OverriddenPropertyName, ChildHandle);
-		}
-	}
+	void* Data;
+	GroupColorPropertyHandle->GetValueData(Data);
+	return *reinterpret_cast<FLinearColor*>(Data);
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -296,7 +436,7 @@ void FPropertyCustomization_YapGroupSettings::SortGroups()
 		"Other",
 	};
 
-	PropertyGroups.KeySort([&Categories] (const FString& A, const FString& B)
+	GroupPropertyArrays.KeySort([&Categories] (const FString& A, const FString& B)
 	{
 		int32 IndexA = Categories.Find(A);
 		int32 IndexB = Categories.Find(B);
@@ -305,66 +445,13 @@ void FPropertyCustomization_YapGroupSettings::SortGroups()
 	});
 }
 
-void FPropertyCustomization_YapGroupSettings::DrawGroup(IDetailChildrenBuilder& StructBuilder, FString CategoryString, TArray<TSharedPtr<IPropertyHandle>>& PropertyHandles)
-{
-	if (PropertyHandles.Num() == 0)
-	{
-		return;
-	}
-	
-	IDetailGroup& Group = StructBuilder.AddGroup(FName(CategoryString), FText::FromString(CategoryString));
-
-	FDetailWidgetRow& HeaderRow = Group.HeaderRow();
-
-	FName CategoryName(CategoryString);
-	
-	HeaderRow.NameContent()
-	[
-		SNew(SBorder)
-		.ForegroundColor_Lambda( [this, CategoryName] ()
-		{
-			FLinearColor Color = GetGroupColor();
-
-			int32* Count = GroupOverridenCounts.Find(CategoryName);
-			
-			if (!Count || *Count == 0)
-			{
-				//Color *= YapColor::LightGray;
-			}
-			else
-			{
-				//Color /= YapColor::LightGray;
-			}
-			
-			return Color;
-		})
-		.BorderImage(FYapEditorStyle::GetImageBrush(YapBrushes.None))
-		.VAlign(VAlign_Center)
-		[
-			SNew(STextBlock)
-			.Text(FText::FromString(CategoryString))
-			.Font(IDetailLayoutBuilder::GetDetailFont())
-		]
-	];
-	
-	for (int32 i = 0; i < PropertyHandles.Num(); ++i)
-	{
-		TSharedPtr<IPropertyHandle>& Property = PropertyHandles[i];
-
-		DrawProperty(StructBuilder, Group, Property);
-	}
-}
-
 void FPropertyCustomization_YapGroupSettings::DrawProperty(IDetailChildrenBuilder& StructBuilder, IDetailGroup& Group, TSharedPtr<IPropertyHandle>& Property)
-{
-	if (Property->HasMetaData("DoNotDraw"))
-	{
-		return;
-	}
-	
+{	
+	UE_LOG(LogYapEditor, VeryVerbose, TEXT("     DrawProperty [%s]"), *Property->GetPropertyDisplayName().ToString());
+
 	if (IsDefault())
 	{
-		DrawDefaultProperty(StructBuilder, Group, Property);
+		return DrawDefaultProperty(StructBuilder, Group, Property);
 	}
 	else
 	{
@@ -403,68 +490,71 @@ void FPropertyCustomization_YapGroupSettings::DrawDefaultProperty(IDetailChildre
 void FPropertyCustomization_YapGroupSettings::DrawNamedGroupProperty(IDetailChildrenBuilder& StructBuilder, IDetailGroup& Group, TSharedPtr<IPropertyHandle>& Property)
 {
 	FName PropertyName = Property->GetProperty()->GetFName();
+
+	uint32 ChildrenCount;
+	Property->GetNumChildren(ChildrenCount);
 	
+	UE_LOG(LogYapEditor, VeryVerbose, TEXT("DrawNamedGroupProperty: %s - children: %i"), *PropertyName.ToString(), ChildrenCount);
+		
 	TSharedPtr<IPropertyHandle>* BoolControlPtr = PropertyBoolControlHandles.Find(Property->GetProperty()->GetFName());
 	TSharedPtr<IPropertyHandle>* DefaultValuePtr = DefaultPropertyHandles.Find(Property->GetProperty()->GetFName());
 
 	check(BoolControlPtr);
 	check(DefaultValuePtr);
 	
-	TSharedPtr<IPropertyHandle> BoolControl = *BoolControlPtr;
+	TSharedPtr<IPropertyHandle> OverrideSetting = *BoolControlPtr;
 	TSharedPtr<IPropertyHandle> DefaultValue = *DefaultValuePtr;
 	
-	// FAILURE IMPLEMENTATION
-	
-	/*
 	IDetailPropertyRow& Row = Group.AddPropertyRow(Property.ToSharedRef());
-	IDetailPropertyRow& RowDefault = Group.AddPropertyRow(DefaultValue.ToSharedRef());
 
 	TSharedPtr<SWidget> NameWidget;
-	TSharedPtr<SWidget> ValueWidget;
+	TSharedPtr<SWidget> OverrideValueWidget;
 	FDetailWidgetRow WidgetRow;
+	Row.GetDefaultWidgets(NameWidget, OverrideValueWidget, WidgetRow);
+
+	Row.IsEnabled(OverrideSetting);
+
+	Row.ShowPropertyButtons(false);
 	
-	Row.GetDefaultWidgets(NameWidget, ValueWidget, WidgetRow);
 	Row.CustomWidget(true)
-	.Visibility(TAttribute<EVisibility>::CreateLambda( [BoolControl] ()
+	.Visibility(TAttribute<EVisibility>::CreateLambda( [OverrideSetting] ()
 	{
 		bool b;
-		BoolControl->GetValue(b);
+		OverrideSetting->GetValue(b);
 		return b ? EVisibility::Visible : EVisibility::Collapsed;
 	}))
 	.NameContent()
 	[
 		SNew(SCheckBox)
-		.Style(FYapEditorStyle::Get(), YapStyles.CheckBoxStyle_Skippable)
-		.Padding(0)
-		.IsChecked_Lambda( [this, BoolControl] ()
+		.Style(FYapEditorStyle::Get(), YapStyles.CheckBoxStyle_TypeSettingsOverride)
+		.Padding(FMargin(4, 0, 0, 0))
+		.IsChecked_Lambda( [this, OverrideSetting] ()
 		{
 			bool bTemp;
-			BoolControl->GetValue(bTemp);
+			OverrideSetting->GetValue(bTemp);
 			return bTemp ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
 		})
-		.OnCheckStateChanged_Lambda( [this, BoolControl] (ECheckBoxState NewState)
+		.OnCheckStateChanged_Lambda( [this, OverrideSetting] (ECheckBoxState NewState)
 		{
-			BoolControl->SetValue(NewState == ECheckBoxState::Checked);
+			OverrideSetting->SetValue(NewState == ECheckBoxState::Checked);
 			UpdateOverriddenCounts();
 		})
 		[
-			SNew(SBorder)
-			.BorderImage(FYapEditorStyle::GetImageBrush(YapBrushes.None))
-			.ForegroundColor_Lambda( [this, PropertyName] ()
-			{
-				FLinearColor Color = GetGroupColor();
-				
-				if (!IsOverridden(PropertyName))
-				{
-					Color *= YapColor::LightGray;
-				}
-				else
-				{
-					Color /= YapColor::LightGray;
-				}
-				
-				return Color;
-			})
+			SNew(SHorizontalBox)
+			+ SHorizontalBox::Slot()
+			.AutoWidth()
+			.Padding(1, -3, 6, -4)
+			[
+				SNew(SBox)
+				.WidthOverride(3)
+				.VAlign(VAlign_Fill)
+				[
+					SNew(SImage)
+					.Image(FYapEditorStyle::GetImageBrush(YapBrushes.Box_SolidWhite))
+					.ColorAndOpacity(GetGroupColor())
+				]
+			]
+			+ SHorizontalBox::Slot()
 			[
 				NameWidget.ToSharedRef()
 			]
@@ -472,60 +562,62 @@ void FPropertyCustomization_YapGroupSettings::DrawNamedGroupProperty(IDetailChil
 	]
 	.ValueContent()
 	[
-		ValueWidget.ToSharedRef()
+		OverrideValueWidget.ToSharedRef()
 	];
-	
+
+	// TODO | this is the shittiest hack ever. I can't control the custom row well enough to display both the default value and the override depending
+	// TODO | on the override state... so, draw the property twice, and hide one or the other.
+
+	IDetailPropertyRow& DefaultRow = Group.AddPropertyRow(DefaultValue.ToSharedRef());
+
 	TSharedPtr<SWidget> DefaultNameWidget;
 	TSharedPtr<SWidget> DefaultValueWidget;
 	FDetailWidgetRow DefaultWidgetRow;
+	DefaultRow.GetDefaultWidgets(DefaultNameWidget, DefaultValueWidget, DefaultWidgetRow);
 
-	RowDefault.GetDefaultWidgets(DefaultNameWidget, DefaultValueWidget, DefaultWidgetRow);
-	
+	DefaultRow.ShowPropertyButtons(false);
+
 	DefaultValueWidget->SetEnabled(false);
 	
-	//RowDefault.IsEnabled(false);
-	
-	RowDefault.CustomWidget(true)
-	.Visibility(TAttribute<EVisibility>::CreateLambda( [BoolControl] ()
+	DefaultRow.CustomWidget(false)
+	.Visibility(TAttribute<EVisibility>::CreateLambda( [OverrideSetting] ()
 	{
 		bool b;
-		BoolControl->GetValue(b);
+		OverrideSetting->GetValue(b);
 		return !b ? EVisibility::Visible : EVisibility::Collapsed;
 	}))
 	.NameContent()
 	[
 		SNew(SCheckBox)
-		.Style(FYapEditorStyle::Get(), YapStyles.CheckBoxStyle_Skippable)
-		.Padding(0)
-		.IsChecked_Lambda( [this, BoolControl] ()
+		.Style(FYapEditorStyle::Get(), YapStyles.CheckBoxStyle_TypeSettingsOverride)
+		.Padding(FMargin(4, 0, 0, 0))
+		.IsChecked_Lambda( [this, OverrideSetting] ()
 		{
-			bool bTemp;
-			BoolControl->GetValue(bTemp);
-			return bTemp ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
+			bool b;
+			OverrideSetting->GetValue(b);
+			return b ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
 		})
-		.OnCheckStateChanged_Lambda( [this, BoolControl] (ECheckBoxState NewState)
+		.OnCheckStateChanged_Lambda( [this, OverrideSetting] (ECheckBoxState NewState)
 		{
-			BoolControl->SetValue(NewState == ECheckBoxState::Checked);
+			OverrideSetting->SetValue(NewState == ECheckBoxState::Checked);
 			UpdateOverriddenCounts();
 		})
 		[
-			SNew(SBorder)
-			.BorderImage(FYapEditorStyle::GetImageBrush(YapBrushes.None))
-			.ForegroundColor_Lambda( [this, PropertyName] ()
-			{
-				FLinearColor Color = GetGroupColor();
-				
-				if (!IsOverridden(PropertyName))
-				{
-					Color *= YapColor::LightGray;
-				}
-				else
-				{
-					Color /= YapColor::LightGray;
-				}
-				
-				return Color;
-			})
+			SNew(SHorizontalBox)
+			+ SHorizontalBox::Slot()
+			.AutoWidth()
+			.Padding(1, -3, 6, -4)
+			[
+				SNew(SBox)
+				.WidthOverride(3)
+				.VAlign(VAlign_Fill)
+				[
+					SNew(SImage)
+					.Image(FYapEditorStyle::GetImageBrush(YapBrushes.Box_SolidWhite))
+					.ColorAndOpacity(GetGroupColor().Desaturate(0.25f) * YapColor::LightGray)
+				]
+			]
+			+ SHorizontalBox::Slot()
 			[
 				NameWidget.ToSharedRef()
 			]
@@ -535,141 +627,6 @@ void FPropertyCustomization_YapGroupSettings::DrawNamedGroupProperty(IDetailChil
 	[
 		DefaultValueWidget.ToSharedRef()
 	];
-	*/
-
-
-	// ORIGINAL IMPLEMENTATION
-	
-	///*
-	TSharedRef<SWidget> NormalValueWidget = 
-			(CastField<FStructProperty>(Property->GetProperty()))
-				? StructBuilder.GenerateStructValueWidget(Property.ToSharedRef())
-				: Property->CreatePropertyValueWidget();
-	
-	TSharedRef<SWidget> DefaultValueWidget = 
-			(CastField<FStructProperty>(DefaultValue->GetProperty()))
-				? StructBuilder.GenerateStructValueWidget(DefaultValue.ToSharedRef())
-				: DefaultValue->CreatePropertyValueWidget();
-
-	DefaultValueWidget->SetEnabled(false);
-	
-	FDetailWidgetRow& Row1 = Group.AddWidgetRow()
-	.NameContent()
-	.HAlign(HAlign_Fill)
-	[
-		SNew(SCheckBox)
-		.IsChecked_Lambda( [this, BoolControl] ()
-		{
-			bool bTemp;
-			BoolControl->GetValue(bTemp);
-			return bTemp ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
-		})
-		.OnCheckStateChanged_Lambda( [this, BoolControl] (ECheckBoxState NewState)
-		{
-			BoolControl->SetValue(NewState == ECheckBoxState::Checked);
-			UpdateOverriddenCounts();
-		})
-		[
-			SNew(SBorder)
-			.BorderImage(FYapEditorStyle::GetImageBrush(YapBrushes.None))
-			.ForegroundColor_Lambda( [this, PropertyName] ()
-			{
-				FLinearColor Color = GetGroupColor();
-				
-				if (!IsOverridden(PropertyName))
-				{
-					Color *= YapColor::LightGray;
-				}
-				else
-				{
-					Color /= YapColor::LightGray;
-				}
-				
-				return Color;
-			})
-			[
-				Property->CreatePropertyNameWidget()
-			]
-		]
-	]
-	.ValueContent()
-	[
-		SNew(SWidgetSwitcher)
-		.WidgetIndex_Lambda( [BoolControl] () { bool bTemp; BoolControl->GetValue(bTemp); return bTemp ? 0 : 1; } )
-		+ SWidgetSwitcher::Slot()
-		[
-			NormalValueWidget
-		]
-		+ SWidgetSwitcher::Slot()
-		[
-			DefaultValueWidget
-		]
-	];
-
-	Row1.Visibility(TAttribute<EVisibility>::CreateLambda( [BoolControl] ()
-	{
-		bool b;
-		BoolControl->GetValue(b);
-		return !b ? EVisibility::Visible : EVisibility::Collapsed;
-	}));
-	
-	IDetailPropertyRow& Row2 = Group.AddPropertyRow(Property.ToSharedRef());
-
-	TSharedPtr<SWidget> NameWidget;
-	TSharedPtr<SWidget> ValueWidget;
-	FDetailWidgetRow RowWidget;
-		
-	Row2.GetDefaultWidgets(NameWidget, ValueWidget, RowWidget);
-
-	Row2.CustomWidget(true)
-	.Visibility(TAttribute<EVisibility>::CreateLambda( [BoolControl] ()
-	{
-		bool b;
-		BoolControl->GetValue(b);
-		return b ? EVisibility::Visible : EVisibility::Collapsed;
-	}))
-	.NameContent()
-	[
-		SNew(SCheckBox)
-		.IsChecked_Lambda( [this, BoolControl] ()
-		{
-			bool bTemp;
-			BoolControl->GetValue(bTemp);
-			return bTemp ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
-		})
-		.OnCheckStateChanged_Lambda( [this, BoolControl] (ECheckBoxState NewState)
-		{
-			BoolControl->SetValue(NewState == ECheckBoxState::Checked);
-			UpdateOverriddenCounts();
-		})
-		[
-			SNew(SBorder)
-			.BorderImage(FYapEditorStyle::GetImageBrush(YapBrushes.None))
-			.ForegroundColor_Lambda( [this, PropertyName] ()
-			{
-				FLinearColor Color = GetGroupColor();
-				
-				if (!IsOverridden(PropertyName))
-				{
-					Color *= YapColor::LightGray;
-				}
-				else
-				{
-					Color /= YapColor::LightGray;
-				}
-				
-				return Color;
-			})
-			[
-				NameWidget.ToSharedRef()
-			]
-		]
-	]
-	.ValueContent()
-	[
-		ValueWidget.ToSharedRef()
-	];
-	//*/
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -680,35 +637,6 @@ void FPropertyCustomization_YapGroupSettings::DrawExtraPanelContent(IDetailGroup
 		//DrawDialogueTagsExtraControls(Group, Property);
 		DrawTagExtraControls(Group, Property, LOCTEXT("DialogueTags", "Dialogue Tags"));
 	}
-}
-
-// ------------------------------------------------------------------------------------------------
-const FSlateBrush* FPropertyCustomization_YapGroupSettings::BorderImage() const
-{
-	return FAppStyle::Get().GetBrush("SCSEditor.Background");
-}
-
-// ------------------------------------------------------------------------------------------------
-FText FPropertyCustomization_YapGroupSettings::GetChildTagsAsText(TSharedPtr<IPropertyHandle> ParentTagProperty) const
-{
-	FGameplayTag ParentTag = GetTagPropertyFromHandle(ParentTagProperty);
-	
-	if (!ParentTag.IsValid())
-	{
-		return LOCTEXT("None_Label", "<None>");
-	}
-
-	FName ParentTagPropertyName = ParentTagProperty->GetProperty()->GetFName();
-	
-	const bool* bDirty = CachedGameplayTagsPreviewTextsDirty.Find(ParentTagPropertyName);
-	const FText* Text = CachedGameplayTagsPreviewTexts.Find(ParentTagPropertyName);
-	
-	if (!bDirty || !Text || (*bDirty))
-	{
-		return LOCTEXT("Error_Label", "<Error>");
-	}
-
-	return CachedGameplayTagsPreviewTexts[ParentTagPropertyName];
 }
 
 // ------------------------------------------------------------------------------------------------

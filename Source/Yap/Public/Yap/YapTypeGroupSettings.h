@@ -33,6 +33,7 @@ public:
 	// - - - - - PRIVATE - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 private:
 	/** If true, this struct is the default settings. This is only set internally by UYapProjectSettings. */
+	UPROPERTY(Transient, EditAnywhere, meta = (DoNotDraw))
 	bool bDefault = false;
 	
 	UPROPERTY(Config, EditAnywhere, meta = (DoNotDraw))
@@ -68,20 +69,16 @@ private:
 	UPROPERTY(Config, EditAnywhere, Category = "Dialogue Playback")
 	EYapTimeMode DefaultTimeModeSetting = EYapTimeMode::AudioTime;
 
-	/** If set, the Open Convo. node will pause flow graph execution. Yap must be notified to continue. Use this if you want to wait for a conversation opening animation. */
-	UPROPERTY(Config, EditAnywhere, Category = "Dialogue Playback", meta = (ClampMin = 0.0, UIMin = 0.0, UIMax = 2.0, Delta = 0.01))
-	bool bConversationsRequireAdvanceTriggerToStart = false;
-	
 	/** If set, dialogue will be non-skippable by default and must play for its entire duration. */
-	UPROPERTY(Config, EditAnywhere, Category = "Dialogue Playback", meta = (EditCondition = "DefaultTimeModeSetting != EYapTimeMode::None", EditConditionHides))
+	UPROPERTY(Config, EditAnywhere, Category = "Dialogue Playback|Timed", meta = (EditCondition = "DefaultTimeModeSetting != EYapTimeMode::None", EditConditionHides))
 	bool bForcedDialogueDuration = false;
 	
 	/** If set, dialogue will not auto-advance when its duration finishes and will require advancement by using the Dialogue Handle. */
-	UPROPERTY(Config, EditAnywhere, Category = "Dialogue Playback", meta = (EditCondition = "DefaultTimeModeSetting != EYapTimeMode::None", EditConditionHides))
+	UPROPERTY(Config, EditAnywhere, Category = "Dialogue Playback|Timed", meta = (EditCondition = "DefaultTimeModeSetting != EYapTimeMode::None", EditConditionHides))
 	bool bManualAdvanceOnly = false;
 
 	/** If set, prompt nodes will always default to auto-advance. */
-	UPROPERTY(Config, EditAnywhere, Category = "Dialogue Playback")
+	UPROPERTY(Config, EditAnywhere, Category = "Dialogue Playback", DisplayName = "Prompts Auto-Advance")
 	bool bPromptAutoAdvance = false;
 	
 	/**
@@ -89,7 +86,7 @@ private:
 	 * This lets prompt options pop-up immediately upon starting that speech. This is roughly equivalent to using the last fragment's "Start" pin to move into the Prompt node.
 	 * WARNING: This setting cause all activation conditions of the last fragment of any talk nodes which flow into player prompt nodes to be ignored! This ensures consistent game behavior.
 	 */
-	UPROPERTY(Config, EditAnywhere, Category = "Dialogue Playback", DisplayName = "Auto-advance to Prompt Nodes", meta = (EditCondition = "bManualAdvanceOnly", EditConditionHides))
+	UPROPERTY(Config, EditAnywhere, Category = "Dialogue Playback|Timed", DisplayName = "Talk Auto-Advance into Prompts", meta = (EditCondition = "bManualAdvanceOnly", EditConditionHides))
 	bool bAutoAdvanceToPromptNodes = false;
 
 	/** By default, a player prompt node will auto-select the prompt when only one is displayed. This setting prevents that. */
@@ -185,9 +182,6 @@ public:
 	UPROPERTY(EditAnywhere, meta = (DefaultOverride = FlowAssetsRootFolder))
 	bool bFlowAssetsRootFolder_Override = false;
 
-	UPROPERTY(EditAnywhere, meta = (DefaultOverride = bConversationsRequireAdvanceTriggerToStart))
-	bool bConversationsRequireAdvanceTriggerToStart_Override = false;
-
 	UPROPERTY(EditAnywhere, meta = (DefaultOverride = bForcedDialogueDuration))
 	bool bForcedDialogueDuration_Override = false;
 
@@ -278,8 +272,6 @@ public:
 
 	EYapMissingAudioErrorLevel GetMissingAudioErrorLevel() RETURN(bMissingAudioErrorLevel_Override, MissingAudioErrorLevel)
 	
-	bool GetConversationsRequireAdvanceTriggerToStart() RETURN(bConversationsRequireAdvanceTriggerToStart_Override, bConversationsRequireAdvanceTriggerToStart)
-
 	bool GetForcedDialogueDuration() RETURN(bForcedDialogueDuration_Override, bForcedDialogueDuration)
 	
 	bool GetManualAdvanceOnly() const

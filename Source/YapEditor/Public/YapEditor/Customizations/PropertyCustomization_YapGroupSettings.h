@@ -7,6 +7,7 @@
 #include "IPropertyTypeCustomization.h"
 #include "PropertyHandle.h"
 
+class IDetailPropertyRow;
 class IPropertyHandle;
 class FDetailWidgetRow;
 class IDetailChildrenBuilder;
@@ -14,6 +15,10 @@ class IDetailCategoryBuilder;
 class IDetailGroup;
 struct FGameplayTag;
 struct FYapTypeGroupSettings;
+
+/**
+ * 
+ */
 class FPropertyCustomization_YapGroupSettings : public IPropertyTypeCustomization
 {
     // CONSTRUCTION -------------------------------------------------------------------------------
@@ -21,25 +26,30 @@ class FPropertyCustomization_YapGroupSettings : public IPropertyTypeCustomizatio
 public:
     
     static TSharedRef<IPropertyTypeCustomization> MakeInstance() { return MakeShared<FPropertyCustomization_YapGroupSettings>(); }
-
+    
+    static TArray<FName> IgnoredProperties;
+    
     // STATE --------------------------------------------------------------------------------------
     
 protected:
 
     FYapTypeGroupSettings* Settings = nullptr;
         
-    TArray<TSharedPtr<IPropertyHandle>> IndexedPropertyHandles;
+    TArray<TSharedPtr<IPropertyHandle>> AllPropertyHandles;
 
     TMap<FName, TSharedPtr<IPropertyHandle>> PropertyBoolControlHandles;
     
     static TMap<FName, TSharedPtr<IPropertyHandle>> DefaultPropertyHandles;
 
-    TMap<FString, TArray<TSharedPtr<IPropertyHandle>>> PropertyGroups;
+    TMap<FString, IDetailGroup*> Groups;
+    
+    TMap<FString, TArray<TSharedPtr<IPropertyHandle>>> GroupPropertyArrays;
 
     TMap<FName, int32> GroupOverridenCounts;
 
     int32 TotalOverrides = 0;
 
+    TSharedPtr<IPropertyHandle> DefaultPropertyHandle;
     TSharedPtr<IPropertyHandle> GroupColorPropertyHandle;
 
     TSharedPtr<SBox> HeaderColorPropertyHolder;
@@ -61,46 +71,38 @@ protected:
 protected:
 
     // Initial Setup
-    
-    void GrabOriginalStructPtr(TSharedRef<IPropertyHandle> StructPropertyHandle);
-    
-    void IndexChildrenProperties(TSharedRef<class IPropertyHandle> StructPropertyHandle);
 
+    void IndexAllProperties(TSharedRef<class IPropertyHandle> StructPropertyHandle);
+
+    /** Iterates through all child property handles and stores a few important ones for IndexChildrenProperties */
+    void IndexImportantProperties(TSharedRef<IPropertyHandle> StructPropertyHandle);
+    
     void UpdateOverriddenCounts();
 
-    void HookUpPropertyChangeDelegates();
-    
     bool IsDefault() const;
 
     bool IsOverridden(FName PropertyName) const;
 
     FLinearColor GetGroupColor();
-    
-    void GroupProperties();
-
-    void GatherOverrides();
 
     void SortGroups();
 
-    // Draw
-    void DrawGroup(IDetailChildrenBuilder& StructBuilder, FString CategoryString, TArray<TSharedPtr<IPropertyHandle>>& PropertyHandles);
-
+public:
     void DrawProperty(IDetailChildrenBuilder& StructBuilder, IDetailGroup& Group, TSharedPtr<IPropertyHandle>& Property);
+    
+    //void DrawProperty(IDetailChildrenBuilder& StructBuilder, IDetailCategoryBuilder& Group, TSharedPtr<IPropertyHandle>& Property);
 
+protected:
     void DrawDefaultProperty(IDetailChildrenBuilder& StructBuilder, IDetailGroup& Group, TSharedPtr<IPropertyHandle>& Property);
 
     void DrawNamedGroupProperty(IDetailChildrenBuilder& StructBuilder, IDetailGroup& Group, TSharedPtr<IPropertyHandle>& Property);
-    
+
     void DrawTagExtraControls(IDetailGroup& Group, TSharedPtr<IPropertyHandle> ParentTagPropertyHandle, FText TagEditorTitle);
     
     void DrawDialogueTagsExtraControls(IDetailGroup& Group, TSharedPtr<IPropertyHandle> DialogueTagsParentProperty);
 
     void DrawExtraPanelContent(IDetailGroup& Group, TSharedPtr<IPropertyHandle> Property);
     
-    const FSlateBrush* BorderImage() const;
-    
-    FText GetChildTagsAsText(TSharedPtr<IPropertyHandle> ParentTagProperty) const;
-
     bool IsTagPropertySet(TSharedPtr<IPropertyHandle> TagPropertyHandle) const;
 
     FGameplayTag& GetTagPropertyFromHandle(TSharedPtr<IPropertyHandle> TagPropertyHandle) const;

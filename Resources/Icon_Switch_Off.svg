@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   id="glyphicons-basic"
+   viewBox="0 0 32 32"
+   version="1.1"
+   sodipodi:docname="Icon_Switch_Off.svg"
+   inkscape:version="1.4 (86a8ad7, 2024-10-11)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1" />
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#505050"
+     bordercolor="#eeeeee"
+     borderopacity="1"
+     inkscape:showpageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#505050"
+     inkscape:zoom="29.59375"
+     inkscape:cx="23.569166"
+     inkscape:cy="15.577614"
+     inkscape:window-width="5120"
+     inkscape:window-height="2089"
+     inkscape:window-x="1192"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="glyphicons-basic" />
+  <path
+     id="switch-off"
+     d="M 21.724091,5.696636 H 10.275909 a 10.303364,10.303364 0 0 0 0,20.606728 h 11.448182 a 10.303364,10.303364 0 0 0 0,-20.606728 z m 0,17.172273 H 10.275909 a 6.8689093,6.8689093 0 0 1 0,-13.7378183 h 11.448182 a 6.8689093,6.8689093 0 0 1 0,13.7378183 z M 14.855182,16 A 4.5792729,4.5792729 0 1 1 10.275909,11.420727 4.5838522,4.5838522 0 0 1 14.855182,16 Z"
+     style="fill:#ffffff;fill-opacity:1;stroke-width:1.14482" />
+</svg>

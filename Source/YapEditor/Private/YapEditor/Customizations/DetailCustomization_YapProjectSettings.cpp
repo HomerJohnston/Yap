@@ -12,6 +12,7 @@
 #include "Yap/YapProjectSettings.h"
 #include "Yap/Globals/YapFileUtilities.h"
 #include "YapEditor/YapEditorColor.h"
+#include "YapEditor/YapEditorLog.h"
 #include "YapEditor/YapEditorStyle.h"
 #include "YapEditor/YapEditorSubsystem.h"
 #include "YapEditor/Globals/YapEditorFuncs.h"
@@ -64,16 +65,40 @@ const FSlateBrush* FDetailCustomization_YapProjectSettings::TODOBorderImage() co
 	//return FAppStyle::GetBrush("Menu.Background");
 }
 
-void CustomSortYapProjectSettingsCategories(const TMap<FName, IDetailCategoryBuilder*>&  AllCategoryMap )
+void SortCategory(const TMap<FName, IDetailCategoryBuilder*>& AllCategoryMap, int32& Order, TSet<FName>& SortedCategories, FName NextCategory)
+{
+	IDetailCategoryBuilder* Builder = (*AllCategoryMap.Find(FName("Core")));
+	
+	if (!Builder)
+	{
+		UE_LOG(LogYapEditor, Error, TEXT("Could not find project settings category %s"), *NextCategory.ToString());
+		return;
+	}
+
+	SortedCategories.Add(NextCategory);
+	
+	Builder->SetSortOrder(Order++);
+}
+
+void CustomSortYapProjectSettingsCategories(const TMap<FName, IDetailCategoryBuilder*>& AllCategoryMap )
 {
 	int i = 0;
-	(*AllCategoryMap.Find(FName("Core")))->SetSortOrder(i++);
-	(*AllCategoryMap.Find(FName("Mood Tags")))->SetSortOrder(i++);
-	(*AllCategoryMap.Find(FName("Dialogue Tags")))->SetSortOrder(i++);
-	(*AllCategoryMap.Find(FName("Dialogue Playback")))->SetSortOrder(i++);
-	(*AllCategoryMap.Find(FName("Editor")))->SetSortOrder(i++);
-	(*AllCategoryMap.Find(FName("Flow Graph Settings")))->SetSortOrder(i++);
-	(*AllCategoryMap.Find(FName("Error Handling")))->SetSortOrder(i++);
+
+	TSet<FName> SortedCategories;
+
+	SortCategory(AllCategoryMap, i, SortedCategories, "Core");
+	SortCategory(AllCategoryMap, i, SortedCategories, "Mood Tags");
+	SortCategory(AllCategoryMap, i, SortedCategories, "Dialogue Tags");
+	SortCategory(AllCategoryMap, i, SortedCategories, "Dialogue Playback");
+	SortCategory(AllCategoryMap, i, SortedCategories, "Editor");
+	SortCategory(AllCategoryMap, i, SortedCategories, "Flow Graph Settings");
+	SortCategory(AllCategoryMap, i, SortedCategories, "Error Handling");
+	SortCategory(AllCategoryMap, i, SortedCategories, "Other");
+
+	if (SortedCategories.Num() != AllCategoryMap.Num())
+	{
+		UE_LOG(LogYapEditor, Error, TEXT("Not all categories were sorted!"));
+	}
 }
 
 void FDetailCustomization_YapProjectSettings::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)

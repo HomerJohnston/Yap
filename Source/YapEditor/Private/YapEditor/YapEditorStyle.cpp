@@ -160,6 +160,9 @@ void FYapEditorStyle::Initialize()
 	YAP_DEFINE_BRUSH(FSlateVectorImageBrush,	Icon_Reconciled,				"Icon_Reconciled", ".svg",				FVector2f(16, 16));
 	YAP_DEFINE_BRUSH(FSlateVectorImageBrush,	Icon_Unreconciled,				"Icon_Unreconciled", ".svg",			FVector2f(16, 16));
 	
+	YAP_DEFINE_BRUSH(FSlateVectorImageBrush,	Icon_Switch_On,					"Icon_Switch_On", ".svg",				FVector2f(16, 16));
+	YAP_DEFINE_BRUSH(FSlateVectorImageBrush,	Icon_Switch_Off,				"Icon_Switch_Off", ".svg",				FVector2f(16, 16));
+	
 	YAP_DEFINE_BRUSH(FSlateBoxBrush,			Icon_IDTag,						"Icon_IDTag", ".png",					FMargin(0.5, 0.5, 0.0, 0.0));
 
 	YAP_DEFINE_BRUSH(FSlateImageBrush,			Bar_NegativePadding,			"Bar_NegativePadding", ".png",			FVector2f(5, 3), FLinearColor::White, ESlateBrushTileType::Horizontal);
@@ -348,6 +351,24 @@ void FYapEditorStyle::Initialize()
 		.SetUndeterminedImage(YAP_COMMON_CHECKBOXSTYLE.UncheckedImage)
 		.SetUndeterminedHoveredImage(YAP_COMMON_CHECKBOXSTYLE.UncheckedHoveredImage)
 		.SetUndeterminedPressedImage(YAP_COMMON_CHECKBOXSTYLE.UncheckedPressedImage)
+	);
+
+	YAP_DEFINE_STYLE(FCheckBoxStyle, CheckBoxStyle_TypeSettingsOverride, YAP_COMMON_CHECKBOXSTYLE,
+		.SetCheckBoxType(ESlateCheckBoxType::CheckBox)
+		.SetForegroundColor(YapColor::Gray_Trans) // Unchecked
+		.SetHoveredForegroundColor(YapColor::White) // Unchecked, Hovered
+		.SetPressedForegroundColor(YapColor::LightGray) // Unchecked, Pressed
+		.SetCheckedForegroundColor(YapColor::LightGray) // Checked
+		.SetCheckedHoveredForegroundColor(YapColor::White) // Checked, Hovered
+		.SetCheckedPressedForegroundColor(YapColor::LightGray) // Checked, Pressed
+		
+		.SetCheckedImage(Icon_Switch_On)
+		.SetCheckedHoveredImage(Icon_Switch_On)
+		.SetCheckedPressedImage(Icon_Switch_On)
+
+		.SetUncheckedImage(Icon_Switch_Off)
+		.SetUncheckedHoveredImage(Icon_Switch_Off)
+		.SetUncheckedPressedImage(Icon_Switch_Off)
 	);
 		
 	// ============================================================================================

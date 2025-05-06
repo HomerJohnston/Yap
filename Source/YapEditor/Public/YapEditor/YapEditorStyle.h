@@ -51,6 +51,9 @@ struct FYapBrushes
 	
 	FName Icon_Reconciled;
 	FName Icon_Unreconciled;
+	
+	FName Icon_Switch_On;
+	FName Icon_Switch_Off;
 
 	FName Icon_PlaybackTimeHandle;
 
@@ -115,6 +118,7 @@ struct FYapStyles
 	FName ButtonStyle_TagButton;
 
 	FName CheckBoxStyle_Skippable;
+	FName CheckBoxStyle_TypeSettingsOverride;
 	
 	FName ComboButtonStyle_YapGameplayTagTypedPicker;
 	

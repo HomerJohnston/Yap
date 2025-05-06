@@ -69,12 +69,14 @@ private:
 	UPROPERTY(Config, EditAnywhere, Category = "Dialogue Playback")
 	EYapTimeMode DefaultTimeModeSetting = EYapTimeMode::AudioTime;
 
+	// I can't use any EditCondition meta here. My details customization needs to read the default or override values, not just the override.
+	
 	/** If set, dialogue will be non-skippable by default and must play for its entire duration. */
-	UPROPERTY(Config, EditAnywhere, Category = "Dialogue Playback|Timed", meta = (EditCondition = "DefaultTimeModeSetting != EYapTimeMode::None", EditConditionHides))
+	UPROPERTY(Config, EditAnywhere, Category = "Dialogue Playback|Timed")
 	bool bForcedDialogueDuration = false;
 	
 	/** If set, dialogue will not auto-advance when its duration finishes and will require advancement by using the Dialogue Handle. */
-	UPROPERTY(Config, EditAnywhere, Category = "Dialogue Playback|Timed", meta = (EditCondition = "DefaultTimeModeSetting != EYapTimeMode::None", EditConditionHides))
+	UPROPERTY(Config, EditAnywhere, Category = "Dialogue Playback|Timed")
 	bool bManualAdvanceOnly = false;
 
 	/** If set, prompt nodes will always default to auto-advance. */

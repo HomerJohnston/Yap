@@ -107,8 +107,6 @@ void FPropertyCustomization_YapGroupSettings::CustomizeHeader(TSharedRef<class I
 
 	IndexAllProperties(StructPropertyHandle);
 	
-	GroupProperties();
-	
 	SortGroups();
 	
 	UpdateOverriddenCounts();

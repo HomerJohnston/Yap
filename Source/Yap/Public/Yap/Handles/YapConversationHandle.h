@@ -29,7 +29,7 @@ public:
     
 private:
     
-    UPROPERTY(Transient)
+    UPROPERTY(Transient, meta = (IgnoreForMemberInitializationTest))
     FGuid Guid;
 
     // ==========================================

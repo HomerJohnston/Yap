@@ -163,6 +163,7 @@ protected:
 	
 	TOptional<float>		Percent_FragmentTime() const;
 	FLinearColor 			ColorAndOpacity_FragmentTimeIndicator() const;
+	bool					Bool_PaddingTimeIsSet() const;
 
 	// ------------------------------------------
 	

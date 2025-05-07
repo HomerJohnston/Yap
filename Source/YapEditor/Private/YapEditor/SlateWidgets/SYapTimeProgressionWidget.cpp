@@ -5,6 +5,7 @@
 
 #include "YapEditor/SlateWidgets/SYapTimeProgressionWidget.h"
 
+#include "YapEditor/YapEditorColor.h"
 #include "YapEditor/YapEditorStyle.h"
 
 SLATE_IMPLEMENT_WIDGET(SYapTimeProgressionWidget)
@@ -22,6 +23,7 @@ SYapTimeProgressionWidget::SYapTimeProgressionWidget()
 void SYapTimeProgressionWidget::Construct(const FArguments& InArgs)
 {
 	BarColorAtt = InArgs._BarColor;
+	PaddingIsSetAtt = InArgs._PaddingIsSet;
 	
 	SpeechTimeAtt = InArgs._SpeechTime;
 	PaddingTimeAtt = InArgs._PaddingTime;
@@ -63,6 +65,7 @@ int32 SYapTimeProgressionWidget::OnPaint(const FPaintArgs& Args, const FGeometry
 	}
 
 	FLinearColor BarColor = BarColorAtt.Get();
+	FLinearColor PaddingColor = PaddingIsSetAtt.Get() ? YapColor::White : BarColor;
 
 	float SpeechDuration = SpeechTimeAtt.Get().Get(0.0f);
 	float PaddingDuration = PaddingTimeAtt.Get();
@@ -106,7 +109,7 @@ int32 SYapTimeProgressionWidget::OnPaint(const FPaintArgs& Args, const FGeometry
 		float Left = BarTimes[1].X;
 		float Right = BarTimes[1].Y;
 
-		Draw(Left, Right, MaxTime, DownScaling, GeoWidth, OutDrawElements, RetLayerId, AllottedGeometry, YapBrushes.Bar_NegativePadding, BarColor);
+		Draw(Left, Right, MaxTime, DownScaling, GeoWidth, OutDrawElements, RetLayerId, AllottedGeometry, YapBrushes.Bar_NegativePadding, PaddingColor);
 	}
 	
 	if (BarTimes[2].SizeSquared() > 0.0f)
@@ -114,7 +117,7 @@ int32 SYapTimeProgressionWidget::OnPaint(const FPaintArgs& Args, const FGeometry
 		float Left = BarTimes[2].X;
 		float Right = BarTimes[2].Y;
 
-		Draw(Left, Right, MaxTime, DownScaling, GeoWidth, OutDrawElements, RetLayerId, AllottedGeometry, YapBrushes.Bar_PositivePadding, BarColor);
+		Draw(Left, Right, MaxTime, DownScaling, GeoWidth, OutDrawElements, RetLayerId, AllottedGeometry, YapBrushes.Bar_PositivePadding, PaddingColor);
 	}
 	
 	if (PlaybackTimeAtt.Get().IsSet())

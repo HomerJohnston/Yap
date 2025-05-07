@@ -22,6 +22,7 @@ public:
 	{}
 
 		SLATE_ATTRIBUTE(FLinearColor, BarColor)
+		SLATE_ATTRIBUTE(bool, PaddingIsSet)
 		SLATE_ATTRIBUTE(TOptional<float>, SpeechTime)
 		SLATE_ATTRIBUTE(float, PaddingTime)
 		SLATE_ATTRIBUTE(float, MaxDisplayTime)
@@ -34,6 +35,7 @@ public:
 	SYapTimeProgressionWidget();
 
 	TAttribute<FLinearColor> BarColorAtt;
+	TAttribute<bool> PaddingIsSetAtt;
 	TAttribute<TOptional<float>> SpeechTimeAtt;
 	TAttribute<float> PaddingTimeAtt;
 	TSlateAttribute<float> MaxDisplayTimeAtt;

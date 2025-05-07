@@ -818,6 +818,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateFragmentWidget()
 				[
 					SNew(SYapTimeProgressionWidget)
 					.BarColor(this, &ThisClass::ColorAndOpacity_FragmentTimeIndicator)
+					.PaddingIsSet(this, &ThisClass::Bool_PaddingTimeIsSet)
 					.SpeechTime_Lambda( [this] () { return GetFragment().GetSpeechTime(GEditor->EditorWorld, GetDisplayMaturitySetting(), EYapLoadContext::AsyncEditorOnly, GetDialogueNode()->GetTypeGroupTag()); })
 					.PaddingTime_Lambda( [this] () { return GetFragment().GetPaddingValue(GetDialogueNode()->GetTypeGroupTag()); } )
 					.MaxDisplayTime_Lambda( [this] () { return UYapProjectSettings::GetDialogueTimeSliderMax(); } )
@@ -1157,6 +1158,11 @@ FLinearColor SFlowGraphNode_YapFragmentWidget::ColorAndOpacity_FragmentTimeIndic
 	}
 
 	return Color;
+}
+
+bool SFlowGraphNode_YapFragmentWidget::Bool_PaddingTimeIsSet() const
+{
+	return GetFragment().GetPaddingSetting().IsSet();
 }
 
 // ---------------------------------------------------

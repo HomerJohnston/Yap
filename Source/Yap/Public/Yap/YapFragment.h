@@ -83,6 +83,9 @@ protected:
 	/**  */
 	UPROPERTY()
 	TSoftObjectPtr<UYapCharacter> DirectedAtAsset;
+
+	UPROPERTY()
+	TSoftObjectPtr<UObject> SpeakerAssetNew;
 	
 	UPROPERTY()
 	FYapBit MatureBit;
@@ -184,7 +187,12 @@ public:
 	// ASSET LOADING
 protected:
 	
+	/**
+	 * 
+	 */
 	TSharedPtr<FStreamableHandle> SpeakerHandle;
+
+	TSharedPtr<FStreamableHandle> SpeakerHandleNew;
 	
 	TSharedPtr<FStreamableHandle> DirectedAtHandle;
 
@@ -206,10 +214,14 @@ public:
 	
 	const UYapCharacter* GetSpeaker(EYapLoadContext LoadContext); // Non-const because of async loading handle
 
+	const UObject* GetSpeakerNew(EYapLoadContext LoadContext); // Non-const because of async loading handle
+
 	const UYapCharacter* GetDirectedAt(EYapLoadContext LoadContext); // Non-const because of async loading handle
 	
 private:
 	const UYapCharacter* GetCharacter_Internal(const TSoftObjectPtr<UYapCharacter>& CharacterAsset, TSharedPtr<FStreamableHandle>& Handle, EYapLoadContext LoadContext);
+	
+	const UObject* GetSpeaker_InternalNew(const TSoftObjectPtr<UObject>& SpeakerAsset, TSharedPtr<FStreamableHandle>& Handle, EYapLoadContext LoadContext);
 
 public:
 	// TODO I don't think fragments should know where their position is!

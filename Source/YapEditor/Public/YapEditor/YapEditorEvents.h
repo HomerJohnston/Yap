@@ -22,4 +22,6 @@ namespace YapEditor
 	}
 }
 
+#undef YAP_EVT_NAME
+
 #undef LOCTEXT_NAMESPACE

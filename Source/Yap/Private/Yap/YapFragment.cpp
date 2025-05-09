@@ -94,6 +94,11 @@ const UYapCharacter* FYapFragment::GetSpeaker(EYapLoadContext LoadContext)
 	return GetCharacter_Internal(SpeakerAsset, SpeakerHandle, LoadContext);
 }
 
+const UObject* FYapFragment::GetSpeakerNew(EYapLoadContext LoadContext)
+{
+	return GetSpeaker_InternalNew(SpeakerAssetNew, SpeakerHandleNew, LoadContext);
+}
+
 const UYapCharacter* FYapFragment::GetDirectedAt(EYapLoadContext LoadContext)
 {
 	return GetCharacter_Internal(DirectedAtAsset, DirectedAtHandle, LoadContext);
@@ -131,6 +136,40 @@ const UYapCharacter* FYapFragment::GetCharacter_Internal(const TSoftObjectPtr<UY
 	}
 
 	return CharacterAsset.Get();
+}
+
+const UObject* FYapFragment::GetSpeaker_InternalNew(const TSoftObjectPtr<UObject>& InSpeakerAsset, TSharedPtr<FStreamableHandle>& Handle, EYapLoadContext LoadContext)
+{
+	if (InSpeakerAsset.IsNull())
+	{
+		return nullptr;
+	}
+
+	if (InSpeakerAsset.IsValid())
+	{
+		return SpeakerAssetNew.Get();
+	}
+
+	switch (LoadContext)
+	{
+		case EYapLoadContext::Async:
+		{
+			Handle = FYapStreamableManager::Get().RequestAsyncLoad(InSpeakerAsset.ToSoftObjectPath());
+			break;
+		}
+		case EYapLoadContext::AsyncEditorOnly:
+		{
+			FYapStreamableManager::Get().RequestAsyncLoad(InSpeakerAsset.ToSoftObjectPath());
+			break;
+		}
+		case EYapLoadContext::Sync:
+		{
+			Handle = FYapStreamableManager::Get().RequestSyncLoad(InSpeakerAsset.ToSoftObjectPath());
+			break;
+		}
+	}
+
+	return InSpeakerAsset.Get();
 }
 
 const FText& FYapFragment::GetDialogueText(UWorld* World, EYapMaturitySetting MaturitySetting) const

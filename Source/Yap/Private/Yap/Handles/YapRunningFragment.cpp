@@ -3,8 +3,6 @@
 
 #include "Yap/YapRunningFragment.h" 
 
-#include "Yap/YapBlueprintFunctionLibrary.h"
-#include "Yap/Interfaces/IYapHandleReactor.h"
 #include "Yap/Nodes/FlowNode_YapDialogue.h"
 
 #define LOCTEXT_NAMESPACE "Yap"
@@ -37,15 +35,6 @@ const FYapFragment& FYapRunningFragment::GetFragment() const
 
 void FYapRunningFragment::OnSpeakingEnds() const
 {
-	/*
-	for (TWeakObjectPtr<UObject> Reactor : Reactors)
-	{
-		if (Reactor.IsValid())
-		{
-			IYapHandleReactor::Execute_K2_OnSpeakingEnds(Reactor.Get());
-		}
-	}
-	*/
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -53,18 +42,6 @@ void FYapRunningFragment::OnSpeakingEnds() const
 void FYapRunningFragment::Invalidate()
 {
 	Guid.Invalidate();
-	
-	/*
-	for (TWeakObjectPtr<UObject> Reactor : Reactors)
-	{
-		if (Reactor.IsValid())
-		{
-			IYapHandleReactor::Execute_K2_OnHandleInvalidated(Reactor.Get());
-		}
-	}
-	
-	Reactors.Empty();
-	*/
 }
 
 void FYapRunningFragment::SetSpeechTimerHandle(FTimerHandle InSpeechTimerHandle)
@@ -76,18 +53,6 @@ void FYapRunningFragment::SetFragmentTimerHandle(FTimerHandle InFragmentTimerHan
 {
 	FragmentTimerHandle = InFragmentTimerHandle;
 }
-
-// ------------------------------------------------------------------------------------------------
-
-/*
-void FYapRunningFragment::AddReactor(UObject* Reactor)
-{
-	if (ensureMsgf(Reactor->Implements<UYapHandleReactor>(), TEXT("FYapDialogueHandle::AddReactor(...) failed: object does not implement IYapHandleReactor! [%s]"), *Reactor->GetName()))
-	{
-		Reactors.Add(Reactor);
-	}
-}
-*/
 
 // ------------------------------------------------------------------------------------------------
 

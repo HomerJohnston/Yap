@@ -328,7 +328,7 @@ void UFlowNode_YapDialogue::OnPassThrough_Implementation()
 // ------------------------------------------------------------------------------------------------
 
 bool UFlowNode_YapDialogue::CanEnterNode()
-{
+{	
 	return CheckConditions() && CheckActivationLimits();
 }
 
@@ -349,7 +349,7 @@ bool UFlowNode_YapDialogue::CheckConditions()
 			return false;
 		}
 	}
-	
+
 	return true;
 }
 
@@ -606,7 +606,7 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 #if !UE_BUILD_SHIPPING
 	if (IsValid(Data.Speaker))
 	{
-		UE_LOG(LogYap, VeryVerbose, TEXT("%s [%i]: [%s] %s"), *GetName(), FragmentIndex, *Data.Speaker->GetEntityName().ToString(), *Bit.GetDialogueText().ToString());		
+		UE_LOG(LogYap, VeryVerbose, TEXT("%s [%i]: [%s] %s"), *GetName(), FragmentIndex, *Data.Speaker->Yap_GetSpeakerName().ToString(), *Bit.GetDialogueText().ToString());		
 	}
 	else
 	{

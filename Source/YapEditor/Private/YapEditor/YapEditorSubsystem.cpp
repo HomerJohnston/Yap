@@ -105,7 +105,7 @@ TSharedPtr<FSlateImageBrush> UYapEditorSubsystem::GetCharacterPortraitBrush(cons
 	}
 
 	// The character only has hard refs to its portrait textures. Its textures will always be loaded.
-	const UTexture2D* Texture = Character->GetPortraitTexture(MoodTag);
+	const UTexture2D* Texture = Character->Yap_GetSpeakerPortrait(MoodTag);
 
 	if (!Texture)
 	{

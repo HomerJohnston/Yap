@@ -9,16 +9,12 @@
 
 #define LOCTEXT_NAMESPACE "Yap"
 
-UYapCharacter::UYapCharacter()
+UYapCharacter::UYapCharacter() :
+	EntityColor(0.5, 0.5, 0.5, 1.0)
 {
 }
 
-const TMap<FName, TObjectPtr<UTexture2D>>& UYapCharacter::GetPortraits() const
-{
-	return Portraits;
-}
-
-const UTexture2D* UYapCharacter::GetPortraitTexture(const FGameplayTag& MoodTag) const
+const UTexture2D* UYapCharacter::Yap_GetSpeakerPortrait(const FGameplayTag& MoodTag) const
 {
 	if (bUseSinglePortrait)
 	{

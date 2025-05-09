@@ -472,12 +472,34 @@ void FPropertyCustomization_YapGroupSettings::DrawDefaultProperty(IDetailChildre
 	Row.CustomWidget(true)
 	.NameContent()
 	[
+		
+		SNew(SHorizontalBox)
+		+ SHorizontalBox::Slot()
+		.AutoWidth()
+		.Padding(1, -3, 6, -4)
+		[
+			SNew(SBox)
+			.WidthOverride(3)
+			.VAlign(VAlign_Fill)
+			[
+				SNew(SImage)
+				.Image(FYapEditorStyle::GetImageBrush(YapBrushes.Box_SolidWhite))
+				.ColorAndOpacity(GetGroupColor())
+			]
+		]
+		+ SHorizontalBox::Slot()
+		[
+			NameWidget.ToSharedRef()
+		]
+		/*
 		SNew(SBorder)
 		.BorderImage(FYapEditorStyle::GetImageBrush(YapBrushes.None))
 		.ForegroundColor_Lambda( [this] () { return GetGroupColor(); } )
 		[
 			NameWidget.ToSharedRef()
 		]
+		*/
+
 	]
 	.ValueContent()
 	[

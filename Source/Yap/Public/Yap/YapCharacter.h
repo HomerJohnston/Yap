@@ -3,7 +3,8 @@
 
 #pragma once
 
-#include "YapEntity.h"
+#include "GameplayTagContainer.h"
+#include "Interfaces/IYapSpeaker.h"
 
 #include "YapCharacter.generated.h"
 
@@ -15,7 +16,7 @@ enum class EFlowYapCharacterMood : uint8;
 // TODO add validation warning to the details customization
 // TODO add a "skip warning" bool to portrait entries, to make it allowable for them to be unset (on packaging, any unset textures should, by default, log a warning message)
 UCLASS(meta = (DataAssetCategory = "TODO"))
-class YAP_API UYapCharacter : public UYapEntity
+class YAP_API UYapCharacter : public UObject, public IYapSpeaker
 {
 #if WITH_EDITOR
 	friend class FDetailCustomization_YapCharacter;
@@ -26,6 +27,18 @@ public:
 	UYapCharacter();
 
 protected:
+	/** Human-readable name of this character or entity. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName = "Name")
+	FText EntityName;
+
+	/** Color for display. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName = "Color")
+	FLinearColor EntityColor;
+	
+	/** Used to find this actor in the world. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	FGameplayTag IdentityTag;
+	
 	/** If set, the character will use a single portrait texture for all moods. */
 	UPROPERTY(EditAnywhere)
 	bool bUseSinglePortrait = false;
@@ -37,14 +50,23 @@ protected:
 	/** Avatar icons to use in dialogue UI */
 	UPROPERTY(EditAnywhere, EditFixedSize, meta=(ReadOnlyKeys, ForceInlineRow, EditCondition = "!bUseSinglePortrait", EditConditionHides))
 	TMap<FName, TObjectPtr<UTexture2D>> Portraits;
-	
-public:
-	const TMap<FName, TObjectPtr<UTexture2D>>& GetPortraits() const;
 
-	UFUNCTION(BlueprintCallable)
-	const UTexture2D* GetPortraitTexture(const FGameplayTag& MoodTag) const;
+	// --------------------- //
+	/* IYapSpeaker Interface */
+public:
+
+	FText Yap_GetSpeakerName() const override { return EntityName; };
+
+	FLinearColor Yap_GetSpeakerColor() const override { return EntityColor; };
+
+	FGameplayTag Yap_GetSpeakerTag() const override { return IdentityTag; };
 	
-#if WITH_EDITOR
+	const UTexture2D* Yap_GetSpeakerPortrait(const FGameplayTag& MoodTag) const override;
+
+	/* IYapSpeaker Interface */
+	// --------------------- //
+
+	#if WITH_EDITOR
 public:
 	void PostLoad() override;
 
@@ -56,26 +78,3 @@ public:
 };
 
 #undef LOCTEXT_NAMESPACE
-
-
-
-UCLASS(Blueprintable)
-class ATestActor : public AActor
-{
-	GENERATED_BODY()
-	
-	UPROPERTY(EditAnywhere)
-	FString String1;
-
-	UPROPERTY(EditAnywhere)
-	FString String2;
-
-	UFUNCTION(CallInEditor)
-	void Flip()
-	{
-		FString Temp = String2;
-		String2 = String1;
-		String1 = Temp;
-		Modify();
-	}
-};

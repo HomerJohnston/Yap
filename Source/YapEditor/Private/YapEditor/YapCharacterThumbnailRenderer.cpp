@@ -29,15 +29,16 @@ void UYapCharacterThumbnailRenderer::Draw(UObject* Object, int32 X, int32 Y, uin
 
 	const FGameplayTag& MoodTag = UYapProjectSettings::GetDefaultMoodTag();
 	
-	const UTexture2D* TexturePtr = Character->GetPortraitTexture(MoodTag);
+	const UTexture2D* TexturePtr = Character->Yap_GetSpeakerPortrait(MoodTag);
 
 	FVector2D Center (Width * 0.5f, Height * 0.5f);
 		
 	FCanvasBoxItem Box(FVector2D(Width * 0.00f, Height * 0.00f), FVector2D(Width * 1.0, Height * 1.0));
-	Box.SetColor(Character->GetEntityColor() * YapColor::Gray);
+	
+	Box.SetColor(Character->Yap_GetSpeakerColor() * YapColor::Gray);
 	Box.LineThickness = 0.0625 * Width;
 
-	Canvas->DrawNGon(Center, (Character->GetEntityColor() * YapColor::DimGray).ToFColor(true), 16, Width);
+	Canvas->DrawNGon(Center, (Character->Yap_GetSpeakerColor() * YapColor::DimGray).ToFColor(true), 16, Width);
 
 	Canvas->DrawItem(Box);
 	

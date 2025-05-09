@@ -75,12 +75,12 @@ AActor* UYapBlueprintFunctionLibrary::FindYapCharacterActor(UObject* WorldContex
 		return nullptr;
 	}
 
-	if (!Character->GetIdentityTag().IsValid())
+	if (!Character->Yap_GetSpeakerTag().IsValid())
 	{
 		return nullptr;
 	}
 	
-	UYapCharacterComponent* Comp = UYapSubsystem::FindCharacterComponent(WorldContext->GetWorld(), Character->GetIdentityTag());
+	UYapCharacterComponent* Comp = UYapSubsystem::FindCharacterComponent(WorldContext->GetWorld(), Character->Yap_GetSpeakerTag());
 
 	if (!IsValid(Comp))
 	{

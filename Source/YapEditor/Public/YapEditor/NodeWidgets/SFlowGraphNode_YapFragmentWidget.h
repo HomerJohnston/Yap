@@ -194,6 +194,7 @@ protected:
 	// ------------------------------------------
 	
 	TSharedRef<SWidget>		PopupContentGetter_SpeakerWidget(const UYapCharacter* Character);
+	TSharedRef<SWidget>		PopupContentGetter_SpeakerWidgetNew(const UObject* Character);
 	void					OnSetNewSpeakerAsset(const FAssetData& AssetData);
 
 	// ------------------------------------------

@@ -72,23 +72,22 @@ private:
 	// I can't use any EditCondition meta here. My details customization needs to read the default or override values, not just the override.
 	
 	/** If set, dialogue will be non-skippable by default and must play for its entire duration. */
-	UPROPERTY(Config, EditAnywhere, Category = "Dialogue Playback|Timed")
+	UPROPERTY(Config, EditAnywhere, Category = "Dialogue Playback|Timed Settings")
 	bool bForcedDialogueDuration = false;
 	
-	/** If set, dialogue will not auto-advance when its duration finishes and will require advancement by using the Dialogue Handle. */
-	UPROPERTY(Config, EditAnywhere, Category = "Dialogue Playback|Timed")
+	/** If set, dialogue will not auto-advance by default and will require advancement by using the Conversation Handle or Speech Handle. */
+	UPROPERTY(Config, EditAnywhere, Category = "Dialogue Playback|Timed Settings", DisplayName = "Manual Advance by Default")
 	bool bManualAdvanceOnly = false;
 
 	/** If set, prompt nodes will always default to auto-advance. */
-	UPROPERTY(Config, EditAnywhere, Category = "Dialogue Playback", DisplayName = "Prompts Auto-Advance")
+	UPROPERTY(Config, EditAnywhere, Category = "Dialogue Playback", DisplayName = "Prompts Auto-Advance by Default")
 	bool bPromptAutoAdvance = false;
 	
 	/**
 	 * If set, the *last* fragment of an auto-advancing talk node will check if the fragment is playing into a player prompt node. If it is, it will immediately advance into the player prompt node after starting speech.
 	 * This lets prompt options pop-up immediately upon starting that speech. This is roughly equivalent to using the last fragment's "Start" pin to move into the Prompt node.
-	 * WARNING: This setting cause all activation conditions of the last fragment of any talk nodes which flow into player prompt nodes to be ignored! This ensures consistent game behavior.
 	 */
-	UPROPERTY(Config, EditAnywhere, Category = "Dialogue Playback|Timed", DisplayName = "Talk Auto-Advance into Prompts", meta = (EditCondition = "bManualAdvanceOnly", EditConditionHides))
+	UPROPERTY(Config, EditAnywhere, Category = "Dialogue Playback|Timed Settings", DisplayName = "Talk Auto-Advance into Prompts [BEING DEPRECATED]", meta = (EditCondition = "bManualAdvanceOnly", EditConditionHides))
 	bool bAutoAdvanceToPromptNodes = false;
 
 	/** By default, a player prompt node will auto-select the prompt when only one is displayed. This setting prevents that. */

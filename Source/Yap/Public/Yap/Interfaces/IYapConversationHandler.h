@@ -32,10 +32,6 @@ class UYapConversationHandler : public UInterface
 class IYapConversationHandler
 {
 	GENERATED_BODY()
-
-#if WITH_EDITOR
-	bool bWarnedAboutMatureDialogue = false;
-#endif
 	
 protected:
 	/** Code to run when a conversation begins. Do NOT call Parent when overriding. */

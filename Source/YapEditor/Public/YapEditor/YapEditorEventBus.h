@@ -13,12 +13,14 @@ enum class EYapEventSubscription : uint8
 };
 
 // ----------------------------------------------
-template<typename ClassType>
+template<typename ClassType, typename... Args>
 struct FYapEdEventArg
 {
 	EYapEventSubscription Setting = EYapEventSubscription::Unspecified;
 
-	typename TMemFunPtrType<false, ClassType, void()>::Type Function;
+	typename TMemFunPtrType<false, ClassType, void(Args...)>::Type Function;
+
+	
 	
 	void Ignore()
 	{
@@ -51,6 +53,8 @@ class SomeWidget
 public:
 	
 	void OnSomeVoidEvent();
+
+	void Test2(int32 Seven);
 	
 	void SomeInitFunction()
 	{
@@ -61,12 +65,16 @@ public:
 		//Evts.ConditionsArrayNumChange.Subscribe(&SomeWidget::OnSomeVoidEvent);
 
 		FYapEdEventArg<SomeWidget> Thing;
+		FYapEdEventArg<SomeWidget, int32> Thing2;
 
 		TMemFunPtrType<false, SomeWidget, void()>::Type Function = &SomeWidget::OnSomeVoidEvent;
+		TMemFunPtrType<false, SomeWidget, void(int32)>::Type Function2 = &SomeWidget::Test2;
 		
 		Thing.Function = Function;
+		Thing2.Function = Function2;
 
 		(*this.*Thing.Function)();
+		(*this.*Thing2.Function)(7);
 
 		FYapEditorEventBus Bus;
 
@@ -102,7 +110,5 @@ public:
 		{ TEXT("BevelMaterial"), &UText3DComponent::GetBevelMaterial }
 	};
  */
-
-#undef YAP_EVENT
 
 #undef LOCTEXT_NAMESPACE

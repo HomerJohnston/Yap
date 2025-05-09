@@ -121,6 +121,7 @@ protected:
 	FOptionalSize GetMaxTitleWidth() const;
 
 public:
+	// TODO implement this. I kind of think Flow should offer up an enum or something for us to manage this...
 	virtual bool UseLowDetail() const { return false; };
 
 public:

@@ -62,6 +62,10 @@ protected:
 	/** What type of classes are allowable to use for dialogue assets (sounds). If unset, defaults to Unreal's USoundBase. */
 	UPROPERTY(Config, EditAnywhere, Category = "Core", meta = (AllowAbstract))
 	TArray<TSoftClassPtr<UObject>> AudioAssetClasses;
+
+	/** This filters certain tag dropdowns. Set this to your game's Gameplay Tag that contains tags for each of your speaking characters. If your game's speaking characters have no common tag parent, leave this blank. */
+	UPROPERTY(Config, EditAnywhere, Category = "Uncategorized", meta = (AllowAbstract))
+	FGameplayTag CharacterTagBase;
 	
 	// - - - - - MOOD TAGS - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	
@@ -69,11 +73,9 @@ protected:
 	UPROPERTY(Config, EditAnywhere, Category = "Mood Tags")
 	FGameplayTag MoodTagsParent;
 
-	
 	/** Optional default mood tag to use, for fragments which do not have a mood tag set. */
 	UPROPERTY(Config, EditAnywhere, Category = "Mood Tags")
 	FGameplayTag DefaultMoodTag;
-
 	
 	/** Where to look for mood icons. If unspecified, will use the default "Plugins/FlowYap/Resources/MoodTags" folder. */
 	UPROPERTY(Config, EditAnywhere, Category = "Mood Tags")
@@ -82,14 +84,14 @@ protected:
 	// - - - - - DIALOGUE TYPE GROUPS - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 	/** Your most commonly used dialogue type should be setup here. Settings from here will be used for any dialogue nodes which do not have a group assigned. */
-	UPROPERTY(Config, EditAnywhere, Category = "Core")
+	UPROPERTY(Config, EditAnywhere, Category = "Core|TypeGroups")
 	FYapTypeGroupSettings DefaultGroup;
 	
 	/**
 	 * Type groups - if you want to have separate type handling for things like normal in-level chatting, tutorial text, incoming radio messages, etc... add "Groups" for them here.
 	 * Your "Listeners" can register to receive events from one or more groups.
 	 */
-	UPROPERTY(Config, EditAnywhere, Category = "Core", meta = (ForceInlineRow))
+	UPROPERTY(Config, EditAnywhere, Category = "Core|TypeGroups", meta = (ForceInlineRow))
 	TMap<FGameplayTag, FYapTypeGroupSettings> NamedGroups;
 	
 	// - - - - - DIALOGUE PLAYBACK - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  

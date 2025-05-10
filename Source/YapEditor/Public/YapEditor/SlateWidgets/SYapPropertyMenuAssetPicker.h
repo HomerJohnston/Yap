@@ -36,7 +36,6 @@ public:
 	/**
 	 * Construct the widget.
 	 * @param	InArgs				Arguments for widget construction
-	 * @param	InPropertyHandle	The property handle that this widget will operate on.
 	 */
 	void Construct( const FArguments& InArgs );
 
@@ -95,7 +94,7 @@ private:
 
 	/**
 	 * Delegate for handling creating new assets from the menu.
-	 * @param	FactoryPtr		Factory which creates asset
+	 * @param	Factory		Factory which creates asset
 	 */
 	void OnCreateNewAssetSelected(TWeakObjectPtr<UFactory> Factory);
 
@@ -117,10 +116,10 @@ private:
 	TSharedPtr<SWidget> AssetPickerWidget;
 
 	/** Whether the asset can be 'None' in this case */
-	bool bAllowClear;
+	bool bAllowClear = true;
 
 	/** Whether the asset can be copied or pasted */
-	bool bAllowCopyPaste;
+	bool bAllowCopyPaste = true;
 
 	/** Array of classes to Allow in filter */
 	TArray<const UClass*> AllowedClasses;

@@ -4,7 +4,7 @@
 #pragma once
 
 #include "GameplayTagContainer.h"
-#include "Interfaces/IYapSpeaker.h"
+#include "Interfaces/IYapCharacterInterface.h"
 
 #include "YapCharacter.generated.h"
 
@@ -16,7 +16,7 @@ enum class EFlowYapCharacterMood : uint8;
 // TODO add validation warning to the details customization
 // TODO add a "skip warning" bool to portrait entries, to make it allowable for them to be unset (on packaging, any unset textures should, by default, log a warning message)
 UCLASS(meta = (DataAssetCategory = "TODO"))
-class YAP_API UYapCharacter : public UObject, public IYapSpeaker
+class YAP_API UYapCharacter : public UObject, public IYapCharacterInterface
 {
 #if WITH_EDITOR
 	friend class FDetailCustomization_YapCharacter;
@@ -55,13 +55,13 @@ protected:
 	/* IYapSpeaker Interface */
 public:
 
-	FText Yap_GetSpeakerName() const override { return EntityName; };
+	FText GetYapCharacterName() const override { return EntityName; };
 
-	FLinearColor Yap_GetSpeakerColor() const override { return EntityColor; };
+	FLinearColor GetYapCharacterColor() const override { return EntityColor; };
 
-	FGameplayTag Yap_GetSpeakerTag() const override { return IdentityTag; };
+	FGameplayTag GetYapCharacterTag() const override { return IdentityTag; };
 	
-	const UTexture2D* Yap_GetSpeakerPortrait(const FGameplayTag& MoodTag) const override;
+	const UTexture2D* GetYapCharacterPortrait(const FGameplayTag& MoodTag) const override;
 
 	/* IYapSpeaker Interface */
 	// --------------------- //

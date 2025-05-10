@@ -50,22 +50,30 @@ public:
 	// ============================================================================================
 protected:
 	
-	// - - - - - CORE - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-	
-	/** You must create a Yap Broker class (C++ or blueprint) and set it here for Yap to work. */
-	UPROPERTY(Config, EditAnywhere, Category = "Core")
-	TSoftClassPtr<UYapBroker> BrokerClass = nullptr;
-	
 	// Do not expose this for editing; only hard-coded
 	TArray<TSoftClassPtr<UObject>> DefaultAssetAudioClasses;
+
+	// - - - - - CORE - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	
+	/** Create a Yap Broker class, inheriting from UYapBroker, and set it here to override some default Yap behavior such as reading your game's maturity setting. */
+	UPROPERTY(Config, EditAnywhere, Category = "Core")
+	TSoftClassPtr<UYapBroker> BrokerClass = nullptr;
 	
 	/** What type of classes are allowable to use for dialogue assets (sounds). If unset, defaults to Unreal's USoundBase. */
 	UPROPERTY(Config, EditAnywhere, Category = "Core", meta = (AllowAbstract))
 	TArray<TSoftClassPtr<UObject>> AudioAssetClasses;
-
+	
+	/** If enabled, *ALL* Content items of your game will be listed in the "Speakers" and "Directed At" drop down selectors. */
+	UPROPERTY(Config, EditAnywhere, Category = "Core", meta = (AllowAbstract))
+	bool bAllowAllAssetsAsSpeakers = false;
+	
+	/** Filters the blueprint/asset popup list when choosing a "Speaker" or "Directed At" asset. */
+	UPROPERTY(Config, EditAnywhere, Category = "Core", meta = (AllowAbstract, EditCondition = "!bAllowAllAssetsAsSpeakers", EditConditionHides))
+	TArray<TSoftClassPtr<UObject>> SpeakerClasses;
+	
 	/** This filters certain tag dropdowns. Set this to your game's Gameplay Tag that contains tags for each of your speaking characters. If your game's speaking characters have no common tag parent, leave this blank. */
 	UPROPERTY(Config, EditAnywhere, Category = "Uncategorized", meta = (AllowAbstract))
-	FGameplayTag CharacterTagBase;
+	FGameplayTag SpeakerTagBase;
 	
 	// - - - - - MOOD TAGS - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	
@@ -210,6 +218,10 @@ public:
 
 	static const FString GetAudioAssetRootFolder(FGameplayTag TypeGroup);
 #endif
+
+	static const TArray<TSoftClassPtr<UObject>>& GetSpeakerClasses() { return Get().SpeakerClasses; }
+
+	static TArray<const UClass*> GetSpeakerClasses_SyncLoad();
 
 	static bool HasCustomAudioAssetClasses() { return Get().AudioAssetClasses.Num() > 0; };
 

@@ -449,7 +449,7 @@ void FPropertyCustomization_YapGroupSettings::DrawProperty(IDetailChildrenBuilde
 
 	if (IsDefault())
 	{
-		return DrawDefaultProperty(StructBuilder, Group, Property);
+		DrawDefaultProperty(StructBuilder, Group, Property);
 	}
 	else
 	{

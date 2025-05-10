@@ -15,7 +15,7 @@
 
 #include "YapFragment.generated.h"
 
-class IYapSpeaker;
+class IYapCharacterInterface;
 enum class EYapLoadContext : uint8;
 class UYapCharacter;
 class UYapCondition;

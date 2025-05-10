@@ -68,7 +68,7 @@ void UYapBlueprintFunctionLibrary::UnregisterFreeSpeechHandler(UObject* HandlerT
 
 // ------------------------------------------------------------------------------------------------
 
-AActor* UYapBlueprintFunctionLibrary::FindYapCharacterActor(UObject* WorldContext, TScriptInterface<IYapSpeaker> Speaker)
+AActor* UYapBlueprintFunctionLibrary::FindYapCharacterActor(UObject* WorldContext, TScriptInterface<IYapCharacterInterface> Speaker)
 {
 	if (!IsValid(Speaker.GetObject()))
 	{
@@ -79,11 +79,11 @@ AActor* UYapBlueprintFunctionLibrary::FindYapCharacterActor(UObject* WorldContex
 	
 	if (Speaker.GetInterface())
 	{
-		Tag = Speaker.GetInterface()->Yap_GetSpeakerTag();
+		Tag = Speaker.GetInterface()->GetYapCharacterTag();
 	}
 	else
 	{
-		Tag = IYapSpeaker::Execute_K2Yap_GetSpeakerTag(Speaker.GetObject());
+		Tag = IYapCharacterInterface::Execute_K2_GetYapCharacterTag(Speaker.GetObject());
 	}
 	
 	if (!Tag.IsValid())

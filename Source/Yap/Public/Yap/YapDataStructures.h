@@ -4,7 +4,7 @@
 #pragma once
 
 #include "GameplayTagContainer.h"
-#include "Yap/Interfaces/IYapSpeaker.h"
+#include "Yap/Interfaces/IYapCharacterInterface.h"
 
 class UYapCharacter;
 struct FYapPromptHandle;
@@ -47,11 +47,11 @@ struct FYapData_SpeechBegins
 	
 	/** Who is being speaked towards. */
 	UPROPERTY(BlueprintReadOnly)
-	TScriptInterface<IYapSpeaker> DirectedAt = nullptr;
+	TScriptInterface<IYapCharacterInterface> DirectedAt = nullptr;
 
 	/** Who is speaking. */
 	UPROPERTY(BlueprintReadOnly)
-	TScriptInterface<IYapSpeaker> Speaker;
+	TScriptInterface<IYapCharacterInterface> Speaker;
 
 	/** Mood of the speaker. */
 	UPROPERTY(BlueprintReadOnly)
@@ -98,11 +98,11 @@ struct FYapData_PlayerPromptCreated
 	
 	/** Who will be spoken to. */
 	UPROPERTY(BlueprintReadOnly)
-	TScriptInterface<IYapSpeaker> DirectedAt;
+	TScriptInterface<IYapCharacterInterface> DirectedAt;
 
 	/** Who is going to speak. */
 	UPROPERTY(BlueprintReadOnly)
-	TScriptInterface<IYapSpeaker> Speaker;
+	TScriptInterface<IYapCharacterInterface> Speaker;
 
 	/** Mood of the speaker. */
 	UPROPERTY(BlueprintReadOnly)

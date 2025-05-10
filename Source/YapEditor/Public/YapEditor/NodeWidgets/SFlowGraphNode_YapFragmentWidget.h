@@ -8,7 +8,7 @@
 #include "Yap/Enums/YapTimeMode.h"
 #include "Templates/SharedPointer.h"
 
-class IYapSpeaker;
+class IYapCharacterInterface;
 class SYapDialogueEditor;
 struct FYapTypeGroupSettings;
 enum class EYapDialogueProgressionFlags : uint8;
@@ -122,7 +122,6 @@ protected:
 	TSharedRef<SWidget>		CreateFragmentControlsWidget();
 	bool					Enabled_AudioPreviewButton(const TSoftObjectPtr<UObject>* Object) const;
 	FReply					OnClicked_AudioPreviewWidget(const TSoftObjectPtr<UObject>* Object);
-	TSharedRef<SWidget>		CreateAudioPreviewWidget(const TSoftObjectPtr<UObject>* AudioAsset, TAttribute<EVisibility> VisibilityAtt);
 
 	// ------------------------------------------
 

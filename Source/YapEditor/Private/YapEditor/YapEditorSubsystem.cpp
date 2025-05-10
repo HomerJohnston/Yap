@@ -107,17 +107,17 @@ TSharedPtr<FSlateImageBrush> UYapEditorSubsystem::GetCharacterPortraitBrush(cons
 	// TODO I should somehow cache this so that I'm not calling slow interface calls on tick in the widget
 	// Or switch to event based updates
 
-	const IYapSpeaker* SpeakerInterface = Cast<IYapSpeaker>(Character);
+	const IYapCharacterInterface* SpeakerInterface = Cast<IYapCharacterInterface>(Character);
 
 	const UTexture2D* Texture = nullptr;
 
 	if (SpeakerInterface)
 	{
-		Texture = SpeakerInterface->Yap_GetSpeakerPortrait(MoodTag);
+		Texture = SpeakerInterface->GetYapCharacterPortrait(MoodTag);
 	}
-	else if (Character->Implements<UYapSpeaker>())
+	else if (Character->Implements<UYapCharacterInterface>())
 	{
-		Texture = IYapSpeaker::Execute_K2Yap_GetSpeakerPortrait(Character, MoodTag);
+		Texture = IYapCharacterInterface::Execute_K2_GetYapCharacterPortrait(Character, MoodTag);
 	}	
 
 	if (!Texture)

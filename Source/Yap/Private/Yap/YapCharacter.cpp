@@ -14,7 +14,7 @@ UYapCharacter::UYapCharacter() :
 {
 }
 
-const UTexture2D* UYapCharacter::Yap_GetSpeakerPortrait(const FGameplayTag& MoodTag) const
+const UTexture2D* UYapCharacter::GetYapCharacterPortrait(const FGameplayTag& MoodTag) const
 {
 	if (bUseSinglePortrait)
 	{

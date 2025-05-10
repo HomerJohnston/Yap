@@ -10,6 +10,7 @@ class UYapCharacter;
 
 // ================================================================================================
 
+/** INCOMPLETE - This is supposed to eventually be usable in a custom UListView class. */
 USTRUCT(BlueprintType)
 struct FYapMessageEntry
 {

@@ -114,6 +114,21 @@ const FString UYapProjectSettings::GetAudioAssetRootFolder(FGameplayTag TypeGrou
 	
 	return Group->AudioAssetsRootFolder.Path;
 }
+
+TArray<const UClass*> UYapProjectSettings::GetSpeakerClasses_SyncLoad()
+{
+	TArray<const UClass*> LoadedClasses;
+	
+	for (TSoftClassPtr<UObject> ClassPtr : Get().SpeakerClasses)
+	{
+		if (!ClassPtr.IsNull())
+		{
+			LoadedClasses.Add(ClassPtr.LoadSynchronous());
+		}
+	}
+	
+	return LoadedClasses;
+}
 #endif
 
 #if WITH_EDITOR

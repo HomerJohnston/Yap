@@ -30,11 +30,7 @@ void Yap::EditorFuncs::OpenProjectSettings()
 
 void Yap::EditorFuncs::PostNotificationInfo_Warning(FText Title, FText Description, float Duration)
 {
-	FNotificationInfo NotificationInfo(Title);
-	NotificationInfo.ExpireDuration = Duration;
-	NotificationInfo.Image = FAppStyle::GetBrush("Icons.WarningWithColor");
-	NotificationInfo.SubText = Description;
-	FSlateNotificationManager::Get().AddNotification(NotificationInfo);
+	Yap::Editor::PostNotificationInfo_Warning(Title, Description, Duration);
 }
 
 bool Yap::EditorFuncs::SaveAsset(UObject* Asset)

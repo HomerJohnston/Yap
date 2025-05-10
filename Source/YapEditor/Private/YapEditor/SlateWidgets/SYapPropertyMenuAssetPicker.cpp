@@ -115,7 +115,7 @@ void SYapPropertyMenuAssetPicker::Construct( const FArguments& InArgs )
 
 		FAssetPickerConfig AssetPickerConfig;
 		// Add filter classes - if we have a single filter class of "Object" then don't set a filter since it would always match everything (but slower!)
-		if (AllowedClasses.Num() == 1 && AllowedClasses[0] == UObject::StaticClass())
+		if ((AllowedClasses.Num() == 0) || (AllowedClasses.Num() == 1 && AllowedClasses[0] == UObject::StaticClass()))
 		{
 			AssetPickerConfig.Filter.ClassPaths.Reset();
 		}

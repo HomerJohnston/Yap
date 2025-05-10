@@ -474,8 +474,8 @@ bool UFlowNode_YapDialogue::TryBroadcastPrompts()
  		
  		FYapData_PlayerPromptCreated Data;
  		Data.Conversation = Conversation.GetHandle();
- 		Data.DirectedAt = TScriptInterface<IYapSpeaker>(const_cast<UObject*>(Fragment.GetDirectedAt(EYapLoadContext::Sync)));
- 		Data.Speaker = TScriptInterface<IYapSpeaker>(const_cast<UObject*>(Fragment.GetSpeaker(EYapLoadContext::Sync)));
+ 		Data.DirectedAt = TScriptInterface<IYapCharacterInterface>(const_cast<UObject*>(Fragment.GetDirectedAt(EYapLoadContext::Sync)));
+ 		Data.Speaker = TScriptInterface<IYapCharacterInterface>(const_cast<UObject*>(Fragment.GetSpeaker(EYapLoadContext::Sync)));
  		Data.MoodTag = Fragment.GetMoodTag();
  		Data.DialogueText = Bit.GetDialogueText();
 
@@ -589,8 +589,8 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 
 	FYapData_SpeechBegins Data;
 	Data.Conversation = Subsystem->GetConversationByOwner(GetWorld(), GetFlowAsset()).GetConversationName();
-	Data.DirectedAt = TScriptInterface<IYapSpeaker>(const_cast<UObject*>(Fragment.GetDirectedAt(EYapLoadContext::Sync)));
-	Data.Speaker = TScriptInterface<IYapSpeaker>(const_cast<UObject*>(Fragment.GetSpeaker(EYapLoadContext::Sync)));
+	Data.DirectedAt = TScriptInterface<IYapCharacterInterface>(const_cast<UObject*>(Fragment.GetDirectedAt(EYapLoadContext::Sync)));
+	Data.Speaker = TScriptInterface<IYapCharacterInterface>(const_cast<UObject*>(Fragment.GetSpeaker(EYapLoadContext::Sync)));
 	Data.MoodTag = Fragment.GetMoodTag();
 	Data.DialogueText = Bit.GetDialogueText();
 	Data.SpeechTime = EffectiveTime;
@@ -606,7 +606,14 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 #if !UE_BUILD_SHIPPING
 	if (IsValid(Data.Speaker.GetObject()))
 	{
-		UE_LOG(LogYap, VeryVerbose, TEXT("%s [%i]: [%s] %s"), *GetName(), FragmentIndex, *Data.Speaker->Yap_GetSpeakerName().ToString(), *Bit.GetDialogueText().ToString());		
+		if (Data.Speaker.GetInterface())
+		{
+			UE_LOG(LogYap, VeryVerbose, TEXT("%s [%i]: [%s] %s"), *GetName(), FragmentIndex, *Data.Speaker->GetYapCharacterName().ToString(), *Bit.GetDialogueText().ToString());		
+		}
+		else
+		{
+			UE_LOG(LogYap, VeryVerbose, TEXT("%s [%i]: [%s] %s"), *GetName(), FragmentIndex, *IYapCharacterInterface::Execute_K2_GetYapCharacterName(Data.Speaker.GetObject()).ToString(), *Bit.GetDialogueText().ToString());				
+		}
 	}
 	else
 	{

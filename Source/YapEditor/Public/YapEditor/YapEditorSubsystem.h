@@ -5,7 +5,7 @@
 
 #include "Textures/SlateIcon.h"
 #include "GameplayTagContainer.h"
-#include "Yap/Interfaces/IYapSpeaker.h"
+#include "Yap/Interfaces/IYapCharacterInterface.h"
 #include "YapEditorSubsystem.generated.h"
 
 class UYapCharacter;

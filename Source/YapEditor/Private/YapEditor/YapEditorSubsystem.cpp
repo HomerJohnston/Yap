@@ -95,17 +95,30 @@ const FSlateBrush* UYapEditorSubsystem::GetMoodTagBrush(FGameplayTag Name)
 	return Brush ? Brush->Get() : FYapEditorStyle::GetImageBrush(YapBrushes.Icon_MoodTag_Missing);
 }
 
-TSharedPtr<FSlateImageBrush> UYapEditorSubsystem::GetCharacterPortraitBrush(const UYapCharacter* Character, const FGameplayTag& MoodTag)
+TSharedPtr<FSlateImageBrush> UYapEditorSubsystem::GetCharacterPortraitBrush(const UObject* Character, const FGameplayTag& MoodTag)
 {
 	static int32 iii = 0;
-	
+
 	if (!IsValid(Character))
 	{
 		return nullptr;
 	}
 
-	// The character only has hard refs to its portrait textures. Its textures will always be loaded.
-	const UTexture2D* Texture = Character->Yap_GetSpeakerPortrait(MoodTag);
+	// TODO I should somehow cache this so that I'm not calling slow interface calls on tick in the widget
+	// Or switch to event based updates
+
+	const IYapSpeaker* SpeakerInterface = Cast<IYapSpeaker>(Character);
+
+	const UTexture2D* Texture = nullptr;
+
+	if (SpeakerInterface)
+	{
+		Texture = SpeakerInterface->Yap_GetSpeakerPortrait(MoodTag);
+	}
+	else if (Character->Implements<UYapSpeaker>())
+	{
+		Texture = IYapSpeaker::Execute_K2Yap_GetSpeakerPortrait(Character, MoodTag);
+	}	
 
 	if (!Texture)
 	{

@@ -9,7 +9,7 @@ UDELEGATE()
 DECLARE_DYNAMIC_DELEGATE(FYapConversationEventDelegate);
 
 USTRUCT(BlueprintType)
-struct FYapConversationHandle
+struct YAP_API FYapConversationHandle
 {
     GENERATED_BODY()
 
@@ -64,7 +64,7 @@ FORCEINLINE uint32 GetTypeHash(const FYapConversationHandle& Struct)
 }
 
 UCLASS()
-class UYapConversationHandleBlueprintFunctionLibrary : public UBlueprintFunctionLibrary
+class YAP_API UYapConversationHandleBlueprintFunctionLibrary : public UBlueprintFunctionLibrary
 {
     GENERATED_BODY()
 

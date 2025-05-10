@@ -89,56 +89,28 @@ void FYapFragment::PreloadContent(UWorld* World, EYapMaturitySetting MaturitySet
 	}
 }
 
-const UYapCharacter* FYapFragment::GetSpeaker(EYapLoadContext LoadContext)
+const UObject* FYapFragment::GetSpeaker(EYapLoadContext LoadContext)
 {
 	return GetCharacter_Internal(SpeakerAsset, SpeakerHandle, LoadContext);
 }
 
-const UObject* FYapFragment::GetSpeakerNew(EYapLoadContext LoadContext)
+bool FYapFragment::HasSpeakerAssigned()
 {
-	return GetSpeaker_InternalNew(SpeakerAssetNew, SpeakerHandleNew, LoadContext);
+	return !SpeakerAsset.IsNull();
 }
 
-const UYapCharacter* FYapFragment::GetDirectedAt(EYapLoadContext LoadContext)
+
+bool FYapFragment::IsSpeakerPendingLoad()
+{
+	return SpeakerAsset.IsPending();
+}
+
+const UObject* FYapFragment::GetDirectedAt(EYapLoadContext LoadContext)
 {
 	return GetCharacter_Internal(DirectedAtAsset, DirectedAtHandle, LoadContext);
 }
 
-const UYapCharacter* FYapFragment::GetCharacter_Internal(const TSoftObjectPtr<UYapCharacter>& CharacterAsset, TSharedPtr<FStreamableHandle>& Handle, EYapLoadContext LoadContext)
-{
-	if (CharacterAsset.IsNull())
-	{
-		return nullptr;
-	}
-
-	if (CharacterAsset.IsValid())
-	{
-		return CharacterAsset.Get();
-	}
-
-	switch (LoadContext)
-	{
-		case EYapLoadContext::Async:
-		{
-			Handle = FYapStreamableManager::Get().RequestAsyncLoad(CharacterAsset.ToSoftObjectPath());
-			break;
-		}
-		case EYapLoadContext::AsyncEditorOnly:
-		{
-			FYapStreamableManager::Get().RequestAsyncLoad(CharacterAsset.ToSoftObjectPath());
-			break;
-		}
-		case EYapLoadContext::Sync:
-		{
-			Handle = FYapStreamableManager::Get().RequestSyncLoad(CharacterAsset.ToSoftObjectPath());
-			break;
-		}
-	}
-
-	return CharacterAsset.Get();
-}
-
-const UObject* FYapFragment::GetSpeaker_InternalNew(const TSoftObjectPtr<UObject>& InSpeakerAsset, TSharedPtr<FStreamableHandle>& Handle, EYapLoadContext LoadContext)
+const UObject* FYapFragment::GetCharacter_Internal(const TSoftObjectPtr<UObject>& InSpeakerAsset, TSharedPtr<FStreamableHandle>& Handle, EYapLoadContext LoadContext)
 {
 	if (InSpeakerAsset.IsNull())
 	{
@@ -147,7 +119,12 @@ const UObject* FYapFragment::GetSpeaker_InternalNew(const TSoftObjectPtr<UObject
 
 	if (InSpeakerAsset.IsValid())
 	{
-		return SpeakerAssetNew.Get();
+		if (const UBlueprint* Blueprint = Cast<UBlueprint>(InSpeakerAsset.Get()))
+		{
+			return Blueprint->GeneratedClass->GetDefaultObject();
+		}
+		
+		return InSpeakerAsset.Get();
 	}
 
 	switch (LoadContext)
@@ -167,6 +144,16 @@ const UObject* FYapFragment::GetSpeaker_InternalNew(const TSoftObjectPtr<UObject
 			Handle = FYapStreamableManager::Get().RequestSyncLoad(InSpeakerAsset.ToSoftObjectPath());
 			break;
 		}
+	}
+
+	if (IsSpeakerPendingLoad())
+	{
+		return nullptr;
+	}
+	
+	if (const UBlueprint* Blueprint = Cast<UBlueprint>(InSpeakerAsset.Get()))
+	{
+		return Blueprint->GetClass()->GetDefaultObject();
 	}
 
 	return InSpeakerAsset.Get();
@@ -461,9 +448,9 @@ void FYapFragment::InvalidateFragmentTag(UFlowNode_YapDialogue* OwnerNode)
 
 
 #if WITH_EDITOR
-void FYapFragment::SetSpeaker(TSoftObjectPtr<UYapCharacter> InCharacter)
+void FYapFragment::SetSpeakerNew(TSoftObjectPtr<UObject> InSpeaker)
 {
-	SpeakerAsset = InCharacter;
+	SpeakerAsset = InSpeaker;
 	SpeakerHandle = nullptr;
 }
 

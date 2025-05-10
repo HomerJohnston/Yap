@@ -8,6 +8,7 @@
 #include "Yap/Enums/YapTimeMode.h"
 #include "Templates/SharedPointer.h"
 
+class IYapSpeaker;
 class SYapDialogueEditor;
 struct FYapTypeGroupSettings;
 enum class EYapDialogueProgressionFlags : uint8;
@@ -98,6 +99,8 @@ protected:
 
 	TSharedPtr<SWidget> ChildSafeCheckBox = nullptr;
 
+	TSharedPtr<SWidget> DirectedAtWidget = nullptr;
+	
 	bool bChildSafeCheckBoxHovered = false;
 
 	static FSlateFontInfo DialogueTextFont;
@@ -193,8 +196,7 @@ protected:
 	
 	// ------------------------------------------
 	
-	TSharedRef<SWidget>		PopupContentGetter_SpeakerWidget(const UYapCharacter* Character);
-	TSharedRef<SWidget>		PopupContentGetter_SpeakerWidgetNew(const UObject* Character);
+	TSharedRef<SWidget>		PopupContentGetter_SpeakerWidget(const UObject* Character);
 	void					OnSetNewSpeakerAsset(const FAssetData& AssetData);
 
 	// ------------------------------------------
@@ -286,7 +288,9 @@ protected:
 	bool FragmentRecentlyRan() const;
 	
 	// ------------
-	bool IsDroppedAsset_YapCharacter(TArrayView<FAssetData> AssetDatas) const;
+	bool IsDroppedAsset_YapSpeaker(TArrayView<FAssetData> AssetDatas) const;
+
+	bool IsAsset_YapSpeaker(const FAssetData& AssetData) const;
 
 	// ------------
 	FSlateColor	GetColorAndOpacityForFragmentText(FLinearColor BaseColor) const;

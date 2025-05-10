@@ -5,7 +5,7 @@
 
 #include "Textures/SlateIcon.h"
 #include "GameplayTagContainer.h"
-
+#include "Yap/Interfaces/IYapSpeaker.h"
 #include "YapEditorSubsystem.generated.h"
 
 class UYapCharacter;
@@ -64,7 +64,7 @@ public:
 
 	const FSlateBrush* GetMoodTagBrush(FGameplayTag Name);
 
-	static TSharedPtr<FSlateImageBrush> GetCharacterPortraitBrush(const UYapCharacter* Character, const FGameplayTag& MoodTag);
+	static TSharedPtr<FSlateImageBrush> GetCharacterPortraitBrush(const UObject* Character, const FGameplayTag& MoodTag);
 
 public:
 		

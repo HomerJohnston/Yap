@@ -15,6 +15,7 @@
 
 #include "YapFragment.generated.h"
 
+class IYapSpeaker;
 enum class EYapLoadContext : uint8;
 class UYapCharacter;
 class UYapCondition;
@@ -75,17 +76,13 @@ public:
 protected:
 	UPROPERTY()
 	TArray<TObjectPtr<UYapCondition>> Conditions;
+
+	UPROPERTY()
+	TSoftObjectPtr<UObject> SpeakerAsset;
 	
 	/**  */
 	UPROPERTY()
-	TSoftObjectPtr<UYapCharacter> SpeakerAsset;
-
-	/**  */
-	UPROPERTY()
-	TSoftObjectPtr<UYapCharacter> DirectedAtAsset;
-
-	UPROPERTY()
-	TSoftObjectPtr<UObject> SpeakerAssetNew;
+	TSoftObjectPtr<UObject> DirectedAtAsset;
 	
 	UPROPERTY()
 	FYapBit MatureBit;
@@ -191,14 +188,12 @@ protected:
 	 * 
 	 */
 	TSharedPtr<FStreamableHandle> SpeakerHandle;
-
-	TSharedPtr<FStreamableHandle> SpeakerHandleNew;
 	
 	TSharedPtr<FStreamableHandle> DirectedAtHandle;
 
 	// EDITOR
 #if WITH_EDITOR
-protected:
+
 #endif
 	
 	// ==========================================
@@ -212,16 +207,16 @@ public:
 	
 	void PreloadContent(UWorld* World, EYapMaturitySetting MaturitySetting, EYapLoadContext LoadContext);
 	
-	const UYapCharacter* GetSpeaker(EYapLoadContext LoadContext); // Non-const because of async loading handle
+	const UObject* GetSpeaker(EYapLoadContext LoadContext); // Non-const because of async loading handle
 
-	const UObject* GetSpeakerNew(EYapLoadContext LoadContext); // Non-const because of async loading handle
+	bool HasSpeakerAssigned();
+	
+	bool IsSpeakerPendingLoad();
 
-	const UYapCharacter* GetDirectedAt(EYapLoadContext LoadContext); // Non-const because of async loading handle
+	const UObject* GetDirectedAt(EYapLoadContext LoadContext); // Non-const because of async loading handle
 	
 private:
-	const UYapCharacter* GetCharacter_Internal(const TSoftObjectPtr<UYapCharacter>& CharacterAsset, TSharedPtr<FStreamableHandle>& Handle, EYapLoadContext LoadContext);
-	
-	const UObject* GetSpeaker_InternalNew(const TSoftObjectPtr<UObject>& SpeakerAsset, TSharedPtr<FStreamableHandle>& Handle, EYapLoadContext LoadContext);
+	const UObject* GetCharacter_Internal(const TSoftObjectPtr<UObject>& SpeakerAsset, TSharedPtr<FStreamableHandle>& Handle, EYapLoadContext LoadContext);
 
 public:
 	// TODO I don't think fragments should know where their position is!
@@ -304,9 +299,9 @@ public:
 
 	const TArray<UYapCondition*>& GetConditions() const { return Conditions; }
 
-	const TSoftObjectPtr<UYapCharacter>& GetSpeakerAsset() const { return SpeakerAsset; }
+	const TSoftObjectPtr<UObject>& GetSpeakerAsset() const { return SpeakerAsset; }
 	
-	const TSoftObjectPtr<UYapCharacter>& GetDirectedAtAsset() const { return DirectedAtAsset; }
+	const TSoftObjectPtr<UObject>& GetDirectedAtAsset() const { return DirectedAtAsset; }
 
 	FFlowPin GetPromptPin() const;
 
@@ -384,7 +379,7 @@ public:
 	// EDITOR API
 #if WITH_EDITOR
 public:
-	void SetSpeaker(TSoftObjectPtr<UYapCharacter> InCharacter);
+	void SetSpeakerNew(TSoftObjectPtr<UObject> InSpeaker);
 	
 	void SetDirectedAt(TSoftObjectPtr<UYapCharacter> InDirectedAt);
 #endif

@@ -318,7 +318,7 @@ void UFlowGraphNode_YapDialogue::AddFragment(int32 InsertionIndex)
 	if (GetYapDialogueNode()->Fragments.IsValidIndex(CopyFragmentIndex))
 	{
 		const FYapFragment& PreviousFragment = GetYapDialogueNode()->GetFragmentByIndex(CopyFragmentIndex);
-		NewFragment.SetSpeaker(PreviousFragment.GetSpeakerAsset());
+		NewFragment.SetSpeakerNew(PreviousFragment.GetSpeakerAsset());
 		NewFragment.SetMoodTag(PreviousFragment.GetMoodTag());
 	}
 

@@ -6,7 +6,7 @@
 
 #include "IYapSpeaker.generated.h"
 
-UINTERFACE(MinimalAPI, Blueprintable)
+UINTERFACE(MinimalAPI, Blueprintable, BlueprintType)
 class UYapSpeaker : public UInterface
 {
     GENERATED_BODY()

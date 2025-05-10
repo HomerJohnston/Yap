@@ -471,11 +471,11 @@ bool UFlowNode_YapDialogue::TryBroadcastPrompts()
 		}
 
  		const FYapBit& Bit = Fragment.GetBit(GetWorld());
-
+ 		
  		FYapData_PlayerPromptCreated Data;
  		Data.Conversation = Conversation.GetHandle();
- 		Data.DirectedAt = Fragment.GetDirectedAt(EYapLoadContext::Sync);
- 		Data.Speaker = Fragment.GetSpeaker(EYapLoadContext::Sync);
+ 		Data.DirectedAt = TScriptInterface<IYapSpeaker>(const_cast<UObject*>(Fragment.GetDirectedAt(EYapLoadContext::Sync)));
+ 		Data.Speaker = TScriptInterface<IYapSpeaker>(const_cast<UObject*>(Fragment.GetSpeaker(EYapLoadContext::Sync)));
  		Data.MoodTag = Fragment.GetMoodTag();
  		Data.DialogueText = Bit.GetDialogueText();
 
@@ -589,8 +589,8 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 
 	FYapData_SpeechBegins Data;
 	Data.Conversation = Subsystem->GetConversationByOwner(GetWorld(), GetFlowAsset()).GetConversationName();
-	Data.DirectedAt = Fragment.GetDirectedAt(EYapLoadContext::Sync);
-	Data.Speaker = Fragment.GetSpeaker(EYapLoadContext::Sync);
+	Data.DirectedAt = TScriptInterface<IYapSpeaker>(const_cast<UObject*>(Fragment.GetDirectedAt(EYapLoadContext::Sync)));
+	Data.Speaker = TScriptInterface<IYapSpeaker>(const_cast<UObject*>(Fragment.GetSpeaker(EYapLoadContext::Sync)));
 	Data.MoodTag = Fragment.GetMoodTag();
 	Data.DialogueText = Bit.GetDialogueText();
 	Data.SpeechTime = EffectiveTime;
@@ -604,7 +604,7 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 	}
 
 #if !UE_BUILD_SHIPPING
-	if (IsValid(Data.Speaker))
+	if (IsValid(Data.Speaker.GetObject()))
 	{
 		UE_LOG(LogYap, VeryVerbose, TEXT("%s [%i]: [%s] %s"), *GetName(), FragmentIndex, *Data.Speaker->Yap_GetSpeakerName().ToString(), *Bit.GetDialogueText().ToString());		
 	}

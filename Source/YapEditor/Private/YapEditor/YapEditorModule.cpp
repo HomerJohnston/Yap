@@ -4,7 +4,7 @@
 #include "YapEditor/YapEditorModule.h"
 
 #include "YapEditor/AssetFactory_YapCharacter.h"
-#include "Yap/YapCharacter.h"
+#include "Yap/YapCharacterAsset.h"
 #include "Yap/YapProjectSettings.h"
 #include "YapEditor/YapCharacterThumbnailRenderer.h"
 #include "YapEditor/YapEditorStyle.h"
@@ -22,11 +22,11 @@ void FYapEditorModule::StartupModule()
 	REGISTER_ASSET_TYPE_ACTION(FAssetTypeActions_FlowYapCharacter);
 
 	REGISTER_DETAIL_CUSTOMIZATION(UYapProjectSettings, FDetailCustomization_YapProjectSettings);
-	REGISTER_DETAIL_CUSTOMIZATION(UYapCharacter, FDetailCustomization_YapCharacter);
+	REGISTER_DETAIL_CUSTOMIZATION(UYapCharacterAsset, FDetailCustomization_YapCharacter);
 
 	REGISTER_PROPERTY_CUSTOMIZATION(FYapTypeGroupSettings, FPropertyCustomization_YapGroupSettings);
 
-	REGISTER_THUMBNAIL_RENDERER(UYapCharacter, UYapCharacterThumbnailRenderer);
+	REGISTER_THUMBNAIL_RENDERER(UYapCharacterAsset, UYapCharacterThumbnailRenderer);
 	
 	StartupModuleBase();
 	// FGPGEditorModuleBase implementation END

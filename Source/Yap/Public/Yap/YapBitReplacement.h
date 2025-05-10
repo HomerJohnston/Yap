@@ -9,7 +9,7 @@
 #include "YapBitReplacement.generated.h"
 
 class UObject;
-class UYapCharacter;
+class UYapCharacterAsset;
 
 // TODO -- URGENT -- we need a details customization for FYapText. So that whenever you set the text, it caches the length.
 USTRUCT()
@@ -21,11 +21,11 @@ struct FYapBitReplacement
 	
 	/**  */
 	UPROPERTY(EditAnywhere)
-	TOptional<TSoftObjectPtr<UYapCharacter>> SpeakerAsset;
+	TOptional<TSoftObjectPtr<UYapCharacterAsset>> SpeakerAsset;
 
 	/**  */
 	UPROPERTY(EditAnywhere)
-	TOptional<TSoftObjectPtr<UYapCharacter>> DirectedAtAsset;
+	TOptional<TSoftObjectPtr<UYapCharacterAsset>> DirectedAtAsset;
 
 	/**  */
 	UPROPERTY(EditAnywhere)

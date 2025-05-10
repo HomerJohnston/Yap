@@ -6,7 +6,7 @@
 
 #include "YapMessageLog.generated.h"
 
-class UYapCharacter;
+class UYapCharacterAsset;
 
 // ================================================================================================
 
@@ -18,17 +18,17 @@ struct FYapMessageEntry
 
     FYapMessageEntry() {}
 
-    FYapMessageEntry(UYapCharacter* InSpeaker, const FText& InText);
+    FYapMessageEntry(UYapCharacterAsset* InSpeaker, const FText& InText);
     
 protected:
     UPROPERTY(BlueprintReadOnly)
-    TObjectPtr<UYapCharacter> Speaker;
+    TObjectPtr<UYapCharacterAsset> Speaker;
 
     UPROPERTY(BlueprintReadOnly)
     FText Text;
 
 public:
-    const UYapCharacter* GetSpeaker() const { return Speaker; }
+    const UYapCharacterAsset* GetSpeaker() const { return Speaker; }
 
     const FText& GetText() const { return Text; }
 };

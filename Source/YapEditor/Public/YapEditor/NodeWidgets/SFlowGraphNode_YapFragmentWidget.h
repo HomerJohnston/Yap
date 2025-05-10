@@ -12,7 +12,7 @@ class IYapCharacterInterface;
 class SYapDialogueEditor;
 struct FYapTypeGroupSettings;
 enum class EYapDialogueProgressionFlags : uint8;
-class UYapCharacter;
+class UYapCharacterAsset;
 class SYapConditionsScrollBox;
 class UYapCondition;
 class SObjectPropertyEntryBox;

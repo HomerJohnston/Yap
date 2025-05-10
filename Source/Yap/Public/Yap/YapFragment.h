@@ -17,7 +17,7 @@
 
 class IYapCharacterInterface;
 enum class EYapLoadContext : uint8;
-class UYapCharacter;
+class UYapCharacterAsset;
 class UYapCondition;
 class UFlowNode_YapDialogue;
 struct FFlowPin;
@@ -381,6 +381,6 @@ public:
 public:
 	void SetSpeakerNew(TSoftObjectPtr<UObject> InSpeaker);
 	
-	void SetDirectedAt(TSoftObjectPtr<UYapCharacter> InDirectedAt);
+	void SetDirectedAt(TSoftObjectPtr<UYapCharacterAsset> InDirectedAt);
 #endif
 };

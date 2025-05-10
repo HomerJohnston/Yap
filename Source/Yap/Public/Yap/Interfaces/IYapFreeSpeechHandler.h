@@ -4,7 +4,7 @@
 #pragma once
 #include "GameplayTagContainer.h"
 #include "Yap/YapRunningFragment.h"
-#include "Yap/YapCharacter.h"
+#include "Yap/YapCharacterAsset.h"
 #include "Yap/Handles/YapSpeechHandle.h"
 #include "Yap/YapDataStructures.h"
 

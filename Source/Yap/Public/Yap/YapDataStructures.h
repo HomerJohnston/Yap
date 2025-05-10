@@ -6,7 +6,7 @@
 #include "GameplayTagContainer.h"
 #include "Yap/Interfaces/IYapCharacterInterface.h"
 
-class UYapCharacter;
+class UYapCharacterAsset;
 struct FYapPromptHandle;
 struct FYapRunningFragment;
 struct FYapBit;

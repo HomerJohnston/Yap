@@ -8,7 +8,7 @@
 #include "Yap/Interfaces/IYapCharacterInterface.h"
 #include "YapEditorSubsystem.generated.h"
 
-class UYapCharacter;
+class UYapCharacterAsset;
 class FYapInputTracker;
 struct FYapFragment;
 

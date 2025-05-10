@@ -7,7 +7,7 @@
 #include "AssetTypeActions/AssetDefinition_SoundBase.h"
 #endif
 
-#include "Yap/YapCharacter.h"
+#include "Yap/YapCharacterAsset.h"
 #include "Yap/YapLog.h"
 #include "Yap/Handles/YapPromptHandle.h"
 #include "Yap/YapSubsystem.h"

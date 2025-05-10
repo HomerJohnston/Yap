@@ -3,7 +3,7 @@
 
 #include "YapEditor/AssetFactory_YapCharacter.h"
 
-#include "Yap/YapCharacter.h"
+#include "Yap/YapCharacterAsset.h"
 #include "YapEditor/YapEditorModule.h"
 
 #define LOCTEXT_NAMESPACE "YapEditor"
@@ -12,7 +12,7 @@ UAssetFactory_YapCharacter::UAssetFactory_YapCharacter()
 {
 	bCreateNew = true;
 	bEditAfterNew = true;
-	SupportedClass = UYapCharacter::StaticClass();
+	SupportedClass = UYapCharacterAsset::StaticClass();
 }
 
 UObject* UAssetFactory_YapCharacter::FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn)
@@ -20,7 +20,7 @@ UObject* UAssetFactory_YapCharacter::FactoryCreateNew(UClass* Class, UObject* In
 	// Uncomment one of these
 
 	// Create an Object asset of this class (this creates an instance of the class in the Content Folder as a project asset)
-	return NewObject<UYapCharacter>(InParent, Class, Name, Flags | RF_Transactional);
+	return NewObject<UYapCharacterAsset>(InParent, Class, Name, Flags | RF_Transactional);
 
 	// Create a Blueprint Class asset of this class (this creates a child Blueprint class in the Content Folder, same as right clicking on class in C++ folder and choosing "Create Blueprint Child from Class")
 	//return FKismetEditorUtilities::CreateBlueprint(Class, InParent, Name, BPTYPE_Normal, UBlueprint::StaticClass(), UBlueprintGeneratedClass::StaticClass());
@@ -49,7 +49,7 @@ FColor FAssetTypeActions_FlowYapCharacter::GetTypeColor() const
 
 UClass* FAssetTypeActions_FlowYapCharacter::GetSupportedClass() const
 {
-	return UYapCharacter::StaticClass();
+	return UYapCharacterAsset::StaticClass();
 }
 
 uint32 FAssetTypeActions_FlowYapCharacter::GetCategories()

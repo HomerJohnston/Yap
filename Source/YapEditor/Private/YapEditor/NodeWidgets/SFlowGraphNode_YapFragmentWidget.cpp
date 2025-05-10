@@ -10,7 +10,7 @@
 #include "SLevelOfDetailBranchNode.h"
 #include "Widgets/Input/SNumericEntryBox.h"
 #include "Widgets/Notifications/SProgressBar.h"
-#include "Yap/YapCharacter.h"
+#include "Yap/YapCharacterAsset.h"
 #include "YapEditor/YapEditorColor.h"
 #include "YapEditor/YapEditorSubsystem.h"
 #include "Yap/YapFragment.h"
@@ -1619,7 +1619,7 @@ void SFlowGraphNode_YapFragmentWidget::OnAssetsDropped_DirectedAtWidget(const FD
 		return;
 	}
 	
-	UYapCharacter* Character = Cast<UYapCharacter>(AssetDatas[0].GetAsset());
+	UYapCharacterAsset* Character = Cast<UYapCharacterAsset>(AssetDatas[0].GetAsset());
 	
 	if (Character)
 	{
@@ -1675,7 +1675,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::PopupContentGetter_Directe
 		+ SHorizontalBox::Slot()
 		[
 			SNew(SYapPropertyMenuAssetPicker)
-			.AllowedClasses({UYapCharacter::StaticClass()})
+			.AllowedClasses({UYapCharacterAsset::StaticClass()})
 			.AllowClear(true)
 			.InitialObject(GetFragmentMutable().GetDirectedAt(EYapLoadContext::AsyncEditorOnly))
 			.OnSet(this, &ThisClass::OnSetNewDirectedAtAsset)
@@ -1704,7 +1704,7 @@ void SFlowGraphNode_YapFragmentWidget::OnSetNewDirectedAtAsset(const FAssetData&
 {
 	FYapTransactions::BeginModify(LOCTEXT("SetDirectedAtCharacter", "Set directed-at character"), GetDialogueNodeMutable());
 
-	GetFragmentMutable().SetDirectedAt(Cast<UYapCharacter>(AssetData.GetAsset()));
+	GetFragmentMutable().SetDirectedAt(Cast<UYapCharacterAsset>(AssetData.GetAsset()));
 
 	FYapTransactions::EndModify();
 }

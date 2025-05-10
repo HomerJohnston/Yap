@@ -9,7 +9,7 @@
 #include "YapEditor/YapEditorColor.h"
 #include "UnrealEdGlobals.h"
 #include "Editor/UnrealEdEngine.h"
-#include "Yap/YapCharacter.h"
+#include "Yap/YapCharacterAsset.h"
 #include "YapEditor/YapInputTracker.h"
 #include "Yap/YapProjectSettings.h"
 #include "YapEditor/YapEditorStyle.h"

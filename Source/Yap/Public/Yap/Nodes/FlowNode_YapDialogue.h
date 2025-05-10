@@ -12,7 +12,7 @@
 
 #include "FlowNode_YapDialogue.generated.h"
 
-class UYapCharacter;
+class UYapCharacterAsset;
 
 // ------------------------------------------------------------------------------------------------
 /**

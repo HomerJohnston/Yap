@@ -6,7 +6,7 @@
 #include "Yap/Handles/YapConversationHandle.h"
 #include "Yap/Handles/YapSpeechHandle.h"
 
-class UYapCharacter;
+class UYapCharacterAsset;
 struct FYapPromptHandle;
 struct FYapRunningFragment;
 struct FYapBit;

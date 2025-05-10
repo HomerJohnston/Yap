@@ -5,7 +5,7 @@
 
 #include "IDetailCustomization.h"
 
-class UYapCharacter;
+class UYapCharacterAsset;
 struct FGameplayTag;
 class IDetailCategoryBuilder;
 
@@ -14,7 +14,7 @@ class IDetailCategoryBuilder;
 class FDetailCustomization_YapCharacter : public IDetailCustomization
 {
 private:
-	TWeakObjectPtr<UYapCharacter> CharacterBeingCustomized;
+	TWeakObjectPtr<UYapCharacterAsset> CharacterBeingCustomized;
 	
 public:
 	static TSharedRef<IDetailCustomization> MakeInstance()

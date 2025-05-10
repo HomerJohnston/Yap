@@ -1,7 +1,7 @@
 // Copyright Ghost Pepper Games, Inc. All Rights Reserved.
 // This work is MIT-licensed. Feel free to use it however you wish, within the confines of the MIT license. 
 
-#include "Yap/YapCharacter.h"
+#include "Yap/YapCharacterAsset.h"
 
 #include "Yap/YapProjectSettings.h"
 
@@ -9,12 +9,12 @@
 
 #define LOCTEXT_NAMESPACE "Yap"
 
-UYapCharacter::UYapCharacter() :
+UYapCharacterAsset::UYapCharacterAsset() :
 	EntityColor(0.5, 0.5, 0.5, 1.0)
 {
 }
 
-const UTexture2D* UYapCharacter::GetYapCharacterPortrait(const FGameplayTag& MoodTag) const
+const UTexture2D* UYapCharacterAsset::GetYapCharacterPortrait(const FGameplayTag& MoodTag) const
 {
 	if (bUseSinglePortrait)
 	{
@@ -29,14 +29,14 @@ const UTexture2D* UYapCharacter::GetYapCharacterPortrait(const FGameplayTag& Moo
 }
 
 #if WITH_EDITOR
-void UYapCharacter::PostLoad()
+void UYapCharacterAsset::PostLoad()
 {
 	Super::PostLoad();
 }
 #endif
 
 #if WITH_EDITOR
-void UYapCharacter::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+void UYapCharacterAsset::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
 	Super::PostEditChangeProperty(PropertyChangedEvent);
 }
@@ -44,7 +44,7 @@ void UYapCharacter::PostEditChangeProperty(FPropertyChangedEvent& PropertyChange
 
 #if WITH_EDITOR
 // TODO I need validation code to check if the character's portrait keys array matches the project or not to throw warnings during packaging?
-void UYapCharacter::RefreshPortraitList()
+void UYapCharacterAsset::RefreshPortraitList()
 {
 	FGameplayTagContainer MoodTags = UYapProjectSettings::GetMoodTags();
 

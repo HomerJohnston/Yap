@@ -5,7 +5,7 @@
 
 #include "CanvasItem.h"
 #include "Engine/Canvas.h"
-#include "Yap/YapCharacter.h"
+#include "Yap/YapCharacterAsset.h"
 #include "Yap/YapProjectSettings.h"
 #include "YapEditor/YapEditorColor.h"
 #include "YapEditor/YapEditorStyle.h"
@@ -20,7 +20,7 @@ void UYapCharacterThumbnailRenderer::GetThumbnailSize(UObject* Object, float Zoo
 
 void UYapCharacterThumbnailRenderer::Draw(UObject* Object, int32 X, int32 Y, uint32 Width, uint32 Height, FRenderTarget* Viewport, FCanvas* Canvas, bool bAdditionalViewFamily)
 {
-	UYapCharacter* Character = Cast<UYapCharacter>(Object);
+	UYapCharacterAsset* Character = Cast<UYapCharacterAsset>(Object);
 
 	if (!Character)
 	{
@@ -95,7 +95,7 @@ EThumbnailRenderFrequency UYapCharacterThumbnailRenderer::GetThumbnailRenderFreq
 
 bool UYapCharacterThumbnailRenderer::CanVisualizeAsset(UObject* Object)
 {
-	UYapCharacter* Character = Cast<UYapCharacter>(Object);
+	UYapCharacterAsset* Character = Cast<UYapCharacterAsset>(Object);
 	
 	return (!!Character);
 }

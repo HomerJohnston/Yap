@@ -6,7 +6,7 @@
 #include "DetailCategoryBuilder.h"
 #include "DetailLayoutBuilder.h"
 #include "DetailWidgetRow.h"
-#include "Yap/YapCharacter.h"
+#include "Yap/YapCharacterAsset.h"
 #include "Yap/YapProjectSettings.h"
 #include "YapEditor/YapEditorColor.h"
 #include "YapEditor/YapEditorStyle.h"
@@ -20,15 +20,15 @@ void FDetailCustomization_YapCharacter::CustomizeDetails(IDetailLayoutBuilder& D
 {
 	TArray<TWeakObjectPtr<UObject>> Objects;
 
-	bUseSinglePortraitProperty = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UYapCharacter, bUseSinglePortrait));
-	PortraitProperty = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UYapCharacter, Portrait));
-	PortraitsProperty = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UYapCharacter, Portraits));
+	bUseSinglePortraitProperty = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UYapCharacterAsset, bUseSinglePortrait));
+	PortraitProperty = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UYapCharacterAsset, Portrait));
+	PortraitsProperty = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UYapCharacterAsset, Portraits));
 
 	DetailBuilder.GetObjectsBeingCustomized(Objects);
 
 	if (Objects.Num() == 1)
 	{
-		CharacterBeingCustomized = Cast<UYapCharacter>(Objects[0].Get());
+		CharacterBeingCustomized = Cast<UYapCharacterAsset>(Objects[0].Get());
 	}
 	else
 	{

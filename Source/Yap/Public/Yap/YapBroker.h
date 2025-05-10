@@ -10,7 +10,7 @@
 #include "YapBroker.generated.h"
 
 enum class EYapMaturitySetting : uint8;
-class UYapCharacter;
+class UYapCharacterAsset;
 struct FYapPromptHandle;
 
 #define LOCTEXT_NAMESPACE "Yap"

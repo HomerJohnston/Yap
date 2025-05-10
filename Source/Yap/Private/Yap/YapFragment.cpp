@@ -3,7 +3,7 @@
 
 #include "Yap/YapFragment.h"
 
-#include "Yap/YapCharacter.h"
+#include "Yap/YapCharacterAsset.h"
 #include "Yap/YapCondition.h"
 #include "Yap/YapProjectSettings.h"
 #include "Yap/YapStreamableManager.h"
@@ -454,7 +454,7 @@ void FYapFragment::SetSpeakerNew(TSoftObjectPtr<UObject> InSpeaker)
 	SpeakerHandle = nullptr;
 }
 
-void FYapFragment::SetDirectedAt(TSoftObjectPtr<UYapCharacter> InDirectedAt)
+void FYapFragment::SetDirectedAt(TSoftObjectPtr<UYapCharacterAsset> InDirectedAt)
 {
 	DirectedAtAsset = InDirectedAt;
 	DirectedAtHandle = nullptr;

@@ -7,7 +7,7 @@
 #include "GameplayTagsModule.h"
 #include "Nodes/Route/FlowNode_Reroute.h"
 #include "Yap/YapBit.h"
-#include "Yap/YapCharacter.h"
+#include "Yap/YapCharacterAsset.h"
 #include "Yap/YapCondition.h"
 #include "Yap/YapFragment.h"
 #include "Yap/YapProjectSettings.h"

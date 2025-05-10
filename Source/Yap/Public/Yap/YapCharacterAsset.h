@@ -6,7 +6,7 @@
 #include "GameplayTagContainer.h"
 #include "Interfaces/IYapCharacterInterface.h"
 
-#include "YapCharacter.generated.h"
+#include "YapCharacterAsset.generated.h"
 
 enum class EFlowYapCharacterMood : uint8;
 
@@ -16,7 +16,7 @@ enum class EFlowYapCharacterMood : uint8;
 // TODO add validation warning to the details customization
 // TODO add a "skip warning" bool to portrait entries, to make it allowable for them to be unset (on packaging, any unset textures should, by default, log a warning message)
 UCLASS(meta = (DataAssetCategory = "TODO"))
-class YAP_API UYapCharacter : public UObject, public IYapCharacterInterface
+class YAP_API UYapCharacterAsset : public UObject, public IYapCharacterInterface
 {
 #if WITH_EDITOR
 	friend class FDetailCustomization_YapCharacter;
@@ -24,7 +24,7 @@ class YAP_API UYapCharacter : public UObject, public IYapCharacterInterface
 
 	GENERATED_BODY()
 public:
-	UYapCharacter();
+	UYapCharacterAsset();
 
 protected:
 	/** Human-readable name of this character or entity. */

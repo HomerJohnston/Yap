@@ -8,7 +8,7 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "YapBlueprintFunctionLibrary.generated.h"
 
-class UYapCharacter;
+class UYapCharacterAsset;
 struct FInstancedStruct;
 struct FYapSpeechHandle;
 

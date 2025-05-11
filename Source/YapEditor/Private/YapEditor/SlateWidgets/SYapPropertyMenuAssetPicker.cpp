@@ -132,6 +132,11 @@ void SYapPropertyMenuAssetPicker::Construct( const FArguments& InArgs )
 			AssetPickerConfig.Filter.RecursiveClassPathsExclusionSet.Add(DisallowedClasses[i]->GetClassPathName());
 		}
 
+		// Allow us to pick blueprints
+		AssetPickerConfig.bCanShowClasses = true;
+
+		AssetPickerConfig.SelectionMode = ESelectionMode::SingleToggle;
+		
 		// Allow child classes
 		AssetPickerConfig.Filter.bRecursiveClasses = true;
 		// Set a delegate for setting the asset from the picker

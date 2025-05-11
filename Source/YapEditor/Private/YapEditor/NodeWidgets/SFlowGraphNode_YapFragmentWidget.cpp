@@ -1194,8 +1194,8 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::PopupContentGetter_Speaker
 		+ SHorizontalBox::Slot()
 		[
 			SNew(SYapPropertyMenuAssetPicker)
-			//.OnShouldFilterAsset(this, &ThisClass::IsAsset_YapSpeaker) // This works lovely... but it loads all assets. It's slow, ugly, occupies memory, and fills the output log with every asset error in the project.
-			.AllowedClasses(UYapProjectSettings::GetCharacterClasses_SyncLoad())
+			.OnShouldFilterAsset(this, &ThisClass::ShouldFilter_YapSpeaker) // This works lovely... but it loads all assets. It's slow, ugly, occupies memory, and fills the output log with every asset error in the project.
+			//.AllowedClasses(UYapProjectSettings::GetCharacterClasses_SyncLoad())
 			.AllowClear(true)
 			.InitialObject(Character)
 			.OnSet(this, &ThisClass::OnSetNewSpeakerAsset)
@@ -1319,6 +1319,41 @@ void SFlowGraphNode_YapFragmentWidget::OnAssetsDropped_SpeakerWidget(const FDrag
 
 	FYapScopedTransaction Transaction(YapEditor::Event::None, LOCTEXT("SetSpeakerCharacter", "Set speaker character"), GetDialogueNodeMutable());
 	GetFragmentMutable().SetSpeakerNew(AssetObject);
+	
+	if (!AssetObject->Implements<UYapCharacterInterface>())
+	{
+		// Verify if this asset has been added to project settings
+		bool bAssetAlreadyRegistered = false;
+
+		UBlueprint* Blueprint = Cast<UBlueprint>(AssetObject);
+		TSoftClassPtr<UObject> GeneratedClassAsSoft;
+		
+		if (Blueprint)
+		{
+			GeneratedClassAsSoft = TSoftClassPtr<UObject>(Blueprint->GeneratedClass);
+
+			const TArray<TSoftClassPtr<UObject>>& ProjectSettingsAdditionalCharacters = UYapProjectSettings::GetAdditionalCharacterClasses();
+
+			for (const TSoftClassPtr<UObject>& SettingCharacter : ProjectSettingsAdditionalCharacters)
+			{
+				if (SettingCharacter == GeneratedClassAsSoft)
+				{
+					bAssetAlreadyRegistered = true;
+					break;
+				}
+			}
+		}
+
+		if (!bAssetAlreadyRegistered)
+		{
+			if (EAppReturnType::Yes == FMessageDialog::Open(EAppMsgType::YesNo, LOCTEXT("AddBlueprintToCharacterClassSettings_Message", "Would you like to add this to Yap's \"Additional Character Classes\" setting?\nThis will allow Yap to discover this in character dropdowns.")))
+			{
+				//FYapScopedTransaction Transaction2(YapEditor::Event::None, LOCTEXT("AddBlueprintToCharacterClassSettings_Transaction", "Add blueprint to Yap Characters in project settings"), GetMutableDefault<UYapProjectSettings>());
+
+				UYapProjectSettings::AddAdditionalCharacterClass(GeneratedClassAsSoft);
+			}
+		}
+	}
 }
 
 TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateSpeakerImageWidget(int32 PortraitSize, int32 BorderSize)
@@ -2221,7 +2256,19 @@ bool SFlowGraphNode_YapFragmentWidget::IsDroppedAsset_YapSpeaker(TArrayView<FAss
 
 	FAssetData& AssetData = AssetDatas[0];
 
-	return IsAsset_YapSpeaker(AssetData);
+	bool bSuccess = IsAsset_YapSpeaker(AssetData);
+
+	// That function just checks if it has the interface natively (C++) or if it's listed in the project settings. We should force load it and check if it is a blueprint with the interface still.
+	
+	if (UBlueprint* Blueprint = Cast<UBlueprint>(AssetData.GetAsset()))
+	{
+		if (Blueprint->GeneratedClass->ImplementsInterface(UYapCharacterInterface::StaticClass()))
+		{
+			bSuccess = true;
+		}
+	}
+	
+	return bSuccess;
 }
 
 bool SFlowGraphNode_YapFragmentWidget::IsAsset_YapSpeaker(const FAssetData& AssetData) const
@@ -2232,25 +2279,44 @@ bool SFlowGraphNode_YapFragmentWidget::IsAsset_YapSpeaker(const FAssetData& Asse
 	{
 		return false;
 	}
-				
+
 	if (Class->ImplementsInterface(UYapCharacterInterface::StaticClass()))
 	{
-		UE_LOG(LogYapEditor, VeryVerbose, TEXT("Found valid speaker class from asset: %s"), *Class->GetName());
+		//UE_LOG(LogYapEditor, VeryVerbose, TEXT("Found valid speaker class from asset: %s"), *Class->GetName());
 		return true;
 	}
+	
+	const TArray<TSoftClassPtr<UObject>>& AllowableClasses = UYapProjectSettings::GetAdditionalCharacterClasses();
 
-	if (Class->IsChildOf(UBlueprint::StaticClass()))
+	FString AllowableClassStringTemp;
+	
+	if (AllowableClasses.Num() > 0)
 	{
-		const UBlueprint* BlueprintAsset = Cast<UBlueprint>(AssetData.GetAsset());
-
-		if (BlueprintAsset && BlueprintAsset->GeneratedClass->ImplementsInterface(UYapCharacterInterface::StaticClass()))
+		for (TSoftClassPtr<UObject> AllowableClass : AllowableClasses)
 		{
-			UE_LOG(LogYapEditor, VeryVerbose, TEXT("Found valid speaker class from blueprint: %s"), *BlueprintAsset->GeneratedClass->GetName());
-			return true;
+			if (!AllowableClass)
+			{
+				continue;
+			}
+			
+			const FString PackageName = AssetData.PackageName.ToString();
+			
+			AllowableClassStringTemp = AllowableClass->GetPackage()->GetName();
+			
+			if (PackageName == AllowableClassStringTemp)
+			{
+				//UE_LOG(LogYapEditor, VeryVerbose, TEXT("Found valid speaker class from package path comparison: %s"), *Class->GetName());
+				return true;
+			}
 		}
 	}
-
+	
 	return false;
+}
+
+bool SFlowGraphNode_YapFragmentWidget::ShouldFilter_YapSpeaker(const FAssetData& AssetData) const
+{
+	return !IsAsset_YapSpeaker(AssetData);
 }
 
 FSlateColor SFlowGraphNode_YapFragmentWidget::GetColorAndOpacityForFragmentText(FLinearColor BaseColor) const

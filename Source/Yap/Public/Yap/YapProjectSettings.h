@@ -66,9 +66,9 @@ protected:
 	UPROPERTY(Config, EditAnywhere, Category = "Core", meta = (AllowAbstract))
 	TArray<TSoftClassPtr<UObject>> AudioAssetClasses;
 	
-	/** Filters the blueprint/asset popup list when choosing a "Speaker" or "Directed At" asset. */
-	UPROPERTY(Config, EditAnywhere, Category = "Core", meta = (AllowAbstract, EditCondition = "!bAllowAllAssetsAsSpeakers", EditConditionHides))
-	TArray<TSoftClassPtr<UObject>> CharacterClasses;
+	/** By default, Yap will discover all native C++ classes that inherit the Yap Character interface. You can add blueprint classes which inherit it here. This avoids forcefully loading all assets to discover them. */
+	UPROPERTY(Config, EditAnywhere, Category = "Core", meta = (AllowAbstract))
+	TArray<TSoftClassPtr<UObject>> AdditionalCharacterClasses;
 	
 	/** This filters certain tag dropdowns. Set this to your game's Gameplay Tag that contains tags for each of your speaking characters. If your game's speaking characters have no common tag parent, leave this blank. */
 	UPROPERTY(Config, EditAnywhere, Category = "Uncategorized", meta = (AllowAbstract))
@@ -218,10 +218,10 @@ public:
 	static const FString GetAudioAssetRootFolder(FGameplayTag TypeGroup);
 #endif
 
-	static const TArray<TSoftClassPtr<UObject>>& GetCharacterClasses() { return Get().CharacterClasses; }
+	static const TArray<TSoftClassPtr<UObject>>& GetAdditionalCharacterClasses() { return Get().AdditionalCharacterClasses; }
 
-	static TArray<const UClass*> GetCharacterClasses_SyncLoad();
-
+	static void AddAdditionalCharacterClass(TSoftClassPtr<UObject> Class);
+	
 	static bool HasCustomAudioAssetClasses() { return Get().AudioAssetClasses.Num() > 0; };
 
 	static int32 GetTextWordsPerMinute() { return Get().TextWordsPerMinute; }

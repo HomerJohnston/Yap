@@ -292,6 +292,8 @@ protected:
 	bool IsDroppedAsset_YapSpeaker(TArrayView<FAssetData> AssetDatas) const;
 
 	bool IsAsset_YapSpeaker(const FAssetData& AssetData) const;
+	
+	bool ShouldFilter_YapSpeaker(const FAssetData& AssetData) const;
 
 	// ------------
 	FSlateColor	GetColorAndOpacityForFragmentText(FLinearColor BaseColor) const;

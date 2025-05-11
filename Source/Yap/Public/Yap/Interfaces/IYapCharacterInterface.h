@@ -14,9 +14,7 @@ class UYapCharacterInterface : public UInterface
 
 /**
  * Apply this interface to any class or blueprint which you want to make usable as a speaker in Yap.
- *
  * The NAME, COLOR, and PORTRAIT are arbitrary pieces of data you can use however you want in your game (or ignore).
- *
  * The TAG property is special; Yap can use it to try and find the character's Actor in the world (see UYapCharacterComponent).
  */
 class YAP_API IYapCharacterInterface
@@ -70,7 +68,7 @@ protected:
     UFUNCTION(BlueprintImplementableEvent, Category = "Yap|Character", DisplayName = "Get Color")
     FLinearColor K2_GetYapCharacterColor() const;
 
-    /** Implement this on a blueprint. */
+    /** Implement this on a blueprint. The tag can be used by Yap to look for actors in the world that have a Yap Character Component added to them. */
     UFUNCTION(BlueprintImplementableEvent, Category = "Yap|Character", DisplayName = "Get Tag")
     FGameplayTag K2_GetYapCharacterTag() const;
 

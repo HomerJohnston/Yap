@@ -109,7 +109,7 @@ struct FYapStyles
 	FName ButtonStyle_ConditionWidget;
 	FName ButtonStyle_FragmentControls;
 	FName ButtonStyle_HeaderButton;
-	FName ButtonStyle_DialogueCornerFoldout;
+	FName ButtonStyle_SimpleYapButton;
 	FName ButtonStyle_DialogueSettings;
 	FName ButtonStyle_SequencingSelector;
 	FName ButtonStyle_SpeakerPopup;

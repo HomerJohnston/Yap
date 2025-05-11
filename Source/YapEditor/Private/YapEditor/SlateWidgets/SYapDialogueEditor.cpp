@@ -1030,7 +1030,7 @@ FSlateColor SYapDialogueEditor::ButtonColorAndOpacity_UseTimeMode(EYapTimeMode T
 	if (GetFragment().GetTimeMode(GEditor->EditorWorld, GetDisplayMaturitySetting(), DialogueNode->GetTypeGroupTag()) == TimeMode)
 	{
 		// Implicit match through project defaults
-		return ColorTint.Desaturate(0.50);
+		return YapColor::Desaturate(ColorTint, 0.50);
 	}
 	
 	return YapColor::DarkGray;

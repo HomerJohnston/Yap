@@ -634,7 +634,7 @@ void FPropertyCustomization_YapGroupSettings::DrawNamedGroupProperty(IDetailChil
 				[
 					SNew(SImage)
 					.Image(FYapEditorStyle::GetImageBrush(YapBrushes.Box_SolidWhite))
-					.ColorAndOpacity(GetGroupColor().Desaturate(0.25f) * YapColor::LightGray)
+					.ColorAndOpacity(YapColor::Desaturate(GetGroupColor(), 0.25f) * YapColor::LightGray)
 				]
 			]
 			+ SHorizontalBox::Slot()

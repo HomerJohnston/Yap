@@ -8,23 +8,17 @@
 #include "PropertyCustomizationHelpers.h"
 #include "SAssetDropTarget.h"
 #include "SLevelOfDetailBranchNode.h"
-#include "Widgets/Input/SNumericEntryBox.h"
-#include "Widgets/Notifications/SProgressBar.h"
 #include "Yap/YapCharacterAsset.h"
 #include "YapEditor/YapEditorColor.h"
 #include "YapEditor/YapEditorSubsystem.h"
 #include "Yap/YapFragment.h"
 #include "Yap/YapProjectSettings.h"
 #include "YapEditor/YapTransactions.h"
-#include "Yap/YapUtil.h"
 #include "YapEditor/YapEditorStyle.h"
 #include "Yap/Enums/YapMissingAudioErrorLevel.h"
 #include "Yap/Nodes/FlowNode_YapDialogue.h"
 #include "YapEditor/NodeWidgets/SFlowGraphNode_YapDialogueWidget.h"
 #include "Yap/YapBitReplacement.h"
-#include "YapEditor/YapInputTracker.h"
-#include "YapEditor/SlateWidgets/SYapTextPropertyEditableTextBox.h"
-#include "YapEditor/Helpers/YapEditableTextPropertyHandle.h"
 #include "YapEditor/SlateWidgets/SYapActivationCounterWidget.h"
 #include "YapEditor/SlateWidgets/SYapConditionsScrollBox.h"
 #include "YapEditor/SlateWidgets/SYapButtonPopup.h"
@@ -34,13 +28,10 @@
 #include "Yap/Enums/YapErrorLevel.h"
 #include "YapEditor/YapDeveloperSettings.h"
 #include "Framework/MultiBox/SToolBarButtonBlock.h"
-#include "Kismet2/BlueprintEditorUtils.h"
-#include "Widgets/Text/SMultiLineEditableText.h"
 #include "Yap/Enums/YapLoadContext.h"
 #include "YapEditor/YapEditorEvents.h"
 #include "YapEditor/YapEditorLog.h"
 #include "YapEditor/Globals/YapEditorFuncs.h"
-#include "YapEditor/GraphNodes/FlowGraphNode_YapDialogue.h"
 #include "YapEditor/Helpers/ProgressionSettingWidget.h"
 #include "YapEditor/SlateWidgets/SYapDialogueEditor.h"
 #include "YapEditor/SlateWidgets/SYapGameplayTagTypedPicker.h"
@@ -874,7 +865,7 @@ bool CheckAudioAssetUsesAudioID(const UFlowNode_YapDialogue* Node, int32 Fragmen
 	return false;
 }
 
-FSlateColor SFlowGraphNode_YapFragmentWidget::ColorAndOpacity_AudioID() const
+FSlateColor SFlowGraphNode_YapFragmentWidget::ColorAndOpacity_AudioIDText() const
 {
 	const TSoftObjectPtr<UObject>& MatureAudioAsset = GetFragment().GetMatureBit().AudioAsset;
 	const TSoftObjectPtr<UObject>& SafeAudioAsset = GetFragment().GetChildSafeBit().AudioAsset;
@@ -884,43 +875,48 @@ FSlateColor SFlowGraphNode_YapFragmentWidget::ColorAndOpacity_AudioID() const
 	const FLinearColor Error = YapColor::Red;
 	const FLinearColor NoAudio = YapColor::White;
 	const FLinearColor AllGood = YapColor::DarkGray;
+
+	FLinearColor Color = AllGood;
 	
 	if (MatureAudioAsset.IsNull())
 	{
-		return NoAudio;
+		Color = NoAudio;
 	}
-
-	if (SafeAudioAsset.IsNull())
+	else if (SafeAudioAsset.IsNull() && bNeedsChildSafeAudio)
 	{
-		if (bNeedsChildSafeAudio)
-		{
-			return Error;
-		}
+		Color = Error;
 	}
-
-	if (!MatureAudioAsset.IsNull())
+	else if (!MatureAudioAsset.IsNull())
 	{
 		bool bCorrectMatch = false;
 		bool bAssetUsesAudioID = CheckAudioAssetUsesAudioID(GetDialogueNode(), FragmentIndex, MatureAudioAsset, bCorrectMatch);
 
-		if (!bAssetUsesAudioID || !bCorrectMatch)
+		if (!bAssetUsesAudioID)
 		{
-			return Error;
+			Color = YapColor::LightBlue;
+		}
+		else if (bAssetUsesAudioID && !bCorrectMatch)
+		{
+			Color = Error;
 		}
 	}
-
-	if (!SafeAudioAsset.IsNull() && bNeedsChildSafeAudio)
+	else if (!SafeAudioAsset.IsNull() && bNeedsChildSafeAudio)
 	{
 		bool bCorrectMatch = false;
 		bool bAssetUsesAudioID = CheckAudioAssetUsesAudioID(GetDialogueNode(), FragmentIndex, SafeAudioAsset, bCorrectMatch);
 
 		if (!bAssetUsesAudioID || !bCorrectMatch)
 		{
-			return Error;
+			Color = Error;
 		}
 	}
 	
-	return AllGood;
+	if (AudioIDButton.IsValid() && AudioIDButton->IsHovered())
+	{
+		Color /= YapColor::LightGray;
+	}
+
+	return Color;
 }
 
 EVisibility SFlowGraphNode_YapFragmentWidget::Visibility_TimeProgressionWidget() const
@@ -1041,18 +1037,13 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateDialogueDisplayWidge
 		.VAlign(VAlign_Bottom)
 		.HAlign(HAlign_Right)
 		.Padding(0)
-		[			
-			/*
-			 // TODO build these into the ID tag widget
-			SNew(SImage)
-			.Image(FYapEditorStyle::GetImageBrush(YapBrushes.Icon_CornerDropdown_Right))
-			.Visibility(this, &ThisClass::Visibility_AudioSettingsButton)
-			.ColorAndOpacity(this, &ThisClass::ColorAndOpacity_AudioSettingsButton)
-			*/
-			SNew(SButton)
-			.ButtonStyle(FYapEditorStyle::Get(), YapStyles.ButtonStyle_DialogueCornerFoldout)
+		[
+			SAssignNew(AudioIDButton, SButton)
+			.ButtonStyle(FYapEditorStyle::Get(), YapStyles.ButtonStyle_SimpleYapButton)
 			.OnClicked_Lambda( [&Bit, this] () { return OnClicked_AudioPreviewWidget(&Bit.AudioAsset); } )
 			.ContentPadding(0)
+			//.ForegroundColor(YapColor::White_Trans)
+			.ButtonColorAndOpacity(YapColor::Transparent)
 			.ToolTipText_Lambda( [&Bit, this] ()
 			{
 				if (Bit.AudioAsset.IsNull())
@@ -1062,17 +1053,15 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateDialogueDisplayWidge
 
 				return FText::FromString(Bit.AudioAsset.GetAssetName());
 			})
-			.ForegroundColor(YapColor::White)
 			[
 				SNew(SBorder)
 				.Visibility_Lambda( [this] () { return GetTypeGroup().GetHideAudioID() ? EVisibility::Collapsed : EVisibility::Visible; } )
 				.BorderImage(FYapEditorStyle::GetImageBrush(YapBrushes.Icon_IDTag))
-				//.BorderBackgroundColor(FSlateColor::UseForeground())
-				.BorderBackgroundColor(this, &ThisClass::ColorAndOpacity_AudioSettingsButton)
+				.BorderBackgroundColor(this, &ThisClass::ColorAndOpacity_AudioIDButton)
 				.Padding(4)
 				[
 					SNew(STextBlock)
-					.ColorAndOpacity(this, &ThisClass::ColorAndOpacity_AudioID)
+					.ColorAndOpacity(this, &ThisClass::ColorAndOpacity_AudioIDText)
 					.Text_Lambda( [FragmentIndexText, DialogueNode] ()
 					{
 						if (DialogueNode.IsValid())
@@ -1139,11 +1128,11 @@ FLinearColor SFlowGraphNode_YapFragmentWidget::ColorAndOpacity_FragmentTimeIndic
 
 	if (TimeMode == EYapTimeMode::Default)
 	{
-		Color = Color.Desaturate(0.4f);
+		Color = YapColor::Desaturate(Color, 0.4f);
 	}
 	else
 	{
-		Color = Color.Desaturate(0.2f);
+		Color = YapColor::Desaturate(Color, 0.2f);
 	}
 
 	// Darken it during play if it isn't running
@@ -1408,7 +1397,8 @@ FSlateColor SFlowGraphNode_YapFragmentWidget::BorderBackgroundColor_SpeakerImage
 
 	if (!GetDialogueNode()->IsPlayerPrompt())
 	{
-		Color.A *= 0.75f;
+		Color = YapColor::Desaturate(Color, 0.25f);
+		Color.A *= 0.65f;
 	}
 
 	if (SpeakerDropTarget.IsValid() && SpeakerDropTarget->IsHovered())
@@ -1827,7 +1817,7 @@ FSlateColor SFlowGraphNode_YapFragmentWidget::ButtonColorAndOpacity_UseTimeMode(
 	if (GetFragment().GetTimeMode(GEditor->EditorWorld, GetDisplayMaturitySetting(), GetDialogueNode()->GetTypeGroupTag()) == TimeMode)
 	{
 		// Implicit match through project defaults
-		return ColorTint.Desaturate(0.50);
+		return YapColor::Desaturate(ColorTint, 0.50);
 	}
 	
 	return YapColor::DarkGray;
@@ -1968,10 +1958,10 @@ EVisibility SFlowGraphNode_YapFragmentWidget::Visibility_AudioAssetErrorState(co
 	return EVisibility::Hidden;
 }
 
-FSlateColor SFlowGraphNode_YapFragmentWidget::ColorAndOpacity_AudioSettingsButton() const
+FSlateColor SFlowGraphNode_YapFragmentWidget::ColorAndOpacity_AudioIDButton() const
 {
 	FLinearColor Color;
-	
+
 	switch (GetFragmentAudioErrorLevel())
 	{
 		case EYapErrorLevel::OK:
@@ -1996,39 +1986,18 @@ FSlateColor SFlowGraphNode_YapFragmentWidget::ColorAndOpacity_AudioSettingsButto
 		}
 	}
 
-	Color = Color.Desaturate(0.35f);
-	
-	return Color;
-	
-	/*
-	FLinearColor Color;
+	Color = YapColor::Desaturate(Color, 0.4f);
 
-	switch (GetFragmentAudioErrorLevel())
+	if (AudioIDButton.IsValid() && AudioIDButton->IsHovered())
 	{
-		case EYapErrorLevel::OK:
-		{
-			Color = YapColor::DarkGray;
-			break;
-		}
-		case EYapErrorLevel::Warning:
-		{
-			Color = YapColor::Orange;
-			break;
-		}
-		case EYapErrorLevel::Error:
-		{
-			Color = YapColor::Red;
-			break;
-		}
-		case EYapErrorLevel::Unknown:
-		{
-			Color = YapColor::Error;
-			break;
-		}
+		Color /= YapColor::LightGray;
+	}
+	else
+	{
+		Color *= YapColor::LightGray;
 	}
 	
 	return Color;
-	*/
 }
 
 // TODO handle child safe settings somehow
@@ -2618,7 +2587,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateMoodTagSelectorWidge
 	return SNew(SComboButton)
 		.Cursor(EMouseCursor::Default)
 		.HasDownArrow(false)
-		.ButtonStyle(FYapEditorStyle::Get(), YapStyles.ButtonStyle_DialogueCornerFoldout) // TODO fix style
+		.ButtonStyle(FYapEditorStyle::Get(), YapStyles.ButtonStyle_SimpleYapButton) // TODO fix style
 		.ContentPadding(FMargin(0.f, 0.f))
 		.MenuPlacement(MenuPlacement_CenteredBelowAnchor)
 		//.ButtonColorAndOpacity(FSlateColor(FLinearColor(0.f, 0.f, 0.f, 0.5f)))
@@ -2660,7 +2629,6 @@ FSlateColor SFlowGraphNode_YapFragmentWidget::ForegroundColor_MoodTagSelectorWid
 	
 	return YapColor::White_Trans;
 }
-
 
 const FSlateBrush* SFlowGraphNode_YapFragmentWidget::Image_MoodTagSelector() const
 {

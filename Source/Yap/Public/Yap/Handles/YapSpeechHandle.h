@@ -5,17 +5,22 @@
 
 #include "YapSpeechHandle.generated.h"
 
-/** Since I can't store handles in structs by ref, I pass around a simpler version of it containing only the GUID and look up the actual handle (which could become "large" with more data) from the subsystem as needed. */
+// ================================================================================================
+
+/**
+ * When a fragment (speech) begins running, you will be given a handle. You can use this handle to bind to events,
+ * get fragment data, cancel the running speech, etc. using the function library.
+ **/
 USTRUCT(BlueprintType)
 struct YAP_API FYapSpeechHandle
 {
     GENERATED_BODY()
 
-    friend class UYapSpeechHandleBFL;
+  //  friend class UYapSpeechHandleBFL;
     
-    // ==========================================
+    // ------------------------------------------
     // CONSTRUCTION
-    // ==========================================
+    // ------------------------------------------
 public:
 	
     FYapSpeechHandle();
@@ -26,9 +31,9 @@ public:
     
     //FYapSpeechHandle(const FYapRunningFragment& RunningFragment);
 
-    // ==========================================
+    // ------------------------------------------
     // STATE
-    // ==========================================
+    // ------------------------------------------
 private:
 	
     UPROPERTY(Transient, BlueprintReadOnly, meta = (IgnoreForMemberInitializationTest, AllowPrivateAccess))
@@ -40,9 +45,9 @@ private:
     UPROPERTY(Transient)
     bool bActive = true;
     
-    // ==========================================
+    // ------------------------------------------
     // API
-    // ==========================================
+    // ------------------------------------------
 public:
 
     bool IsValid() const { return bActive && Guid.IsValid() && World.IsValid(); }
@@ -73,7 +78,7 @@ DECLARE_DYNAMIC_DELEGATE_TwoParams(FYapSpeechEventDelegate, UObject*, Broadcaste
 
 
 /**
- * 
+ * Function library for speech handles.
  */
 UCLASS(DisplayName = "Yap Speech Handle Function Library")
 class YAP_API UYapSpeechHandleBFL : public UBlueprintFunctionLibrary
@@ -81,37 +86,41 @@ class YAP_API UYapSpeechHandleBFL : public UBlueprintFunctionLibrary
     GENERATED_BODY()
 
 public:
-    
+    /** Bind a delegate to run when speech completes. This is when actual talking finishes not when any fragment padding finishes. */
     UFUNCTION(BlueprintCallable, Category = "Yap|Speech Handle", meta = (WorldContext = "WorldContext"))
     static void BindToOnSpeechComplete(UObject* WorldContext, FYapSpeechHandle Handle, FYapSpeechEventDelegate Delegate);
 
+    /** Unind a delegate for when speech completes (i.e. if you no longer want a delegate to run). */
     UFUNCTION(BlueprintCallable, Category = "Yap|Speech Handle", meta = (WorldContext = "WorldContext"))
     static void UnbindToOnSpeechComplete(UObject* WorldContext, FYapSpeechHandle Handle, FYapSpeechEventDelegate Delegate);
-    
+
+    /** Stops a running speech. This is intended to be used to halt free speech; to advance conversations, use the conversation handle. */
     UFUNCTION(BlueprintCallable, Category = "Yap|Speech Handle", meta = (WorldContext = "WorldContext"))
     static bool CancelSpeech(UObject* WorldContext, const FYapSpeechHandle& Handle);
 
+    /** If speech is set as forced duration (unskippable) this will return false. This is intended to be used to help show/hide "Continue" style buttons. */
     UFUNCTION(BlueprintCallable, Category = "Yap|Speech Handle", meta = (WorldContext = "WorldContext"))
-    static bool CanSkipCurrently(UObject* WorldContext, const FYapSpeechHandle& Handle);
+    static bool CanSkip(UObject* WorldContext, const FYapSpeechHandle& Handle);
 
+    /** Checks if this speech is actually running. */
     UFUNCTION(BlueprintCallable, Category = "Yap|Speech Handle", meta = (WorldContext = "WorldContext"))
     static bool IsRunning(UObject* WorldContext, const FYapSpeechHandle& Handle);
     
     /*
+     * TODO URGENT
     UFUNCTION(BlueprintCallable, Category = "Yap")
     static const TArray<FInstancedStruct>& GetFragmentData(const FYapSpeechHandle& HandleRef);
     */
 
+    /** Invalidates the speech handle. */
     UFUNCTION(BlueprintCallable, Category = "Yap|Speech Handle")
-    static void Invalidate(UPARAM(ref) FYapSpeechHandle& Handle)
-    {
-        Handle.bActive = false;
-    };
+    static void Invalidate(UPARAM(ref) FYapSpeechHandle& Handle);
     
     /** Returns true if the values are equal (A == B) */
     UFUNCTION(BlueprintPure, Category = "Yap|Speech Handle", meta=(DisplayName="Equal (YapSpeechHandle)", CompactNodeTitle="==", BlueprintThreadSafe))
     static bool EqualEqual_YapSpeechHandle(FYapSpeechHandle A, FYapSpeechHandle B);
 
+    /** Returns the GUID of the handle. */
     UFUNCTION(BlueprintCallable, Category = "Yap|Speech Handle")
     static FString ToString(const FYapSpeechHandle Handle);
 };

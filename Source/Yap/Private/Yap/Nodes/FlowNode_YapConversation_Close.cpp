@@ -69,10 +69,24 @@ FText UFlowNode_YapConversation_Close::GetNodeTitle() const
 {
 	if (IsTemplate())
 	{
-		return FText::FromString("Conversation - Close");
+		return FText::FromString("Close Conversation");
 	}
 
 	return FText::FromString("Close Convo.");
+}
+#endif
+
+#if WITH_EDITOR
+void UFlowNode_YapConversation_Close::UpdateNodeConfigText_Implementation()
+{
+	if (!Conversation.IsValid())
+	{
+		SetNodeConfigText(FText::GetEmpty());
+
+		return;
+	}
+
+	SetNodeConfigText(FText::FromName(Conversation.GetTagName()));
 }
 #endif
 

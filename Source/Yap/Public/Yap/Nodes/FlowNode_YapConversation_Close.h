@@ -28,5 +28,7 @@ public:
 
 #if WITH_EDITOR
 	FText GetNodeTitle() const override;
+
+	void UpdateNodeConfigText_Implementation() override;
 #endif
 };

@@ -13,11 +13,8 @@
 
 /**
  * A Free Speech Handler is an interface you can apply to anything to help it respond to Yap dialogue.
- *
  * This ONLY responds to dialogue nodes that are running on a Flow Graph which has NOT had an "Open Conversation" node run.
- *
  * To respond to dialogue nodes that are running after opening a conversation, see IYapConversationHandler.
- * 
  * Use UYapSubsystem::RegisterFreeSpeechHandler(...) to register your class for events. 
  */
 UINTERFACE(MinimalAPI, Blueprintable)

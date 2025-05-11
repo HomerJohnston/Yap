@@ -55,15 +55,24 @@ FText UFlowNode_YapConversation_Open::GetNodeTitle() const
 {
 	if (IsTemplate())
 	{
-		return FText::FromString("Conversation - Open");
+		return FText::FromString("Open Conversation");
 	}
 
 	return FText::FromString("Open Convo.");
 }
+#endif
 
-void UFlowNode_YapConversation_Open::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+#if WITH_EDITOR
+void UFlowNode_YapConversation_Open::UpdateNodeConfigText_Implementation()
 {
-	Super::PostEditChangeProperty(PropertyChangedEvent);
+	if (!ConversationName.IsValid())
+	{
+		SetNodeConfigText(FText::GetEmpty());
+
+		return;
+	}
+
+	SetNodeConfigText(FText::FromName(ConversationName.GetTagName()));
 }
 #endif
 

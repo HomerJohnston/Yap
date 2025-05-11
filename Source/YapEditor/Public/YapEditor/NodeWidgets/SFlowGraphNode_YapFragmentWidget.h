@@ -102,6 +102,8 @@ protected:
 	TSharedPtr<SWidget> DirectedAtWidget = nullptr;
 
 	TSharedPtr<SWidget> SpeakerDropTarget = nullptr;
+
+	TSharedPtr<SWidget> AudioIDButton = nullptr;
 	
 	bool bChildSafeCheckBoxHovered = false;
 
@@ -152,7 +154,7 @@ protected:
 
 	EVisibility 			Visibility_AudioSettingsButton() const;
 	EVisibility 			Visibility_DialogueErrorState() const;
-	FSlateColor 			ColorAndOpacity_AudioID() const;
+	FSlateColor 			ColorAndOpacity_AudioIDText() const;
 	EVisibility				Visibility_TimeProgressionWidget() const;
 	
 	// ------------------------------------------
@@ -252,7 +254,7 @@ protected:
 	bool					OnShouldFilterAsset_AudioAssetWidget(const FAssetData& AssetData) const;
 	EVisibility				Visibility_AudioAssetErrorState(const TSoftObjectPtr<UObject>* Asset) const;
 
-	FSlateColor				ColorAndOpacity_AudioSettingsButton() const;
+	FSlateColor				ColorAndOpacity_AudioIDButton() const;
 	EYapErrorLevel			GetFragmentAudioErrorLevel() const;
 
 	FSlateColor				ColorAndOpacity_AudioAssetErrorState(const TSoftObjectPtr<UObject>* Asset) const;

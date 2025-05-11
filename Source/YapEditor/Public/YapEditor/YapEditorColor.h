@@ -89,6 +89,13 @@ namespace YapColor
 
 	const FLinearColor Asset_Character = LightGreen;
 	inline const FLinearColor Button_Unset() { return DarkGray; }
+
+	/** FLinearColor::Desaturate also lerps alpha towards zero for some reason... use my own instead. */
+	inline FLinearColor Desaturate(FLinearColor InColor, float Desaturation )
+	{
+		float Lum = InColor.GetLuminance();
+		return FMath::Lerp( InColor, FLinearColor( Lum, Lum, Lum, InColor.A ), Desaturation );
+	}
 }
 
 #undef LOCTEXT_NAMESPACE

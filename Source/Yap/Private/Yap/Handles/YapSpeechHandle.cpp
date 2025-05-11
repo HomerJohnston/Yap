@@ -4,7 +4,6 @@
 #include "Yap/Handles/YapSpeechHandle.h"
 #include "Yap/YapLog.h"
 #include "Yap/YapSubsystem.h"
-#include "Yap/Nodes/FlowNode_YapDialogue.h"
 
 #define LOCTEXT_NAMESPACE "Yap"
 
@@ -41,7 +40,9 @@ void FYapSpeechHandle::Invalidate()
 		UYapSubsystem::Get(World.Get())->UnregisterSpeechHandle(*this);
 	}
         
-	Guid.Invalidate();   
+	Guid.Invalidate();
+	
+	bActive = false;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -104,8 +105,9 @@ bool UYapSpeechHandleBFL::CancelSpeech(UObject* WorldContext, const FYapSpeechHa
 
 // ------------------------------------------------------------------------------------------------
 
-bool UYapSpeechHandleBFL::CanSkipCurrently(UObject* WorldContext, const FYapSpeechHandle& Handle)
+bool UYapSpeechHandleBFL::CanSkip(UObject* WorldContext, const FYapSpeechHandle& Handle)
 {
+	UE_LOG(LogYap, Warning, TEXT("CanSkipCurrently is work in progress and currently just returns true"));
 	// TODO URGENT - need this for UI development
 	return true;
 	/*
@@ -130,6 +132,11 @@ bool UYapSpeechHandleBFL::CanSkipCurrently(UObject* WorldContext, const FYapSpee
 bool UYapSpeechHandleBFL::IsRunning(UObject* WorldContext, const FYapSpeechHandle& Handle)
 {
 	return UYapSubsystem::IsSpeechRunning(WorldContext->GetWorld(), Handle);
+}
+
+void UYapSpeechHandleBFL::Invalidate(FYapSpeechHandle& Handle)
+{
+	Handle.Invalidate();
 }
 
 // ------------------------------------------------------------------------------------------------

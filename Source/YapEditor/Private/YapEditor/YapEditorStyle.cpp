@@ -264,14 +264,14 @@ void FYapEditorStyle::Initialize()
 		.SetPressedPadding(YAP_COMMON_PRESSED_PADDING)
 	);
 	
-	YAP_DEFINE_STYLE(FButtonStyle, ButtonStyle_DialogueCornerFoldout, FButtonStyle::GetDefault(),
-		.SetNormal(CORE_BOX_BRUSH(YAP_COMMON_BRUSH, YAP_COMMON_MARGIN, YapColor::Transparent))
-		.SetHovered(CORE_BOX_BRUSH(YAP_COMMON_BRUSH, YAP_COMMON_MARGIN, YapColor::Transparent))
-		.SetPressed(CORE_BOX_BRUSH(YAP_COMMON_BRUSH, YAP_COMMON_MARGIN, YapColor::Transparent))
+	YAP_DEFINE_STYLE(FButtonStyle, ButtonStyle_SimpleYapButton, FButtonStyle::GetDefault(),
+		.SetNormal(CORE_BOX_BRUSH(YAP_COMMON_BRUSH, YAP_COMMON_MARGIN, YapColor::White))
+		.SetHovered(CORE_BOX_BRUSH(YAP_COMMON_BRUSH, YAP_COMMON_MARGIN, YapColor::White))
+		.SetPressed(CORE_BOX_BRUSH(YAP_COMMON_BRUSH, YAP_COMMON_MARGIN, YapColor::White))
 		.SetNormalForeground(YapColor::Gray_SemiGlass)
 		.SetHoveredForeground(YapColor::Gray_SemiTrans)
 		.SetPressedForeground(YapColor::DarkGray)
-		.SetPressedPadding(FMargin(0))
+		.SetPressedPadding(FMargin(0, 1, 0, -1))
 		);
 	
 	YAP_DEFINE_STYLE(FButtonStyle, ButtonStyle_SpeakerPopup, FButtonStyle::GetDefault(),

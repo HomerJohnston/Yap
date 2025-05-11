@@ -22,13 +22,16 @@ bool UYapCondition_MaturitySetting::EvaluateCondition_Implementation() const
 }
 
 // ------------------------------------------------------------------------------------------------
+
 #if WITH_EDITOR
 FLinearColor UYapCondition_MaturitySetting::GetColor_Implementation() const
 {
 	return Super::GetColor_Implementation();
 }
 #endif
+
 // ------------------------------------------------------------------------------------------------
+
 #if WITH_EDITOR
 FText UYapCondition_MaturitySetting::GetTitle_Implementation() const
 {
@@ -49,6 +52,7 @@ FText UYapCondition_MaturitySetting::GetTitle_Implementation() const
 	}
 }
 #endif
+
 // ------------------------------------------------------------------------------------------------
 
 #undef LOCTEXT_NAMESPACE

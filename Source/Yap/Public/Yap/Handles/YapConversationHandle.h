@@ -8,6 +8,10 @@
 UDELEGATE()
 DECLARE_DYNAMIC_DELEGATE(FYapConversationEventDelegate);
 
+/**
+ * A conversation handle will be given to you when a conversation is opened.
+ * Use the blueprint function library functions below to make use of the conversation handle.
+ */
 USTRUCT(BlueprintType)
 struct YAP_API FYapConversationHandle
 {
@@ -63,6 +67,9 @@ FORCEINLINE uint32 GetTypeHash(const FYapConversationHandle& Struct)
     return GetTypeHash(Struct.GetGuid());
 }
 
+/**
+ * 
+ */
 UCLASS()
 class YAP_API UYapConversationHandleBlueprintFunctionLibrary : public UBlueprintFunctionLibrary
 {

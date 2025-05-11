@@ -13,15 +13,21 @@ FText IYapCharacterInterface::K2_GetYapCharacterName_Implementation() const
     return GetYapCharacterName();
 }
 
+// ----------------------------------------------
+
 FLinearColor IYapCharacterInterface::K2_GetYapCharacterColor_Implementation() const
 {
     return GetYapCharacterColor();
 };
 
+// ----------------------------------------------
+
 FGameplayTag IYapCharacterInterface::K2_GetYapCharacterTag_Implementation() const
 {
     return GetYapCharacterTag();
 };
+
+// ----------------------------------------------
 
 const UTexture2D* IYapCharacterInterface::K2_GetYapCharacterPortrait_Implementation(const FGameplayTag& MoodTag) const
 {
@@ -33,24 +39,29 @@ const UTexture2D* IYapCharacterInterface::K2_GetYapCharacterPortrait_Implementat
 
 FText IYapCharacterInterface::GetYapCharacterName() const
 {
-    return K2_GetYapCharacterName();
+    return FText::GetEmpty();
 }
+
+// ----------------------------------------------
 
 FLinearColor IYapCharacterInterface::GetYapCharacterColor() const
 {
-    return K2_GetYapCharacterColor();
+    return FLinearColor::Gray;
 }
+
+// ----------------------------------------------
 
 FGameplayTag IYapCharacterInterface::GetYapCharacterTag() const
 {
-    return K2_GetYapCharacterTag();
+    return FGameplayTag::EmptyTag;
 }
+
+// ----------------------------------------------
 
 const UTexture2D* IYapCharacterInterface::GetYapCharacterPortrait(const FGameplayTag& MoodTag) const
 {
-    return K2_GetYapCharacterPortrait(MoodTag);
+    return nullptr;
 }
-
 
 // ================================================================================================
 // Public API for actual use
@@ -74,6 +85,8 @@ FText IYapCharacterInterface::GetName(const UObject* Character)
     return Name;
 }
 
+// ----------------------------------------------
+
 FLinearColor IYapCharacterInterface::GetColor(const UObject* Character)
 {
     FLinearColor Color(0.030f, 0.030f, 0.030f, 1.0f);
@@ -92,6 +105,8 @@ FLinearColor IYapCharacterInterface::GetColor(const UObject* Character)
 
     return Color;
 }
+
+// ----------------------------------------------
 
 FGameplayTag IYapCharacterInterface::GetTag(const UObject* Character)
 {
@@ -112,6 +127,8 @@ FGameplayTag IYapCharacterInterface::GetTag(const UObject* Character)
     return Tag;
 }
 
+// ----------------------------------------------
+
 const UTexture2D* IYapCharacterInterface::GetPortrait(const UObject* Character, FGameplayTag MoodTag)
 {
     const UTexture2D* Texture = nullptr;
@@ -129,4 +146,11 @@ const UTexture2D* IYapCharacterInterface::GetPortrait(const UObject* Character, 
     }
 
     return Texture;
+}
+
+// ----------------------------------------------
+
+const UTexture2D* IYapCharacterInterface::GetPortrait(const UObject* Character)
+{
+    return GetPortrait(Character, FGameplayTag::EmptyTag);
 }

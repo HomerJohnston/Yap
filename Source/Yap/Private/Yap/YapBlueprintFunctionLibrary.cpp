@@ -47,9 +47,9 @@ void UYapBlueprintFunctionLibrary::RegisterConversationHandler(UObject* NewHandl
 
 // ------------------------------------------------------------------------------------------------
 
-void UYapBlueprintFunctionLibrary::RegisterFreeSpeechHandler(UObject* NewHandler)
+void UYapBlueprintFunctionLibrary::RegisterFreeSpeechHandler(UObject* NewHandler, FGameplayTag TypeGroup)
 {
-	UYapSubsystem::RegisterFreeSpeechHandler(NewHandler);
+	UYapSubsystem::RegisterFreeSpeechHandler(NewHandler, TypeGroup);
 }
 
 // ------------------------------------------------------------------------------------------------

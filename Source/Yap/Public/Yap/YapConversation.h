@@ -105,6 +105,8 @@ public:
     
     const TArray<FYapSpeechHandle>& GetRunningFragments() const { return RunningFragments; }
 
+    FYapConversationHandle& GetHandle() { return Handle; }
+
     const FYapConversationHandle& GetHandle() const { return Handle; }
 
     const EYapConversationState GetState() const { return State; }

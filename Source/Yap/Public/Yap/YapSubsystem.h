@@ -61,9 +61,9 @@ friend struct FYapPromptHandle;
 public:
 	UYapSubsystem();
 
-	// =========================================
+	// -----------------------------------------
 	// STATE
-	// =========================================
+	// -----------------------------------------
 protected:
 
 	/** All registered conversation handlers. It is assumed developers will only have one or two of these at a time, no need for fast lookup. Calling order will be preserved in order of registration. */
@@ -78,8 +78,6 @@ protected:
 	UPROPERTY(Transient)
 	TObjectPtr<UYapBroker> Broker;
 
-	// ----------------------
-	
 	/** Master container of conversations */
 	UPROPERTY(Transient)
 	TMap<FYapConversationHandle, FYapConversation> Conversations;
@@ -88,19 +86,6 @@ protected:
 	UPROPERTY(Transient)
 	TArray<FYapConversationHandle> ConversationQueue;
 
-	/** The current focused conversation; same as Con */
-	const FYapConversationHandle& GetActiveConversation()
-	{
-		int32 Index = ConversationQueue.Num() - 1;
-
-		if (Index == INDEX_NONE)
-		{
-			return FYapConversationHandle::GetNullHandle();
-		}
-		
-		return ConversationQueue[ConversationQueue.Num() - 1];
-	};
-
 	/** Stores which conversation a given speech is a part of */
 	UPROPERTY(Transient)
 	TMap<FYapSpeechHandle, FYapConversationHandle> SpeechConversationMapping;
@@ -108,8 +93,6 @@ protected:
 	/** Stores which conversation a given prompt is a part of */
 	UPROPERTY(Transient)
 	TMap<FYapPromptHandle, FYapConversationHandle> PromptHandleConversationTags;
-
-	// ----------------------
 	
 	/** Stores the tag of a fragment and the owning dialogue node where that fragment can be found */
 	UPROPERTY(Transient)
@@ -227,13 +210,14 @@ public:
 	FYapConversation& OpenConversation(FGameplayTag ConversationName, UObject* ConversationOwner); // Called by Open Conversation node
 
 	// Main close conversation function
-	EYapConversationState CloseConversation(const FYapConversationHandle& Handle);
+	EYapConversationState CloseConversation(FYapConversationHandle& Handle);
 	
 	// Exists primarily to be called by the Close Conversation flow node (with a conversation name)
 	EYapConversationState CloseConversation(const FGameplayTag& ConversationName);
 
 	// Exists primarily to be called by the Close Conversation flow node (with an unset conversation name)
 	EYapConversationState CloseConversation(const UObject* Owner);
+	
 protected:
 	// Actually opens a conversation
 	void StartOpeningConversation(const FYapConversationHandle& Handle);
@@ -242,10 +226,12 @@ protected:
 	bool StartOpeningConversation(FYapConversation& Conversation);
 
 	// Actually closes a conversation
-	EYapConversationState StartClosingConversation(const FYapConversationHandle& Handle);
+	EYapConversationState StartClosingConversation(FYapConversationHandle& Handle);
 
 
 
+	/** The current focused conversation; same as Con */
+	const FYapConversationHandle& GetActiveConversation();;
 
 
 
@@ -278,7 +264,7 @@ public:
 	static FYapConversation& GetConversationByOwner(UObject* WorldContext, UObject* Owner);
 	
 	/**  */
-	static FYapConversation& GetConversationByHandle(UObject* WorldContext, FYapConversationHandle Handle);
+	static FYapConversation& GetConversationByHandle(UObject* WorldContext, const FYapConversationHandle& Handle);
 
 	/**  */
 	static FYapConversation& GetConversationByName(const FGameplayTag& ConversationName, UObject* Owner);
@@ -295,7 +281,7 @@ public:
 	static bool CancelSpeech(UObject* WorldContext, const FYapSpeechHandle& Handle);
 
 	/** Used to complete all running speech within a given conversation; supposed to be used for "skip" or "continue/advance" type buttons */
-	static void AdvanceConversation(UObject* Instigator, FYapConversationHandle Handle);
+	static void AdvanceConversation(UObject* Instigator, const FYapConversationHandle& Handle);
 	
 	// TODO: ability to instantly playback/skip through multiple nodes until some sort of target point is hit, maybe a custom node? (imagine skipping an entire cutscene)
 	// static bool SkipConversationTo(???);

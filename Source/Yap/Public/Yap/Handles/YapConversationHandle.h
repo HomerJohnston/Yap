@@ -8,6 +8,8 @@
 UDELEGATE()
 DECLARE_DYNAMIC_DELEGATE(FYapConversationEventDelegate);
 
+// ================================================================================================
+
 /**
  * A conversation handle will be given to you when a conversation is opened and is used to interact with the conversation (advance it).
  * Use the blueprint function library functions to make use of the conversation handle.
@@ -17,26 +19,26 @@ struct YAP_API FYapConversationHandle
 {
     GENERATED_BODY()
 
-    // ==========================================
+    // ------------------------------------------
     // CONSTRUCTION
-    // ==========================================
+    // ------------------------------------------
 public:
 	
     FYapConversationHandle();
 
     FYapConversationHandle(const FGuid& InGuid);
 
-    // ==========================================
+    // ------------------------------------------
     // STATE
-    // ==========================================
+    // ------------------------------------------
 private:
     
     UPROPERTY(Transient, meta = (IgnoreForMemberInitializationTest))
     FGuid Guid;
 
-    // ==========================================
+    // ------------------------------------------
     // API
-    // ==========================================
+    // ------------------------------------------
 public:
 
     bool IsValid() const { return Guid.IsValid(); }
@@ -54,7 +56,7 @@ public:
     
     static const FYapConversationHandle& GetNullHandle()
     {
-        static FYapConversationHandle NullConversationHandle = FYapConversationHandle(FGuid(0, 0, 0, 0));
+        static const FYapConversationHandle NullConversationHandle = FYapConversationHandle(FGuid(0, 0, 0, 0));
         return NullConversationHandle;
     }
 };
@@ -63,6 +65,8 @@ FORCEINLINE uint32 GetTypeHash(const FYapConversationHandle& Struct)
 {
     return GetTypeHash(Struct.GetGuid());
 }
+
+// ================================================================================================
 
 /**
  * Function library for conversation handles.

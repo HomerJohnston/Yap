@@ -38,7 +38,7 @@ public:
 	static void RegisterConversationHandler(UObject* NewHandler, FGameplayTag TypeGroup);
 	
 	UFUNCTION(BlueprintCallable, Category = "Yap|Registration")
-	static void RegisterFreeSpeechHandler(UObject* NewHandler);
+	static void RegisterFreeSpeechHandler(UObject* NewHandler, FGameplayTag TypeGroup);
 	
 	UFUNCTION(BlueprintCallable, Category = "Yap|Registration")
 	static void UnregisterConversationHandler(UObject* HandlerToUnregister);

@@ -224,7 +224,7 @@ FYapConversation& UYapSubsystem::OpenConversation(FGameplayTag ConversationName,
 
 // ------------------------------------------------------------------------------------------------
 
-EYapConversationState UYapSubsystem::CloseConversation(const FYapConversationHandle& Handle)
+EYapConversationState UYapSubsystem::CloseConversation(FYapConversationHandle& Handle)
 {
 	FYapConversation* ConversationPtr = Conversations.Find(Handle);
 
@@ -319,7 +319,7 @@ bool UYapSubsystem::StartOpeningConversation(FYapConversation& Conversation)
 
 // ------------------------------------------------------------------------------------------------
 
-EYapConversationState UYapSubsystem::StartClosingConversation(const FYapConversationHandle& Handle)
+EYapConversationState UYapSubsystem::StartClosingConversation(FYapConversationHandle& Handle)
 {
 	FYapConversation* ConversationPtr = Conversations.Find(Handle);
 
@@ -332,6 +332,8 @@ EYapConversationState UYapSubsystem::StartClosingConversation(const FYapConversa
 			ConversationQueue.Remove(Handle);
 			
 			Conversations.Remove(Handle);
+
+			Handle.Invalidate();
 			
 			StartNextQueuedConversation();
 
@@ -349,6 +351,18 @@ EYapConversationState UYapSubsystem::StartClosingConversation(const FYapConversa
 		UE_LOG(LogYap, Error, TEXT("Failed to close conversation {s}, conversation does not exist!"));
 		return EYapConversationState::Undefined;
 	}
+}
+
+const FYapConversationHandle& UYapSubsystem::GetActiveConversation()
+{
+	int32 Index = ConversationQueue.Num() - 1;
+
+	if (Index == INDEX_NONE)
+	{
+		return FYapConversationHandle::GetNullHandle();
+	}
+		
+	return ConversationQueue[ConversationQueue.Num() - 1];
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -471,7 +485,7 @@ FYapConversation& UYapSubsystem::GetConversationByOwner(UObject* WorldContext, U
 
 // ------------------------------------------------------------------------------------------------
 
-FYapConversation& UYapSubsystem::GetConversationByHandle(UObject* WorldContext, FYapConversationHandle Handle)
+FYapConversation& UYapSubsystem::GetConversationByHandle(UObject* WorldContext, const FYapConversationHandle& Handle)
 {
 	FYapConversation* ConversationPtr = Get(WorldContext->GetWorld())->Conversations.Find(Handle);
 
@@ -624,7 +638,7 @@ bool UYapSubsystem::CancelSpeech(UObject* WorldContext, const FYapSpeechHandle& 
 
 // ------------------------------------------------------------------------------------------------
 
-void UYapSubsystem::AdvanceConversation(UObject* Instigator, FYapConversationHandle Handle)
+void UYapSubsystem::AdvanceConversation(UObject* Instigator, const FYapConversationHandle& Handle)
 {
 	UE_LOG(LogYap, VeryVerbose, TEXT("Subsystem: AdvanceConversation [%s]"), *Handle.ToString());
 
@@ -724,7 +738,7 @@ FYapSpeechHandle UYapSubsystem::GetNewSpeechHandle(FGuid Guid)
 {
 	FYapSpeechHandle NewHandle(GetWorld(), Guid);
 	
-	FYapSpeechEvent& X = SpeechCompleteEvents.Add(NewHandle);
+	SpeechCompleteEvents.Add(NewHandle);
 
 	return NewHandle;
 }

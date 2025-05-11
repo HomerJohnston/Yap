@@ -3,11 +3,14 @@
 
 #pragma once
 
-namespace Yap::FileUtilities
+namespace Yap
 {
+	namespace FileUtilities
+	{
 	YAP_API FString GetPluginFolder();
 
 	YAP_API FString GetResourcesFolder();
 
 	YAP_API FName GetTagConfigFileName();
+	}
 }

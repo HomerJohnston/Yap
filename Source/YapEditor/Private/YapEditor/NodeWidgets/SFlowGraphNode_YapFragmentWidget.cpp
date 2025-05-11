@@ -733,6 +733,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateFragmentWidget()
 				.HAlign(HAlign_Fill)
 				[
 					SAssignNew(FragmentTextOverlay, SOverlay)
+					.Visibility(EVisibility::Visible)
 					+ SOverlay::Slot()
 					[
 						SNew(SBox)
@@ -844,6 +845,7 @@ bool CheckAudioAssetUsesAudioID(const UFlowNode_YapDialogue* Node, int32 Fragmen
 	int32 AudioIDLen = Node->GetAudioID().Len();
 	int32 FragmentIDLen = 3; // TODO magic number move this to project settings or some other constant
 	
+	// TODO make the naming pattern a project setting
 	FRegexPattern RegexActual(FString::Format(TEXT("[a-zA-Z]{{0}}-\\d{{1}}"), {AudioIDLen, FragmentIDLen}));
 	FRegexMatcher RegexMatcher(RegexActual, *Asset.ToString());
 
@@ -863,10 +865,12 @@ bool CheckAudioAssetUsesAudioID(const UFlowNode_YapDialogue* Node, int32 Fragmen
 		{
 			bCorrectMatch = false;
 		}
-		
+
+		// This audio asset name contains an Audio ID (meaning it has AAA-000 somewhere in the asset name)
 		return true;
 	}
 
+	// This audio asset does not contain an Audio ID (it's just a random name)
 	return false;
 }
 
@@ -875,46 +879,48 @@ FSlateColor SFlowGraphNode_YapFragmentWidget::ColorAndOpacity_AudioID() const
 	const TSoftObjectPtr<UObject>& MatureAudioAsset = GetFragment().GetMatureBit().AudioAsset;
 	const TSoftObjectPtr<UObject>& SafeAudioAsset = GetFragment().GetChildSafeBit().AudioAsset;
 
-	bool bHasAudio = false;
+	bool bNeedsChildSafeAudio = NeedsChildSafeData();
+
+	const FLinearColor Error = YapColor::Red;
+	const FLinearColor NoAudio = YapColor::White;
+	const FLinearColor AllGood = YapColor::DarkGray;
 	
+	if (MatureAudioAsset.IsNull())
+	{
+		return NoAudio;
+	}
+
+	if (SafeAudioAsset.IsNull())
+	{
+		if (bNeedsChildSafeAudio)
+		{
+			return Error;
+		}
+	}
+
 	if (!MatureAudioAsset.IsNull())
 	{
-		bool bCorrectMatch;
-		
-		if (CheckAudioAssetUsesAudioID(GetDialogueNode(), FragmentIndex, MatureAudioAsset, bCorrectMatch))
+		bool bCorrectMatch = false;
+		bool bAssetUsesAudioID = CheckAudioAssetUsesAudioID(GetDialogueNode(), FragmentIndex, MatureAudioAsset, bCorrectMatch);
+
+		if (!bAssetUsesAudioID || !bCorrectMatch)
 		{
-			if (bCorrectMatch)
-			{
-				bHasAudio = true;
-			}
-			else
-			{
-				return YapColor::Red;
-			}
+			return Error;
 		}
 	}
 
-	if (bHasAudio && NeedsChildSafeData() && !SafeAudioAsset.IsNull())
+	if (!SafeAudioAsset.IsNull() && bNeedsChildSafeAudio)
 	{
-		bool bCorrectMatch;
-		
-		if (CheckAudioAssetUsesAudioID(GetDialogueNode(), FragmentIndex, SafeAudioAsset, bCorrectMatch))
+		bool bCorrectMatch = false;
+		bool bAssetUsesAudioID = CheckAudioAssetUsesAudioID(GetDialogueNode(), FragmentIndex, SafeAudioAsset, bCorrectMatch);
+
+		if (!bAssetUsesAudioID || !bCorrectMatch)
 		{
-			if (!bCorrectMatch)
-			{
-				return YapColor::Red;
-			}
+			return Error;
 		}
 	}
-
-	FLinearColor Color = bHasAudio ? YapColor::LightBlue : YapColor::DimGray;
-
-	if (!FragmentTextOverlay->IsHovered())
-	{
-		Color *= YapColor::LightGray;
-	}
-
-	return Color;
+	
+	return AllGood;
 }
 
 EVisibility SFlowGraphNode_YapFragmentWidget::Visibility_TimeProgressionWidget() const
@@ -927,7 +933,7 @@ EVisibility SFlowGraphNode_YapFragmentWidget::Visibility_TimeProgressionWidget()
 	{
 		return EVisibility::Collapsed;
 	}
-		
+	
 	return EVisibility::SelfHitTestInvisible;
 }
 
@@ -1047,7 +1053,16 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateDialogueDisplayWidge
 			.ButtonStyle(FYapEditorStyle::Get(), YapStyles.ButtonStyle_DialogueCornerFoldout)
 			.OnClicked_Lambda( [&Bit, this] () { return OnClicked_AudioPreviewWidget(&Bit.AudioAsset); } )
 			.ContentPadding(0)
-			.ForegroundColor(YapColor::DarkGray)
+			.ToolTipText_Lambda( [&Bit, this] ()
+			{
+				if (Bit.AudioAsset.IsNull())
+				{
+					return LOCTEXT("AudioIDTooltip_Unset", "No audio");
+				}
+
+				return FText::FromString(Bit.AudioAsset.GetAssetName());
+			})
+			.ForegroundColor(YapColor::White)
 			[
 				SNew(SBorder)
 				.Visibility_Lambda( [this] () { return GetTypeGroup().GetHideAudioID() ? EVisibility::Collapsed : EVisibility::Visible; } )
@@ -1180,7 +1195,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::PopupContentGetter_Speaker
 		[
 			SNew(SYapPropertyMenuAssetPicker)
 			//.OnShouldFilterAsset(this, &ThisClass::IsAsset_YapSpeaker) // This works lovely... but it loads all assets. It's slow, ugly, occupies memory, and fills the output log with every asset error in the project.
-			.AllowedClasses(UYapProjectSettings::GetSpeakerClasses_SyncLoad())
+			.AllowedClasses(UYapProjectSettings::GetCharacterClasses_SyncLoad())
 			.AllowClear(true)
 			.InitialObject(Character)
 			.OnSet(this, &ThisClass::OnSetNewSpeakerAsset)
@@ -1256,7 +1271,7 @@ void SFlowGraphNode_YapFragmentWidget::OnAssetsDropped_TextWidget(const FDragDro
 // SPEAKER WIDGET
 // ------------------------------------------------------------------------------------------------
 
-TSharedRef<SOverlay> SFlowGraphNode_YapFragmentWidget::CreateSpeakerWidget()
+TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateSpeakerWidget()
 {
 	int32 PortraitSize = UYapProjectSettings::GetPortraitSize();
 	int32 BorderSize = 2;
@@ -1265,34 +1280,29 @@ TSharedRef<SOverlay> SFlowGraphNode_YapFragmentWidget::CreateSpeakerWidget()
 	
 	const UObject* SpeakerAsset = Fragment.GetSpeaker(EYapLoadContext::AsyncEditorOnly);
 	
-	return SNew(SOverlay)
-	+ SOverlay::Slot()
-	.Padding(0, 0, 0, 0)
+	return SNew(SLevelOfDetailBranchNode)
+	.UseLowDetailSlot(Owner, &SFlowGraphNode_YapDialogueWidget::UseLowDetail)
+	.HighDetail()
 	[
-		SNew(SLevelOfDetailBranchNode)
-		.UseLowDetailSlot(Owner, &SFlowGraphNode_YapDialogueWidget::UseLowDetail)
-		.HighDetail()
+		SAssignNew(SpeakerDropTarget, SAssetDropTarget)
+		.bSupportsMultiDrop(false)
+		.OnAreAssetsAcceptableForDrop(this, &ThisClass::IsDroppedAsset_YapSpeaker)
+		.OnAssetsDropped(this, &ThisClass::OnAssetsDropped_SpeakerWidget)
 		[
-			SNew(SAssetDropTarget)
-			.bSupportsMultiDrop(false)
-			.OnAreAssetsAcceptableForDrop(this, &ThisClass::IsDroppedAsset_YapSpeaker)
-			.OnAssetsDropped(this, &ThisClass::OnAssetsDropped_SpeakerWidget)
+			SNew(SYapButtonPopup)
+			.PopupPlacement(MenuPlacement_BelowAnchor)
+			//.PopupContentGetter(FPopupContentGetter::CreateSP(this, &ThisClass::PopupContentGetter_SpeakerWidget, Character))
+			.PopupContentGetter(FPopupContentGetter::CreateSP(this, &ThisClass::PopupContentGetter_SpeakerWidget, SpeakerAsset))
+			.ButtonStyle(FYapEditorStyle::Get(), YapStyles.ButtonStyle_SpeakerPopup)
+			.ButtonContent()
 			[
-				SNew(SYapButtonPopup)
-				.PopupPlacement(MenuPlacement_BelowAnchor)
-				//.PopupContentGetter(FPopupContentGetter::CreateSP(this, &ThisClass::PopupContentGetter_SpeakerWidget, Character))
-				.PopupContentGetter(FPopupContentGetter::CreateSP(this, &ThisClass::PopupContentGetter_SpeakerWidget, SpeakerAsset))
-				.ButtonStyle(FYapEditorStyle::Get(), YapStyles.ButtonStyle_SpeakerPopup)
-				.ButtonContent()
-				[
-					CreateSpeakerImageWidget(PortraitSize, BorderSize)
-				]
+				CreateSpeakerImageWidget(PortraitSize, BorderSize)
 			]
 		]
-		.LowDetail()
-		[
-			CreateSpeakerImageWidget(PortraitSize, BorderSize)
-		]
+	]
+	.LowDetail()
+	[
+		CreateSpeakerImageWidget(PortraitSize, BorderSize)
 	];
 }
 
@@ -1328,7 +1338,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateSpeakerImageWidget(i
 			.HAlign(HAlign_Center)
 			.VAlign(VAlign_Center)
 			.BorderImage(FYapEditorStyle::GetImageBrush(YapBrushes.Border_Thick_RoundedSquare))
-			.BorderBackgroundColor(this, &ThisClass::BorderBackgroundColor_CharacterImage)
+			.BorderBackgroundColor(this, &ThisClass::BorderBackgroundColor_SpeakerImage)
 		]
 		+ SOverlay::Slot()
 		.HAlign(HAlign_Center)
@@ -1353,28 +1363,12 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateSpeakerImageWidget(i
 	];
 }
 
-FSlateColor SFlowGraphNode_YapFragmentWidget::BorderBackgroundColor_CharacterImage() const
+FSlateColor SFlowGraphNode_YapFragmentWidget::BorderBackgroundColor_SpeakerImage() const
 {
 	const UObject* Speaker = GetFragmentMutable().GetSpeaker(EYapLoadContext::DoNotLoad);
 	
-	FLinearColor Color = YapColor::DarkGray;
+	FLinearColor Color = IYapCharacterInterface::GetColor(Speaker);
 	
-	if (IsValid(Speaker))
-	{
-		if (const IYapCharacterInterface* SpeakerInterface = Cast<IYapCharacterInterface>(Speaker))
-		{
-			Color = SpeakerInterface->GetYapCharacterColor();
-		}
-		else if (Speaker->Implements<UYapCharacterInterface>())
-		{
-			Color = IYapCharacterInterface::Execute_K2_GetYapCharacterColor(Speaker);
-		}
-		else
-		{
-			Color = YapColor::Gray_Glass;		
-		}
-	}
-
 	Color.A *= UYapDeveloperSettings::GetPortraitBorderAlpha();
 
 	if (!GetDialogueNode()->IsPlayerPrompt())
@@ -1382,6 +1376,11 @@ FSlateColor SFlowGraphNode_YapFragmentWidget::BorderBackgroundColor_CharacterIma
 		Color.A *= 0.75f;
 	}
 
+	if (SpeakerDropTarget.IsValid() && SpeakerDropTarget->IsHovered())
+	{
+		Color /= YapColor::LightGray;
+	}
+	
 	return Color;
 }
 
@@ -1425,42 +1424,15 @@ FText SFlowGraphNode_YapFragmentWidget::ToolTipText_SpeakerWidget() const
 		return LOCTEXT("SpeakerUnset_Label","Speaker Unset");
 	}
 
-	FText CharacterName;
-
-	// TODO clean me up this is a rough implementation
-	if (const IYapCharacterInterface* SpeakerInterface = Cast<IYapCharacterInterface>(Speaker))
-	{
-		CharacterName = SpeakerInterface->GetYapCharacterName();
-	}
-	else if (Speaker->Implements<UYapCharacterInterface>())
-	{
-		CharacterName = IYapCharacterInterface::Execute_K2_GetYapCharacterName(Speaker);
-	}
+	FText SpeakerName = IYapCharacterInterface::GetName(Speaker);
 	
-	TSharedPtr<FGameplayTagNode> GTN = UGameplayTagsManager::Get().FindTagNode(GetFragment().GetMoodTag());
-
-	if (CharacterName.IsEmpty())
+	if (SpeakerName.IsEmpty())
 	{
-		CharacterName = LOCTEXT("Unnamed", "Unnamed");
-	}
-
-	FText MoodTagLabel;
-	
-	if (GTN.IsValid())
-	{
-		MoodTagLabel = FText::FromName(GTN->GetSimpleTagName());
-	}
-	else
-	{
-		TSharedPtr<FGameplayTagNode> DefaultGTN = UGameplayTagsManager::Get().FindTagNode(UYapProjectSettings::GetDefaultMoodTag());
-
-		FText MoodTagNameAsText = DefaultGTN.IsValid() ? FText::FromName(DefaultGTN->GetSimpleTagName()) : LOCTEXT("MoodTag_None_Label", "None");
-		
-		MoodTagLabel = FText::Format(LOCTEXT("DefaultMoodTag_Label", "{0}(D)"), MoodTagNameAsText);
+		SpeakerName = LOCTEXT("Unnamed", "Unnamed");
 	}
 
 	// TODO minor bug this is being reached when it shouldn't be
-	return FText::Format(LOCTEXT("SpeakerMoodImageMissing_Label", "{0}\n\n{1}"), CharacterName, MoodTagLabel);
+	return FText::Format(LOCTEXT("SpeakerImageMissing_Label", "{0}"), SpeakerName);
 }
 
 FText SFlowGraphNode_YapFragmentWidget::Text_SpeakerWidget() const
@@ -1474,7 +1446,7 @@ FText SFlowGraphNode_YapFragmentWidget::Text_SpeakerWidget() const
 	
 	if (Fragment.IsSpeakerPendingLoad())
 	{
-		LOCTEXT("Loading...", "Loading...");
+		return LOCTEXT("Loading...", "Loading...");
 	}
 
 	const UObject* Speaker = Fragment.GetSpeaker(EYapLoadContext::DoNotLoad);
@@ -1482,40 +1454,15 @@ FText SFlowGraphNode_YapFragmentWidget::Text_SpeakerWidget() const
 	// TODO I hate reading this twice although it probably isn't that expensive. Maybe I can toggle this on/off by events somehow later.		
 	if (Image_SpeakerImage() == nullptr)
 	{
-		TSharedPtr<FGameplayTagNode> MoodGameplayTagNode = UGameplayTagsManager::Get().FindTagNode(GetFragment().GetMoodTag());
 
-		FText CharacterName;
-
-		if (const IYapCharacterInterface* SpeakerInterface = Cast<IYapCharacterInterface>(Speaker))
+		FText SpeakerName = IYapCharacterInterface::GetName(Speaker);
+		
+		if (SpeakerName.IsEmpty())
 		{
-			CharacterName = SpeakerInterface->GetYapCharacterName();
-		}
-		else if (Speaker->Implements<UYapCharacterInterface>())
-		{
-			CharacterName = IYapCharacterInterface::Execute_K2_GetYapCharacterName(Speaker);
+			SpeakerName = LOCTEXT("Unnamed", "Unnamed");
 		}
 		
-		if (CharacterName.IsEmpty())
-		{
-			CharacterName = LOCTEXT("Unnamed", "Unnamed");
-		}
-
-		FText MoodTagLabel;
-		
-		if (MoodGameplayTagNode.IsValid())
-		{
-			MoodTagLabel = FText::FromName(MoodGameplayTagNode->GetSimpleTagName());
-		}
-		else
-		{
-			TSharedPtr<FGameplayTagNode> DefaultGTN = UGameplayTagsManager::Get().FindTagNode(UYapProjectSettings::GetDefaultMoodTag());
-
-			FText MoodTagNameAsText = DefaultGTN.IsValid() ? FText::FromName(DefaultGTN->GetSimpleTagName()) : LOCTEXT("MoodTag_None_Label", "None");
-			
-			MoodTagLabel = FText::Format(LOCTEXT("DefaultMoodTag_Label", "{0}(D)"), MoodTagNameAsText);
-		}
-		
-		return FText::Format(LOCTEXT("SpeakerMoodImageMissing_Label", "{0}\n\n{1}\n<missing>"), CharacterName, MoodTagLabel);
+		return FText::Format(LOCTEXT("SpeakerImageMissing_Label", "{0}\n\nNo Portrait"), SpeakerName);
 	}
 	
 	return FText::GetEmpty();
@@ -1542,10 +1489,12 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateDirectedAtWidget()
 	.Cursor(EMouseCursor::Default)
 	.HAlign(HAlign_Center)
 	.VAlign(VAlign_Center)
-	//.BorderImage(FYapEditorStyle::GetImageBrush(YapBrushes.Panel_Rounded))
 	.BorderImage(FYapEditorStyle::GetImageBrush(YapBrushes.Icon_FilledCircle))
 	.BorderBackgroundColor(this, &ThisClass::BorderBackgroundColor_DirectedAtImage)
-	.Visibility_Lambda( [this] () { return IsHovered() || IsValid(GetFragmentMutable().GetDirectedAt(EYapLoadContext::DoNotLoad)) ? EVisibility::Visible : EVisibility::Collapsed; } )
+	.Visibility_Lambda( [this] ()
+	{
+		return (FragmentTextOverlay.IsValid() && FragmentTextOverlay->IsHovered()) || IsValid(GetFragmentMutable().GetDirectedAt(EYapLoadContext::DoNotLoad)) ? EVisibility::Visible : EVisibility::Collapsed;
+	} )
 	.Padding(3)
 	[
 		SNew(SBox)
@@ -1588,27 +1537,14 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateDirectedAtWidget()
 FSlateColor SFlowGraphNode_YapFragmentWidget::BorderBackgroundColor_DirectedAtImage() const
 {
 	const UObject* DirectedAt = GetFragmentMutable().GetDirectedAt(EYapLoadContext::DoNotLoad);
+	
+	FLinearColor Color = IYapCharacterInterface::GetColor(DirectedAt);
 
-	FLinearColor Color = YapColor::Gray;
-
-	if (IsValid(DirectedAt))
+	if (DirectedAtWidget.IsValid() && DirectedAtWidget->IsHovered())
 	{
-		if (const IYapCharacterInterface* Speaker = Cast<IYapCharacterInterface>(DirectedAt))
-		{
-			Color = Speaker->GetYapCharacterColor();
-		}
-		else if (DirectedAt->Implements<UYapCharacterInterface>())
-		{
-			Color = IYapCharacterInterface::Execute_K2_GetYapCharacterColor(DirectedAt);
-		}
-
-		float A = UYapDeveloperSettings::GetPortraitBorderAlpha();
-
-		Color.R *= A;
-		Color.G *= A;
-		Color.B *= A;
+		Color /= YapColor::LightGray;
 	}
-
+	
 	return Color;
 }
 
@@ -2000,6 +1936,37 @@ EVisibility SFlowGraphNode_YapFragmentWidget::Visibility_AudioAssetErrorState(co
 FSlateColor SFlowGraphNode_YapFragmentWidget::ColorAndOpacity_AudioSettingsButton() const
 {
 	FLinearColor Color;
+	
+	switch (GetFragmentAudioErrorLevel())
+	{
+		case EYapErrorLevel::OK:
+		{
+			Color = YapColor::Noir;
+			break;
+		}
+		case EYapErrorLevel::Warning:
+		{
+			Color = YapColor::Red;
+			break;
+		}
+		case EYapErrorLevel::Error:
+		{
+			Color = YapColor::Red;
+			break;
+		}
+		case EYapErrorLevel::Unknown:
+		{
+			Color = YapColor::Error;
+			break;
+		}
+	}
+
+	Color = Color.Desaturate(0.35f);
+	
+	return Color;
+	
+	/*
+	FLinearColor Color;
 
 	switch (GetFragmentAudioErrorLevel())
 	{
@@ -2026,6 +1993,7 @@ FSlateColor SFlowGraphNode_YapFragmentWidget::ColorAndOpacity_AudioSettingsButto
 	}
 	
 	return Color;
+	*/
 }
 
 // TODO handle child safe settings somehow

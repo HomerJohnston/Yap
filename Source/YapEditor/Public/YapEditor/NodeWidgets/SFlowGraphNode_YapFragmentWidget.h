@@ -69,7 +69,7 @@ protected:
 
 	// Index of this fragment inside the dialogue node
 	uint8 FragmentIndex = 0;
-
+	
 	// Color lookup table for buttons and indicators
 	static TMap<EYapTimeMode, FLinearColor> TimeModeButtonColors;
 	
@@ -100,6 +100,8 @@ protected:
 	TSharedPtr<SWidget> ChildSafeCheckBox = nullptr;
 
 	TSharedPtr<SWidget> DirectedAtWidget = nullptr;
+
+	TSharedPtr<SWidget> SpeakerDropTarget = nullptr;
 	
 	bool bChildSafeCheckBoxHovered = false;
 
@@ -169,12 +171,12 @@ protected:
 
 	// ------------------------------------------
 	
-	TSharedRef<SOverlay>	CreateSpeakerWidget();
+	TSharedRef<SWidget>	CreateSpeakerWidget();
 
 	void					OnAssetsDropped_SpeakerWidget(const FDragDropEvent& DragDropEvent, TArrayView<FAssetData> AssetDatas);
 
 	TSharedRef<SWidget>		CreateSpeakerImageWidget(int32 PortraitSize, int32 BorderSize);
-	FSlateColor				BorderBackgroundColor_CharacterImage() const;
+	FSlateColor				BorderBackgroundColor_SpeakerImage() const;
 	const FSlateBrush*		Image_SpeakerImage() const;
 	FText					ToolTipText_SpeakerWidget() const;
 	FText					Text_SpeakerWidget() const;

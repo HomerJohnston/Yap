@@ -213,6 +213,10 @@ bool UYapBroker::PreviewAudioAsset(const UObject* AudioAsset) const
 			}
 			
 			PreviewAudioComponent = GEditor->PlayPreviewSound(const_cast<USoundBase*>(AudioAssetAsSoundBase));
+
+			// TODO 
+			//PreviewAudioComponent->OnAudioFinished
+
 			return true;
 		}
 		else

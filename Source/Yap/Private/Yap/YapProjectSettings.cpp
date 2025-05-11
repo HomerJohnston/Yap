@@ -6,6 +6,7 @@
 #if WITH_EDITOR
 #include "GameplayTagsManager.h"
 #endif
+#include "Yap/YapCharacterAsset.h"
 #include "Yap/Globals/YapFileUtilities.h"
 
 #define LOCTEXT_NAMESPACE "Yap"
@@ -24,6 +25,8 @@ UYapProjectSettings::UYapProjectSettings()
 #endif
 
 	DefaultAssetAudioClasses = { USoundBase::StaticClass() };
+
+	DefaultCharacterClasses = { UYapCharacterAsset::StaticClass() };
 
 	DefaultGroup = FYapTypeGroupSettings(true);
 
@@ -115,11 +118,20 @@ const FString UYapProjectSettings::GetAudioAssetRootFolder(FGameplayTag TypeGrou
 	return Group->AudioAssetsRootFolder.Path;
 }
 
-TArray<const UClass*> UYapProjectSettings::GetSpeakerClasses_SyncLoad()
+TArray<const UClass*> UYapProjectSettings::GetCharacterClasses_SyncLoad()
 {
 	TArray<const UClass*> LoadedClasses;
+
+	TArray<TSoftClassPtr<UObject>> SourceClasses;
+
+	if (Get().CharacterClasses.Num() > 0)
+	{
+		SourceClasses.Reserve(Get().CharacterClasses.Num() + 1);
+		SourceClasses = GetCharacterClasses();
+		SourceClasses.Append(Get().DefaultCharacterClasses);
+	}
 	
-	for (TSoftClassPtr<UObject> ClassPtr : Get().SpeakerClasses)
+	for (TSoftClassPtr<UObject> ClassPtr : SourceClasses)
 	{
 		if (!ClassPtr.IsNull())
 		{

@@ -15,26 +15,31 @@ class UYapCharacterInterface : public UInterface
 class YAP_API IYapCharacterInterface
 {
     GENERATED_BODY()
-    
+
+    // -----------------------------------------------------
+    // Blueprint Interface - Override these in a blueprint on which you've added this interface, and call these in your Blueprint Graphs
+    // -----------------------------------------------------
 protected:
     UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Yap|Character", DisplayName = "Get Name")
     FText K2_GetYapCharacterName() const;
-    FText K2_GetYapCharacterName_Implementation() const { return GetYapCharacterName(); }
-    
+    virtual FText K2_GetYapCharacterName_Implementation() const;
+
     UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Yap|Character", DisplayName = "Get Color")
     FLinearColor K2_GetYapCharacterColor() const;
-    FLinearColor K2_GetYapCharacterColor_Implementation() const { return GetYapCharacterColor(); };
-    
+    virtual FLinearColor K2_GetYapCharacterColor_Implementation() const;
+
     UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Yap|Character", DisplayName = "Get Tag")
     FGameplayTag K2_GetYapCharacterTag() const;
-    FGameplayTag K2_GetYapCharacterTag_Implementation() const { return GetYapCharacterTag(); };
+    virtual FGameplayTag K2_GetYapCharacterTag_Implementation() const;
 
     UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Yap|Character", DisplayName = "Get Portrait")
     const UTexture2D* K2_GetYapCharacterPortrait(const FGameplayTag& MoodTag) const;
-    const UTexture2D* K2_GetYapCharacterPortrait_Implementation(const FGameplayTag& MoodTag) const { return GetYapCharacterPortrait(MoodTag); };
+    virtual const UTexture2D* K2_GetYapCharacterPortrait_Implementation(const FGameplayTag& MoodTag) const;
 
-public:
-
+    // -----------------------------------------------------
+    // C++ Interface - Override these in a C++ class which inherits this interface
+    // -----------------------------------------------------
+protected:
     virtual FText GetYapCharacterName() const;
 
     virtual FLinearColor GetYapCharacterColor() const;
@@ -42,4 +47,16 @@ public:
     virtual FGameplayTag GetYapCharacterTag() const;
     
     virtual const UTexture2D* GetYapCharacterPortrait(const FGameplayTag& MoodTag) const;
+
+    // -----------------------------------------------------
+    // Public API - Use these in your C++ code (these will automatically call the C++ or K2 functions above, as appropriate)
+    // -----------------------------------------------------
+public:
+    static FText GetName(const UObject* Character);
+
+    static FLinearColor GetColor(const UObject* Character);
+
+    static FGameplayTag GetTag(const UObject* Character);
+
+    static const UTexture2D* GetPortrait(const UObject* Character, FGameplayTag MoodTag);
 };

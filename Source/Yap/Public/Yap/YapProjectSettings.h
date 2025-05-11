@@ -53,6 +53,9 @@ protected:
 	// Do not expose this for editing; only hard-coded
 	TArray<TSoftClassPtr<UObject>> DefaultAssetAudioClasses;
 
+	// Do not expose this for editing; only hard-coded
+	TArray<TSoftClassPtr<UObject>> DefaultCharacterClasses;
+
 	// - - - - - CORE - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	
 	/** Create a Yap Broker class, inheriting from UYapBroker, and set it here to override some default Yap behavior such as reading your game's maturity setting. */
@@ -63,17 +66,13 @@ protected:
 	UPROPERTY(Config, EditAnywhere, Category = "Core", meta = (AllowAbstract))
 	TArray<TSoftClassPtr<UObject>> AudioAssetClasses;
 	
-	/** If enabled, *ALL* Content items of your game will be listed in the "Speakers" and "Directed At" drop down selectors. */
-	UPROPERTY(Config, EditAnywhere, Category = "Core", meta = (AllowAbstract))
-	bool bAllowAllAssetsAsSpeakers = false;
-	
 	/** Filters the blueprint/asset popup list when choosing a "Speaker" or "Directed At" asset. */
 	UPROPERTY(Config, EditAnywhere, Category = "Core", meta = (AllowAbstract, EditCondition = "!bAllowAllAssetsAsSpeakers", EditConditionHides))
-	TArray<TSoftClassPtr<UObject>> SpeakerClasses;
+	TArray<TSoftClassPtr<UObject>> CharacterClasses;
 	
 	/** This filters certain tag dropdowns. Set this to your game's Gameplay Tag that contains tags for each of your speaking characters. If your game's speaking characters have no common tag parent, leave this blank. */
 	UPROPERTY(Config, EditAnywhere, Category = "Uncategorized", meta = (AllowAbstract))
-	FGameplayTag SpeakerTagBase;
+	FGameplayTag CharacterTagBase;
 	
 	// - - - - - MOOD TAGS - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	
@@ -219,9 +218,9 @@ public:
 	static const FString GetAudioAssetRootFolder(FGameplayTag TypeGroup);
 #endif
 
-	static const TArray<TSoftClassPtr<UObject>>& GetSpeakerClasses() { return Get().SpeakerClasses; }
+	static const TArray<TSoftClassPtr<UObject>>& GetCharacterClasses() { return Get().CharacterClasses; }
 
-	static TArray<const UClass*> GetSpeakerClasses_SyncLoad();
+	static TArray<const UClass*> GetCharacterClasses_SyncLoad();
 
 	static bool HasCustomAudioAssetClasses() { return Get().AudioAssetClasses.Num() > 0; };
 

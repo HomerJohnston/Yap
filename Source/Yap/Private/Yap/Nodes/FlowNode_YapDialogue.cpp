@@ -604,16 +604,11 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 	}
 
 #if !UE_BUILD_SHIPPING
-	if (IsValid(Data.Speaker.GetObject()))
+	const UObject* Speaker = Data.Speaker.GetObject();
+	
+	if (IsValid(Speaker))
 	{
-		if (Data.Speaker.GetInterface())
-		{
-			UE_LOG(LogYap, VeryVerbose, TEXT("%s [%i]: [%s] %s"), *GetName(), FragmentIndex, *Data.Speaker->GetYapCharacterName().ToString(), *Bit.GetDialogueText().ToString());		
-		}
-		else
-		{
-			UE_LOG(LogYap, VeryVerbose, TEXT("%s [%i]: [%s] %s"), *GetName(), FragmentIndex, *IYapCharacterInterface::Execute_K2_GetYapCharacterName(Data.Speaker.GetObject()).ToString(), *Bit.GetDialogueText().ToString());				
-		}
+		UE_LOG(LogYap, VeryVerbose, TEXT("%s [%i]: [%s] %s"), *GetName(), FragmentIndex, *IYapCharacterInterface::GetName(Speaker).ToString(), *Bit.GetDialogueText().ToString());		
 	}
 	else
 	{

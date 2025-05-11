@@ -75,16 +75,7 @@ AActor* UYapBlueprintFunctionLibrary::FindYapCharacterActor(UObject* WorldContex
 		return nullptr;
 	}
 
-	FGameplayTag Tag = FGameplayTag::EmptyTag;
-	
-	if (Speaker.GetInterface())
-	{
-		Tag = Speaker.GetInterface()->GetYapCharacterTag();
-	}
-	else
-	{
-		Tag = IYapCharacterInterface::Execute_K2_GetYapCharacterTag(Speaker.GetObject());
-	}
+	FGameplayTag Tag = IYapCharacterInterface::GetTag(Speaker.GetObject());
 	
 	if (!Tag.IsValid())
 	{

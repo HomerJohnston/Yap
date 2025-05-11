@@ -97,8 +97,6 @@ const FSlateBrush* UYapEditorSubsystem::GetMoodTagBrush(FGameplayTag Name)
 
 TSharedPtr<FSlateImageBrush> UYapEditorSubsystem::GetCharacterPortraitBrush(const UObject* Character, const FGameplayTag& MoodTag)
 {
-	static int32 iii = 0;
-
 	if (!IsValid(Character))
 	{
 		return nullptr;
@@ -107,19 +105,8 @@ TSharedPtr<FSlateImageBrush> UYapEditorSubsystem::GetCharacterPortraitBrush(cons
 	// TODO I should somehow cache this so that I'm not calling slow interface calls on tick in the widget
 	// Or switch to event based updates
 
-	const IYapCharacterInterface* SpeakerInterface = Cast<IYapCharacterInterface>(Character);
-
-	const UTexture2D* Texture = nullptr;
-
-	if (SpeakerInterface)
-	{
-		Texture = SpeakerInterface->GetYapCharacterPortrait(MoodTag);
-	}
-	else if (Character->Implements<UYapCharacterInterface>())
-	{
-		Texture = IYapCharacterInterface::Execute_K2_GetYapCharacterPortrait(Character, MoodTag);
-	}	
-
+	const UTexture2D* Texture = IYapCharacterInterface::GetPortrait(Character, MoodTag);
+	
 	if (!Texture)
 	{
 		if (UYapProjectSettings::GetDefaultPortraitTextureAsset().IsNull())
@@ -149,14 +136,6 @@ TSharedPtr<FSlateImageBrush> UYapEditorSubsystem::GetCharacterPortraitBrush(cons
 
 	Get()->CharacterPortraitBrushes.Add(Texture, NewPortraitBrush);
 	
-	/*
-	NewPortraitBrush.ImageSize = FVector2D(128, 128);
-	NewPortraitBrush.SetResourceObject(const_cast<UTexture2D*>(Texture)); // TODO make sure this is safe and that there isn't a better system
-	NewPortraitBrush.SetUVRegion(FBox2D(FVector2D(0,0), FVector2D(1,1)));
-	NewPortraitBrush.DrawAs = ESlateBrushDrawType::Box;
-	NewPortraitBrush.Margin = 0;
-	*/
-
 	return NewPortraitBrush;
 }
 

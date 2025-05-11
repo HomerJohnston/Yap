@@ -76,6 +76,7 @@ class YAP_API UYapConversationHandleBFL : public UBlueprintFunctionLibrary
 {
     GENERATED_BODY()
 
+public:
     /** Bind a delegate to a conversation opening event. This will be called when a "Open Conversation" flow node is entered. Use it to start opening your conversation UI. */
     UFUNCTION(BlueprintCallable, Category = "Yap|ConversationHandle", meta = (WorldContext = "WorldContext"))
     static UPARAM(DisplayName = Handle) FYapConversationHandle BindToConversationOpening(UObject* WorldContext, FYapConversationHandle Handle, FYapConversationEventDelegate Delegate);

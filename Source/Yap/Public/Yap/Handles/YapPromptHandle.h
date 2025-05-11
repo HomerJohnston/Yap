@@ -20,6 +20,7 @@ struct YAP_API FYapPromptHandle
 	
 	// ------------------------------------------
 	// STATE
+	// ------------------------------------------
 
 protected:
 	UPROPERTY(Transient, BlueprintReadOnly, meta = (AllowPrivateAccess, IgnoreForMemberInitializationTest))
@@ -30,12 +31,14 @@ protected:
 
 	// ------------------------------------------
 	// PUBLIC API - Your game should use these
+	// ------------------------------------------
 
 public:
 	void RunPrompt(UObject* WorldContext);
 
 	// ------------------------------------------
 	// YAP API - These are called by Yap classes
+	// ------------------------------------------
 
 public:
 	FYapPromptHandle();
@@ -66,8 +69,10 @@ FORCEINLINE uint32 GetTypeHash(const FYapPromptHandle& Struct)
 	return GetTypeHash(Struct.GetGuid());
 }
 
+// ================================================================================================
+
 /**
- * 
+ * Function library for prompt handles.
  */
 UCLASS()
 class YAP_API UYapPromptHandleBFL : public UBlueprintFunctionLibrary
@@ -75,12 +80,7 @@ class YAP_API UYapPromptHandleBFL : public UBlueprintFunctionLibrary
 	GENERATED_BODY()
 
 public:
+	/** After a prompt node is entered it will supply you with prompt handles for each option. Use this to select that prompt and continue the conversation. */
 	UFUNCTION(BlueprintCallable, Category = "Yap|PromptHandle", meta = (WorldContext = "WorldContext"))
 	static void RunPrompt(UObject* WorldContext, const FYapPromptHandle& Handle);
-
-	// TODO this might be useful? Add a way to react to selection of specific prompts?
-	/*
-	UFUNCTION(BlueprintCallable, Category = "Yap|PromptHandle")
-	static bool Subscribe(const FYapPromptHandle& Handle, FYapPromptHandleChosen Delegate);
-	*/
 };

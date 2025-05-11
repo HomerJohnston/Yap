@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include "Yap/YapRunningFragment.h"
 #include "YapSpeechHandle.generated.h"
 
 /** Since I can't store handles in structs by ref, I pass around a simpler version of it containing only the GUID and look up the actual handle (which could become "large" with more data) from the subsystem as needed. */
@@ -62,15 +61,6 @@ public:
     {
         return Guid.ToString();
     }
-    
-    // TODO I would prefer to use these instead of calling the BPFL functions below, but circular reference. Solve later. Use the BPFL funcs below for now instead. 
-    //void BindToOnSpeechComplete(FYapSpeechEventDelegate Delegate) const;
-
-    //void UnbindToOnSpeechComplete(FYapSpeechEventDelegate Delegate) const;
-
-    //void BindToOnFragmentComplete(FYapSpeechEventDelegate Delegate) const;
-
-    //void UnbindToOnFragmentComplete(FYapSpeechEventDelegate Delegate) const;
 };
 
 FORCEINLINE uint32 GetTypeHash(const FYapSpeechHandle& Struct)
@@ -85,7 +75,7 @@ DECLARE_DYNAMIC_DELEGATE_TwoParams(FYapSpeechEventDelegate, UObject*, Broadcaste
 /**
  * 
  */
-UCLASS()
+UCLASS(DisplayName = "Yap Speech Handle Function Library")
 class YAP_API UYapSpeechHandleBFL : public UBlueprintFunctionLibrary
 {
     GENERATED_BODY()

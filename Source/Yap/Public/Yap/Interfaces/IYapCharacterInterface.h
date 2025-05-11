@@ -23,35 +23,27 @@ class YAP_API IYapCharacterInterface
 {
     GENERATED_BODY()
 
+public:
     // -----------------------------------------------------
-    // Blueprint Interface - Override these in a blueprint on which you've added this interface, and call these in your Blueprint Graphs
+    // Public C++ API - Use these in your C++ code (these will automatically call the C++ or K2 functions below, as appropriate)
     // -----------------------------------------------------
+    
+    /** Try to get the supplied character's name. Will log an error if the character does not implement the interface. */
+    static FText GetName(const UObject* Character);
+
+    /** Try to get the supplied character's color. Will log an error if the character does not implement the interface. */
+    static FLinearColor GetColor(const UObject* Character);
+
+    /** Try to get the supplied character's ID tag. Will log an error if the character does not implement the interface. */
+    static FGameplayTag GetTag(const UObject* Character);
+    
+    /** Try to get the supplied character's portrait. Will log an error if the character does not implement the interface. */
+    static const UTexture2D* GetPortrait(const UObject* Character, FGameplayTag MoodTag = FGameplayTag::EmptyTag);
+
 protected:
-
-    /** Implement this on a blueprint. Do not override this in C++. */
-    UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Yap|Character", DisplayName = "Get Name")
-    FText K2_GetYapCharacterName() const;
-    virtual FText K2_GetYapCharacterName_Implementation() const;
-
-    /** Implement this on a blueprint. Do not override this in C++. */
-    UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Yap|Character", DisplayName = "Get Color")
-    FLinearColor K2_GetYapCharacterColor() const;
-    virtual FLinearColor K2_GetYapCharacterColor_Implementation() const;
-
-    /** Implement this on a blueprint. Do not override this in C++. */
-    UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Yap|Character", DisplayName = "Get Tag")
-    FGameplayTag K2_GetYapCharacterTag() const;
-    virtual FGameplayTag K2_GetYapCharacterTag_Implementation() const;
-
-    /** Implement this on a blueprint. Do not override this in C++. */
-    UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Yap|Character", DisplayName = "Get Portrait")
-    const UTexture2D* K2_GetYapCharacterPortrait(const FGameplayTag& MoodTag) const;
-    virtual const UTexture2D* K2_GetYapCharacterPortrait_Implementation(const FGameplayTag& MoodTag) const;
-
     // -----------------------------------------------------
-    // C++ Interface - Override these in a C++ class which inherits this interface
+    // Protected C++ Interface - Override these in a C++ class which inherits this interface
     // -----------------------------------------------------
-protected:
     
     /** Override this on a C++ class. */
     virtual FText GetYapCharacterName() const;
@@ -64,24 +56,62 @@ protected:
     
     /** Override this on a C++ class. */
     virtual const UTexture2D* GetYapCharacterPortrait(const FGameplayTag& MoodTag) const;
-
+    
     // -----------------------------------------------------
-    // Public API - Use these in your C++ code (these will automatically call the C++ or K2 functions above, as appropriate)
+    // Blueprint Interface - Override these in a blueprint on which you've added this interface
     // -----------------------------------------------------
-public:
-    
-    /** Try to get the supplied character's name. Will return empty text if the character does not implement the interface. */
-    static FText GetName(const UObject* Character);
 
-    /** Try to get the supplied character's color. Will return gray if the character does not implement the interface. */
-    static FLinearColor GetColor(const UObject* Character);
+    /** Implement this on a blueprint. */
+    UFUNCTION(BlueprintImplementableEvent, Category = "Yap|Character", DisplayName = "Get Name")
+    FText K2_GetYapCharacterName() const;
+    //virtual FText K2_GetYapCharacterName_Implementation() const;
 
-    /** Try to get the supplied character's ID tag. Will return an empty tag if the character does not implement the interface. */
-    static FGameplayTag GetTag(const UObject* Character);
+    /** Implement this on a blueprint. */
+    UFUNCTION(BlueprintImplementableEvent, Category = "Yap|Character", DisplayName = "Get Color")
+    FLinearColor K2_GetYapCharacterColor() const;
+
+    /** Implement this on a blueprint. */
+    UFUNCTION(BlueprintImplementableEvent, Category = "Yap|Character", DisplayName = "Get Tag")
+    FGameplayTag K2_GetYapCharacterTag() const;
+
+    /** Implement this on a blueprint. */
+    UFUNCTION(BlueprintImplementableEvent, Category = "Yap|Character", DisplayName = "Get Portrait")
+    const UTexture2D* K2_GetYapCharacterPortrait(const FGameplayTag& MoodTag) const;
+};
+
+/**
+ * Use these functions in blueprint to read Yap Characters.
+ */
+UCLASS(DisplayName = "Yap Character Function Library")
+class UYapCharacterBFL : public UBlueprintFunctionLibrary
+{
+    GENERATED_BODY()
+
+    /** Get the supplied character's name. */
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Yap|Character")
+    static FText GetName(const TScriptInterface<IYapCharacterInterface> Character)
+    {
+        return IYapCharacterInterface::GetName(Character.GetObject());
+    }
+
+    /** Get the supplied character's color. */
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Yap|Character")
+    static FLinearColor GetColor(const TScriptInterface<IYapCharacterInterface> Character)
+    {
+        return IYapCharacterInterface::GetColor(Character.GetObject());
+    }
+
+    /** Get the supplied character's ID tag. */
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Yap|Character")
+    static FGameplayTag GetTag(const TScriptInterface<IYapCharacterInterface> Character)
+    {
+        return IYapCharacterInterface::GetTag(Character.GetObject());
+    }
     
-    /** Try to get the supplied character's portrait. Will return a nullptr if the character does not implement the interface. */
-    static const UTexture2D* GetPortrait(const UObject* Character, FGameplayTag MoodTag);
-    
-    /** Try to get the supplied character's portrait (this calls GetPortrait(...) with an empty mood tag). Will return a nullptr if the character does not implement the interface. */
-    static const UTexture2D* GetPortrait(const UObject* Character);
+    /** Get the supplied character's portrait. */
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Yap|Character")
+    static const UTexture2D* GetPortrait(const TScriptInterface<IYapCharacterInterface> Character, FGameplayTag MoodTag)
+    {
+        return IYapCharacterInterface::GetPortrait(Character.GetObject(), MoodTag);
+    }
 };

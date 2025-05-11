@@ -26,14 +26,24 @@ class UYapConversationHandler : public UInterface
 	GENERATED_BODY()
 };
 
-/** A conversation handler is an interface you can apply to anything to help it respond to Yap dialogue.
+/**
+ * A Conversation Handler is an interface you can apply to anything to help it respond to Yap dialogue.
+ *
+ * This ONLY responds to dialogue nodes that are running on a Flow Graph which has had an "Open Conversation" node run.
+ *
+ * To respond to dialogue nodes running on a graph without opening a conversation see IYapFreeSpeechHandler.
+ * 
  * Use UYapSubsystem::RegisterConversationHandler(...) to register your class for events. 
  */
 class IYapConversationHandler
 {
 	GENERATED_BODY()
 	
+	// -----------------------------------------------------
+	// Blueprint Interface - Override these in a blueprint on which you've added this interface
+	// -----------------------------------------------------
 protected:
+	
 	/** Code to run when a conversation begins. Do NOT call Parent when overriding. */
 	UFUNCTION(BlueprintImplementableEvent, DisplayName = "Conv. Chat Opened")
 	void K2_ConversationOpened(FYapData_ConversationOpened Data, FYapConversationHandle Handle);
@@ -54,7 +64,11 @@ protected:
 	UFUNCTION(BlueprintImplementableEvent, DisplayName = "Conv. Player Prompt Chosen")
 	void K2_ConversationPlayerPromptChosen(FYapData_PlayerPromptChosen Data, FYapPromptHandle Handle);
 	
+	// -----------------------------------------------------
+	// C++ Interface - Override these in a C++ class which inherits this interface
+	// -----------------------------------------------------
 public:
+	
 	/** Code to run when a conversation begins. Do NOT call Super when overriding. */
 	YAP_API virtual void OnConversationOpened(FYapData_ConversationOpened Data, FYapConversationHandle Handle)
 	{

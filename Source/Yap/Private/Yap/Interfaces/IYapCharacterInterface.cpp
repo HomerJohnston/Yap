@@ -4,67 +4,39 @@
 #include "Yap/Interfaces/IYapCharacterInterface.h"
 
 #include "GameplayTagContainer.h"
+#include "Yap/YapLog.h"
 
 // ================================================================================================
-// Default K2 implementations call the C++ implementations
-
-FText IYapCharacterInterface::K2_GetYapCharacterName_Implementation() const
-{
-    return GetYapCharacterName();
-}
-
-// ----------------------------------------------
-
-FLinearColor IYapCharacterInterface::K2_GetYapCharacterColor_Implementation() const
-{
-    return GetYapCharacterColor();
-};
-
-// ----------------------------------------------
-
-FGameplayTag IYapCharacterInterface::K2_GetYapCharacterTag_Implementation() const
-{
-    return GetYapCharacterTag();
-};
-
-// ----------------------------------------------
-
-const UTexture2D* IYapCharacterInterface::K2_GetYapCharacterPortrait_Implementation(const FGameplayTag& MoodTag) const
-{
-    return GetYapCharacterPortrait(MoodTag);
-};
-
-// ================================================================================================
-// Default C++ implementations need to be overridden
+// Default C++ implementations, can be overridden by C++ classes
 
 FText IYapCharacterInterface::GetYapCharacterName() const
 {
-    return FText::GetEmpty();
+    return K2_GetYapCharacterName();
 }
 
 // ----------------------------------------------
 
 FLinearColor IYapCharacterInterface::GetYapCharacterColor() const
 {
-    return FLinearColor::Gray;
+    return K2_GetYapCharacterColor();
 }
 
 // ----------------------------------------------
 
 FGameplayTag IYapCharacterInterface::GetYapCharacterTag() const
 {
-    return FGameplayTag::EmptyTag;
+    return K2_GetYapCharacterTag();
 }
 
 // ----------------------------------------------
 
 const UTexture2D* IYapCharacterInterface::GetYapCharacterPortrait(const FGameplayTag& MoodTag) const
 {
-    return nullptr;
+    return K2_GetYapCharacterPortrait(MoodTag);
 }
 
 // ================================================================================================
-// Public API for actual use
+// Public API for C++ usage
 
 FText IYapCharacterInterface::GetName(const UObject* Character)
 {
@@ -79,6 +51,10 @@ FText IYapCharacterInterface::GetName(const UObject* Character)
         else if (Character->Implements<UYapCharacterInterface>())
         {
             Name = IYapCharacterInterface::Execute_K2_GetYapCharacterName(Character);
+        }
+        else
+        {
+            UE_LOG(LogYap, Error, TEXT("IYapCharacterInterface::GetName failure - Object [%s] did not implement IYapCharacterInterface in C++ or blueprint!"), *Character->GetName());
         }
     }
 
@@ -101,6 +77,10 @@ FLinearColor IYapCharacterInterface::GetColor(const UObject* Character)
         {
             Color = IYapCharacterInterface::Execute_K2_GetYapCharacterColor(Character);
         }
+        else
+        {
+            UE_LOG(LogYap, Error, TEXT("IYapCharacterInterface::GetColor failure - Object [%s] did not implement IYapCharacterInterface in C++ or blueprint!"), *Character->GetName());
+        }
     }
 
     return Color;
@@ -121,6 +101,10 @@ FGameplayTag IYapCharacterInterface::GetTag(const UObject* Character)
         else if (Character->Implements<UYapCharacterInterface>())
         {
             Tag = IYapCharacterInterface::Execute_K2_GetYapCharacterTag(Character);
+        }
+        else
+        {
+            UE_LOG(LogYap, Error, TEXT("IYapCharacterInterface::GetTag failure - Object [%s] did not implement IYapCharacterInterface in C++ or blueprint!"), *Character->GetName());
         }
     }
 
@@ -143,14 +127,11 @@ const UTexture2D* IYapCharacterInterface::GetPortrait(const UObject* Character, 
         {
             Texture = IYapCharacterInterface::Execute_K2_GetYapCharacterPortrait(Character, MoodTag);
         }
+        else
+        {
+            UE_LOG(LogYap, Error, TEXT("IYapCharacterInterface::GetPortrait failure - Object [%s] did not implement IYapCharacterInterface in C++ or blueprint!"), *Character->GetName());
+        }
     }
 
     return Texture;
-}
-
-// ----------------------------------------------
-
-const UTexture2D* IYapCharacterInterface::GetPortrait(const UObject* Character)
-{
-    return GetPortrait(Character, FGameplayTag::EmptyTag);
 }

@@ -571,8 +571,9 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 	Fragment.ClearAwaitingManualAdvance();
 	
 	const FYapBit& Bit = Fragment.GetBit(GetWorld());
-
-	TOptional<float> Time = Fragment.GetSpeechTime(GetWorld(), TypeGroup);
+	const FYapTypeGroupSettings& TypeGroupSettings = UYapProjectSettings::GetTypeGroup(TypeGroup);
+	
+	TOptional<float> Time = Fragment.GetSpeechTime(GetWorld(), TypeGroupSettings);
 
 	float EffectiveTime;
 	
@@ -582,7 +583,7 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 	}
 	else
 	{
-		EffectiveTime = UYapProjectSettings::GetTypeGroup(TypeGroup).GetMinimumSpeakingTime();
+		EffectiveTime = TypeGroupSettings.GetMinimumSpeakingTime();
 	}
 
 	UYapSubsystem* Subsystem = GetWorld()->GetSubsystem<UYapSubsystem>();
@@ -598,7 +599,7 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 	Data.bSkippable = Fragment.GetSkippable(GetSkippable());
 
 	// It's possible that a fragment has titletext data but the project settings are to ignore it; avoid copying the data if the game settings don't want it
-	if (!UYapProjectSettings::GetTypeGroup(TypeGroup).GetShowTitleTextOnTalkNodes())
+	if (!TypeGroupSettings.GetShowTitleTextOnTalkNodes())
 	{
 		Data.TitleText = Bit.GetTitleText();
 	}
@@ -625,21 +626,28 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 	RunningFragments.Add(FocusedSpeechHandle, FragmentIndex);
 	SpeakingFragments.Add(FocusedSpeechHandle);
 
-	// If the fragment uses padding, start a padding timer
-	if (Fragment.GetUsesPadding(TypeGroup))
-	{
-		float PaddingCompletionTime = Fragment.GetProgressionTime(GetWorld(), TypeGroup);
-		GetWorld()->GetTimerManager().SetTimer(Fragment.PaddingTimerHandle, FTimerDelegate::CreateUObject(this, &ThisClass::OnPaddingComplete, FocusedSpeechHandle), PaddingCompletionTime, false);
-		FragmentsInPadding.Add(FocusedSpeechHandle);
-	}
-
 	Fragment.SetStartTime(GetWorld()->GetTimeSeconds());
 	Fragment.SetEntryState(EYapFragmentEntryStateFlags::Success);
 	
-	// We must actually run the speech last
 	Fragment.IncrementActivations();
+	
 	Subsystem->RunSpeech(Data, TypeGroup, FocusedSpeechHandle);
+	
+	if (Fragment.GetUsesPadding(GetWorld(), TypeGroupSettings))
+	{
+		float PaddingCompletionTime = Fragment.GetProgressionTime(GetWorld(), TypeGroupSettings);
 
+		if (PaddingCompletionTime > 0)
+		{
+			GetWorld()->GetTimerManager().SetTimer(Fragment.PaddingTimerHandle, FTimerDelegate::CreateUObject(this, &ThisClass::OnPaddingComplete, FocusedSpeechHandle), PaddingCompletionTime, false);
+			FragmentsInPadding.Add(FocusedSpeechHandle);	
+		}
+		else
+		{
+			OnPaddingComplete(FocusedSpeechHandle);
+		}
+	}
+	
 	TriggerSpeechStartPin(FragmentIndex);
 	
 	return true;

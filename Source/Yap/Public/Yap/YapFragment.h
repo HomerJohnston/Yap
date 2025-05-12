@@ -256,7 +256,7 @@ public:
 
 	FYapBit& GetChildSafeBitMutable() { return ChildSafeBit; }
 
-	TOptional<float> GetSpeechTime(UWorld* World, const FGameplayTag& TypeGroup) const;
+	TOptional<float> GetSpeechTime(UWorld* World, const FYapTypeGroupSettings& TypeGroup) const;
 
 	double GetStartTime() const { return StartTime; }
 
@@ -273,16 +273,16 @@ public:
 	void ClearAwaitingManualAdvance();
 
 protected:
-	TOptional<float> GetSpeechTime(UWorld* World, EYapMaturitySetting MaturitySetting, EYapLoadContext LoadContext, const FGameplayTag& TypeGroup) const;
+	TOptional<float> GetSpeechTime(UWorld* World, EYapMaturitySetting MaturitySetting, EYapLoadContext LoadContext, const FYapTypeGroupSettings& TypeGroup) const;
 
 public:
 	TOptional<float> GetPaddingSetting() const { return Padding; };
 	
-	float GetPaddingValue(const FGameplayTag& TypeGroup) const;
+	float GetPaddingValue(UWorld* World, const FYapTypeGroupSettings& TypeGroup) const;
 
-	bool GetUsesPadding(const FGameplayTag& TypeGroup) const { return !FMath::IsNearlyZero(GetPaddingValue(TypeGroup)); }
+	bool GetUsesPadding(UWorld* World, const FYapTypeGroupSettings& TypeGroup) const;
 
-	float GetProgressionTime(UWorld* World, const FGameplayTag& TypeGroup) const;
+	float GetProgressionTime(UWorld* World, const FYapTypeGroupSettings& TypeGroup) const;
 	
 	void IncrementActivations();
 
@@ -323,9 +323,9 @@ public:
 	bool GetSkippable(bool Default) const;
 	
 	/** Gets the evaluated time mode to be used for this bit (incorporating project default settings and fallbacks) */
-	EYapTimeMode GetTimeMode(UWorld* World, const FGameplayTag& TypeGroup) const;
+	EYapTimeMode GetTimeMode(UWorld* World, const FYapTypeGroupSettings& TypeGroup) const;
 	
-	EYapTimeMode GetTimeMode(UWorld* World, EYapMaturitySetting MaturitySetting, const FGameplayTag& TypeGroup) const;
+	EYapTimeMode GetTimeMode(UWorld* World, EYapMaturitySetting MaturitySetting, const FYapTypeGroupSettings& TypeGroup) const;
 
 	FGameplayTag GetMoodTag() const { return MoodTag; }
 

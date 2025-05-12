@@ -443,7 +443,7 @@ TSharedRef<SWidget> SYapDialogueEditor::BuildPaddingSettings_ExpandedEditor(floa
 						.MaxSliderValue(UYapProjectSettings::GetFragmentPaddingSliderMax())
 						.ToolTipText(LOCTEXT("FragmentTimeEntry_Tooltip", "Time this dialogue fragment will play for"))
 						.Justification(ETextJustify::Center)
-						.Value_Lambda( [this] () { return GetFragment().GetPaddingValue(DialogueNode->GetTypeGroupTag()); } )
+						.Value_Lambda( [this] () { return GetFragment().GetPaddingSetting().Get(0.0f); } )//GetPaddingValue(DialogueNode->GetWorld(), UYapProjectSettings::GetTypeGroup(DialogueNode->GetTypeGroupTag())); } )
 						.OnValueChanged_Lambda( [this] (float NewValue) { GetFragment().SetPaddingToNextFragment(NewValue); } )
 						.OnValueCommitted_Lambda( [this] (float NewValue, ETextCommit::Type) { GetFragment().SetPaddingToNextFragment(NewValue); } ) // TODO transactions
 					]
@@ -988,7 +988,9 @@ TOptional<float> SYapDialogueEditor::Value_TimeSetting_AudioTime(EYapMaturitySet
 
 TOptional<float> SYapDialogueEditor::Value_TimeSetting_TextTime(EYapMaturitySetting MaturitySetting) const
 {
-	return GetFragment().GetBit(GEditor->EditorWorld, MaturitySetting).GetTextTime(DialogueNode->GetTypeGroupTag());
+	const FYapTypeGroupSettings& TypeGroupSettings = UYapProjectSettings::GetTypeGroup(DialogueNode->GetTypeGroupTag());
+	
+	return GetFragment().GetBit(GEditor->EditorWorld, MaturitySetting).GetTextTime(TypeGroupSettings);
 }
 
 TOptional<float> SYapDialogueEditor::Value_TimeSetting_ManualTime(EYapMaturitySetting MaturitySetting) const
@@ -1027,7 +1029,7 @@ FSlateColor SYapDialogueEditor::ButtonColorAndOpacity_UseTimeMode(EYapTimeMode T
 		return ColorTint;
 	}
 	
-	if (GetFragment().GetTimeMode(GEditor->EditorWorld, GetDisplayMaturitySetting(), DialogueNode->GetTypeGroupTag()) == TimeMode)
+	if (GetFragment().GetTimeMode(GEditor->EditorWorld, GetDisplayMaturitySetting(), UYapProjectSettings::GetTypeGroup(DialogueNode->GetTypeGroupTag())) == TimeMode)
 	{
 		// Implicit match through project defaults
 		return YapColor::Desaturate(ColorTint, 0.50);
@@ -1044,7 +1046,7 @@ FSlateColor SYapDialogueEditor::ForegroundColor_TimeSettingButton(EYapTimeMode T
 		return ColorTint;
 	}
 	
-	if (GetFragment().GetTimeMode(GEditor->EditorWorld, GetDisplayMaturitySetting(), DialogueNode->GetTypeGroupTag()) == TimeMode)
+	if (GetFragment().GetTimeMode(GEditor->EditorWorld, GetDisplayMaturitySetting(), UYapProjectSettings::GetTypeGroup(DialogueNode->GetTypeGroupTag())) == TimeMode)
 	{
 		// Implicit match through project defaults
 		return ColorTint;

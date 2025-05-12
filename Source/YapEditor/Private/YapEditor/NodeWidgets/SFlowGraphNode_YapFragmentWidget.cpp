@@ -775,8 +775,8 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateFragmentWidget()
 					SNew(SYapTimeProgressionWidget)
 					.BarColor(this, &ThisClass::ColorAndOpacity_FragmentTimeIndicator)
 					.PaddingIsSet(this, &ThisClass::Bool_PaddingTimeIsSet)
-					.SpeechTime_Lambda( [this] () { return GetFragment().GetSpeechTime(GEditor->EditorWorld, GetDisplayMaturitySetting(), EYapLoadContext::AsyncEditorOnly, GetDialogueNode()->GetTypeGroupTag()); })
-					.PaddingTime_Lambda( [this] () { return GetFragment().GetPaddingValue(GetDialogueNode()->GetTypeGroupTag()); } )
+					.SpeechTime_Lambda( [this] () { return GetFragment().GetSpeechTime(GEditor->EditorWorld, GetDisplayMaturitySetting(), EYapLoadContext::AsyncEditorOnly, GetTypeGroup()); })
+					.PaddingTime_Lambda( [this] () { return GetFragment().GetPaddingValue(GetDialogueNode()->GetWorld(), GetTypeGroup()); } )
 					.MaxDisplayTime_Lambda( [this] () { return UYapProjectSettings::GetDialogueTimeSliderMax(); } )
 					.PlaybackTime_Lambda( [this] () { return Percent_FragmentTime(); } )
 				]
@@ -923,9 +923,7 @@ EVisibility SFlowGraphNode_YapFragmentWidget::Visibility_TimeProgressionWidget()
 {
 	UWorld* World = GetDialogueNode()->GetWorld();
 
-	const FGameplayTag& TypeGroup = GetDialogueNode()->GetTypeGroupTag();
-	
-	if (GetFragment().GetTimeMode(World, TypeGroup) == EYapTimeMode::None)
+	if (GetFragment().GetTimeMode(World, GetTypeGroup()) == EYapTimeMode::None)
 	{
 		return EVisibility::Collapsed;
 	}
@@ -1814,7 +1812,7 @@ FSlateColor SFlowGraphNode_YapFragmentWidget::ButtonColorAndOpacity_UseTimeMode(
 		return ColorTint;
 	}
 	
-	if (GetFragment().GetTimeMode(GEditor->EditorWorld, GetDisplayMaturitySetting(), GetDialogueNode()->GetTypeGroupTag()) == TimeMode)
+	if (GetFragment().GetTimeMode(GEditor->EditorWorld, GetDisplayMaturitySetting(), GetTypeGroup()) == TimeMode)
 	{
 		// Implicit match through project defaults
 		return YapColor::Desaturate(ColorTint, 0.50);
@@ -1841,7 +1839,7 @@ FSlateColor SFlowGraphNode_YapFragmentWidget::ForegroundColor_TimeSettingButton(
 		return ColorTint;
 	}
 	
-	if (GetFragment().GetTimeMode(GEditor->EditorWorld, GetDisplayMaturitySetting(), GetDialogueNode()->GetTypeGroupTag()) == TimeMode)
+	if (GetFragment().GetTimeMode(GEditor->EditorWorld, GetDisplayMaturitySetting(), GetTypeGroup()) == TimeMode)
 	{
 		// Implicit match through project defaults
 		return ColorTint;

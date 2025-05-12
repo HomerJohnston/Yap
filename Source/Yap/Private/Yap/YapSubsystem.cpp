@@ -427,7 +427,7 @@ void UYapSubsystem::OnFinishedBroadcastingPrompts(const FYapData_PlayerPromptsRe
 
 // ------------------------------------------------------------------------------------------------
 
-FYapSpeechHandle UYapSubsystem::RunSpeech(const FYapData_SpeechBegins& SpeechData, const FGameplayTag& TypeGroup, FYapSpeechHandle& Handle)
+FYapSpeechHandle UYapSubsystem::RunSpeech(const FYapData_SpeechBegins& SpeechData,  FGameplayTag TypeGroupTag, FYapSpeechHandle& Handle)
 {
 	// TODO should SpeechData contain the conversation handle instead of the name?
 	if (SpeechData.Conversation.IsValid())
@@ -441,13 +441,13 @@ FYapSpeechHandle UYapSubsystem::RunSpeech(const FYapData_SpeechBegins& SpeechDat
 			}
 		}
 		
-		auto* HandlerArray = FindConversationHandlerArray(TypeGroup);
+		auto* HandlerArray = FindConversationHandlerArray(TypeGroupTag);
 		
 		BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapConversationHandler, OnConversationSpeechBegins, Execute_K2_ConversationSpeechBegins)>(HandlerArray, SpeechData, Handle);
 	}
 	else
 	{
-		auto* HandlerArray = FindFreeSpeechHandlerArray(TypeGroup);
+		auto* HandlerArray = FindFreeSpeechHandlerArray(TypeGroupTag);
 		
 		BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapFreeSpeechHandler, OnTalkSpeechBegins, Execute_K2_TalkSpeechBegins)>(HandlerArray, SpeechData, Handle);
 	}

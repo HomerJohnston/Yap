@@ -215,7 +215,7 @@ const FYapBit& FYapFragment::GetBit(UWorld* World, EYapMaturitySetting MaturityS
 	return MatureBit;
 }
 
-TOptional<float> FYapFragment::GetSpeechTime(UWorld* World, const FGameplayTag& TypeGroup) const
+TOptional<float> FYapFragment::GetSpeechTime(UWorld* World, const FYapTypeGroupSettings& TypeGroup) const
 {
 	return GetSpeechTime(World, UYapSubsystem::GetCurrentMaturitySetting(World), EYapLoadContext::Sync, TypeGroup);
 }
@@ -235,14 +235,14 @@ void FYapFragment::ClearAwaitingManualAdvance()
 	bFragmentAwaitingManualAdvance = false;
 }
 
-TOptional<float> FYapFragment::GetSpeechTime(UWorld* World, EYapMaturitySetting MaturitySetting, EYapLoadContext LoadContext, const FGameplayTag& TypeGroup) const
+TOptional<float> FYapFragment::GetSpeechTime(UWorld* World, EYapMaturitySetting MaturitySetting, EYapLoadContext LoadContext, const FYapTypeGroupSettings& TypeGroup) const
 {
 	EYapTimeMode EffectiveTimeMode = GetTimeMode(World, MaturitySetting, TypeGroup);
 	
 	return GetBit(World, MaturitySetting).GetSpeechTime(World, EffectiveTimeMode, LoadContext, TypeGroup);
 }
 
-float FYapFragment::GetPaddingValue(const FGameplayTag& TypeGroup) const
+float FYapFragment::GetPaddingValue(UWorld* World, const FYapTypeGroupSettings& TypeGroup) const
 {	
 	if (IsTimeModeNone())
 	{
@@ -251,27 +251,39 @@ float FYapFragment::GetPaddingValue(const FGameplayTag& TypeGroup) const
 	
 	if (Padding.IsSet())
 	{
-		return Padding.GetValue();
+		float RawPadding = Padding.GetValue();
+		
+		TOptional<float> SpeechTime = GetSpeechTime(World, TypeGroup);
+
+		return FMath::Max(-SpeechTime.Get(0.0f), RawPadding);
 	}
 	
-	return UYapProjectSettings::GetTypeGroup(TypeGroup).GetDefaultFragmentPaddingTime();
+	return TypeGroup.GetDefaultFragmentPaddingTime();
 }
 
-float FYapFragment::GetProgressionTime(UWorld* World, const FGameplayTag& TypeGroup) const
+bool FYapFragment::GetUsesPadding(UWorld* World, const FYapTypeGroupSettings& TypeGroup) const
+{
+	float PaddingValue = GetPaddingValue(World, TypeGroup);
+	
+	return !FMath::IsNearlyZero(PaddingValue);
+}
+
+float FYapFragment::GetProgressionTime(UWorld* World, const FYapTypeGroupSettings& TypeGroup) const
 {
 	float SpeechTime = GetSpeechTime(World, TypeGroup).Get(0.0f);
-	float PaddingTime = 0.0f;
+	
+	float PaddingTime;
 	
 	if (Padding.IsSet())
 	{
-		PaddingTime = Padding.GetValue();
+		PaddingTime = GetPaddingValue(World, TypeGroup);
 	}
 	else
 	{
-		PaddingTime = UYapProjectSettings::GetTypeGroup(TypeGroup).GetDefaultFragmentPaddingTime();
+		PaddingTime = TypeGroup.GetDefaultFragmentPaddingTime();
 	}
 
-	return SpeechTime + PaddingTime;
+	return FMath::Max(SpeechTime + PaddingTime, 0.0f);
 }
 
 void FYapFragment::IncrementActivations()
@@ -349,20 +361,20 @@ bool FYapFragment::GetSkippable(bool Default) const
 	return Skippable.Get(Default);
 }
 
-EYapTimeMode FYapFragment::GetTimeMode(UWorld* World, const FGameplayTag& TypeGroup) const
+EYapTimeMode FYapFragment::GetTimeMode(UWorld* World, const FYapTypeGroupSettings& TypeGroup) const
 {
 	return GetTimeMode(World, UYapSubsystem::GetCurrentMaturitySetting(World), TypeGroup);
 }
 
-EYapTimeMode FYapFragment::GetTimeMode(UWorld* World, EYapMaturitySetting MaturitySetting, const FGameplayTag& TypeGroup) const
+EYapTimeMode FYapFragment::GetTimeMode(UWorld* World, EYapMaturitySetting MaturitySetting, const FYapTypeGroupSettings& TypeGroup) const
 {
-	EYapTimeMode EffectiveTimeMode = (TimeMode == EYapTimeMode::Default) ? UYapProjectSettings::GetTypeGroup(TypeGroup).GetDefaultTimeModeSetting() : TimeMode;
+	EYapTimeMode EffectiveTimeMode = (TimeMode == EYapTimeMode::Default) ? TypeGroup.GetDefaultTimeModeSetting() : TimeMode;
 
 	if (EffectiveTimeMode == EYapTimeMode::AudioTime)
 	{
 		if (!GetBit(World, MaturitySetting).HasAudioAsset())
 		{
-			EYapMissingAudioErrorLevel MissingAudioBehavior = UYapProjectSettings::GetTypeGroup(TypeGroup).GetMissingAudioErrorLevel();
+			EYapMissingAudioErrorLevel MissingAudioBehavior = TypeGroup.GetMissingAudioErrorLevel();
 			
 			if (MissingAudioBehavior == EYapMissingAudioErrorLevel::Error)
 			{

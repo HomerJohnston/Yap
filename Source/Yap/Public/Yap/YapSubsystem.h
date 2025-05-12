@@ -254,7 +254,7 @@ protected:
 public:
 	/**  */
 	UFUNCTION(BlueprintCallable)
-	FYapSpeechHandle RunSpeech(const FYapData_SpeechBegins& SpeechData, const FGameplayTag& TypeGroup, FYapSpeechHandle& Handle);
+	FYapSpeechHandle RunSpeech(const FYapData_SpeechBegins& SpeechData, FGameplayTag TypeGroup, FYapSpeechHandle& Handle);
 
 	// TODO I hate this thing
 	static FYapConversation NullConversation;

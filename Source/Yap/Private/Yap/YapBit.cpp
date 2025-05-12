@@ -33,7 +33,7 @@ bool FYapBit::HasAudioAsset() const
 
 // --------------------------------------------------------------------------------------------
 
-TOptional<float> FYapBit::GetSpeechTime(UWorld* World, EYapTimeMode TimeMode, EYapLoadContext LoadContext, const FGameplayTag& TypeGroup) const
+TOptional<float> FYapBit::GetSpeechTime(UWorld* World, EYapTimeMode TimeMode, EYapLoadContext LoadContext, const FYapTypeGroupSettings& TypeGroup) const
 {
 	// TODO clamp minimums from project settings?
 	TOptional<float> Time;
@@ -63,7 +63,7 @@ TOptional<float> FYapBit::GetSpeechTime(UWorld* World, EYapTimeMode TimeMode, EY
 
 	float Value = Time.Get(0);
 	
-	float MinAllowableTime = UYapProjectSettings::GetTypeGroup(TypeGroup).GetMinimumSpeakingTime();
+	float MinAllowableTime = TypeGroup.GetMinimumSpeakingTime();
 
 	return FMath::Max(Value, MinAllowableTime);
 }
@@ -105,12 +105,12 @@ void FYapBit::LoadContent(EYapLoadContext LoadContext) const
 
 // --------------------------------------------------------------------------------------------
 
-TOptional<float> FYapBit::GetTextTime(const FGameplayTag& TypeGroup) const
+TOptional<float> FYapBit::GetTextTime( const FYapTypeGroupSettings& TypeGroup) const
 {
 	int32 TWPM = UYapProjectSettings::GetTextWordsPerMinute();
 	int32 WordCount = DialogueText.GetWordCount();
 	double SecondsPerWord = 60.0 / (double)TWPM;
-	double MinTextTimeLength = UYapProjectSettings::GetTypeGroup(TypeGroup).GetMinimumAutoTextTimeLength();
+	double MinTextTimeLength = TypeGroup.GetMinimumAutoTextTimeLength();
 	
 	return FMath::Max(WordCount * SecondsPerWord, MinTextTimeLength);
 }

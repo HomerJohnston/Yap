@@ -473,22 +473,39 @@ TSharedRef<SWidget> SFlowGraphNode_YapDialogueWidget::CreateNodeContentArea()
 	.WidthOverride(this, &SFlowGraphNode_YapDialogueWidget::GetMaxNodeWidth)
 	.Visibility_Lambda([]() { return GEditor->PlayWorld == nullptr ? EVisibility::Visible : EVisibility::HitTestInvisible; })
 	[
-		SAssignNew(Content, SVerticalBox)
-		+ SVerticalBox::Slot()
-		.AutoHeight()
-		.Padding(0, 3, 0, 4)
+		SNew(SOverlay)
+		+ SOverlay::Slot()
+		.HAlign(HAlign_Left)
+		.Padding(-4, -24, 0, 2) // The top bar is 26 pixels high
 		[
-			CreateContentHeader()
+			SNew(SBox)
+			.WidthOverride(4)
+			.Visibility_Lambda( [this] () { return GetTypeGroup().IsDefault() ? EVisibility::Collapsed : EVisibility::HitTestInvisible; })
+			[
+				SNew(SImage)
+				.Image(FYapEditorStyle::GetImageBrush(YapBrushes.Box_SolidWhite))
+				.ColorAndOpacity_Lambda( [this] () { return GetTypeGroup().GetGroupColor().Desaturate(0.4F); }) // Epic's Desaturate command sets opacity as well, which I want for this
+			]
 		]
-		+ SVerticalBox::Slot()
-		.AutoHeight()
+		+ SOverlay::Slot()
 		[
-			CreateFragmentBoxes()
-		]
-		+ SVerticalBox::Slot()
-		.AutoHeight()
-		[
-			CreateContentFooter()
+			SAssignNew(Content, SVerticalBox)
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			.Padding(0, 3, 0, 4)
+			[
+				CreateContentHeader()
+			]
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			[
+				CreateFragmentBoxes()
+			]
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			[
+				CreateContentFooter()
+			]	
 		]
 	];
 }
@@ -568,7 +585,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapDialogueWidget::CreateContentHeader()
 			{
 				bool bShouldShowGroupLabel;
 
-				if (GetTypeGroup().GetDefault())
+				if (GetTypeGroup().IsDefault())
 				{
 					 bShouldShowGroupLabel = false;
 				}

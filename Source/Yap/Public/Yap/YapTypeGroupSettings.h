@@ -255,7 +255,7 @@ public:
 	// PROPERTY GETTERS
 	// ============================================================================================
 public:
-	bool GetDefault() const { return bDefault; }
+	bool IsDefault() const { return bDefault; }
 
 	FLinearColor GetGroupColor() const { return GroupColor; }
 

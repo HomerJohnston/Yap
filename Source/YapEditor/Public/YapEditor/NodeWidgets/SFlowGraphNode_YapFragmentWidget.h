@@ -42,7 +42,13 @@ enum class EYapFragmentControlsDirection : uint8
 	Down,
 };
 
-class SFlowGraphNode_YapFragmentWidget : public SCompoundWidget//, public TSharedFromThis<SFlowGraphNode_YapFragmentWidget>
+enum class EYapTextType : uint8
+{
+	Speech,
+	TitleText
+};
+
+class SFlowGraphNode_YapFragmentWidget : public SCompoundWidget
 {
 	// ==========================================
 	// CONSTRUCTION
@@ -57,7 +63,7 @@ private:
 	SLATE_END_ARGS()
 	
 public:
-	void Construct(const FArguments& InArgs); // non-virtual override
+	void Construct(const FArguments& InArgs);
 		
 	// ==========================================
 	// STATE
@@ -97,19 +103,27 @@ protected:
 	// Holds the dialogue text, title text, and time indicators - hover state can be used to change the color of some elements when hovered
 	TSharedPtr<SOverlay> FragmentTextOverlay = nullptr;
 
+	//
 	TSharedPtr<SWidget> ChildSafeCheckBox = nullptr;
 
+	//
 	TSharedPtr<SWidget> DirectedAtWidget = nullptr;
 
+	//
 	TSharedPtr<SWidget> SpeakerDropTarget = nullptr;
 
+	//
 	TSharedPtr<SWidget> AudioIDButton = nullptr;
+
+	//
+	TWeakPtr<SYapDialogueEditor> ExpandedDialogueEditor;
 	
+	//
 	bool bChildSafeCheckBoxHovered = false;
 
+	//
 	static FSlateFontInfo DialogueTextFont;
 
-	TWeakPtr<SYapDialogueEditor> ExpandedDialogueEditor;
 	
 public:
 	// ================================================================================================
@@ -165,6 +179,8 @@ protected:
 	
 	TSharedRef<SWidget>		PopupContentGetter_ExpandedEditor();
 
+	void					OnPostPopup_TextEditor(bool& bOverrideFocus, EYapTextType TextType, EYapMaturitySetting Maturity);
+	
 	// ------------------------------------------
 	
 	TOptional<float>		Percent_FragmentTime() const;
@@ -173,7 +189,7 @@ protected:
 
 	// ------------------------------------------
 	
-	TSharedRef<SWidget>	CreateSpeakerWidget();
+	TSharedRef<SWidget>		CreateSpeakerWidget();
 
 	void					OnAssetsDropped_SpeakerWidget(const FDragDropEvent& DragDropEvent, TArrayView<FAssetData> AssetDatas);
 
@@ -184,6 +200,8 @@ protected:
 	FText					Text_SpeakerWidget() const;
 
 	float					GetSpeakerWidgetSize(int32 PortraitSize, int32 BorderSize) const;
+
+	TSharedRef<SWidget>		CreateSpeakerImageWidget_LowDetail(int32 PortraitSize, int32 BorderSize);
 
 	// ------------------------------------------
 

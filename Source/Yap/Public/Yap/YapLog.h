@@ -3,4 +3,6 @@
 
 #pragma once
 
+#include "Logging/LogMacros.h"
+
 YAP_API DECLARE_LOG_CATEGORY_EXTERN(LogYap, Log, All);

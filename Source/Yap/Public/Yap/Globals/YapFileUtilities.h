@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "CoreMinimal.h"
+
 namespace Yap
 {
 	namespace FileUtilities

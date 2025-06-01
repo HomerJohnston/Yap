@@ -9,7 +9,7 @@
 #include "Yap/Handles/YapConversationHandle.h"
 #include "Yap/Handles/YapPromptHandle.h"
 #include "Yap/Handles/YapSpeechHandle.h"
-
+#include "Engine/TimerHandle.h"
 #include "FlowNode_YapDialogue.generated.h"
 
 class UYapCharacterAsset;
@@ -96,43 +96,43 @@ public:
 	
 protected:
 	/** What type of node we are. */
-	UPROPERTY(BlueprintReadOnly)
+    UPROPERTY(BlueprintReadOnly, Category = "Default")
 	EYapDialogueNodeType DialogueNodeType;
 
 	/** What is this dialogue's type-group? Leave unset to use the default type-group. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Default")
 	FGameplayTag TypeGroup;
 	
 	/** Maximum number of times we can successfully enter & exit this node. Any further attempts will trigger the Bypass output. */
-	UPROPERTY(BlueprintReadOnly)
+    UPROPERTY(BlueprintReadOnly, Category = "Default")
 	int32 NodeActivationLimit;
 
 	/** Controls how Talk nodes flow. See EYapDialogueTalkSequencing. */
-	UPROPERTY(BlueprintReadOnly)
+    UPROPERTY(BlueprintReadOnly, Category = "Default")
 	EYapDialogueTalkSequencing TalkSequencing;
 
 	/** Controls if dialogue can be interrupted. */
-	UPROPERTY(BlueprintReadOnly)
+    UPROPERTY(BlueprintReadOnly, Category = "Default")
 	TOptional<bool> Skippable;
 
 	/** Controls if dialogue automatically advances (only applicable if it has a time duration set). */
-	UPROPERTY(BlueprintReadOnly)
+    UPROPERTY(BlueprintReadOnly, Category = "Default")
 	TOptional<bool> AutoAdvance;
 
 	/** Tags can be used to interact with this dialogue node during the game. Dialogue nodes can be looked up and/or modified by UYapSubsystem by their tag. */
-	UPROPERTY(BlueprintReadOnly)
+    UPROPERTY(BlueprintReadOnly, Category = "Default")
 	FGameplayTag DialogueTag;
 
 	/** Conditions which must be met for this dialogue to run. All conditions must pass (AND, not OR evaluation). If any conditions fail, Bypass output is triggered. */
-	UPROPERTY(Instanced, BlueprintReadOnly)
+    UPROPERTY(Instanced, BlueprintReadOnly, Category = "Default")
 	TArray<TObjectPtr<UYapCondition>> Conditions;
 
 	/** Unique node ID for audio system. */
-	UPROPERTY(EditAnywhere)
+    UPROPERTY(EditAnywhere, Category = "Default")
 	FString AudioID = "";
 	
 	/** Actual dialogue contents. */
-	UPROPERTY(EditAnywhere)
+    UPROPERTY(EditAnywhere, Category = "Default")
 	TArray<FYapFragment> Fragments;
 
 	// ============================================================================================
@@ -142,7 +142,7 @@ protected:
 protected:
 	// TODO what happens if I enter a node before it finishes playing? Should I use the activation count to reseed new GUIDs for fragments? This is an extreme edge case
 	/** How many times this node has been successfully ran. */
-	UPROPERTY(Transient, BlueprintReadOnly)
+    UPROPERTY(Transient, BlueprintReadOnly, Category = "Default")
 	int32 NodeActivationCount = 0;
 
 	/** The most recent running fragment */

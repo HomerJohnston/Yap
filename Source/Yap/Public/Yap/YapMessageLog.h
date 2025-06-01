@@ -3,7 +3,7 @@
 
 #pragma once
 #include "GameplayTagContainer.h"
-
+#include "Subsystems/GameInstanceSubsystem.h"
 #include "YapMessageLog.generated.h"
 
 class UYapCharacterAsset;
@@ -21,10 +21,10 @@ struct FYapMessageEntry
     FYapMessageEntry(UYapCharacterAsset* InSpeaker, const FText& InText);
     
 protected:
-    UPROPERTY(BlueprintReadOnly)
+    UPROPERTY(BlueprintReadOnly, Category = "Default")
     TObjectPtr<UYapCharacterAsset> Speaker;
 
-    UPROPERTY(BlueprintReadOnly)
+    UPROPERTY(BlueprintReadOnly, Category = "Default")
     FText Text;
 
 public:
@@ -41,7 +41,7 @@ struct FYapConversationLog
     GENERATED_BODY()
 
 protected:
-    UPROPERTY(BlueprintReadOnly)
+    UPROPERTY(BlueprintReadOnly, Category = "Default")
     TArray<FYapMessageEntry> MessageEntries;
 };
 
@@ -53,6 +53,6 @@ class UYapMessageLog : public UGameInstanceSubsystem
     GENERATED_BODY()
 
 protected:
-    UPROPERTY(BlueprintReadOnly)
+    UPROPERTY(BlueprintReadOnly, Category = "Default")
     TMap<FGameplayTag, FYapConversationLog> LoggedConversations;
 };

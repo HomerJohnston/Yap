@@ -12,7 +12,9 @@
 #include "Yap/YapRunningFragment.h"
 #include "Yap/YapBitReplacement.h"
 #include "Yap/YapDataStructures.h"
-
+#include "Subsystems/WorldSubsystem.h"
+#include "Engine/TimerHandle.h"
+#include "Engine/World.h"
 #include "YapSubsystem.generated.h"
 
 class UYapConversationHandler;
@@ -253,7 +255,7 @@ protected:
 
 public:
 	/**  */
-	UFUNCTION(BlueprintCallable)
+    UFUNCTION(BlueprintCallable, Category = "Default")
 	FYapSpeechHandle RunSpeech(const FYapData_SpeechBegins& SpeechData, FGameplayTag TypeGroup, FYapSpeechHandle& Handle);
 
 	// TODO I hate this thing

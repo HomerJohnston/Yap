@@ -20,11 +20,10 @@ struct YAP_API FYapText
 	// SETTINGS
 	// --------------------------------------------------------------------------------------------
 private:
-	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess), Category = "Default")
 	FText Text;
 
-	UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess))
+    UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess), Category = "Default")
 	int32 WordCount = 0;
 
 	// --------------------------------------------------------------------------------------------

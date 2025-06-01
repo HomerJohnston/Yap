@@ -15,6 +15,7 @@
 #include "Yap/Enums/YapLoadContext.h"
 #include "Yap/Interfaces/IYapFreeSpeechHandler.h"
 #include "Yap/Nodes/FlowNode_YapDialogue.h"
+#include "TimerManager.h"
 
 #define LOCTEXT_NAMESPACE "Yap"
 

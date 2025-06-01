@@ -13,6 +13,8 @@
 #include "Yap/YapProjectSettings.h"
 #include "Yap/YapSubsystem.h"
 #include "Yap/Enums/YapLoadContext.h"
+#include "Engine/World.h"
+#include "TimerManager.h"
 
 #define LOCTEXT_NAMESPACE "Yap"
 
@@ -179,9 +181,9 @@ void UFlowNode_YapDialogue::SetActive()
 	return;
 	
 	// TODO is there another way I can do this. This is ugly looking.
-	FYapSpeechEventDelegate Delegate;
-	Delegate.BindUFunction(this, GET_FUNCTION_NAME_CHECKED_TwoParams(ThisClass, OnSpeechComplete, UObject*, FYapSpeechHandle));
-	UYapSpeechHandleBFL::BindToOnSpeechComplete(GetWorld(), FocusedSpeechHandle, Delegate);	
+    // FYapSpeechEventDelegate Delegate;
+    // Delegate.BindUFunction(this, GET_FUNCTION_NAME_CHECKED_TwoParams(ThisClass, OnSpeechComplete, UObject*, FYapSpeechHandle));
+    // UYapSpeechHandleBFL::BindToOnSpeechComplete(GetWorld(), FocusedSpeechHandle, Delegate);	
 }
 
 void UFlowNode_YapDialogue::SetInactive()
@@ -190,9 +192,9 @@ void UFlowNode_YapDialogue::SetInactive()
 	
 	// Unbind this node from speech complete events
 	// TODO clean this crap up, is there any other method I can use to achieve this that isn't so dumb looking?
-	FYapSpeechEventDelegate Delegate;
-	Delegate.BindUFunction(this, GET_FUNCTION_NAME_CHECKED_TwoParams(ThisClass, OnSpeechComplete, UObject*, FYapSpeechHandle));
-	UYapSpeechHandleBFL::UnbindToOnSpeechComplete(GetWorld(), FocusedSpeechHandle, Delegate);
+    // FYapSpeechEventDelegate Delegate;
+    // Delegate.BindUFunction(this, GET_FUNCTION_NAME_CHECKED_TwoParams(ThisClass, OnSpeechComplete, UObject*, FYapSpeechHandle));
+    // UYapSpeechHandleBFL::UnbindToOnSpeechComplete(GetWorld(), FocusedSpeechHandle, Delegate);
 }
 
 // ------------------------------------------------------------------------------------------------

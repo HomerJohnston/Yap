@@ -7,7 +7,6 @@
 #include "Graph/Widgets/SFlowGraphNode.h"
 #include "Yap/Nodes/FlowNode_YapDialogue.h"
 
-struct FYapTypeGroupSettings;
 class SCanvas;
 class SYapConditionDetailsViewWidget;
 class SVirtualWindow;
@@ -219,7 +218,7 @@ protected:
 	void OnDialogueStart(uint8 FragmentIndex);
 	void OnDialogueSkipped(uint8 FragmentIndex);
 
-	const FYapTypeGroupSettings& GetTypeGroup() const;
+	const UYapDomainConfig& GetDomainConfig() const;
 	
 	// ------------------------------------------
 	// OVERRIDES & THEIR HELPERS

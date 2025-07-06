@@ -4,6 +4,7 @@
 #pragma once
 
 #include "Nodes/FlowNode.h"
+#include "Yap/YapDomainConfig.h"
 #include "Yap/YapRunningFragment.h" 
 #include "Yap/YapFragment.h"
 #include "Yap/Handles/YapConversationHandle.h"
@@ -24,6 +25,7 @@ enum class EYapDialogueTalkSequencing : uint8
 	RunAll				UMETA(ToolTip = "The node will always try to run every fragment. The node will execute the Out pin after it finishes trying to run all fragments."), 
 	RunUntilFailure		UMETA(ToolTip = "The node will attempt to run every fragment. If any one fails, the node will execute the Out pin."),
 	SelectOne			UMETA(ToolTip = "The node will attempt to run every fragment. If any one passes, the node will execute the Out pin."),
+	SelectRandom		UMETA(ToolTip = "The node will randomly run one available fragment, then execute the Out pin."),
 	COUNT				UMETA(Hidden)
 };
 
@@ -31,12 +33,13 @@ enum class EYapDialogueTalkSequencing : uint8
 /**
  * Node type. Freestyle talking or player prompt. Changes the execution flow of dialogue.
  */
-UENUM()
+UENUM(meta = (UseEnumValuesAsMaskValuesInEditor = true))
 enum class EYapDialogueNodeType : uint8
 {
-	Talk,
-	PlayerPrompt,
-	COUNT				UMETA(Hidden)
+	Talk			= 1 << 0,
+	TalkAndAdvance	= 1 << 1	UMETA(DisplayName = "Talk & Advance"),
+	PlayerPrompt	= 1 << 2,
+	COUNT			= 1 << 3	UMETA(Hidden)
 };
 
 USTRUCT()
@@ -62,11 +65,20 @@ struct FYapFragmentRunData
 	FTimerHandle PaddingTimerHandle;
 };
 
+UCLASS()
+class YAP_API UYapDomainConfig_Default : public UYapDomainConfig
+{
+	GENERATED_BODY()
+
+public:
+	UYapDomainConfig_Default();
+};
+
 // ------------------------------------------------------------------------------------------------
 /**
  * Emits Dialogue through UYapSubsystem.
  */
-UCLASS(NotBlueprintable, BlueprintType, meta = (DisplayName = "Dialogue", Keywords = "yap")) /*, ToolTip = "Emits Yap dialogue events"*/
+UCLASS(Blueprintable, BlueprintType, meta = (DisplayName = "Dialogue", Keywords = "yap")) /*, ToolTip = "Emits Yap dialogue events"*/
 class YAP_API UFlowNode_YapDialogue : public UFlowNode
 {
 	GENERATED_BODY()
@@ -99,9 +111,8 @@ protected:
 	UPROPERTY(BlueprintReadOnly)
 	EYapDialogueNodeType DialogueNodeType;
 
-	/** What is this dialogue's type-group? Leave unset to use the default type-group. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	FGameplayTag TypeGroup;
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UYapDomainConfig> DomainConfig;
 	
 	/** Maximum number of times we can successfully enter & exit this node. Any further attempts will trigger the Bypass output. */
 	UPROPERTY(BlueprintReadOnly)
@@ -110,6 +121,8 @@ protected:
 	/** Controls how Talk nodes flow. See EYapDialogueTalkSequencing. */
 	UPROPERTY(BlueprintReadOnly)
 	EYapDialogueTalkSequencing TalkSequencing;
+
+	EYapDialogueTalkSequencing OldTalkSequencing;
 
 	/** Controls if dialogue can be interrupted. */
 	UPROPERTY(BlueprintReadOnly)
@@ -149,6 +162,10 @@ protected:
 	UPROPERTY(Transient)
 	TOptional<uint8> FocusedFragmentIndex;
 
+	/** Flow doesn't give me a nice way to prevent entering this node twice. */
+	UPROPERTY(Transient)
+	bool bNodeActive = false;
+	
 	/**  */
 	UPROPERTY(Transient)
 	TMap<FYapPromptHandle, uint8> PromptIndices;
@@ -168,17 +185,19 @@ protected:
 	/**  */
 	UPROPERTY(Transient)
 	TSet<FYapSpeechHandle> FragmentsInPadding;
-	
+
 	// ============================================================================================
 	// PUBLIC API
 	// ============================================================================================
 
 public:
+	/**  */
+	EYapDialogueNodeType GetNodeType() const { return DialogueNodeType; }
+
 	/** Is this dialogue a Talk node or a Player Prompt node? */
 	bool IsPlayerPrompt() const { return DialogueNodeType == EYapDialogueNodeType::PlayerPrompt; }
 
-	/** What type-group is this dialogue node? Different type groups can have different playback settings, and be handled by different registered listeners. */
-	const FGameplayTag& GetTypeGroupTag() const { return TypeGroup; }
+	const UYapDomainConfig& GetDomainConfig() const;
 	
 	/** Does this node use title text? */
 	bool UsesTitleText() const;
@@ -314,6 +333,16 @@ protected:
 	void SetActive();
 
 	void SetInactive();
+
+	/** Fragment access */
+public:
+	TOptional<float> GetSpeechTime(uint8 FragmentIndex) const;
+
+#if WITH_EDITOR
+	TOptional<float> GetSpeechTime(uint8 FragmentIndex, EYapMaturitySetting Maturity, EYapLoadContext LoadContext) const;
+#endif
+	
+	float GetPadding(uint8 FragmentIndex) const;
 	
 #if WITH_EDITOR
 public:

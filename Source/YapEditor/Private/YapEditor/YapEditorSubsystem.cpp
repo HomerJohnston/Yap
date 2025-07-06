@@ -26,7 +26,8 @@ TArray<TWeakObjectPtr<UObject>> UYapEditorSubsystem::OpenedAssets = {};
 
 void UYapEditorSubsystem::UpdateMoodTagBrushesIfRequired()
 {
-	FGameplayTagContainer ProjectMoodTags = UYapProjectSettings::GetMoodTags();
+	// TODO
+	FGameplayTagContainer ProjectMoodTags; // Get All Mood Tags SomehowWWWWWWWWWWWWW =  // UYapProjectSettings::GetMoodTags();
 	
 	if (ProjectMoodTags.Num() != CachedMoodTags.Num() || !CachedMoodTags.HasAllExact(ProjectMoodTags))
 	{
@@ -38,7 +39,7 @@ void UYapEditorSubsystem::UpdateMoodTagBrushesIfRequired()
 
 void UYapEditorSubsystem::UpdateMoodTagBrushes()
 {
-	FGameplayTagContainer ProjectMoodTags = UYapProjectSettings::GetMoodTags();
+	FGameplayTagContainer ProjectMoodTags; // Get All Mood Tags SomehowWWWWWWWWWWWWW =  // UYapProjectSettings::GetMoodTags();
 	
 	MoodTagIconBrushes.Empty(ProjectMoodTags.Num() + 1);
 
@@ -57,13 +58,13 @@ void UYapEditorSubsystem::BuildIcon(const FGameplayTag& MoodTag)
 	TSharedPtr<FSlateImageBrush> ImageBrush = nullptr;
 	
 	// Attempt to load SVG
-	FString IconPath = UYapProjectSettings::GetMoodTagIconPath(MoodTag, "svg");
+	FString IconPath = "";// UYapProjectSettings::GetMoodTagIconPath(MoodTag, "svg");
 	ImageBrush = MakeShared<FSlateVectorImageBrush>(IconPath, FVector2f(16, 16), YapColor::White);
 
 	// Attempt to load PNG
 	if (!ImageBrush)
 	{
-		IconPath = UYapProjectSettings::GetMoodTagIconPath(MoodTag, "png");
+		IconPath = ""; //UYapProjectSettings::GetMoodTagIconPath(MoodTag, "png");
 		ImageBrush = MakeShared<FSlateImageBrush>(IconPath, FVector2f(16, 16), YapColor::White);
 	}
 	
@@ -221,7 +222,8 @@ void UYapEditorSubsystem::OnGetCategoriesMetaFromPropertyHandle(TSharedPtr<IProp
 
 	if (IsMoodTagProperty(PropertyHandle))
 	{
-		MetaString = GetDefault<UYapProjectSettings>()->GetMoodTagsParent().ToString();
+		// TODO meta string mood tags parent
+		MetaString = "";// GetDefault<UYapProjectSettings>()->GetMoodTagsParent().ToString();
 		return;
 	}
 }

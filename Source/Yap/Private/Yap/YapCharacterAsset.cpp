@@ -20,10 +20,13 @@ const UTexture2D* UYapCharacterAsset::GetYapCharacterPortrait(const FGameplayTag
 	{
 		return Portrait;
 	}
-	
-	FGameplayTag MoodTagToFind = MoodTag.IsValid() ? MoodTag : UYapProjectSettings::GetDefaultMoodTag();
 
-	const TObjectPtr<UTexture2D>* TexturePtr = Portraits.Find(MoodTagToFind.GetTagName());
+	if (!MoodTag.IsValid())
+	{
+		return nullptr;
+	}
+	
+	const TObjectPtr<UTexture2D>* TexturePtr = nullptr; // Portraits.Find(MoodTag.GetTagName());
 
 	return TexturePtr ? *TexturePtr : nullptr;
 }
@@ -43,10 +46,14 @@ void UYapCharacterAsset::PostEditChangeProperty(FPropertyChangedEvent& PropertyC
 #endif
 
 #if WITH_EDITOR
-// TODO I need validation code to check if the character's portrait keys array matches the project or not to throw warnings during packaging?
 void UYapCharacterAsset::RefreshPortraitList()
 {
-	FGameplayTagContainer MoodTags = UYapProjectSettings::GetMoodTags();
+	// Iterate through all yap domains and generate portrait maps
+
+	// TODO UYapCharacterAsset::RefreshPortraitList()
+
+	/*
+	FGameplayTagContainer MoodTags = UYapDomainConfig::GetDefaultMoodTags();
 
 	TSet<FName> MoodTagsAsNames;
 	TSet<FName> CharacterMoodTagsAsNames;
@@ -78,6 +85,7 @@ void UYapCharacterAsset::RefreshPortraitList()
 
 	// Sort the map for better display.
 	Portraits.KeySort(FNameLexicalLess());
+	*/
 }
 #endif
 

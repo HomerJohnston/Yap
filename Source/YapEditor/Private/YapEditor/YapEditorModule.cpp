@@ -24,7 +24,7 @@ void FYapEditorModule::StartupModule()
 	REGISTER_DETAIL_CUSTOMIZATION(UYapProjectSettings, FDetailCustomization_YapProjectSettings);
 	REGISTER_DETAIL_CUSTOMIZATION(UYapCharacterAsset, FDetailCustomization_YapCharacter);
 
-	REGISTER_PROPERTY_CUSTOMIZATION(FYapTypeGroupSettings, FPropertyCustomization_YapGroupSettings);
+	//REGISTER_PROPERTY_CUSTOMIZATION(FYapDomainSettings, FPropertyCustomization_YapGroupSettings);
 
 	REGISTER_THUMBNAIL_RENDERER(UYapCharacterAsset, UYapCharacterThumbnailRenderer);
 	

@@ -256,7 +256,7 @@ public:
 
 	FYapBit& GetChildSafeBitMutable() { return ChildSafeBit; }
 
-	TOptional<float> GetSpeechTime(UWorld* World, const FYapTypeGroupSettings& TypeGroup) const;
+	TOptional<float> GetSpeechTime(UWorld* World, const UYapDomainConfig& Domain) const;
 
 	double GetStartTime() const { return StartTime; }
 
@@ -272,17 +272,16 @@ public:
 	
 	void ClearAwaitingManualAdvance();
 
-protected:
-	TOptional<float> GetSpeechTime(UWorld* World, EYapMaturitySetting MaturitySetting, EYapLoadContext LoadContext, const FYapTypeGroupSettings& TypeGroup) const;
-
+	TOptional<float> GetSpeechTime(UWorld* World, EYapMaturitySetting MaturitySetting, EYapLoadContext LoadContext, const UYapDomainConfig& Domain) const;
+	
 public:
 	TOptional<float> GetPaddingSetting() const { return Padding; };
 	
-	float GetPaddingValue(UWorld* World, const FYapTypeGroupSettings& TypeGroup) const;
+	float GetPaddingValue(UWorld* World, const UYapDomainConfig& Domain) const;
 
-	bool GetUsesPadding(UWorld* World, const FYapTypeGroupSettings& TypeGroup) const;
+	bool GetUsesPadding(UWorld* World, const UYapDomainConfig& Domain) const;
 
-	float GetProgressionTime(UWorld* World, const FYapTypeGroupSettings& TypeGroup) const;
+	float GetProgressionTime(UWorld* World, const UYapDomainConfig& Domain) const;
 	
 	void IncrementActivations();
 
@@ -323,9 +322,9 @@ public:
 	bool GetSkippable(bool Default) const;
 	
 	/** Gets the evaluated time mode to be used for this bit (incorporating project default settings and fallbacks) */
-	EYapTimeMode GetTimeMode(UWorld* World, const FYapTypeGroupSettings& TypeGroup) const;
+	EYapTimeMode GetTimeMode(UWorld* World, const UYapDomainConfig& Domain) const;
 	
-	EYapTimeMode GetTimeMode(UWorld* World, EYapMaturitySetting MaturitySetting, const FYapTypeGroupSettings& TypeGroup) const;
+	EYapTimeMode GetTimeMode(UWorld* World, EYapMaturitySetting MaturitySetting, const UYapDomainConfig& Domain) const;
 
 	FGameplayTag GetMoodTag() const { return MoodTag; }
 
@@ -344,8 +343,6 @@ public:
 	void SetIndexInDialogue(uint8 NewValue) { IndexInDialogue = NewValue; }
 
 	FDelegateHandle FragmentTagChildrenFilterDelegateHandle;
-	
-	static void OnGetCategoriesMetaFromPropertyHandle(TSharedPtr<IPropertyHandle> PropertyHandle, FString& String);
 	
 	void SetPaddingToNextFragment(float NewValue) { Padding = NewValue; }
 

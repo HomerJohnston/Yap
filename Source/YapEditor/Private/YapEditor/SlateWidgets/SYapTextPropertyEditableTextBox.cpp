@@ -157,6 +157,7 @@ TSharedRef<SWidget> SYapTextPropertyEditableStringTableReference::OnGetStringTab
 				.Padding(12)
 				[
 					SNew(STextBlock).Text(LOCTEXT("EmptyStringTableList", "No string tables available"))
+					.SimpleTextMode(true)
 				]
 
 				+SWidgetSwitcher::Slot() // Appears when there's a string table with at least a key
@@ -189,6 +190,7 @@ TSharedRef<ITableRow> SYapTextPropertyEditableStringTableReference::OnGenerateSt
 		[
 			SNew(STextBlock)
 			.Text(InItem->DisplayName)
+			.SimpleTextMode(true)
 			.ToolTipText(FText::FromName(InItem->TableId))
 		];
 }
@@ -232,6 +234,7 @@ TSharedRef<ITableRow> SYapTextPropertyEditableStringTableReference::OnGenerateSt
 		[
 			SNew(STextBlock)
 			.Text(FText::FromString(*InItem))
+			.SimpleTextMode(true)
 			.ToolTipText(FText::FromString(*InItem))
 		];
 }
@@ -605,6 +608,7 @@ public:
 					[
 						SNew(STextBlock)
 						.TextStyle(FAppStyle::Get(), "DetailsView.CategoryTextStyle")
+						.SimpleTextMode(true)
 						.Font(FAppStyle::Get().GetFontStyle("PropertyWindow.BoldFont"))
 						.Text(InArgs._Text)
 						.ToolTip(GetToolTip())
@@ -636,6 +640,7 @@ public:
 							[
 								SNew(STextBlock)
 								.Font(FAppStyle::Get().GetFontStyle("PropertyWindow.NormalFont"))
+								.SimpleTextMode(true)
 								.Text(InArgs._Text)
 								.ToolTip(GetToolTip())
 							]

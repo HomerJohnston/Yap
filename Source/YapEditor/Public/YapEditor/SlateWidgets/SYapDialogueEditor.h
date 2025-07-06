@@ -5,8 +5,9 @@
 
 #define LOCTEXT_NAMESPACE "YapEditor"
 
+class UYapDomainConfig;
 class SFlowGraphNode_YapFragmentWidget;
-struct FYapTypeGroupSettings;
+struct FYapDomainSettings;
 enum class EYapTimeMode : uint8;
 struct FYapFragment;
 class UFlowNode_YapDialogue;
@@ -106,7 +107,7 @@ public:
 	
 	EYapMaturitySetting				GetDisplayMaturitySetting() const;
 	
-	const FYapTypeGroupSettings&	GetTypeGroup() const;
+	const UYapDomainConfig&	GetDomainConfig() const;
 
 public:
 	void SetFocus_MatureDialogue();

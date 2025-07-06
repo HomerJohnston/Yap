@@ -86,6 +86,7 @@ void FDetailCustomization_YapCharacter::CustomizeDetails(IDetailLayoutBuilder& D
 				[
 					SNew(STextBlock)
 					.Font(YapFonts.Font_WarningText)
+					.SimpleTextMode(true)
 					.Text(LOCTEXT("CharacterPortraits_MoodTagsNeedRefresh", "Portraits list out of date, "))
 					.ColorAndOpacity(YapColor::OrangeRed)
 				]
@@ -112,6 +113,7 @@ void FDetailCustomization_YapCharacter::CustomizeDetails(IDetailLayoutBuilder& D
 				[
 					SNew(STextBlock)
 					.Font(YapFonts.Font_WarningText)
+					.SimpleTextMode(true)
 					.Text(this, &FDetailCustomization_YapCharacter::Text_PortraitsListHint)
 					.ColorAndOpacity(YapColor::LightYellow)
 				]
@@ -129,6 +131,7 @@ void FDetailCustomization_YapCharacter::CustomizeDetails(IDetailLayoutBuilder& D
 
 EVisibility FDetailCustomization_YapCharacter::Visibility_MoodTagsOutOfDateWarning() const
 {
+	/*
 	TMap<FName, TObjectPtr<UTexture2D>> PortraitsMap = GetPortraitsMap();
 	
 	FGameplayTagContainer ProjectMoodTags = UYapProjectSettings::GetMoodTags();
@@ -155,13 +158,14 @@ EVisibility FDetailCustomization_YapCharacter::Visibility_MoodTagsOutOfDateWarni
 			return EVisibility::Visible;
 		}
 	}
-
+	*/
 	return EVisibility::Collapsed;
 }
 
 FText FDetailCustomization_YapCharacter::Text_PortraitsListHint() const
 {
-	return UYapProjectSettings::GetMoodTags().Num() == 0 ? LOCTEXT("CharacterPortraits_MoodTagsEmpty_Info_1", "You need to create mood tags. Go to ") : LOCTEXT("CharacterPortraits_MoodTags_Info_1", "To edit portrait mood tags, go to ");
+	// return UYapProjectSettings::GetMoodTags().Num() == 0 ? LOCTEXT("CharacterPortraits_MoodTagsEmpty_Info_1", "You need to create mood tags. Go to ") : LOCTEXT("CharacterPortraits_MoodTags_Info_1", "To edit portrait mood tags, go to ");
+	return INVTEXT("TODO");
 }
 
 void FDetailCustomization_YapCharacter::OnClicked_RefreshMoodTagsButton() const

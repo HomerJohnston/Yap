@@ -22,6 +22,9 @@
 
 FText FDetailCustomization_YapProjectSettings::GetMoodTags() const
 {
+	return INVTEXT("TODO");
+
+	/*
 	const UYapProjectSettings* ProjectSettings = GetDefault<UYapProjectSettings>();
 	
 	const FGameplayTag& ParentTag = ProjectSettings->GetMoodTagsParent();
@@ -57,6 +60,7 @@ FText FDetailCustomization_YapProjectSettings::GetMoodTags() const
 	}
 	
 	return FText::FromString(TagString);
+	*/
 }
 
 const FSlateBrush* FDetailCustomization_YapProjectSettings::TODOBorderImage() const
@@ -111,6 +115,7 @@ void FDetailCustomization_YapProjectSettings::CustomizeDetails(IDetailLayoutBuil
 
 FReply FDetailCustomization_YapProjectSettings::OnClicked_ResetDefaultMoodTags() const
 {
+	/*
 	if ( EAppReturnType::Yes != FMessageDialog::Open(EAppMsgType::YesNo, LOCTEXT("AreYouSure_Prompt", "Are you sure?")) )
 	{
 		return FReply::Handled();
@@ -168,12 +173,15 @@ FReply FDetailCustomization_YapProjectSettings::OnClicked_ResetDefaultMoodTags()
 	}
 
 	FYapTransactions::EndModify();
+
+	*/
 	
 	return FReply::Handled();
 }
 
 FReply FDetailCustomization_YapProjectSettings::OnClicked_DeleteAllMoodTags() const
 {
+	/*
 	if ( EAppReturnType::Yes != FMessageDialog::Open(EAppMsgType::YesNo, LOCTEXT("AreYouSure_Prompt", "Are you sure?")) )
 	{
 		return FReply::Handled();
@@ -190,31 +198,36 @@ FReply FDetailCustomization_YapProjectSettings::OnClicked_DeleteAllMoodTags() co
 	}
 	
 	FYapTransactions::EndModify();
-
+	*/
+	
 	return FReply::Handled();
 }
 
 FReply FDetailCustomization_YapProjectSettings::OnClicked_OpenMoodTagsManager()
 {
+	/*
 	FGameplayTagManagerWindowArgs Args;
 	Args.Title = LOCTEXT("MoodTags", "Mood Tags");
 	Args.bRestrictedTags = false;
 	Args.Filter = UYapProjectSettings::GetMoodTagsParent().ToString();
 
 	UE::GameplayTags::Editor::OpenGameplayTagManager(Args);
-
+	*/
+	
 	return FReply::Handled();
 }
 
-FReply FDetailCustomization_YapProjectSettings::OnClicked_OpenDialogueTagsManager(const FGameplayTag& TypeGroup)
+FReply FDetailCustomization_YapProjectSettings::OnClicked_OpenDialogueTagsManager(const FGameplayTag& DomainTag)
 {
+	/*
 	FGameplayTagManagerWindowArgs Args;
 	Args.Title = LOCTEXT("DialogueTags", "Dialogue Tags");
 	Args.bRestrictedTags = false;
-	Args.Filter = UYapProjectSettings::GetTypeGroup(TypeGroup).GetDialogueTagsParent().ToString();
+	Args.Filter = UYapProjectSettings::GetDomain(DomainTag).GetDialogueTagsParent().ToString();
 
 	UE::GameplayTags::Editor::OpenGameplayTagManager(Args);
-
+	*/
+	
 	return FReply::Handled();
 }
 
@@ -307,6 +320,9 @@ FReply FDetailCustomization_YapProjectSettings::OnClicked_RefreshMoodTagIcons()
 
 FText FDetailCustomization_YapProjectSettings::ToolTipText_DefaultMoodTags() const
 {
+	return INVTEXT("TODO");
+	
+	/*
 	const FGameplayTag& ParentTag = UYapProjectSettings::GetMoodTagsParent();
 
 	if (!ParentTag.IsValid())
@@ -331,6 +347,7 @@ FText FDetailCustomization_YapProjectSettings::ToolTipText_DefaultMoodTags() con
 	}
 	
 	return FText::Format(LOCTEXT("SetDefaultTags_ToolTip", "Sets the following tags:\n{0}"), FText::FromString(DefaultTagsAsString));
+	*/
 }
 
 bool FDetailCustomization_YapProjectSettings::IsTagPropertySet(TSharedPtr<IPropertyHandle> TagPropertyHandle) const

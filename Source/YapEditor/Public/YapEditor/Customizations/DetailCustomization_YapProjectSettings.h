@@ -56,7 +56,7 @@ protected:
 
 	FReply OnClicked_OpenMoodTagsManager();
 
-	FReply OnClicked_OpenDialogueTagsManager(const FGameplayTag& TypeGroup);
+	FReply OnClicked_OpenDialogueTagsManager(const FGameplayTag& DomainTag);
 
 	/*
 	FReply OnClicked_CleanupDialogueTags();

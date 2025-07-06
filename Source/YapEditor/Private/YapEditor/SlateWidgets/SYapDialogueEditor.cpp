@@ -167,6 +167,7 @@ TSharedRef<SWidget> SYapDialogueEditor::BuildDialogueEditor_SingleSide(const FTe
 		[
 			SNew(STextBlock)
 			.Text(Title)
+			.SimpleTextMode(true)
 			.Font(YapFonts.Font_SectionHeader)
 			.Justification(ETextJustify::Center)	
 		]
@@ -242,6 +243,7 @@ TSharedRef<SWidget> SYapDialogueEditor::BuildDialogueEditor_SingleSide(const FTe
 				[							
 					SNew(STextBlock)
 					.Text(LOCTEXT("AudioAssetPicker_Title", "Audio Asset"))
+					.SimpleTextMode(true)
 				]
 				+ SVerticalBox::Slot()
 				.AutoHeight()
@@ -392,6 +394,7 @@ TSharedRef<SWidget> SYapDialogueEditor::BuildPaddingSettings_ExpandedEditor(floa
 				[
 					SNew(STextBlock)
 					.Text(LOCTEXT("PaddingTime_Header", "Padding Time"))
+					.SimpleTextMode(true)
 				]
 				+ SHorizontalBox::Slot()
 				.AutoWidth()
@@ -780,6 +783,7 @@ TSharedRef<SWidget> SYapDialogueEditor::MakeTimeSettingRow(EYapTimeMode TimeMode
 		[
 			SNew(STextBlock)
 			.Text(LabelText)
+			.SimpleTextMode(true)
 		];
 	}
 
@@ -947,12 +951,12 @@ EYapErrorLevel SYapDialogueEditor::GetAudioAssetErrorLevel(const TSoftObjectPtr<
 		}
 	}
 
-	EYapMissingAudioErrorLevel MissingAudioBehavior = GetTypeGroup().GetMissingAudioErrorLevel();
+	EYapMissingAudioErrorLevel MissingAudioBehavior = GetDomainConfig().GetMissingAudioErrorLevel();
 
 	EYapTimeMode TimeModeSetting = GetFragment().GetTimeModeSetting();
 	
 	// We don't have any audio asset set. If the dialogue is set to use audio time but does NOT have an audio asset, we either indicate an error (prevent packaging) or indicate a warning (allow packaging) 
-	if ((TimeModeSetting == EYapTimeMode::AudioTime) || (TimeModeSetting == EYapTimeMode::Default && GetTypeGroup().GetDefaultTimeModeSetting() == EYapTimeMode::AudioTime))
+	if ((TimeModeSetting == EYapTimeMode::AudioTime) || (TimeModeSetting == EYapTimeMode::Default && GetDomainConfig().GetDefaultTimeModeSetting() == EYapTimeMode::AudioTime))
 	{
 		switch (MissingAudioBehavior)
 		{
@@ -988,9 +992,9 @@ TOptional<float> SYapDialogueEditor::Value_TimeSetting_AudioTime(EYapMaturitySet
 
 TOptional<float> SYapDialogueEditor::Value_TimeSetting_TextTime(EYapMaturitySetting MaturitySetting) const
 {
-	const FYapTypeGroupSettings& TypeGroupSettings = UYapProjectSettings::GetTypeGroup(DialogueNode->GetTypeGroupTag());
+	const UYapDomainConfig& DomainConfig = DialogueNode->GetDomainConfig();
 	
-	return GetFragment().GetBit(GEditor->EditorWorld, MaturitySetting).GetTextTime(TypeGroupSettings);
+	return GetFragment().GetBit(GEditor->EditorWorld, MaturitySetting).GetTextTime(DomainConfig);
 }
 
 TOptional<float> SYapDialogueEditor::Value_TimeSetting_ManualTime(EYapMaturitySetting MaturitySetting) const
@@ -1029,7 +1033,7 @@ FSlateColor SYapDialogueEditor::ButtonColorAndOpacity_UseTimeMode(EYapTimeMode T
 		return ColorTint;
 	}
 	
-	if (GetFragment().GetTimeMode(GEditor->EditorWorld, GetDisplayMaturitySetting(), UYapProjectSettings::GetTypeGroup(DialogueNode->GetTypeGroupTag())) == TimeMode)
+	if (GetFragment().GetTimeMode(GEditor->EditorWorld, GetDisplayMaturitySetting(), DialogueNode->GetDomainConfig()) == TimeMode)
 	{
 		// Implicit match through project defaults
 		return YapColor::Desaturate(ColorTint, 0.50);
@@ -1046,7 +1050,7 @@ FSlateColor SYapDialogueEditor::ForegroundColor_TimeSettingButton(EYapTimeMode T
 		return ColorTint;
 	}
 	
-	if (GetFragment().GetTimeMode(GEditor->EditorWorld, GetDisplayMaturitySetting(), UYapProjectSettings::GetTypeGroup(DialogueNode->GetTypeGroupTag())) == TimeMode)
+	if (GetFragment().GetTimeMode(GEditor->EditorWorld, GetDisplayMaturitySetting(), DialogueNode->GetDomainConfig()) == TimeMode)
 	{
 		// Implicit match through project defaults
 		return ColorTint;
@@ -1070,9 +1074,9 @@ EYapMaturitySetting SYapDialogueEditor::GetDisplayMaturitySetting() const
 	return Owner->GetIsChildSafeCheckBoxHovered() ? EYapMaturitySetting::ChildSafe : EYapMaturitySetting::Mature;
 }
 
-const FYapTypeGroupSettings& SYapDialogueEditor::GetTypeGroup() const
+const UYapDomainConfig& SYapDialogueEditor::GetDomainConfig() const
 {
-	return UYapProjectSettings::GetTypeGroup(DialogueNode->GetTypeGroupTag());
+	return DialogueNode->GetDomainConfig();
 }
 
 void SYapDialogueEditor::SetFocus_MatureDialogue()

@@ -27,7 +27,7 @@ protected:
 	FGuid Guid;
 
 	UPROPERTY(Transient, BlueprintReadOnly, meta = (AllowPrivateAccess))
-	FGameplayTag TypeGroup;
+	TSubclassOf<UFlowNode_YapDialogue> Domain;
 
 	// ------------------------------------------
 	// PUBLIC API - Your game should use these
@@ -43,7 +43,7 @@ public:
 public:
 	FYapPromptHandle();
 
-	FYapPromptHandle(const FGameplayTag& InTypeGroup);
+	FYapPromptHandle(TSubclassOf<UFlowNode_YapDialogue> Domain);
 
 	void Invalidate();
 	
@@ -51,7 +51,7 @@ public:
 
 	FGuid GetGuid() const { return Guid; }
 
-	const FGameplayTag& GetTypeGroup() const { return TypeGroup; }
+	TSubclassOf<UFlowNode_YapDialogue> GetDomain() const { return Domain; }
 	
 	bool operator==(const FYapPromptHandle& Other) const
 	{

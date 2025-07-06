@@ -37,7 +37,7 @@ void FYapSpeechHandle::Invalidate()
 {
 	if (World.IsValid())
 	{
-		UYapSubsystem::Get(World.Get())->UnregisterSpeechHandle(*this);
+		//UYapSubsystem::Get(World.Get())->UnregisterSpeechHandle(*this);
 	}
         
 	Guid.Invalidate();

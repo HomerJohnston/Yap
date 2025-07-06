@@ -56,6 +56,8 @@ struct FYapBrushes
 	FName Icon_Switch_Off;
 
 	FName Icon_PlaybackTimeHandle;
+	
+	FName Icon_Random;
 
 	FName Bar_NegativePadding;
 	FName Bar_PositivePadding;

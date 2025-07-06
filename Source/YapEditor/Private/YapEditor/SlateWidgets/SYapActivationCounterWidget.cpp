@@ -71,12 +71,13 @@ void SYapActivationCounterWidget::Construct(const FArguments& InArgs, FOnTextCom
 			SNew(SVerticalBox)
 			+ SVerticalBox::Slot()
 			.VAlign(VAlign_Bottom)
-			.HAlign(HAlign_Fill)
+			.HAlign(HAlign_Center)
 			.Padding(0, 0, 0, (FontHeight - 10))
 			[
 				SNew(STextBlock)
 				.Visibility(this, &SYapActivationCounterWidget::Visibility_UpperElements)
 				.Text(this, &SYapActivationCounterWidget::NumeratorText)
+				.SimpleTextMode(true)
 				.ColorAndOpacity(this, &SYapActivationCounterWidget::NumeratorColor)
 				.Font(FCoreStyle::GetDefaultFontStyle("Bold", FontHeight))
 				.Justification(ETextJustify::Center)
@@ -96,7 +97,7 @@ void SYapActivationCounterWidget::Construct(const FArguments& InArgs, FOnTextCom
 			]
 			+ SVerticalBox::Slot()
 			.VAlign(VAlign_Top)
-			.HAlign(HAlign_Fill)
+			.HAlign(HAlign_Center)
 			.Padding(0, (FontHeight - 11), 0, 0)
 			[
 				// TODO: SEditableText messes up justification on refresh, why??? STextBlock is ok

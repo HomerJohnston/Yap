@@ -8,9 +8,20 @@
 
 #include "YapCharacterAsset.generated.h"
 
+class UFlowNode_YapDialogue;
 enum class EFlowYapCharacterMood : uint8;
 
 #define LOCTEXT_NAMESPACE "Yap"
+
+USTRUCT()
+struct YAP_API FYapPortraitList
+{
+	GENERATED_BODY()
+	
+	/** Avatar icons to use in dialogue UI */
+	UPROPERTY(EditAnywhere, EditFixedSize, meta=(ReadOnlyKeys, ForceInlineRow, EditCondition = "!bUseSinglePortrait", EditConditionHides))
+	TMap<FName, TObjectPtr<UTexture2D>> Portraits;	
+};
 
 // TODO data validation - on packaging make sure the portraits key tags list matches project settings
 // TODO add validation warning to the details customization
@@ -49,7 +60,7 @@ protected:
 	
 	/** Avatar icons to use in dialogue UI */
 	UPROPERTY(EditAnywhere, EditFixedSize, meta=(ReadOnlyKeys, ForceInlineRow, EditCondition = "!bUseSinglePortrait", EditConditionHides))
-	TMap<FName, TObjectPtr<UTexture2D>> Portraits;
+	TMap<TSoftClassPtr<UFlowNode_YapDialogue>, FYapPortraitList> Portraits;
 
 	// --------------------- //
 	/* IYapSpeaker Interface */

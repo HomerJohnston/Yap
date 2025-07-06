@@ -10,7 +10,7 @@
 #include "ObjectEditorUtils.h"
 #include "SGameplayTagPicker.h"
 #include "Widgets/Layout/SWidgetSwitcher.h"
-#include "Yap/YapTypeGroupSettings.h"
+#include "Yap/YapDomainConfig.h"
 #include "Yap/YapProjectSettings.h"
 #include "YapEditor/YapEditorColor.h"
 #include "YapEditor/YapEditorLog.h"
@@ -22,8 +22,8 @@ TMap<FName, TSharedPtr<IPropertyHandle>> FPropertyCustomization_YapGroupSettings
 
 TArray<FName> FPropertyCustomization_YapGroupSettings::IgnoredProperties = 
 {
-	GET_MEMBER_NAME_CHECKED(FYapTypeGroupSettings, bDefault),
-	GET_MEMBER_NAME_CHECKED(FYapTypeGroupSettings, GroupColor)
+	//GET_MEMBER_NAME_CHECKED(FYapDomainConfig_Base, bDefault),
+	//GET_MEMBER_NAME_CHECKED(FYapDomainConfig_Base, GroupColor)
 };
 
 // ========
@@ -53,7 +53,7 @@ struct FYapCategoryOrGroup
 	{
 		if (Category)
 		{
-			Category->AddProperty(Property);
+			IDetailPropertyRow& Row = Category->AddProperty(Property);
 		}
 		else
 		{
@@ -115,6 +115,7 @@ void FPropertyCustomization_YapGroupSettings::CustomizeHeader(TSharedRef<class I
 		[
 			SNew(STextBlock)
 			.Text(INVTEXT("Test"))
+			.SimpleTextMode(true)
 		];
 	
 	if (IsDefault())
@@ -151,6 +152,7 @@ void FPropertyCustomization_YapGroupSettings::CustomizeHeader(TSharedRef<class I
 			[
 				SNew(STextBlock)
 				.Text_Lambda( [this] () { return FText::Format(LOCTEXT("OverriddenPropertiesCount", "Overridden: {0}"), FText::AsNumber(TotalOverrides)); })
+				.SimpleTextMode(true)
 				.Font(IDetailLayoutBuilder::GetDetailFont())
 			]
 		];
@@ -336,13 +338,15 @@ void FPropertyCustomization_YapGroupSettings::IndexImportantProperties(TSharedRe
 {
 	uint32 NumChildren;
 	StructPropertyHandle->GetNumChildren(NumChildren);
+
 	
+	/*
 	for (uint32 ChildIndex = 0; ChildIndex < NumChildren; ++ChildIndex)
 	{
 		TSharedPtr<IPropertyHandle> ChildHandle = StructPropertyHandle->GetChildHandle(ChildIndex);
 
-		static const FName GroupColorName = GET_MEMBER_NAME_CHECKED(FYapTypeGroupSettings, GroupColor);
-		static const FName DefaultName = GET_MEMBER_NAME_CHECKED(FYapTypeGroupSettings, bDefault);
+		static const FName GroupColorName = GET_MEMBER_NAME_CHECKED(FYapDomainSettings, GroupColor);
+		static const FName DefaultName = GET_MEMBER_NAME_CHECKED(FYapDomainSettings, bDefault);
 
 		FName PropertyName = ChildHandle->GetProperty()->GetFName();
 
@@ -356,6 +360,8 @@ void FPropertyCustomization_YapGroupSettings::IndexImportantProperties(TSharedRe
 			DefaultPropertyHandle = ChildHandle;
 		}
 	}
+	*/
+	
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -652,11 +658,15 @@ void FPropertyCustomization_YapGroupSettings::DrawNamedGroupProperty(IDetailChil
 // ------------------------------------------------------------------------------------------------
 void FPropertyCustomization_YapGroupSettings::DrawExtraPanelContent(IDetailGroup& Group, TSharedPtr<IPropertyHandle> Property)
 {
-	if (Property->GetProperty()->GetFName() == GET_MEMBER_NAME_CHECKED(FYapTypeGroupSettings, DialogueTagsParent))
+	
+	/*
+	if (Property->GetProperty()->GetFName() == GET_MEMBER_NAME_CHECKED(FYapDomainSettings, DialogueTagsParent))
 	{
 		//DrawDialogueTagsExtraControls(Group, Property);
 		DrawTagExtraControls(Group, Property, LOCTEXT("DialogueTags", "Dialogue Tags"));
 	}
+	*/
+	
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -881,6 +891,7 @@ void FPropertyCustomization_YapGroupSettings::DrawTagExtraControls(IDetailGroup&
 	.VAlign(VAlign_Center)
 	[
 		SNew(STextBlock)
+		.SimpleTextMode(true)
 		.Visibility(TAttribute<EVisibility>::CreateLambda([this, ParentTagPropertyHandle] ()
 		{
 			if (!IsTagPropertySet(ParentTagPropertyHandle) && (IsDefault() || IsOverridden(ParentTagPropertyHandle->GetProperty()->GetFName())))
@@ -946,7 +957,9 @@ void FPropertyCustomization_YapGroupSettings::DrawTagExtraControls(IDetailGroup&
 // ------------------------------------------------------------------------------------------------
 void FPropertyCustomization_YapGroupSettings::DrawDialogueTagsExtraControls(IDetailGroup& Group, TSharedPtr<IPropertyHandle> DialogueTagsParentProperty)
 {
-	if (DialogueTagsParentProperty->GetProperty()->GetFName() != GET_MEMBER_NAME_CHECKED(FYapTypeGroupSettings, DialogueTagsParent))
+	
+	/*
+	if (DialogueTagsParentProperty->GetProperty()->GetFName() != GET_MEMBER_NAME_CHECKED(FYapDomainSettings, DialogueTagsParent))
 	{
 		checkNoEntry();
 	}
@@ -958,6 +971,7 @@ void FPropertyCustomization_YapGroupSettings::DrawDialogueTagsExtraControls(IDet
 	[
 		SNew(STextBlock)
 		.Text(LOCTEXT("DialogueTags", "Dialogue Tags"))
+		.SimpleTextMode(true)
 		.Font(IDetailLayoutBuilder::GetDetailFont())
 	]
 	.ValueContent()
@@ -984,6 +998,8 @@ void FPropertyCustomization_YapGroupSettings::DrawDialogueTagsExtraControls(IDet
 			.OnClicked(this, &FPropertyCustomization_YapGroupSettings::OnClicked_CleanupDialogueTags)
 		]
 	];
+	*/
+	
 }
 
 #undef LOCTEXT_NAMESPACE

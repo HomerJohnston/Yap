@@ -13,7 +13,7 @@
 // --------------------------------------------------------------------------------------------
 
 const FText& FYapBit::GetDialogueText() const
-{
+{	
 	return DialogueText.Get();
 }
 
@@ -33,7 +33,7 @@ bool FYapBit::HasAudioAsset() const
 
 // --------------------------------------------------------------------------------------------
 
-TOptional<float> FYapBit::GetSpeechTime(UWorld* World, EYapTimeMode TimeMode, EYapLoadContext LoadContext, const FYapTypeGroupSettings& TypeGroup) const
+TOptional<float> FYapBit::GetSpeechTime(UWorld* World, EYapTimeMode TimeMode, EYapLoadContext LoadContext, const UYapDomainConfig& Domain) const
 {
 	// TODO clamp minimums from project settings?
 	TOptional<float> Time;
@@ -52,7 +52,7 @@ TOptional<float> FYapBit::GetSpeechTime(UWorld* World, EYapTimeMode TimeMode, EY
 		}
 		case EYapTimeMode::TextTime:
 		{
-			Time = GetTextTime(TypeGroup);
+			Time = GetTextTime(Domain);
 			break;
 		}
 		default:
@@ -63,7 +63,7 @@ TOptional<float> FYapBit::GetSpeechTime(UWorld* World, EYapTimeMode TimeMode, EY
 
 	float Value = Time.Get(0);
 	
-	float MinAllowableTime = TypeGroup.GetMinimumSpeakingTime();
+	float MinAllowableTime = Domain.GetMinimumSpeakingTime();
 
 	return FMath::Max(Value, MinAllowableTime);
 }
@@ -105,12 +105,12 @@ void FYapBit::LoadContent(EYapLoadContext LoadContext) const
 
 // --------------------------------------------------------------------------------------------
 
-TOptional<float> FYapBit::GetTextTime( const FYapTypeGroupSettings& TypeGroup) const
+TOptional<float> FYapBit::GetTextTime(const UYapDomainConfig& Domain) const
 {
-	int32 TWPM = UYapProjectSettings::GetTextWordsPerMinute();
+	int32 TWPM = Domain.DialoguePlayback.TimeSettings.TextWordsPerMinute;
 	int32 WordCount = DialogueText.GetWordCount();
 	double SecondsPerWord = 60.0 / (double)TWPM;
-	double MinTextTimeLength = TypeGroup.GetMinimumAutoTextTimeLength();
+	double MinTextTimeLength = Domain.GetMinimumAutoTextTimeLength();
 	
 	return FMath::Max(WordCount * SecondsPerWord, MinTextTimeLength);
 }

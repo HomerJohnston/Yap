@@ -13,15 +13,15 @@
 FYapPromptHandle::FYapPromptHandle()
 {
 	Guid = FGuid::NewGuid();
-	TypeGroup = FGameplayTag::EmptyTag;
+	this->Domain = nullptr;
 }
 
 // ------------------------------------------------------------------------------------------------
 
-FYapPromptHandle::FYapPromptHandle(const FGameplayTag& InTypeGroup)
+FYapPromptHandle::FYapPromptHandle(TSubclassOf<UFlowNode_YapDialogue> Domain)
 {
 	Guid = FGuid::NewGuid();
-	TypeGroup = InTypeGroup;
+	this->Domain = Domain;
 }
 
 // ------------------------------------------------------------------------------------------------

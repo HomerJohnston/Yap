@@ -21,6 +21,7 @@ struct FYapPromptHandle;
 class IYapConversationHandler;
 struct FYapBit;
 class UYapCharacterComponent;
+class UYapSquirrel;
 enum class EYapMaturitySetting : uint8;
 
 UDELEGATE()
@@ -68,11 +69,11 @@ protected:
 
 	/** All registered conversation handlers. It is assumed developers will only have one or two of these at a time, no need for fast lookup. Calling order will be preserved in order of registration. */
 	UPROPERTY(Transient)
-	TMap<FGameplayTag, FYapHandlersArray> ConversationHandlers;
+	TMap<TSubclassOf<UFlowNode_YapDialogue>, FYapHandlersArray> ConversationHandlers;
 
 	/** All registered free speech handlers. It is assumed developers will only have one or two of these at a time, no need for fast lookup. Calling order will be preserved in order of registration. */
 	UPROPERTY(Transient)
-	TMap<FGameplayTag, FYapHandlersArray> FreeSpeechHandlers;
+	TMap<TSubclassOf<UFlowNode_YapDialogue>, FYapHandlersArray> FreeSpeechHandlers;
 
 	/** The broker object. Active only during play. Editor work uses the CDO instead. */
 	UPROPERTY(Transient)
@@ -132,6 +133,12 @@ public:
 
 	UPROPERTY(Transient)
 	FYapConversationEvent OnAdvanceConversationDelegate;
+
+	UPROPERTY(Transient, Instanced)
+	TObjectPtr<UYapSquirrel> NoiseGenerator;
+
+public:
+	UYapSquirrel& GetNoiseGenerator() { return *NoiseGenerator; }
 	
 	/*
 	UPROPERTY(BlueprintAssignable, Transient)
@@ -143,19 +150,19 @@ public:
 public:
 	
 	/** Register a conversation handler to a specific type group, or EmptyTag for the default type group. */
-	static void RegisterConversationHandler(UObject* NewHandler, FGameplayTag TypeGroup = FGameplayTag::EmptyTag);
+	static void RegisterConversationHandler(UObject* NewHandler, TSubclassOf<UFlowNode_YapDialogue> Domain);
 
 	/** Unregister a conversation handler from a specific type group. */
-	static void UnregisterConversationHandler(UObject* HandlerToRemove, FGameplayTag TypeGroup = FGameplayTag::EmptyTag);
+	static void UnregisterConversationHandler(UObject* HandlerToRemove, TSubclassOf<UFlowNode_YapDialogue> Domain);
 	
 	/** Unregister a conversation handler.*/
 	//static void UnregisterConversationHandlerAllTypeGroups(UObject* HandlerToRemove);
 	
 	/** Register a conversation handler. Conversation handlers will receive yap dialogue events. Must implement IYapConversationHandler either in C++ or BP. */
-	static void RegisterFreeSpeechHandler(UObject* NewHandler, FGameplayTag TypeGroup = FGameplayTag::EmptyTag);
+	static void RegisterFreeSpeechHandler(UObject* NewHandler, const TSubclassOf<UFlowNode_YapDialogue> Domain);
 
 	/** Register a conversation handler. Conversation handlers will receive yap dialogue events. Must implement IYapConversationHandler either in C++ or BP. */
-	static void UnregisterFreeSpeechHandler(UObject* HandlerToRemove, FGameplayTag TypeGroup = FGameplayTag::EmptyTag);
+	static void UnregisterFreeSpeechHandler(UObject* HandlerToRemove, const TSubclassOf<UFlowNode_YapDialogue> Domain);
 
 	/** Register a conversation handler. Conversation handlers will receive yap dialogue events. Must implement IYapConversationHandler either in C++ or BP. */
 	//static void UnregisterFreeSpeechHandlerAllTypeGroups(UObject* HandlerToRemove);
@@ -191,6 +198,11 @@ public:
 	static bool IsSpeechRunning(UWorld* World, const FYapSpeechHandle& Handle)
 	{
 		return Get(World)->RunningSpeech.Contains(Handle);
+	}
+
+	static bool IsSpeechInConversation(UObject* WorldContext, const FYapSpeechHandle& Handle)
+	{
+		return Get(WorldContext)->SpeechConversationMapping.Contains(Handle);
 	}
 	
 public:
@@ -246,15 +258,15 @@ protected:
 	void OnActiveConversationClosed(UObject* Instigator, FYapConversationHandle Handle);
 	
 	/**  */
-	FYapPromptHandle BroadcastPrompt(const FYapData_PlayerPromptCreated& Data, const FGameplayTag& TypeGroup);
+	FYapPromptHandle BroadcastPrompt(const FYapData_PlayerPromptCreated& Data, TSubclassOf<UFlowNode_YapDialogue> Domain);
 
 	/**  */
-	void OnFinishedBroadcastingPrompts(const FYapData_PlayerPromptsReady& Data, const FGameplayTag& TypeGroup);
+	void OnFinishedBroadcastingPrompts(const FYapData_PlayerPromptsReady& Data, TSubclassOf<UFlowNode_YapDialogue> Domain);
 
 public:
 	/**  */
 	UFUNCTION(BlueprintCallable)
-	FYapSpeechHandle RunSpeech(const FYapData_SpeechBegins& SpeechData, FGameplayTag TypeGroup, FYapSpeechHandle& Handle);
+	FYapSpeechHandle RunSpeech(const FYapData_SpeechBegins& SpeechData, TSubclassOf<UFlowNode_YapDialogue> Domain, FYapSpeechHandle& Handle);
 
 	// TODO I hate this thing
 	static FYapConversation NullConversation;
@@ -293,13 +305,13 @@ public:
 	/**  */
 	void UnregisterCharacterComponent(UYapCharacterComponent* YapCharacterComponent);
 
-	TArray<TObjectPtr<UObject>>& FindOrAddConversationHandlerArray(const FGameplayTag& TypeGroup);
+	TArray<TObjectPtr<UObject>>& FindOrAddConversationHandlerArray(const TSubclassOf<UFlowNode_YapDialogue> Domain);
 
-	TArray<TObjectPtr<UObject>>* FindConversationHandlerArray(const FGameplayTag& TypeGroup);
+	TArray<TObjectPtr<UObject>>* FindConversationHandlerArray(const TSubclassOf<UFlowNode_YapDialogue> Domain);
 	
-	TArray<TObjectPtr<UObject>>& FindOrAddFreeSpeechHandlerArray(const FGameplayTag& TypeGroup);
+	TArray<TObjectPtr<UObject>>& FindOrAddFreeSpeechHandlerArray(const TSubclassOf<UFlowNode_YapDialogue> Domain);
 	
-	TArray<TObjectPtr<UObject>>* FindFreeSpeechHandlerArray(const FGameplayTag& TypeGroup);
+	TArray<TObjectPtr<UObject>>* FindFreeSpeechHandlerArray(const TSubclassOf<UFlowNode_YapDialogue> Domain);
 
 	FYapSpeechHandle GetNewSpeechHandle(FGuid Guid);
 	

@@ -215,9 +215,9 @@ const FYapBit& FYapFragment::GetBit(UWorld* World, EYapMaturitySetting MaturityS
 	return MatureBit;
 }
 
-TOptional<float> FYapFragment::GetSpeechTime(UWorld* World, const FYapTypeGroupSettings& TypeGroup) const
+TOptional<float> FYapFragment::GetSpeechTime(UWorld* World, const UYapDomainConfig& Domain) const
 {
-	return GetSpeechTime(World, UYapSubsystem::GetCurrentMaturitySetting(World), EYapLoadContext::Sync, TypeGroup);
+	return GetSpeechTime(World, UYapSubsystem::GetCurrentMaturitySetting(World), EYapLoadContext::Sync, Domain);
 }
 
 bool FYapFragment::IsAwaitingManualAdvance() const
@@ -235,14 +235,14 @@ void FYapFragment::ClearAwaitingManualAdvance()
 	bFragmentAwaitingManualAdvance = false;
 }
 
-TOptional<float> FYapFragment::GetSpeechTime(UWorld* World, EYapMaturitySetting MaturitySetting, EYapLoadContext LoadContext, const FYapTypeGroupSettings& TypeGroup) const
+TOptional<float> FYapFragment::GetSpeechTime(UWorld* World, EYapMaturitySetting MaturitySetting, EYapLoadContext LoadContext, const UYapDomainConfig& Domain) const
 {
-	EYapTimeMode EffectiveTimeMode = GetTimeMode(World, MaturitySetting, TypeGroup);
+	EYapTimeMode EffectiveTimeMode = GetTimeMode(World, MaturitySetting, Domain);
 	
-	return GetBit(World, MaturitySetting).GetSpeechTime(World, EffectiveTimeMode, LoadContext, TypeGroup);
+	return GetBit(World, MaturitySetting).GetSpeechTime(World, EffectiveTimeMode, LoadContext, Domain);
 }
 
-float FYapFragment::GetPaddingValue(UWorld* World, const FYapTypeGroupSettings& TypeGroup) const
+float FYapFragment::GetPaddingValue(UWorld* World, const UYapDomainConfig& Domain) const
 {	
 	if (IsTimeModeNone())
 	{
@@ -253,34 +253,34 @@ float FYapFragment::GetPaddingValue(UWorld* World, const FYapTypeGroupSettings& 
 	{
 		float RawPadding = Padding.GetValue();
 		
-		TOptional<float> SpeechTime = GetSpeechTime(World, TypeGroup);
+		TOptional<float> SpeechTime = GetSpeechTime(World, Domain);
 
 		return FMath::Max(-SpeechTime.Get(0.0f), RawPadding);
 	}
 	
-	return TypeGroup.GetDefaultFragmentPaddingTime();
+	return Domain.GetDefaultFragmentPaddingTime();
 }
 
-bool FYapFragment::GetUsesPadding(UWorld* World, const FYapTypeGroupSettings& TypeGroup) const
+bool FYapFragment::GetUsesPadding(UWorld* World, const UYapDomainConfig& Domain) const
 {
-	float PaddingValue = GetPaddingValue(World, TypeGroup);
+	float PaddingValue = GetPaddingValue(World, Domain);
 	
 	return !FMath::IsNearlyZero(PaddingValue);
 }
 
-float FYapFragment::GetProgressionTime(UWorld* World, const FYapTypeGroupSettings& TypeGroup) const
+float FYapFragment::GetProgressionTime(UWorld* World, const UYapDomainConfig& Domain) const
 {
-	float SpeechTime = GetSpeechTime(World, TypeGroup).Get(0.0f);
+	float SpeechTime = GetSpeechTime(World, Domain).Get(0.0f);
 	
 	float PaddingTime;
 	
 	if (Padding.IsSet())
 	{
-		PaddingTime = GetPaddingValue(World, TypeGroup);
+		PaddingTime = GetPaddingValue(World, Domain);
 	}
 	else
 	{
-		PaddingTime = TypeGroup.GetDefaultFragmentPaddingTime();
+		PaddingTime = Domain.GetDefaultFragmentPaddingTime();
 	}
 
 	return FMath::Max(SpeechTime + PaddingTime, 0.0f);
@@ -361,20 +361,20 @@ bool FYapFragment::GetSkippable(bool Default) const
 	return Skippable.Get(Default);
 }
 
-EYapTimeMode FYapFragment::GetTimeMode(UWorld* World, const FYapTypeGroupSettings& TypeGroup) const
+EYapTimeMode FYapFragment::GetTimeMode(UWorld* World, const UYapDomainConfig& Domain) const
 {
-	return GetTimeMode(World, UYapSubsystem::GetCurrentMaturitySetting(World), TypeGroup);
+	return GetTimeMode(World, UYapSubsystem::GetCurrentMaturitySetting(World), Domain);
 }
 
-EYapTimeMode FYapFragment::GetTimeMode(UWorld* World, EYapMaturitySetting MaturitySetting, const FYapTypeGroupSettings& TypeGroup) const
+EYapTimeMode FYapFragment::GetTimeMode(UWorld* World, EYapMaturitySetting MaturitySetting, const UYapDomainConfig& Domain) const
 {
-	EYapTimeMode EffectiveTimeMode = (TimeMode == EYapTimeMode::Default) ? TypeGroup.GetDefaultTimeModeSetting() : TimeMode;
+	EYapTimeMode EffectiveTimeMode = (TimeMode == EYapTimeMode::Default) ? Domain.GetDefaultTimeModeSetting() : TimeMode;
 
 	if (EffectiveTimeMode == EYapTimeMode::AudioTime)
 	{
 		if (!GetBit(World, MaturitySetting).HasAudioAsset())
 		{
-			EYapMissingAudioErrorLevel MissingAudioBehavior = TypeGroup.GetMissingAudioErrorLevel();
+			EYapMissingAudioErrorLevel MissingAudioBehavior = Domain.GetMissingAudioErrorLevel();
 			
 			if (MissingAudioBehavior == EYapMissingAudioErrorLevel::Error)
 			{
@@ -421,32 +421,6 @@ FYapBit& FYapFragment::GetBitMutable(EYapMaturitySetting MaturitySetting)
 	else
 	{
 		return MatureBit;
-	}
-}
-
-void FYapFragment::OnGetCategoriesMetaFromPropertyHandle(TSharedPtr<IPropertyHandle> PropertyHandle, FString& MetaString)
-{
-	if (!PropertyHandle || PropertyHandle->GetProperty()->GetFName() != GET_MEMBER_NAME_CHECKED(FYapFragment, FragmentTag))
-	{
-		return;
-	}
-
-	TArray<UObject*> OuterObjects;
-	PropertyHandle->GetOuterObjects(OuterObjects);
-
-	for (const UObject* Object : OuterObjects)
-	{
-		const UFlowNode_YapDialogue* DialogueNode = Cast<UFlowNode_YapDialogue>(Object);
-
-		if (!DialogueNode)
-		{
-			continue;
-		}
-		
-		if (DialogueNode->IsPlayerPrompt())
-		{
-			MetaString = DialogueNode->GetDialogueTag().ToString();
-		}
 	}
 }
 #endif

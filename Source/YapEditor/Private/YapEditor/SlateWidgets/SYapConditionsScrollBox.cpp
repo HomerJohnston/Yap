@@ -141,6 +141,7 @@ TSharedRef<SWidget> SYapConditionsScrollBox::CreateConditionButton(int32 Conditi
 		[
 			SNew(STextBlock)
 			.Text(this, &SYapConditionsScrollBox::Text_ConditionButton, ConditionIndex)
+			.SimpleTextMode(true)
 			.ColorAndOpacity(FSlateColor::UseForeground())
 			.Font(FCoreStyle::GetDefaultFontStyle("Bold", 10))	
 		]

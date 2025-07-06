@@ -40,30 +40,30 @@ float UYapBlueprintFunctionLibrary::GetSoundLength(USoundBase* Sound)
 
 // ------------------------------------------------------------------------------------------------
 
-void UYapBlueprintFunctionLibrary::RegisterConversationHandler(UObject* NewHandler, FGameplayTag TypeGroup)
+void UYapBlueprintFunctionLibrary::RegisterConversationHandler(UObject* NewHandler, TSubclassOf<UFlowNode_YapDialogue> Domain)
 {
-	UYapSubsystem::RegisterConversationHandler(NewHandler, TypeGroup);
+	UYapSubsystem::RegisterConversationHandler(NewHandler, Domain);
 }
 
 // ------------------------------------------------------------------------------------------------
 
-void UYapBlueprintFunctionLibrary::RegisterFreeSpeechHandler(UObject* NewHandler, FGameplayTag TypeGroup)
+void UYapBlueprintFunctionLibrary::RegisterFreeSpeechHandler(UObject* NewHandler, TSubclassOf<UFlowNode_YapDialogue> Domain)
 {
-	UYapSubsystem::RegisterFreeSpeechHandler(NewHandler, TypeGroup);
+	UYapSubsystem::RegisterFreeSpeechHandler(NewHandler, Domain);
 }
 
 // ------------------------------------------------------------------------------------------------
 
-void UYapBlueprintFunctionLibrary::UnregisterConversationHandler(UObject* HandlerToUnregister)
+void UYapBlueprintFunctionLibrary::UnregisterConversationHandler(UObject* HandlerToUnregister, TSubclassOf<UFlowNode_YapDialogue> Domain)
 {
-	UYapSubsystem::UnregisterConversationHandler(HandlerToUnregister);
+	UYapSubsystem::UnregisterConversationHandler(HandlerToUnregister, Domain);
 }
 
 // ------------------------------------------------------------------------------------------------
 
-void UYapBlueprintFunctionLibrary::UnregisterFreeSpeechHandler(UObject* HandlerToUnregister)
+void UYapBlueprintFunctionLibrary::UnregisterFreeSpeechHandler(UObject* HandlerToUnregister, TSubclassOf<UFlowNode_YapDialogue> Domain)
 {
-	UYapSubsystem::UnregisterFreeSpeechHandler(HandlerToUnregister);
+	UYapSubsystem::UnregisterFreeSpeechHandler(HandlerToUnregister, Domain);
 }
 
 // ------------------------------------------------------------------------------------------------

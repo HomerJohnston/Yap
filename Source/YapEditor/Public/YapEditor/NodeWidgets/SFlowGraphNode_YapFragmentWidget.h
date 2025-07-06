@@ -8,9 +8,10 @@
 #include "Yap/Enums/YapTimeMode.h"
 #include "Templates/SharedPointer.h"
 
+class UYapDomainConfig;
 class IYapCharacterInterface;
 class SYapDialogueEditor;
-struct FYapTypeGroupSettings;
+struct FYapDomainSettings;
 enum class EYapDialogueProgressionFlags : uint8;
 class UYapCharacterAsset;
 class SYapConditionsScrollBox;
@@ -114,6 +115,8 @@ protected:
 
 	//
 	TSharedPtr<SWidget> AudioIDButton = nullptr;
+
+	TSharedPtr<SWidget> RowHighlight = nullptr;
 
 	//
 	TWeakPtr<SYapDialogueEditor> ExpandedDialogueEditor;
@@ -318,7 +321,7 @@ protected:
 	// ------------
 	FSlateColor	GetColorAndOpacityForFragmentText(FLinearColor BaseColor) const;
 
-	const FYapTypeGroupSettings& GetTypeGroup() const;
+	const UYapDomainConfig& GetDomainConfig() const;
 
 public:
 	bool GetIsChildSafeCheckBoxHovered() const { return bChildSafeCheckBoxHovered; };

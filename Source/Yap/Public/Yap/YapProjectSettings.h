@@ -5,7 +5,7 @@
 
 #include "Engine/DeveloperSettings.h"
 #include "GameplayTagContainer.h"
-#include "YapTypeGroupSettings.h"
+#include "YapDomainConfig.h"
 #include "Yap/Enums/YapTimeMode.h"
 #include "Yap/YapBroker.h"
 
@@ -70,49 +70,6 @@ protected:
 	UPROPERTY(Config, EditAnywhere, Category = "Core", meta = (AllowAbstract))
 	TArray<TSoftClassPtr<UObject>> AdditionalCharacterClasses;
 	
-	/** This filters certain tag dropdowns. Set this to your game's Gameplay Tag that contains tags for each of your speaking characters. If your game's speaking characters have no common tag parent, leave this blank. */
-	UPROPERTY(Config, EditAnywhere, Category = "Uncategorized", meta = (AllowAbstract))
-	FGameplayTag CharacterTagBase;
-	
-	// - - - - - MOOD TAGS - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-	
-	/** Parent tag to use for mood tags. All sub-tags of this parent will be used as mood tags! If unset, will not use mood tags for this group. */
-	UPROPERTY(Config, EditAnywhere, Category = "Mood Tags")
-	FGameplayTag MoodTagsParent;
-
-	/** Optional default mood tag to use, for fragments which do not have a mood tag set. */
-	UPROPERTY(Config, EditAnywhere, Category = "Mood Tags")
-	FGameplayTag DefaultMoodTag;
-	
-	/** Where to look for mood icons. If unspecified, will use the default "Plugins/FlowYap/Resources/MoodTags" folder. */
-	UPROPERTY(Config, EditAnywhere, Category = "Mood Tags")
-	FDirectoryPath MoodTagEditorIconsPath;
-	
-	// - - - - - DIALOGUE TYPE GROUPS - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-	/** Your most commonly used dialogue type should be setup here. Settings from here will be used for any dialogue nodes which do not have a group assigned. */
-	UPROPERTY(Config, EditAnywhere, Category = "Core|TypeGroups")
-	FYapTypeGroupSettings DefaultGroup;
-	
-	/**
-	 * Type groups - if you want to have separate type handling for things like normal in-level chatting, tutorial text, incoming radio messages, etc... add "Groups" for them here.
-	 * Your "Listeners" can register to receive events from one or more groups.
-	 */
-	UPROPERTY(Config, EditAnywhere, Category = "Core|TypeGroups", meta = (ForceInlineRow))
-	TMap<FGameplayTag, FYapTypeGroupSettings> NamedGroups;
-	
-	// - - - - - DIALOGUE PLAYBACK - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
-	
-	/** Controls how fast dialogue plays. Only useful for text-based speaking time. Can be modified further by your Yap Broker class for user settings. */
-	UPROPERTY(Config, EditAnywhere, Category = "Dialogue Playback", meta = (ClampMin = 1, ClampMax = 1000, UIMin = 60, UIMax = 180, Delta = 5))
-	int32 TextWordsPerMinute = 120;
-
-	/** This is used when setting AutoAdvanceToPromptNodes is enabled; the graph will attempt to search through these nodes for Prompt nodes. */
-	TArray<TSubclassOf<UFlowNode>> PassThroughNodeTypes;
-
-	/** This is used when setting AutoAdvanceToPromptNodes is enabled; the graph will only recursively visit this many child nodes looking for Prompt nodes. */
-	int32 MaxPassthroughSearchDepth = 2;
-
 	// - - - - - EDITOR - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	
 	/** Normally, when assigning dialogue text, Yap will parse the text and attempt to cache a word count to use for determine text time length. Set this to prevent that. */
@@ -122,6 +79,14 @@ protected:
 	/** Normally, when assigning an audio length, Yap will read the audio asset and set the speaking time based on it. Set this to prevent that. */
 	UPROPERTY(Config, EditAnywhere, Category = "Editor")
 	bool bPreventCachingAudioLength = false;
+
+	/** This is used when setting AutoAdvanceToPromptNodes is enabled; the graph will attempt to search through these nodes for Prompt nodes. */
+	UPROPERTY(Config, EditAnywhere, Category = "Editor")
+	TArray<TSubclassOf<UFlowNode>> PassThroughNodeTypes;
+
+	/** This is used when setting AutoAdvanceToPromptNodes is enabled; the graph will only recursively visit this many child nodes looking for Prompt nodes. */
+	UPROPERTY(Config, EditAnywhere, Category = "Editor")
+	int32 MaxPassthroughSearchDepth = 2;
 	
 	// - - - - - GRAPH APPEARANCE - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -191,31 +156,14 @@ public:
 	// Custom API overrides
 public:
 
-#if WITH_EDITOR
-	static FString GetMoodTagIconPath(FGameplayTag Key, FString FileExtension);
-
-	static FGameplayTagContainer GetMoodTags();
-#endif
-
 	static bool GetSuppressBrokerWarnings() { return Get().bSuppressBrokerWarnings; }
 
 	static const TSoftClassPtr<UYapBroker>& GetBrokerClass() { return Get().BrokerClass; }
 	
 	static const TArray<TSoftClassPtr<UObject>>& GetAudioAssetClasses();
 
-	
-	static const FGameplayTag& GetMoodTagsParent() { return Get().MoodTagsParent; };
-
-	static const FGameplayTag& GetDefaultMoodTag() { return Get().DefaultMoodTag; };
-
-#if WITH_EDITOR
-	const FDirectoryPath& GetMoodTagEditorIconsPath() const { return MoodTagEditorIconsPath; };
-#endif
-	
 #if WITH_EDITOR
 	static const UYapBroker* GetEditorBrokerDefault();
-
-	static const FString GetAudioAssetRootFolder(FGameplayTag TypeGroup);
 #endif
 
 	static const TArray<TSoftClassPtr<UObject>>& GetAdditionalCharacterClasses() { return Get().AdditionalCharacterClasses; }
@@ -223,8 +171,6 @@ public:
 	static void AddAdditionalCharacterClass(TSoftClassPtr<UObject> Class);
 	
 	static bool HasCustomAudioAssetClasses() { return Get().AudioAssetClasses.Num() > 0; };
-
-	static int32 GetTextWordsPerMinute() { return Get().TextWordsPerMinute; }
 
 	static bool CacheFragmentWordCountAutomatically() { return !Get().bPreventCachingWordCount; }
 	
@@ -234,9 +180,11 @@ public:
 
 #if WITH_EDITOR
 public:
-	static FString GetMoodTagIconPath();
-
-	static FLinearColor GetGroupColor(FGameplayTag TypeGroup);
+	/*
+	static FString GetMoodTagIconPath(FGameplayTag MoodTag, FString Extension);
+	*/
+	
+	static FLinearColor GetGroupColor(FGameplayTag DomainTag);
 	
 	static int32 GetPortraitSize() { return Get().PortraitSize; }
 
@@ -253,11 +201,6 @@ public:
 protected:
 	void OnGetCategoriesMetaFromPropertyHandle(TSharedPtr<IPropertyHandle> PropertyHandle, FString& MetaString) const;
 #endif
-
-public:
-	static const FYapTypeGroupSettings& GetTypeGroup(FGameplayTag TypeGroup);
-
-	static const FYapTypeGroupSettings* GetTypeGroupPtr(FGameplayTag TypeGroup);
 };
 
 #undef LOCTEXT_NAMESPACE

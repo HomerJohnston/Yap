@@ -50,6 +50,7 @@ SVerticalBox::FSlot::FSlotArguments MakeFragmentProgressionSettingRow(TOptional<
 		[
 			SNew(STextBlock)
 			.Text(Label)
+			.SimpleTextMode(true)
 		]
 		+ SHorizontalBox::Slot()
 		.AutoWidth()

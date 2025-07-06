@@ -14,7 +14,7 @@ class IDetailChildrenBuilder;
 class IDetailCategoryBuilder;
 class IDetailGroup;
 struct FGameplayTag;
-struct FYapTypeGroupSettings;
+struct FYapDomainSettings;
 
 /**
  * 
@@ -33,7 +33,7 @@ public:
     
 protected:
 
-    FYapTypeGroupSettings* Settings = nullptr;
+    FYapDomainSettings* Settings = nullptr;
         
     TArray<TSharedPtr<IPropertyHandle>> AllPropertyHandles;
 

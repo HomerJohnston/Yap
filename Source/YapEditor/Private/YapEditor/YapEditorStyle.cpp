@@ -164,6 +164,8 @@ void FYapEditorStyle::Initialize()
 	YAP_DEFINE_BRUSH(FSlateVectorImageBrush,	Icon_Switch_Off,				"Icon_Switch_Off", ".svg",				FVector2f(16, 16));
 	
 	YAP_DEFINE_BRUSH(FSlateBoxBrush,			Icon_IDTag,						"Icon_IDTag", ".png",					FMargin(0.5, 0.5, 0.0, 0.0));
+	
+	YAP_DEFINE_BRUSH(FSlateVectorImageBrush,	Icon_Random,					"Icon_Random", ".svg",					FVector2f(32, 32));
 
 	YAP_DEFINE_BRUSH(FSlateImageBrush,			Bar_NegativePadding,			"Bar_NegativePadding", ".png",			FVector2f(5, 3), FLinearColor::White, ESlateBrushTileType::Horizontal);
 	YAP_DEFINE_BRUSH(FSlateImageBrush,			Bar_PositivePadding,			"Bar_PositivePadding", ".png",			FVector2f(3, 3), FLinearColor::White, ESlateBrushTileType::Horizontal);

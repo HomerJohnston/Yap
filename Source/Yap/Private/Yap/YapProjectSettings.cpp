@@ -20,7 +20,7 @@ UYapProjectSettings::UYapProjectSettings()
 #if WITH_EDITORONLY_DATA
 	TagContainers =
 	{
-		{ EYap_TagFilter::Prompts, &DefaultGroup.DialogueTagsParent }
+		//{ EYap_TagFilter::Prompts, &DefaultGroup.DialogueTagsParent }
 	};
 #endif
 
@@ -28,52 +28,16 @@ UYapProjectSettings::UYapProjectSettings()
 
 	DefaultCharacterClasses = { UYapCharacterAsset::StaticClass() };
 
-	DefaultGroup = FYapTypeGroupSettings(true);
-
 	UGameplayTagsManager& TagsManager = UGameplayTagsManager::Get();
-	DefaultGroup.DialogueTagsParent = TagsManager.AddNativeGameplayTag("Yap.Dialogue");
-
-	MoodTagsParent = TagsManager.AddNativeGameplayTag("Yap.Mood");
-
-	TagsManager.AddNativeGameplayTag("Yap.TypeGroup");
+	
+	TagsManager.AddNativeGameplayTag("Yap.Domain");
 	
 	DefaultPortraitTexture = FSoftObjectPath("/Yap/T_Avatar_Missing.T_Avatar_Missing");
 	
 #if WITH_EDITOR
-	UGameplayTagsManager::Get().OnGetCategoriesMetaFromPropertyHandle.AddUObject(this, &ThisClass::OnGetCategoriesMetaFromPropertyHandle);
+	TagsManager.OnGetCategoriesMetaFromPropertyHandle.AddUObject(this, &ThisClass::OnGetCategoriesMetaFromPropertyHandle);
 #endif
 }
-
-#if WITH_EDITOR
-FString UYapProjectSettings::GetMoodTagIconPath(FGameplayTag Key, FString FileExtension)
-{
-	int32 Index;
-
-	FString KeyString = (Key.IsValid()) ?  Key.ToString() : "None";
-
-	if (KeyString.FindLastChar('.', Index))
-	{
-		KeyString = KeyString.RightChop(Index + 1);
-	}
-
-	if (Get().MoodTagEditorIconsPath.Path == "")
-	{
-		static FString ResourcesDir = Yap::FileUtilities::GetPluginFolder();
-		
-		return Yap::FileUtilities::GetResourcesFolder() / FString::Format(TEXT("DefaultMoodTags/{0}.{1}"), { KeyString, FileExtension });
-	}
-	
-	return FPaths::ProjectDir() / FString::Format(TEXT("{0}/{1}.{2}}"), { Get().MoodTagEditorIconsPath.Path, KeyString, FileExtension });
-}
-
-#endif
-
-#if WITH_EDITOR
-FGameplayTagContainer UYapProjectSettings::GetMoodTags()
-{
-	return UGameplayTagsManager::Get().RequestGameplayTagChildren(Get().MoodTagsParent);
-}
-#endif
 
 #if WITH_EDITOR
 const UYapBroker* UYapProjectSettings::GetEditorBrokerDefault()
@@ -101,48 +65,9 @@ const TArray<TSoftClassPtr<UObject>>& UYapProjectSettings::GetAudioAssetClasses(
 }
 
 #if WITH_EDITOR
-const FString UYapProjectSettings::GetAudioAssetRootFolder(FGameplayTag TypeGroup)
-{
-	const FYapTypeGroupSettings* Group = GetTypeGroupPtr(TypeGroup);
-
-	if (!Group)
-	{
-		return "";
-	}
-	
-	if (Group->AudioAssetsRootFolder.Path.IsEmpty())
-	{
-		return "";
-	}
-	
-	return Group->AudioAssetsRootFolder.Path;
-}
-
 void UYapProjectSettings::AddAdditionalCharacterClass(TSoftClassPtr<UObject> Class)
 {
 	Get().AdditionalCharacterClasses.Add(Class);
-}
-#endif
-
-#if WITH_EDITOR
-FString UYapProjectSettings::GetMoodTagIconPath()
-{
-	// Recache the path if it was never calculated, or if the setting is set and the cached path is not equal to it
-	if (Get().MoodTagEditorIconsPath.Path.IsEmpty())
-	{
-		return Yap::FileUtilities::GetResourcesFolder() / TEXT("DefaultMoodTags");
-	}
-	else
-	{
-		return FPaths::ProjectDir() / Get().MoodTagEditorIconsPath.Path;
-	}
-}
-#endif
-
-#if WITH_EDITOR
-FLinearColor UYapProjectSettings::GetGroupColor(FGameplayTag GroupName)
-{
-	return GetTypeGroup(GroupName).GetGroupColor();
 }
 #endif
 
@@ -186,44 +111,6 @@ void UYapProjectSettings::OnGetCategoriesMetaFromPropertyHandle(TSharedPtr<IProp
 	}
 }
 #endif
-
-const FYapTypeGroupSettings& UYapProjectSettings::GetTypeGroup(FGameplayTag TypeGroup)
-{
-	if (!TypeGroup.IsValid())
-	{
-		return Get().DefaultGroup;
-	}
-
-	FYapTypeGroupSettings* Group = Get().NamedGroups.Find(TypeGroup);
-
-	if (!Group)
-	{
-		UE_LOG(LogYap, Error, TEXT("Yap group [%s] not found!"), *TypeGroup.ToString());
-		
-		return Get().DefaultGroup;
-	}
-	
-	return *Group;
-}
-
-const FYapTypeGroupSettings* UYapProjectSettings::GetTypeGroupPtr(FGameplayTag TypeGroup)
-{
-	if (!TypeGroup.IsValid())
-	{
-		return &Get().DefaultGroup;
-	}
-
-	FYapTypeGroupSettings* Group = Get().NamedGroups.Find(TypeGroup);
-
-	if (!Group)
-	{
-		UE_LOG(LogYap, Error, TEXT("Yap group [%s] not found!"), *TypeGroup.ToString());
-		
-		return nullptr;
-	}
-	
-	return Group;
-}
 
 #if WITH_EDITOR
 // TODO someone posted a nicer way to do this in Slackers without this... something about simple name? using the node?? can't remember

@@ -27,9 +27,9 @@ void UYapCharacterThumbnailRenderer::Draw(UObject* Object, int32 X, int32 Y, uin
 		return;
 	}
 
-	const FGameplayTag& MoodTag = UYapProjectSettings::GetDefaultMoodTag();
+	//const FGameplayTag& MoodTag = UYapProjectSettings::GetDefaultMoodTag();
 	
-	const UTexture2D* TexturePtr = Character->GetYapCharacterPortrait(MoodTag);
+	const UTexture2D* TexturePtr = nullptr;// Character->GetYapCharacterPortrait(MoodTag);
 
 	FVector2D Center (Width * 0.5f, Height * 0.5f);
 		

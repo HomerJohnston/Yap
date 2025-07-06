@@ -97,18 +97,18 @@ int32 UYapBroker::CalculateWordCount(const FText& Text) const
 	return CountWords(Text.ToString());
 }
 
-float UYapBroker::CalculateTextTime(int32 WordCount, int32 CharCount, const FGameplayTag& TypeGroup) const
+float UYapBroker::CalculateTextTime(int32 WordCount, int32 CharCount, const UYapDomainConfig& DomainConfig) const
 {
 	if (GetClass()->IsFunctionImplementedInScript(GET_FUNCTION_NAME_CHECKED(UYapBroker, K2_CalculateTextTime))) // TODO cache this? Switch To YAP_CALL_K2?
 	{
-		return K2_CalculateTextTime(WordCount, CharCount, TypeGroup);
+		return K2_CalculateTextTime(WordCount, CharCount, &DomainConfig);
 	}
 	
-	int32 TWPM = UYapProjectSettings::GetTextWordsPerMinute();
+	int32 TWPM = DomainConfig.DialoguePlayback.TimeSettings.TextWordsPerMinute;
 	float SecondsPerWord = 60.0 / (float)TWPM;
 	float TalkTime = WordCount * SecondsPerWord * GetPlaybackSpeed();
 
-	float Min = UYapProjectSettings::GetTypeGroup(TypeGroup).GetMinimumAutoTextTimeLength();
+	float Min = DomainConfig.GetMinimumAutoTextTimeLength();
 		
 	return FMath::Max(TalkTime, Min);
 }

@@ -292,7 +292,7 @@ void SFlowGraphNode_YapDialogueWidget::OnTagChanged_DialogueTag_PostEdit(TArray<
 FOptionalSize SFlowGraphNode_YapDialogueWidget::GetMaxNodeWidth() const
 {
 	const float GraphGridSize = 16;
-	return FMath::Max(YAP_MIN_NODE_WIDTH + UYapProjectSettings::GetPortraitSize(), YAP_DEFAULT_NODE_WIDTH + GraphGridSize * GetDomainConfig().GetDialogueWidthAdjustment());
+	return FMath::Max(YAP_MIN_NODE_WIDTH + UYapProjectSettings::GetPortraitSize(), YAP_DEFAULT_NODE_WIDTH + GraphGridSize * GetNodeConfig().GetDialogueWidthAdjustment());
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -364,7 +364,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapDialogueWidget::CreateTitleWidget(TSharedP
 	
 	FString AssetName = FlowAsset->GetName();
 			
-	FString ProjectParentTag = GetDomainConfig().GetDialogueTagsParent().ToString();
+	FString ProjectParentTag = GetNodeConfig().GetDialogueTagsParent().ToString();
 			
 	FString GameplayTagFilter = ProjectParentTag + "." + Path + "." + AssetName;
 	
@@ -813,15 +813,15 @@ FText SFlowGraphNode_YapDialogueWidget::Text_NodeHeader() const
 	{
 		case EYapDialogueNodeType::Talk:
 		{
-			return GetDomainConfig().GetTalkModeTitle();
+			return GetNodeConfig().GetTalkModeTitle();
 		}
 		case EYapDialogueNodeType::TalkAndAdvance:
 		{
-			return GetDomainConfig().GetAskModeTitle();
+			return GetNodeConfig().GetAskModeTitle();
 		}
 		case EYapDialogueNodeType::PlayerPrompt:
 		{
-			return GetDomainConfig().GetPromptModeTitle();
+			return GetNodeConfig().GetPromptModeTitle();
 		}
 		default:
 		{
@@ -1359,13 +1359,13 @@ void SFlowGraphNode_YapDialogueWidget::OnDialogueSkipped(uint8 FragmentIndex)
 
 // ------------------------------------------------------------------------------------------------
 
-const UYapDomainConfig& SFlowGraphNode_YapDialogueWidget::GetDomainConfig() const
+const UYapNodeConfig& SFlowGraphNode_YapDialogueWidget::GetNodeConfig() const
 {
 	const UFlowNode_YapDialogue* DialogueNode = GetFlowYapDialogueNode();
 
 	check(DialogueNode);
 
-	return DialogueNode->GetDomainConfig();
+	return DialogueNode->GetNodeConfig();
 }
 
 // ------------------------------------------------------------------------------------------------

@@ -52,7 +52,7 @@ protected:
     FGameplayTag ConversationName;
 
     UPROPERTY(Transient)
-    TSubclassOf<UFlowNode_YapDialogue> Domain;
+    TSubclassOf<UFlowNode_YapDialogue> NodeType;
     
     UPROPERTY(Transient)
     TArray<FYapSpeechHandle> RunningFragments;
@@ -101,7 +101,7 @@ public:
 public:
     const FGameplayTag& GetConversationName() const { return ConversationName; }
 
-    const TSubclassOf<UFlowNode_YapDialogue> GetDomain() const { return Domain; }
+    const TSubclassOf<UFlowNode_YapDialogue> GetNodeType() const { return NodeType; }
     
     const TArray<FYapSpeechHandle>& GetRunningFragments() const { return RunningFragments; }
 

@@ -5,7 +5,7 @@
 
 #include "Engine/DeveloperSettings.h"
 #include "GameplayTagContainer.h"
-#include "YapDomainConfig.h"
+#include "YapNodeConfig.h"
 #include "Yap/Enums/YapTimeMode.h"
 #include "Yap/YapBroker.h"
 
@@ -69,6 +69,9 @@ protected:
 	/** By default, Yap will discover all native C++ classes that inherit the Yap Character interface. You can add blueprint classes which inherit it here. This avoids forcefully loading all assets to discover them. */
 	UPROPERTY(Config, EditAnywhere, Category = "Core", meta = (AllowAbstract))
 	TArray<TSoftClassPtr<UObject>> AdditionalCharacterClasses;
+
+	UPROPERTY(Config, EditAnywhere, Category = "Core")
+	TSoftClassPtr<UYapNodeConfig> DefaultNodeConfig;
 	
 	// - - - - - EDITOR - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	
@@ -162,6 +165,8 @@ public:
 	
 	static const TArray<TSoftClassPtr<UObject>>& GetAudioAssetClasses();
 
+	static const TSoftClassPtr<UYapNodeConfig>& GetDefaultNodeConfig() { return Get().DefaultNodeConfig; }
+	
 #if WITH_EDITOR
 	static const UYapBroker* GetEditorBrokerDefault();
 #endif
@@ -180,11 +185,6 @@ public:
 
 #if WITH_EDITOR
 public:
-	/*
-	static FString GetMoodTagIconPath(FGameplayTag MoodTag, FString Extension);
-	*/
-	
-	static FLinearColor GetGroupColor(FGameplayTag DomainTag);
 	
 	static int32 GetPortraitSize() { return Get().PortraitSize; }
 

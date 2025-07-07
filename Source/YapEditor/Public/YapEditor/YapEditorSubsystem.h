@@ -52,18 +52,14 @@ protected:
 	TArray<FGameplayTag> TagsPendingDeletion;
 	
 public:
-	void UpdateMoodTagBrushesIfRequired();
+	//void UpdateMoodTagBrushes();
 
-	void UpdateMoodTagBrushes();
+	//void UpdateMoodTagBrushes(const FGameplayTagContainer& ProjectMoodTags);
 	
 protected:
-	void BuildIcon(const FGameplayTag& MoodTag);
+	//void BuildIcon(const FGameplayTag& MoodTag);
 
 public:
-	TSharedPtr<FSlateImageBrush> GetMoodTagIcon(FGameplayTag MoodTag);
-
-	const FSlateBrush* GetMoodTagBrush(FGameplayTag Name);
-
 	static TSharedPtr<FSlateImageBrush> GetCharacterPortraitBrush(const UObject* Character, const FGameplayTag& MoodTag);
 
 public:

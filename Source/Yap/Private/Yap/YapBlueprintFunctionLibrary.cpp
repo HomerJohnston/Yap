@@ -40,30 +40,30 @@ float UYapBlueprintFunctionLibrary::GetSoundLength(USoundBase* Sound)
 
 // ------------------------------------------------------------------------------------------------
 
-void UYapBlueprintFunctionLibrary::RegisterConversationHandler(UObject* NewHandler, TSubclassOf<UFlowNode_YapDialogue> Domain)
+void UYapBlueprintFunctionLibrary::RegisterConversationHandler(UObject* NewHandler, TSubclassOf<UFlowNode_YapDialogue> NodeType)
 {
-	UYapSubsystem::RegisterConversationHandler(NewHandler, Domain);
+	UYapSubsystem::RegisterConversationHandler(NewHandler, NodeType);
 }
 
 // ------------------------------------------------------------------------------------------------
 
-void UYapBlueprintFunctionLibrary::RegisterFreeSpeechHandler(UObject* NewHandler, TSubclassOf<UFlowNode_YapDialogue> Domain)
+void UYapBlueprintFunctionLibrary::RegisterFreeSpeechHandler(UObject* NewHandler, TSubclassOf<UFlowNode_YapDialogue> NodeType)
 {
-	UYapSubsystem::RegisterFreeSpeechHandler(NewHandler, Domain);
+	UYapSubsystem::RegisterFreeSpeechHandler(NewHandler, NodeType);
 }
 
 // ------------------------------------------------------------------------------------------------
 
-void UYapBlueprintFunctionLibrary::UnregisterConversationHandler(UObject* HandlerToUnregister, TSubclassOf<UFlowNode_YapDialogue> Domain)
+void UYapBlueprintFunctionLibrary::UnregisterConversationHandler(UObject* HandlerToUnregister, TSubclassOf<UFlowNode_YapDialogue> NodeType)
 {
-	UYapSubsystem::UnregisterConversationHandler(HandlerToUnregister, Domain);
+	UYapSubsystem::UnregisterConversationHandler(HandlerToUnregister, NodeType);
 }
 
 // ------------------------------------------------------------------------------------------------
 
-void UYapBlueprintFunctionLibrary::UnregisterFreeSpeechHandler(UObject* HandlerToUnregister, TSubclassOf<UFlowNode_YapDialogue> Domain)
+void UYapBlueprintFunctionLibrary::UnregisterFreeSpeechHandler(UObject* HandlerToUnregister, TSubclassOf<UFlowNode_YapDialogue> NodeType)
 {
-	UYapSubsystem::UnregisterFreeSpeechHandler(HandlerToUnregister, Domain);
+	UYapSubsystem::UnregisterFreeSpeechHandler(HandlerToUnregister, NodeType);
 }
 
 // ------------------------------------------------------------------------------------------------

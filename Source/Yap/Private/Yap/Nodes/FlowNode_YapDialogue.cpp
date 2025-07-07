@@ -22,13 +22,11 @@ FName UFlowNode_YapDialogue::BypassPinName = FName("Bypass");
 
 // ------------------------------------------------------------------------------------------------
 
-UYapDomainConfig_Default::UYapDomainConfig_Default()
+UYapNodeConfig_Default::UYapNodeConfig_Default()
 {
 	UGameplayTagsManager& TagsManager = UGameplayTagsManager::Get();
     
-	General.DialogueTagsParent = TagsManager.AddNativeGameplayTag("Yap.Dialogue");
-
-	MoodTags.MoodTagsParent = TagsManager.AddNativeGameplayTag("Yap.Mood.Basic");
+	MoodTags.MoodTagsParent = TagsManager.AddNativeGameplayTag("Yap.Dialogue.Mood");
 }
 
 UFlowNode_YapDialogue::UFlowNode_YapDialogue()
@@ -50,7 +48,7 @@ UFlowNode_YapDialogue::UFlowNode_YapDialogue()
 
 	// The node will only have certain context-outputs which depend on the node type. 
 	OutputPins = {};
-	
+
 #if WITH_EDITOR
 	// TODO use the subsystem to manage crap like this
 	UYapProjectSettings::RegisterTagFilter(this, GET_MEMBER_NAME_CHECKED(ThisClass, DialogueTag), EYap_TagFilter::Prompts);
@@ -60,8 +58,6 @@ UFlowNode_YapDialogue::UFlowNode_YapDialogue()
 		UGameplayTagsManager::Get().OnFilterGameplayTagChildren.AddUObject(this, &ThisClass::OnFilterGameplayTagChildren);
 	}
 #endif
-
-	DomainConfig = UYapDomainConfig_Default::StaticClass();
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -221,7 +217,7 @@ TOptional<float> UFlowNode_YapDialogue::GetSpeechTime(uint8 FragmentIndex) const
 	
 	const FYapFragment& Fragment = GetFragment(FragmentIndex);
 
-	return Fragment.GetSpeechTime(GetWorld(), GetDomainConfig());
+	return Fragment.GetSpeechTime(GetWorld(), GetNodeConfig());
 }
 
 #if WITH_EDITOR
@@ -229,7 +225,7 @@ TOptional<float> UFlowNode_YapDialogue::GetSpeechTime(uint8 FragmentIndex, EYapM
 {	
 	const FYapFragment& Fragment = GetFragment(FragmentIndex);
 
-	return Fragment.GetSpeechTime(GetWorld(), Maturity, LoadContext, GetDomainConfig());
+	return Fragment.GetSpeechTime(GetWorld(), Maturity, LoadContext, GetNodeConfig());
 }
 #endif
 
@@ -242,7 +238,7 @@ float UFlowNode_YapDialogue::GetPadding(uint8 FragmentIndex) const
 	
 	const FYapFragment& Fragment = GetFragment(FragmentIndex);
 
-	float Value = Fragment.GetPaddingValue(GetWorld(), GetDomainConfig());
+	float Value = Fragment.GetPaddingValue(GetWorld(), GetNodeConfig());
 
 	return Value;
 }
@@ -421,24 +417,32 @@ bool UFlowNode_YapDialogue::CheckConditions()
 
 // ------------------------------------------------------------------------------------------------
 
-const UYapDomainConfig& UFlowNode_YapDialogue::GetDomainConfig() const
+const UYapNodeConfig& UFlowNode_YapDialogue::GetNodeConfig() const
 {
-	if (IsValid(DomainConfig))
+	if (IsValid(Config))
 	{
-		return *DomainConfig.GetDefaultObject();
+		return *Config;
 	}
 
-	return *GetDefault<UYapDomainConfig>();
+	const TSoftClassPtr<UYapNodeConfig>& ConfigClass = UYapProjectSettings::GetDefaultNodeConfig();
+	
+	if (ConfigClass.IsNull())
+	{
+		return *GetDefault<UYapNodeConfig>();
+	}
+
+	// TODO URGENT I should probably pin this somehow or make sure it's always loaded by Yap
+	return *ConfigClass.LoadSynchronous()->GetDefaultObject<UYapNodeConfig>();
 }
 
 bool UFlowNode_YapDialogue::UsesTitleText() const
 {
 	if (IsPlayerPrompt())
 	{
-		return !GetDomainConfig().GetHideTitleTextOnPromptNodes();
+		return !GetNodeConfig().GetHideTitleTextOnPromptNodes();
 	}
 
-	return GetDomainConfig().GetShowTitleTextOnTalkNodes();
+	return GetNodeConfig().GetShowTitleTextOnTalkNodes();
 }
 
 const FYapFragment& UFlowNode_YapDialogue::GetFragment(uint8 FragmentIndex) const
@@ -452,7 +456,7 @@ const FYapFragment& UFlowNode_YapDialogue::GetFragment(uint8 FragmentIndex) cons
 
 bool UFlowNode_YapDialogue::GetSkippable() const
 {
-	return Skippable.Get(!GetDomainConfig().GetForcedDialogueDuration());
+	return Skippable.Get(!GetNodeConfig().GetForcedDialogueDuration());
 }
 
 bool UFlowNode_YapDialogue::GetNodeAutoAdvance() const
@@ -462,12 +466,12 @@ bool UFlowNode_YapDialogue::GetNodeAutoAdvance() const
 		return true;
 	}
 	
-	if (IsPlayerPrompt() && GetDomainConfig().GetPromptAdvancesImmediately())
+	if (IsPlayerPrompt() && GetNodeConfig().GetPromptAdvancesImmediately())
 	{
 		return true;
 	}
 	
-	return AutoAdvance.Get(!GetDomainConfig().GetManualAdvanceOnly());
+	return AutoAdvance.Get(!GetNodeConfig().GetManualAdvanceOnly());
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -549,7 +553,7 @@ bool UFlowNode_YapDialogue::TryBroadcastPrompts()
  		Data.MoodTag = Fragment.GetMoodTag();
  		Data.DialogueText = Bit.GetDialogueText();
 
- 		if (!GetDomainConfig().GetHideTitleTextOnPromptNodes())
+ 		if (!GetNodeConfig().GetHideTitleTextOnPromptNodes())
  		{
  			Data.TitleText = Bit.GetTitleText();
  		}
@@ -676,9 +680,9 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 	Fragment.ClearAwaitingManualAdvance();
 	
 	const FYapBit& Bit = Fragment.GetBit(GetWorld());
-	const UYapDomainConfig& DomainSettings = GetDomainConfig();
+	const UYapNodeConfig& NodeConfig = GetNodeConfig();
 	
-	TOptional<float> Time = Fragment.GetSpeechTime(GetWorld(), DomainSettings);
+	TOptional<float> Time = Fragment.GetSpeechTime(GetWorld(), NodeConfig);
 
 	float EffectiveTime;
 	
@@ -688,7 +692,7 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 	}
 	else
 	{
-		EffectiveTime = DomainSettings.GetMinimumSpeakingTime();
+		EffectiveTime = NodeConfig.GetMinimumSpeakingTime();
 	}
 
 	UYapSubsystem* Subsystem = GetWorld()->GetSubsystem<UYapSubsystem>();
@@ -704,7 +708,7 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 	Data.bSkippable = Fragment.GetSkippable(GetSkippable());
 
 	// It's possible that a fragment has titletext data but the project settings are to ignore it; avoid copying the data if the game settings don't want it
-	if (!DomainSettings.GetShowTitleTextOnTalkNodes())
+	if (!NodeConfig.GetShowTitleTextOnTalkNodes())
 	{
 		Data.TitleText = Bit.GetTitleText();
 	}
@@ -742,9 +746,9 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 	{
 		OnPaddingComplete(FocusedSpeechHandle);
 	}
-	else if (Fragment.GetUsesPadding(GetWorld(), DomainSettings))
+	else if (Fragment.GetUsesPadding(GetWorld(), NodeConfig))
 	{
-		float PaddingCompletionTime = Fragment.GetProgressionTime(GetWorld(), DomainSettings);
+		float PaddingCompletionTime = Fragment.GetProgressionTime(GetWorld(), NodeConfig);
 
 		if (PaddingCompletionTime > 0)
 		{
@@ -874,7 +878,7 @@ void UFlowNode_YapDialogue::TryAdvanceFromFragment(const FYapSpeechHandle& Handl
 	}
 	else
 	{
-		if (GetDomainConfig().GetIgnoreManualAdvanceOutsideConversations() && !UYapSubsystem::IsSpeechInConversation(this, Handle))
+		if (GetNodeConfig().GetIgnoreManualAdvanceOutsideConversations() && !UYapSubsystem::IsSpeechInConversation(this, Handle))
 		{
 			UE_LOG(LogYap, VeryVerbose, TEXT("%s [%i]: TryAdvanceFromFragment passed - GetFragmentAutoAdvance true)"), *GetName(), FragmentIndex);
 			AdvanceFromFragment(Handle, FragmentIndex);
@@ -1388,7 +1392,7 @@ void UFlowNode_YapDialogue::OnFilterGameplayTagChildren(const FString& String, T
 	
 	const FGameplayTagContainer& ParentTagContainer = ParentTagNode->GetSingleTagContainer();
 
-	if (ParentTagContainer.HasTagExact(GetDomainConfig().GetDialogueTagsParent()))
+	if (ParentTagContainer.HasTagExact(GetNodeConfig().GetDialogueTagsParent()))
 	{
 		bArg = true;
 	}

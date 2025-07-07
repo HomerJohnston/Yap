@@ -6,12 +6,12 @@
 #include "Yap/Enums/YapMissingAudioErrorLevel.h"
 #include "Yap/Enums/YapTimeMode.h"
 #include "GameplayTagContainer.h"
-#include "YapDomainConfig.generated.h"
+#include "YapNodeConfig.generated.h"
 
 #define LOCTEXT_NAMESPACE "YapEditor"
 
 USTRUCT()
-struct YAP_API FYapDomainSettings_General
+struct FYapNodeConfigGroup_General
 {
 	GENERATED_BODY()
 	
@@ -34,7 +34,7 @@ struct YAP_API FYapDomainSettings_General
 };
 
 USTRUCT()
-struct YAP_API FYapDomainSettings_Audio
+struct FYapNodeConfigGroup_Audio
 {
 	GENERATED_BODY()
 
@@ -63,7 +63,7 @@ struct YAP_API FYapDomainSettings_Audio
 };
 
 USTRUCT()
-struct FYapDomainSettings_DialoguePlaybackTime
+struct FYapNodeConfigGroup_DialoguePlaybackTime
 {
 	GENERATED_BODY()
 	
@@ -103,7 +103,7 @@ struct FYapDomainSettings_DialoguePlaybackTime
 };
 
 USTRUCT()
-struct FYapDomainSettings_DialoguePlayback
+struct FYapNodeConfigGroup_DialoguePlayback
 {
 	GENERATED_BODY()
 
@@ -120,11 +120,11 @@ struct FYapDomainSettings_DialoguePlayback
 	bool bManualAdvanceFreeSpeech = false;
 
 	UPROPERTY(EditAnywhere)
-	FYapDomainSettings_DialoguePlaybackTime TimeSettings;
+	FYapNodeConfigGroup_DialoguePlaybackTime TimeSettings;
 };
 
 USTRUCT()
-struct FYapDomainSettings_PromptSettings
+struct FYapNodeConfigGroup_PromptSettings
 {
 	GENERATED_BODY()
 	
@@ -142,11 +142,11 @@ struct FYapDomainSettings_PromptSettings
 };
 
 USTRUCT()
-struct FYapDomainSettings_FlowGraphSettings
+struct FYapNodeConfigGroup_FlowGraphSettings
 {
 	GENERATED_BODY()
 
-	FYapDomainSettings_FlowGraphSettings();
+	FYapNodeConfigGroup_FlowGraphSettings();
 
 	UPROPERTY(EditAnywhere, meta = (DoNotDraw))
 	FLinearColor GroupColor = FLinearColor::White;
@@ -182,7 +182,7 @@ struct FYapDomainSettings_FlowGraphSettings
 };
 
 USTRUCT()
-struct FYapDomainConfig_MoodTags
+struct FYapNodeConfigGroup_MoodTags
 {
 	GENERATED_BODY()
 
@@ -190,7 +190,7 @@ struct FYapDomainConfig_MoodTags
 	UPROPERTY(EditAnywhere)
 	bool bDisableMoodTags = false;
 	
-	/** Parent tag to use for mood tags. All sub-tags of this parent will be used as mood tags! If unset, will not use mood tags for this group. */
+	/** Parent tag to use for mood tags. All sub-tags of this parent will be used as mood tags. If unset, will not use mood tags for this group. */
 	UPROPERTY(EditAnywhere, meta = (EditCondition = "!bDisableMoodTags", EditConditionHides))
 	FGameplayTag MoodTagsParent;
 
@@ -200,23 +200,23 @@ struct FYapDomainConfig_MoodTags
 	
 	/** Where to look for mood icons. If unspecified, will use the default "Plugins/FlowYap/Resources/MoodTags" folder. */
 	UPROPERTY(EditAnywhere, meta = (EditCondition = "!bDisableMoodTags", EditConditionHides))
-	FDirectoryPath MoodTagEditorIconsPath;
+	FDirectoryPath EditorIconsPath;
 
 	FGameplayTagContainer GetAllMoodTags();
 };
 
 /**
- * Domain settings assets can be created and used to control how different dialogue node subclasses play.
+ * Yap node config assets can be created and used to control how different dialogue node subclasses play.
  */
 UCLASS(Blueprintable)
-class YAP_API UYapDomainConfig : public UObject
+class YAP_API UYapNodeConfig : public UObject
 {
     GENERATED_BODY()
 
 	// CONSTRUCTION ===============================================================================
 
 public:
-	UYapDomainConfig();
+	UYapNodeConfig();
 
 	friend class UYapProjectSettings;
 
@@ -231,22 +231,22 @@ private:
 public:
 	
 	UPROPERTY(EditAnywhere)
-	FYapDomainSettings_General General;
+	FYapNodeConfigGroup_General General;
 	
 	UPROPERTY(EditAnywhere)
-	FYapDomainSettings_Audio Audio;
+	FYapNodeConfigGroup_Audio Audio;
 
 	UPROPERTY(EditAnywhere)
-	FYapDomainSettings_DialoguePlayback DialoguePlayback;
+	FYapNodeConfigGroup_DialoguePlayback DialoguePlayback;
 
 	UPROPERTY(EditAnywhere)
-	FYapDomainSettings_PromptSettings Prompts;
+	FYapNodeConfigGroup_PromptSettings Prompts;
 
 	UPROPERTY(EditAnywhere)
-	FYapDomainSettings_FlowGraphSettings Graph;
+	FYapNodeConfigGroup_FlowGraphSettings Graph;
 
 	UPROPERTY(EditAnywhere)
-	FYapDomainConfig_MoodTags MoodTags;
+	FYapNodeConfigGroup_MoodTags MoodTags;
 	
 	// --------------------------------------------------------------------------------------------
 	// OVERRIDE TOGGLES
@@ -335,7 +335,7 @@ public:
 
 	const FGameplayTag& GetDefaultMoodTag() const { return MoodTags.DefaultMoodTag; };
 
-	FGameplayTagContainer GetMoodTags();
+	FGameplayTagContainer GetMoodTags() const;
 
 	/*
 #if WITH_EDITOR
@@ -344,17 +344,28 @@ public:
 */
 
 #if WITH_EDITOR
-	const FDirectoryPath& GetMoodTagEditorIconsPath() const { return MoodTags.MoodTagEditorIconsPath; };
+public:
+	const FDirectoryPath& GetMoodTagEditorIconsPath() const { return MoodTags.EditorIconsPath; };
+	
+	void PostLoad() override;
+
+    void RebuildMoodTagIcons();
+
+	void BuildIcon(const FGameplayTag& MoodTag);
+	
+    FString GetMoodTagIconPath(FGameplayTag Key, FString FileExtension);
+
+    TSharedPtr<FSlateImageBrush> GetMoodTagIcon(FGameplayTag MoodTag) const;
+
+	const FSlateBrush* GetMoodTagBrush(FGameplayTag Name) const;
 #endif
 
-
+	TMap<FGameplayTag, TSharedPtr<FSlateImageBrush>> MoodTagIconBrushes;
 	
 	// OTHER HELPERS
 	// ============================================================================================
 public:
 	static TArray<FString>& GetDefaultMoodTags();
-	
-	
 };
 
 #undef LOCTEXT_NAMESPACE

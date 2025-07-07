@@ -29,10 +29,10 @@ UYapProjectSettings::UYapProjectSettings()
 	DefaultCharacterClasses = { UYapCharacterAsset::StaticClass() };
 
 	UGameplayTagsManager& TagsManager = UGameplayTagsManager::Get();
-	
-	TagsManager.AddNativeGameplayTag("Yap.Domain");
-	
+		
 	DefaultPortraitTexture = FSoftObjectPath("/Yap/T_Avatar_Missing.T_Avatar_Missing");
+
+	DefaultNodeConfig = UYapNodeConfig_Default::StaticClass();
 	
 #if WITH_EDITOR
 	TagsManager.OnGetCategoriesMetaFromPropertyHandle.AddUObject(this, &ThisClass::OnGetCategoriesMetaFromPropertyHandle);

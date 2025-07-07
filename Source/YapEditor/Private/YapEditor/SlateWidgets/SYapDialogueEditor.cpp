@@ -951,12 +951,12 @@ EYapErrorLevel SYapDialogueEditor::GetAudioAssetErrorLevel(const TSoftObjectPtr<
 		}
 	}
 
-	EYapMissingAudioErrorLevel MissingAudioBehavior = GetDomainConfig().GetMissingAudioErrorLevel();
+	EYapMissingAudioErrorLevel MissingAudioBehavior = GetNodeConfig().GetMissingAudioErrorLevel();
 
 	EYapTimeMode TimeModeSetting = GetFragment().GetTimeModeSetting();
 	
 	// We don't have any audio asset set. If the dialogue is set to use audio time but does NOT have an audio asset, we either indicate an error (prevent packaging) or indicate a warning (allow packaging) 
-	if ((TimeModeSetting == EYapTimeMode::AudioTime) || (TimeModeSetting == EYapTimeMode::Default && GetDomainConfig().GetDefaultTimeModeSetting() == EYapTimeMode::AudioTime))
+	if ((TimeModeSetting == EYapTimeMode::AudioTime) || (TimeModeSetting == EYapTimeMode::Default && GetNodeConfig().GetDefaultTimeModeSetting() == EYapTimeMode::AudioTime))
 	{
 		switch (MissingAudioBehavior)
 		{
@@ -992,9 +992,9 @@ TOptional<float> SYapDialogueEditor::Value_TimeSetting_AudioTime(EYapMaturitySet
 
 TOptional<float> SYapDialogueEditor::Value_TimeSetting_TextTime(EYapMaturitySetting MaturitySetting) const
 {
-	const UYapDomainConfig& DomainConfig = DialogueNode->GetDomainConfig();
+	const UYapNodeConfig& NodeConfig = DialogueNode->GetNodeConfig();
 	
-	return GetFragment().GetBit(GEditor->EditorWorld, MaturitySetting).GetTextTime(DomainConfig);
+	return GetFragment().GetBit(GEditor->EditorWorld, MaturitySetting).GetTextTime(NodeConfig);
 }
 
 TOptional<float> SYapDialogueEditor::Value_TimeSetting_ManualTime(EYapMaturitySetting MaturitySetting) const
@@ -1033,7 +1033,7 @@ FSlateColor SYapDialogueEditor::ButtonColorAndOpacity_UseTimeMode(EYapTimeMode T
 		return ColorTint;
 	}
 	
-	if (GetFragment().GetTimeMode(GEditor->EditorWorld, GetDisplayMaturitySetting(), DialogueNode->GetDomainConfig()) == TimeMode)
+	if (GetFragment().GetTimeMode(GEditor->EditorWorld, GetDisplayMaturitySetting(), DialogueNode->GetNodeConfig()) == TimeMode)
 	{
 		// Implicit match through project defaults
 		return YapColor::Desaturate(ColorTint, 0.50);
@@ -1050,7 +1050,7 @@ FSlateColor SYapDialogueEditor::ForegroundColor_TimeSettingButton(EYapTimeMode T
 		return ColorTint;
 	}
 	
-	if (GetFragment().GetTimeMode(GEditor->EditorWorld, GetDisplayMaturitySetting(), DialogueNode->GetDomainConfig()) == TimeMode)
+	if (GetFragment().GetTimeMode(GEditor->EditorWorld, GetDisplayMaturitySetting(), DialogueNode->GetNodeConfig()) == TimeMode)
 	{
 		// Implicit match through project defaults
 		return ColorTint;
@@ -1074,9 +1074,9 @@ EYapMaturitySetting SYapDialogueEditor::GetDisplayMaturitySetting() const
 	return Owner->GetIsChildSafeCheckBoxHovered() ? EYapMaturitySetting::ChildSafe : EYapMaturitySetting::Mature;
 }
 
-const UYapDomainConfig& SYapDialogueEditor::GetDomainConfig() const
+const UYapNodeConfig& SYapDialogueEditor::GetNodeConfig() const
 {
-	return DialogueNode->GetDomainConfig();
+	return DialogueNode->GetNodeConfig();
 }
 
 void SYapDialogueEditor::SetFocus_MatureDialogue()

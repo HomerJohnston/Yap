@@ -256,7 +256,7 @@ public:
 
 	FYapBit& GetChildSafeBitMutable() { return ChildSafeBit; }
 
-	TOptional<float> GetSpeechTime(UWorld* World, const UYapDomainConfig& Domain) const;
+	TOptional<float> GetSpeechTime(UWorld* World, const UYapNodeConfig& NodeConfig) const;
 
 	double GetStartTime() const { return StartTime; }
 
@@ -272,16 +272,16 @@ public:
 	
 	void ClearAwaitingManualAdvance();
 
-	TOptional<float> GetSpeechTime(UWorld* World, EYapMaturitySetting MaturitySetting, EYapLoadContext LoadContext, const UYapDomainConfig& Domain) const;
+	TOptional<float> GetSpeechTime(UWorld* World, EYapMaturitySetting MaturitySetting, EYapLoadContext LoadContext, const UYapNodeConfig& NodeConfig) const;
 	
 public:
 	TOptional<float> GetPaddingSetting() const { return Padding; };
 	
-	float GetPaddingValue(UWorld* World, const UYapDomainConfig& Domain) const;
+	float GetPaddingValue(UWorld* World, const UYapNodeConfig& NodeConfig) const;
 
-	bool GetUsesPadding(UWorld* World, const UYapDomainConfig& Domain) const;
+	bool GetUsesPadding(UWorld* World, const UYapNodeConfig& NodeConfig) const;
 
-	float GetProgressionTime(UWorld* World, const UYapDomainConfig& Domain) const;
+	float GetProgressionTime(UWorld* World, const UYapNodeConfig& NodeConfig) const;
 	
 	void IncrementActivations();
 
@@ -322,9 +322,9 @@ public:
 	bool GetSkippable(bool Default) const;
 	
 	/** Gets the evaluated time mode to be used for this bit (incorporating project default settings and fallbacks) */
-	EYapTimeMode GetTimeMode(UWorld* World, const UYapDomainConfig& Domain) const;
+	EYapTimeMode GetTimeMode(UWorld* World, const UYapNodeConfig& NodeConfig) const;
 	
-	EYapTimeMode GetTimeMode(UWorld* World, EYapMaturitySetting MaturitySetting, const UYapDomainConfig& Domain) const;
+	EYapTimeMode GetTimeMode(UWorld* World, EYapMaturitySetting MaturitySetting, const UYapNodeConfig& NodeConfig) const;
 
 	FGameplayTag GetMoodTag() const { return MoodTag; }
 

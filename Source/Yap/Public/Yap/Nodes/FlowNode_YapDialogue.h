@@ -4,7 +4,7 @@
 #pragma once
 
 #include "Nodes/FlowNode.h"
-#include "Yap/YapDomainConfig.h"
+#include "Yap/YapNodeConfig.h"
 #include "Yap/YapRunningFragment.h" 
 #include "Yap/YapFragment.h"
 #include "Yap/Handles/YapConversationHandle.h"
@@ -65,13 +65,13 @@ struct FYapFragmentRunData
 	FTimerHandle PaddingTimerHandle;
 };
 
-UCLASS()
-class YAP_API UYapDomainConfig_Default : public UYapDomainConfig
+UCLASS(meta = (DisplayName="Default Config"))
+class YAP_API UYapNodeConfig_Default : public UYapNodeConfig
 {
 	GENERATED_BODY()
 
 public:
-	UYapDomainConfig_Default();
+	UYapNodeConfig_Default();
 };
 
 // ------------------------------------------------------------------------------------------------
@@ -107,13 +107,13 @@ public:
 	// ============================================================================================
 	
 protected:
+	UPROPERTY(EditDefaultsOnly)
+	TObjectPtr<UYapNodeConfig> Config;
+	
 	/** What type of node we are. */
 	UPROPERTY(BlueprintReadOnly)
 	EYapDialogueNodeType DialogueNodeType;
 
-	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<UYapDomainConfig> DomainConfig;
-	
 	/** Maximum number of times we can successfully enter & exit this node. Any further attempts will trigger the Bypass output. */
 	UPROPERTY(BlueprintReadOnly)
 	int32 NodeActivationLimit;
@@ -141,11 +141,11 @@ protected:
 	TArray<TObjectPtr<UYapCondition>> Conditions;
 
 	/** Unique node ID for audio system. */
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditInstanceOnly)
 	FString AudioID = "";
 	
 	/** Actual dialogue contents. */
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditInstanceOnly)
 	TArray<FYapFragment> Fragments;
 
 	// ============================================================================================
@@ -197,7 +197,7 @@ public:
 	/** Is this dialogue a Talk node or a Player Prompt node? */
 	bool IsPlayerPrompt() const { return DialogueNodeType == EYapDialogueNodeType::PlayerPrompt; }
 
-	const UYapDomainConfig& GetDomainConfig() const;
+	const UYapNodeConfig& GetNodeConfig() const;
 	
 	/** Does this node use title text? */
 	bool UsesTitleText() const;

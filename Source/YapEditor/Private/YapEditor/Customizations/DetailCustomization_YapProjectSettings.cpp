@@ -313,7 +313,7 @@ FReply FDetailCustomization_YapProjectSettings::OnClicked_CleanupDialogueTags()
 
 FReply FDetailCustomization_YapProjectSettings::OnClicked_RefreshMoodTagIcons()
 {
-	UYapEditorSubsystem::Get()->UpdateMoodTagBrushes();
+	//UYapEditorSubsystem::Get()->UpdateMoodTagBrushes();
 
 	return FReply::Handled();
 }

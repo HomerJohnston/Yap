@@ -10,7 +10,7 @@
 #include "ObjectEditorUtils.h"
 #include "SGameplayTagPicker.h"
 #include "Widgets/Layout/SWidgetSwitcher.h"
-#include "Yap/YapDomainConfig.h"
+#include "Yap/YapNodeConfig.h"
 #include "Yap/YapProjectSettings.h"
 #include "YapEditor/YapEditorColor.h"
 #include "YapEditor/YapEditorLog.h"

@@ -33,7 +33,7 @@ bool FYapBit::HasAudioAsset() const
 
 // --------------------------------------------------------------------------------------------
 
-TOptional<float> FYapBit::GetSpeechTime(UWorld* World, EYapTimeMode TimeMode, EYapLoadContext LoadContext, const UYapDomainConfig& Domain) const
+TOptional<float> FYapBit::GetSpeechTime(UWorld* World, EYapTimeMode TimeMode, EYapLoadContext LoadContext, const UYapNodeConfig& Config) const
 {
 	// TODO clamp minimums from project settings?
 	TOptional<float> Time;
@@ -52,7 +52,7 @@ TOptional<float> FYapBit::GetSpeechTime(UWorld* World, EYapTimeMode TimeMode, EY
 		}
 		case EYapTimeMode::TextTime:
 		{
-			Time = GetTextTime(Domain);
+			Time = GetTextTime(Config);
 			break;
 		}
 		default:
@@ -63,7 +63,7 @@ TOptional<float> FYapBit::GetSpeechTime(UWorld* World, EYapTimeMode TimeMode, EY
 
 	float Value = Time.Get(0);
 	
-	float MinAllowableTime = Domain.GetMinimumSpeakingTime();
+	float MinAllowableTime = Config.GetMinimumSpeakingTime();
 
 	return FMath::Max(Value, MinAllowableTime);
 }
@@ -105,12 +105,12 @@ void FYapBit::LoadContent(EYapLoadContext LoadContext) const
 
 // --------------------------------------------------------------------------------------------
 
-TOptional<float> FYapBit::GetTextTime(const UYapDomainConfig& Domain) const
+TOptional<float> FYapBit::GetTextTime(const UYapNodeConfig& NodeConfig) const
 {
-	int32 TWPM = Domain.DialoguePlayback.TimeSettings.TextWordsPerMinute;
+	int32 TWPM = NodeConfig.DialoguePlayback.TimeSettings.TextWordsPerMinute;
 	int32 WordCount = DialogueText.GetWordCount();
 	double SecondsPerWord = 60.0 / (double)TWPM;
-	double MinTextTimeLength = Domain.GetMinimumAutoTextTimeLength();
+	double MinTextTimeLength = NodeConfig.GetMinimumAutoTextTimeLength();
 	
 	return FMath::Max(WordCount * SecondsPerWord, MinTextTimeLength);
 }

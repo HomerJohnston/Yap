@@ -46,7 +46,7 @@ UYapSubsystem::UYapSubsystem()
 
 // ------------------------------------------------------------------------------------------------
 
-void UYapSubsystem::RegisterConversationHandler(UObject* NewHandler, TSubclassOf<UFlowNode_YapDialogue> Domain)
+void UYapSubsystem::RegisterConversationHandler(UObject* NewHandler, TSubclassOf<UFlowNode_YapDialogue> NodeType)
 {
 	if (!IsValid(NewHandler))
 	{
@@ -56,7 +56,7 @@ void UYapSubsystem::RegisterConversationHandler(UObject* NewHandler, TSubclassOf
 
 	if (NewHandler->Implements<UYapConversationHandler>())
 	{
-		Get(NewHandler->GetWorld())->FindOrAddConversationHandlerArray(Domain).AddUnique(NewHandler);
+		Get(NewHandler->GetWorld())->FindOrAddConversationHandlerArray(NodeType).AddUnique(NewHandler);
 	}
 	else
 	{
@@ -66,7 +66,7 @@ void UYapSubsystem::RegisterConversationHandler(UObject* NewHandler, TSubclassOf
 
 // ------------------------------------------------------------------------------------------------
 
-void UYapSubsystem::UnregisterConversationHandler(UObject* HandlerToRemove, TSubclassOf<UFlowNode_YapDialogue> Domain)
+void UYapSubsystem::UnregisterConversationHandler(UObject* HandlerToRemove, TSubclassOf<UFlowNode_YapDialogue> NodeType)
 {
 	if (!IsValid(HandlerToRemove))
 	{
@@ -74,7 +74,7 @@ void UYapSubsystem::UnregisterConversationHandler(UObject* HandlerToRemove, TSub
 		return;
 	}
 	
-	auto* Array = Get(HandlerToRemove->GetWorld())->FindConversationHandlerArray(Domain);
+	auto* Array = Get(HandlerToRemove->GetWorld())->FindConversationHandlerArray(NodeType);
 
 	if (!Array)
 	{
@@ -85,13 +85,13 @@ void UYapSubsystem::UnregisterConversationHandler(UObject* HandlerToRemove, TSub
 
 	if (Array->IsEmpty())
 	{
-		Get(HandlerToRemove->GetWorld())->ConversationHandlers.Remove(Domain);
+		Get(HandlerToRemove->GetWorld())->ConversationHandlers.Remove(NodeType);
 	}
 }
 
 // ------------------------------------------------------------------------------------------------
 
-void UYapSubsystem::RegisterFreeSpeechHandler(UObject* NewHandler, const TSubclassOf<UFlowNode_YapDialogue> Domain)
+void UYapSubsystem::RegisterFreeSpeechHandler(UObject* NewHandler, const TSubclassOf<UFlowNode_YapDialogue> NodeType)
 {
 	if (!IsValid(NewHandler))
 	{
@@ -101,7 +101,7 @@ void UYapSubsystem::RegisterFreeSpeechHandler(UObject* NewHandler, const TSubcla
 	
 	if (NewHandler->Implements<UYapFreeSpeechHandler>())
 	{
-		Get(NewHandler->GetWorld())->FindOrAddFreeSpeechHandlerArray(Domain).AddUnique(NewHandler);
+		Get(NewHandler->GetWorld())->FindOrAddFreeSpeechHandlerArray(NodeType).AddUnique(NewHandler);
 	}
 	else
 	{
@@ -111,7 +111,7 @@ void UYapSubsystem::RegisterFreeSpeechHandler(UObject* NewHandler, const TSubcla
 
 // ------------------------------------------------------------------------------------------------
 
-void UYapSubsystem::UnregisterFreeSpeechHandler(UObject* HandlerToRemove, const TSubclassOf<UFlowNode_YapDialogue> Domain)
+void UYapSubsystem::UnregisterFreeSpeechHandler(UObject* HandlerToRemove, const TSubclassOf<UFlowNode_YapDialogue> NodeType)
 {
 	if (!IsValid(HandlerToRemove))
 	{
@@ -119,7 +119,7 @@ void UYapSubsystem::UnregisterFreeSpeechHandler(UObject* HandlerToRemove, const 
 		return;
 	}
 	
-	auto* Array = Get(HandlerToRemove->GetWorld())->FindFreeSpeechHandlerArray(Domain);
+	auto* Array = Get(HandlerToRemove->GetWorld())->FindFreeSpeechHandlerArray(NodeType);
 
 	if (!Array)
 	{
@@ -130,7 +130,7 @@ void UYapSubsystem::UnregisterFreeSpeechHandler(UObject* HandlerToRemove, const 
 	
 	if (Array->IsEmpty())
 	{
-		Get(HandlerToRemove->GetWorld())->FreeSpeechHandlers.Remove(Domain);
+		Get(HandlerToRemove->GetWorld())->FreeSpeechHandlers.Remove(NodeType);
 	}
 }
 
@@ -347,7 +347,7 @@ bool UYapSubsystem::StartOpeningConversation(FYapConversation& Conversation)
 	FYapData_ConversationOpened Data;
 	Data.Conversation = Conversation.GetConversationName();
 
-	auto* HandlerArray = FindConversationHandlerArray(Conversation.GetDomain());
+	auto* HandlerArray = FindConversationHandlerArray(Conversation.GetNodeType());
 
 	// Game code may add opening locks to the conversation here
 	BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapConversationHandler, OnConversationOpened, Execute_K2_ConversationOpened)>(HandlerArray, Data, Conversation.GetHandle());
@@ -432,9 +432,9 @@ void UYapSubsystem::OnActiveConversationClosed(UObject* Instigator, FYapConversa
 
 // ------------------------------------------------------------------------------------------------
 
-FYapPromptHandle UYapSubsystem::BroadcastPrompt(const FYapData_PlayerPromptCreated& Data, TSubclassOf<UFlowNode_YapDialogue> Domain)
+FYapPromptHandle UYapSubsystem::BroadcastPrompt(const FYapData_PlayerPromptCreated& Data, TSubclassOf<UFlowNode_YapDialogue> NodeType)
 {
-	FYapPromptHandle Handle(Domain);
+	FYapPromptHandle Handle(NodeType);
 
 	const FYapConversationHandle& ConversationHandle = Data.Conversation;
 	
@@ -449,7 +449,7 @@ FYapPromptHandle UYapSubsystem::BroadcastPrompt(const FYapData_PlayerPromptCreat
 	
 	PromptHandleConversationTags.Add(Handle, ConversationHandle);
 
-	auto* HandlerArray = FindConversationHandlerArray(Domain);
+	auto* HandlerArray = FindConversationHandlerArray(NodeType);
 
 	BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapConversationHandler, OnConversationPlayerPromptCreated, Execute_K2_ConversationPlayerPromptCreated)>(HandlerArray, Data, Handle);
 
@@ -458,16 +458,16 @@ FYapPromptHandle UYapSubsystem::BroadcastPrompt(const FYapData_PlayerPromptCreat
 
 // ------------------------------------------------------------------------------------------------
 
-void UYapSubsystem::OnFinishedBroadcastingPrompts(const FYapData_PlayerPromptsReady& Data, TSubclassOf<UFlowNode_YapDialogue> Domain)
+void UYapSubsystem::OnFinishedBroadcastingPrompts(const FYapData_PlayerPromptsReady& Data, TSubclassOf<UFlowNode_YapDialogue> NodeType)
 {
-	auto* HandlerArray = FindConversationHandlerArray(Domain);
+	auto* HandlerArray = FindConversationHandlerArray(NodeType);
 
 	BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapConversationHandler, OnConversationPlayerPromptsReady, Execute_K2_ConversationPlayerPromptsReady)>(HandlerArray, Data);
 }
 
 // ------------------------------------------------------------------------------------------------
 
-FYapSpeechHandle UYapSubsystem::RunSpeech(const FYapData_SpeechBegins& SpeechData, TSubclassOf<UFlowNode_YapDialogue> Domain, FYapSpeechHandle& Handle)
+FYapSpeechHandle UYapSubsystem::RunSpeech(const FYapData_SpeechBegins& SpeechData, TSubclassOf<UFlowNode_YapDialogue> NodeType, FYapSpeechHandle& Handle)
 {
 	// TODO should SpeechData contain the conversation handle instead of the name?
 	if (SpeechData.Conversation.IsValid())
@@ -481,13 +481,13 @@ FYapSpeechHandle UYapSubsystem::RunSpeech(const FYapData_SpeechBegins& SpeechDat
 			}
 		}
 		
-		auto* HandlerArray = FindConversationHandlerArray(Domain);
+		auto* HandlerArray = FindConversationHandlerArray(NodeType);
 		
 		BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapConversationHandler, OnConversationSpeechBegins, Execute_K2_ConversationSpeechBegins)>(HandlerArray, SpeechData, Handle);
 	}
 	else
 	{
-		auto* HandlerArray = FindFreeSpeechHandlerArray(Domain);
+		auto* HandlerArray = FindFreeSpeechHandlerArray(NodeType);
 		
 		BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapFreeSpeechHandler, OnTalkSpeechBegins, Execute_K2_TalkSpeechBegins)>(HandlerArray, SpeechData, Handle);
 	}
@@ -609,7 +609,7 @@ void UYapSubsystem::RunPrompt(UObject* WorldContext, const FYapPromptHandle& Han
 
 		if (!Conversation.IsNull())
 		{
-			auto* HandlerArray = Subsystem->FindConversationHandlerArray(Conversation.GetDomain());
+			auto* HandlerArray = Subsystem->FindConversationHandlerArray(Conversation.GetNodeType());
 		
 			BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapConversationHandler, OnConversationPlayerPromptChosen, Execute_K2_ConversationPlayerPromptChosen)>(HandlerArray, Data, Handle);
 		}
@@ -620,7 +620,7 @@ void UYapSubsystem::RunPrompt(UObject* WorldContext, const FYapPromptHandle& Han
 	}
 	else
 	{
-		auto* HandlerArray = Subsystem->FindFreeSpeechHandlerArray(Handle.GetDomain());
+		auto* HandlerArray = Subsystem->FindFreeSpeechHandlerArray(Handle.GetNodeType());
 	
 		BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapConversationHandler, OnConversationPlayerPromptChosen, Execute_K2_ConversationPlayerPromptChosen)>(HandlerArray, Data, Handle);
 	}
@@ -737,16 +737,16 @@ void UYapSubsystem::UnregisterCharacterComponent(UYapCharacterComponent* YapChar
 
 // ------------------------------------------------------------------------------------------------
 
-TArray<TObjectPtr<UObject>>& UYapSubsystem::FindOrAddConversationHandlerArray(const TSubclassOf<UFlowNode_YapDialogue> Domain)
+TArray<TObjectPtr<UObject>>& UYapSubsystem::FindOrAddConversationHandlerArray(const TSubclassOf<UFlowNode_YapDialogue> NodeType)
 {
-	return ConversationHandlers.FindOrAdd(Domain).Array;
+	return ConversationHandlers.FindOrAdd(NodeType).Array;
 }
 
 // ------------------------------------------------------------------------------------------------
 
-TArray<TObjectPtr<UObject>>* UYapSubsystem::FindConversationHandlerArray(const TSubclassOf<UFlowNode_YapDialogue> Domain)
+TArray<TObjectPtr<UObject>>* UYapSubsystem::FindConversationHandlerArray(const TSubclassOf<UFlowNode_YapDialogue> NodeType)
 {
-	FYapHandlersArray* Handlers = ConversationHandlers.Find(Domain);
+	FYapHandlersArray* Handlers = ConversationHandlers.Find(NodeType);
 
 	if (Handlers)
 	{
@@ -758,16 +758,16 @@ TArray<TObjectPtr<UObject>>* UYapSubsystem::FindConversationHandlerArray(const T
 
 // ------------------------------------------------------------------------------------------------
 
-TArray<TObjectPtr<UObject>>& UYapSubsystem::FindOrAddFreeSpeechHandlerArray(const TSubclassOf<UFlowNode_YapDialogue> Domain)
+TArray<TObjectPtr<UObject>>& UYapSubsystem::FindOrAddFreeSpeechHandlerArray(const TSubclassOf<UFlowNode_YapDialogue> NodeType)
 {
-	return FreeSpeechHandlers.FindOrAdd(Domain).Array;
+	return FreeSpeechHandlers.FindOrAdd(NodeType).Array;
 }
 
 // ------------------------------------------------------------------------------------------------
 
-TArray<TObjectPtr<UObject>>* UYapSubsystem::FindFreeSpeechHandlerArray(const TSubclassOf<UFlowNode_YapDialogue> Domain)
+TArray<TObjectPtr<UObject>>* UYapSubsystem::FindFreeSpeechHandlerArray(const TSubclassOf<UFlowNode_YapDialogue> NodeType)
 {
-	FYapHandlersArray* Handlers = FreeSpeechHandlers.Find(Domain);
+	FYapHandlersArray* Handlers = FreeSpeechHandlers.Find(NodeType);
 
 	if (Handlers)
 	{

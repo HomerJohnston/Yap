@@ -6,7 +6,6 @@
 #include "GameplayTagsEditorModule.h"
 #include "GameplayTagsManager.h"
 #include "ILiveCodingModule.h"
-#include "YapEditor/YapEditorColor.h"
 #include "UnrealEdGlobals.h"
 #include "Editor/UnrealEdEngine.h"
 #include "Yap/YapCharacterAsset.h"
@@ -22,79 +21,6 @@
 
 bool UYapEditorSubsystem::bLiveCodingInProgress = true;
 TArray<TWeakObjectPtr<UObject>> UYapEditorSubsystem::OpenedAssets = {};
-
-
-void UYapEditorSubsystem::UpdateMoodTagBrushesIfRequired()
-{
-	// TODO
-	FGameplayTagContainer ProjectMoodTags; // Get All Mood Tags SomehowWWWWWWWWWWWWW =  // UYapProjectSettings::GetMoodTags();
-	
-	if (ProjectMoodTags.Num() != CachedMoodTags.Num() || !CachedMoodTags.HasAllExact(ProjectMoodTags))
-	{
-		UpdateMoodTagBrushes();
-	}
-
-	CachedMoodTags = ProjectMoodTags;
-}
-
-void UYapEditorSubsystem::UpdateMoodTagBrushes()
-{
-	FGameplayTagContainer ProjectMoodTags; // Get All Mood Tags SomehowWWWWWWWWWWWWW =  // UYapProjectSettings::GetMoodTags();
-	
-	MoodTagIconBrushes.Empty(ProjectMoodTags.Num() + 1);
-
-	for (const FGameplayTag& MoodTag : ProjectMoodTags)
-	{
-		BuildIcon(MoodTag);
-	}
-
-	BuildIcon(FGameplayTag::EmptyTag);
-
-	CachedMoodTags = ProjectMoodTags;
-}
-
-void UYapEditorSubsystem::BuildIcon(const FGameplayTag& MoodTag)
-{
-	TSharedPtr<FSlateImageBrush> ImageBrush = nullptr;
-	
-	// Attempt to load SVG
-	FString IconPath = "";// UYapProjectSettings::GetMoodTagIconPath(MoodTag, "svg");
-	ImageBrush = MakeShared<FSlateVectorImageBrush>(IconPath, FVector2f(16, 16), YapColor::White);
-
-	// Attempt to load PNG
-	if (!ImageBrush)
-	{
-		IconPath = ""; //UYapProjectSettings::GetMoodTagIconPath(MoodTag, "png");
-		ImageBrush = MakeShared<FSlateImageBrush>(IconPath, FVector2f(16, 16), YapColor::White);
-	}
-	
-	// Found nothing
-	if (!ImageBrush)
-	{
-		return;
-	}
-
-	MoodTagIconBrushes.Add(MoodTag, ImageBrush);
-}
-
-TSharedPtr<FSlateImageBrush> UYapEditorSubsystem::GetMoodTagIcon(FGameplayTag MoodTag)
-{
-	TSharedPtr<FSlateImageBrush>* Brush = MoodTagIconBrushes.Find(MoodTag);
-
-	if (Brush)
-	{
-		return *Brush;
-	}
-
-	return nullptr;
-}
-
-const FSlateBrush* UYapEditorSubsystem::GetMoodTagBrush(FGameplayTag Name)
-{
-	TSharedPtr<FSlateImageBrush>* Brush = MoodTagIconBrushes.Find(Name);
-
-	return Brush ? Brush->Get() : FYapEditorStyle::GetImageBrush(YapBrushes.Icon_MoodTag_Missing);
-}
 
 TSharedPtr<FSlateImageBrush> UYapEditorSubsystem::GetCharacterPortraitBrush(const UObject* Character, const FGameplayTag& MoodTag)
 {
@@ -150,7 +76,7 @@ void UYapEditorSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	// TODO -- this does NOT work! Keep it hidden until I can figure out why. For some reason FSlateSVGRasterizer will NOT attempt to load a file that didn't exist on startup?
 	// Also see: FDetailCustomization_YapProjectSetting for hidden/disabled button to run UpdateMoodTagBrushes().
 	//UGameplayTagsManager::Get().OnEditorRefreshGameplayTagTree.AddUObject(this, &UYapEditorSubsystem::UpdateMoodTagBrushesIfRequired);
-	UpdateMoodTagBrushes();
+	//UpdateMoodTagBrushes();
 
 	if (IsValid(GUnrealEd))
 	{

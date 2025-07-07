@@ -215,9 +215,9 @@ const FYapBit& FYapFragment::GetBit(UWorld* World, EYapMaturitySetting MaturityS
 	return MatureBit;
 }
 
-TOptional<float> FYapFragment::GetSpeechTime(UWorld* World, const UYapDomainConfig& Domain) const
+TOptional<float> FYapFragment::GetSpeechTime(UWorld* World, const UYapNodeConfig& NodeConfig) const
 {
-	return GetSpeechTime(World, UYapSubsystem::GetCurrentMaturitySetting(World), EYapLoadContext::Sync, Domain);
+	return GetSpeechTime(World, UYapSubsystem::GetCurrentMaturitySetting(World), EYapLoadContext::Sync, NodeConfig);
 }
 
 bool FYapFragment::IsAwaitingManualAdvance() const
@@ -235,14 +235,14 @@ void FYapFragment::ClearAwaitingManualAdvance()
 	bFragmentAwaitingManualAdvance = false;
 }
 
-TOptional<float> FYapFragment::GetSpeechTime(UWorld* World, EYapMaturitySetting MaturitySetting, EYapLoadContext LoadContext, const UYapDomainConfig& Domain) const
+TOptional<float> FYapFragment::GetSpeechTime(UWorld* World, EYapMaturitySetting MaturitySetting, EYapLoadContext LoadContext, const UYapNodeConfig& NodeConfig) const
 {
-	EYapTimeMode EffectiveTimeMode = GetTimeMode(World, MaturitySetting, Domain);
+	EYapTimeMode EffectiveTimeMode = GetTimeMode(World, MaturitySetting, NodeConfig);
 	
-	return GetBit(World, MaturitySetting).GetSpeechTime(World, EffectiveTimeMode, LoadContext, Domain);
+	return GetBit(World, MaturitySetting).GetSpeechTime(World, EffectiveTimeMode, LoadContext, NodeConfig);
 }
 
-float FYapFragment::GetPaddingValue(UWorld* World, const UYapDomainConfig& Domain) const
+float FYapFragment::GetPaddingValue(UWorld* World, const UYapNodeConfig& NodeConfig) const
 {	
 	if (IsTimeModeNone())
 	{
@@ -253,34 +253,34 @@ float FYapFragment::GetPaddingValue(UWorld* World, const UYapDomainConfig& Domai
 	{
 		float RawPadding = Padding.GetValue();
 		
-		TOptional<float> SpeechTime = GetSpeechTime(World, Domain);
+		TOptional<float> SpeechTime = GetSpeechTime(World, NodeConfig);
 
 		return FMath::Max(-SpeechTime.Get(0.0f), RawPadding);
 	}
 	
-	return Domain.GetDefaultFragmentPaddingTime();
+	return NodeConfig.GetDefaultFragmentPaddingTime();
 }
 
-bool FYapFragment::GetUsesPadding(UWorld* World, const UYapDomainConfig& Domain) const
+bool FYapFragment::GetUsesPadding(UWorld* World, const UYapNodeConfig& NodeConfig) const
 {
-	float PaddingValue = GetPaddingValue(World, Domain);
+	float PaddingValue = GetPaddingValue(World, NodeConfig);
 	
 	return !FMath::IsNearlyZero(PaddingValue);
 }
 
-float FYapFragment::GetProgressionTime(UWorld* World, const UYapDomainConfig& Domain) const
+float FYapFragment::GetProgressionTime(UWorld* World, const UYapNodeConfig& NodeConfig) const
 {
-	float SpeechTime = GetSpeechTime(World, Domain).Get(0.0f);
+	float SpeechTime = GetSpeechTime(World, NodeConfig).Get(0.0f);
 	
 	float PaddingTime;
 	
 	if (Padding.IsSet())
 	{
-		PaddingTime = GetPaddingValue(World, Domain);
+		PaddingTime = GetPaddingValue(World, NodeConfig);
 	}
 	else
 	{
-		PaddingTime = Domain.GetDefaultFragmentPaddingTime();
+		PaddingTime = NodeConfig.GetDefaultFragmentPaddingTime();
 	}
 
 	return FMath::Max(SpeechTime + PaddingTime, 0.0f);
@@ -361,20 +361,20 @@ bool FYapFragment::GetSkippable(bool Default) const
 	return Skippable.Get(Default);
 }
 
-EYapTimeMode FYapFragment::GetTimeMode(UWorld* World, const UYapDomainConfig& Domain) const
+EYapTimeMode FYapFragment::GetTimeMode(UWorld* World, const UYapNodeConfig& NodeConfig) const
 {
-	return GetTimeMode(World, UYapSubsystem::GetCurrentMaturitySetting(World), Domain);
+	return GetTimeMode(World, UYapSubsystem::GetCurrentMaturitySetting(World), NodeConfig);
 }
 
-EYapTimeMode FYapFragment::GetTimeMode(UWorld* World, EYapMaturitySetting MaturitySetting, const UYapDomainConfig& Domain) const
+EYapTimeMode FYapFragment::GetTimeMode(UWorld* World, EYapMaturitySetting MaturitySetting, const UYapNodeConfig& NodeConfig) const
 {
-	EYapTimeMode EffectiveTimeMode = (TimeMode == EYapTimeMode::Default) ? Domain.GetDefaultTimeModeSetting() : TimeMode;
+	EYapTimeMode EffectiveTimeMode = (TimeMode == EYapTimeMode::Default) ? NodeConfig.GetDefaultTimeModeSetting() : TimeMode;
 
 	if (EffectiveTimeMode == EYapTimeMode::AudioTime)
 	{
 		if (!GetBit(World, MaturitySetting).HasAudioAsset())
 		{
-			EYapMissingAudioErrorLevel MissingAudioBehavior = Domain.GetMissingAudioErrorLevel();
+			EYapMissingAudioErrorLevel MissingAudioBehavior = NodeConfig.GetMissingAudioErrorLevel();
 			
 			if (MissingAudioBehavior == EYapMissingAudioErrorLevel::Error)
 			{

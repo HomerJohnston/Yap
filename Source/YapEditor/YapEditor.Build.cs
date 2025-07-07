@@ -54,8 +54,10 @@ public class YapEditor : ModuleRules
                 "ToolWidgets",
                 "KismetWidgets",
                 
-                "Projects"
+                "Projects",
                 
+                "AssetRegistry",
+                "AssetDefinition"
             }
         );
     }

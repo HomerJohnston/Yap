@@ -13,15 +13,15 @@
 FYapPromptHandle::FYapPromptHandle()
 {
 	Guid = FGuid::NewGuid();
-	this->Domain = nullptr;
+	this->NodeType = nullptr;
 }
 
 // ------------------------------------------------------------------------------------------------
 
-FYapPromptHandle::FYapPromptHandle(TSubclassOf<UFlowNode_YapDialogue> Domain)
+FYapPromptHandle::FYapPromptHandle(TSubclassOf<UFlowNode_YapDialogue> NodeType)
 {
 	Guid = FGuid::NewGuid();
-	this->Domain = Domain;
+	this->NodeType = NodeType;
 }
 
 // ------------------------------------------------------------------------------------------------

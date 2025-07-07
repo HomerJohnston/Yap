@@ -166,7 +166,7 @@ void UFlowGraphNode_YapDialogue::AutoAssignAudioOnAllFragments()
 	TArray<FAssetData> DependencyAssetData;
 	IAssetRegistry& AssetRegistry = AssetRegistryModule.Get();
 	
-	FString RootFolder = "/Game" / GetYapDialogueNode()->GetDomainConfig().Audio.AudioAssetsRootFolder.Path; // UYapProjectSettings::GetAudioAssetRootFolder(GetYapDialogueNode()->GetDomainTag());
+	FString RootFolder = "/Game" / GetYapDialogueNode()->GetNodeConfig().Audio.AudioAssetsRootFolder.Path;
 
 	if (RootFolder.IsEmpty())
 	{

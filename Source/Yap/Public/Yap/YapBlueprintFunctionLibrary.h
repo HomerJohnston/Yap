@@ -35,16 +35,16 @@ public:
 	static float GetSoundLength(USoundBase* Sound);
 	
 	UFUNCTION(BlueprintCallable, Category = "Yap|Registration")
-	static void RegisterConversationHandler(UObject* NewHandler, TSubclassOf<UFlowNode_YapDialogue> Domain);
+	static void RegisterConversationHandler(UObject* NewHandler, TSubclassOf<UFlowNode_YapDialogue> NodeType);
 	
 	UFUNCTION(BlueprintCallable, Category = "Yap|Registration")
-	static void RegisterFreeSpeechHandler(UObject* NewHandler, TSubclassOf<UFlowNode_YapDialogue> Domain);
+	static void RegisterFreeSpeechHandler(UObject* NewHandler, TSubclassOf<UFlowNode_YapDialogue> NodeType);
 	
 	UFUNCTION(BlueprintCallable, Category = "Yap|Registration")
-	static void UnregisterConversationHandler(UObject* HandlerToUnregister, TSubclassOf<UFlowNode_YapDialogue> Domain);
+	static void UnregisterConversationHandler(UObject* HandlerToUnregister, TSubclassOf<UFlowNode_YapDialogue> NodeType);
 	
 	UFUNCTION(BlueprintCallable, Category = "Yap|Registration")
-	static void UnregisterFreeSpeechHandler(UObject* HandlerToUnregister, TSubclassOf<UFlowNode_YapDialogue> Domain);
+	static void UnregisterFreeSpeechHandler(UObject* HandlerToUnregister, TSubclassOf<UFlowNode_YapDialogue> NodeType);
 
 	UFUNCTION(BlueprintCallable, Category = "Yap|Character", meta = (WorldContext = "WorldContext"))
 	static AActor* FindYapCharacterActor(UObject* WorldContext, TScriptInterface<IYapCharacterInterface> Speaker);

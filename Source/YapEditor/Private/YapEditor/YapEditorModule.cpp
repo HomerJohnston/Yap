@@ -3,23 +3,28 @@
 
 #include "YapEditor/YapEditorModule.h"
 
-#include "YapEditor/AssetFactory_YapCharacter.h"
+#include "YapEditor/AssetFactories/AssetFactory_YapCharacter.h"
 #include "Yap/YapCharacterAsset.h"
 #include "Yap/YapProjectSettings.h"
-#include "YapEditor/YapCharacterThumbnailRenderer.h"
+#include "YapEditor/AssetThumbnailRenderers/YapCharacterThumbnailRenderer.h"
 #include "YapEditor/YapEditorStyle.h"
+#include "YapEditor/AssetDefinitions/AssetDefinition_YapNode.h"
 #include "YapEditor/Customizations/DetailCustomization_YapProjectSettings.h"
 #include "YapEditor/Customizations/DetailCustomization_YapCharacter.h"
 #include "YapEditor/Customizations/PropertyCustomization_YapGroupSettings.h"
 
 #define LOCTEXT_NAMESPACE "YapEditor"
 
+EAssetTypeCategories::Type FYapEditorModule::YapAssetCategory = static_cast<EAssetTypeCategories::Type>(0);
+FAssetCategoryPath FYapAssetCategoryPaths::Yap(LOCTEXT("Yap", "Yap"));
+
 void FYapEditorModule::StartupModule()
 {
-	// FGPGEditorModuleBase implementation START
 	AssetCategory = { "Yap", LOCTEXT("Yap", "Yap") };
 
-	REGISTER_ASSET_TYPE_ACTION(FAssetTypeActions_FlowYapCharacter);
+	// FGPGEditorModuleBase implementation START
+	//REGISTER_ASSET_TYPE_ACTION(FAssetTypeActions_FlowYapCharacter);
+	REGISTER_ASSET_TYPE_ACTION(FAssetTypeActions_YapNodeBlueprint);
 
 	REGISTER_DETAIL_CUSTOMIZATION(UYapProjectSettings, FDetailCustomization_YapProjectSettings);
 	REGISTER_DETAIL_CUSTOMIZATION(UYapCharacterAsset, FDetailCustomization_YapCharacter);

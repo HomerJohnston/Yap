@@ -94,7 +94,7 @@ protected:
 	 * Use this to read your game's settings (e.g. text playback speed) and determine the duration a dialogue should run for.
 	 * The default implementation of this function will use your project setting TextWordsPerMinute multiplied by GetPlaybackSpeed. */
 	UFUNCTION(BlueprintImplementableEvent, DisplayName = "Calculate Word Count")
-	float K2_CalculateTextTime(int32 WordCount, int32 CharCount, const UYapDomainConfig* DomainConfig) const;
+	float K2_CalculateTextTime(int32 WordCount, int32 CharCount, const UYapNodeConfig* NodeConfig) const;
 	
 	/** Overriding this is required if you use 3rd party audio (Wwise, FMOD, etc.) - Do NOT call Parent when overriding.
 	 * 
@@ -139,7 +139,7 @@ public:
 	/** OPTIONAL FUNCTION - Do NOT call Super when overriding - rarely needed, overridable through C++ only.
 	 * Use this to read your game's settings (e.g. text playback speed) and determine the duration a dialogue should run for.
 	 * The default implementation of this function will use your project setting TextWordsPerMinute multiplied by GetPlaybackSpeed. */
-	virtual float CalculateTextTime(int32 WordCount, int32 CharCount, const UYapDomainConfig&  DomainTag) const;
+	virtual float CalculateTextTime(int32 WordCount, int32 CharCount, const UYapNodeConfig&  NodeConfig) const;
 	
 	/** Overriding this is required for 3rd party audio (Wwise, FMOD, etc.) - Do NOT call Super when overriding.
 	 * Use this to cast to your project's audio type(s) and return their duration length in seconds. */

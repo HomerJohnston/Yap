@@ -12,9 +12,16 @@ class IAssetTools;
 
 #define LOCTEXT_NAMESPACE "YapEditor"
 
+struct YAPEDITOR_API FYapAssetCategoryPaths : EAssetCategoryPaths
+{
+    static FAssetCategoryPath Yap;
+};
+
 class FYapEditorModule : public IModuleInterface, public FGPGEditorModuleBase
 {
 public:
+	static EAssetTypeCategories::Type YapAssetCategory;
+    
     virtual void StartupModule() override;
     virtual void ShutdownModule() override;
 };

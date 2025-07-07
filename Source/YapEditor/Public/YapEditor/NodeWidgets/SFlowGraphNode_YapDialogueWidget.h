@@ -218,7 +218,7 @@ protected:
 	void OnDialogueStart(uint8 FragmentIndex);
 	void OnDialogueSkipped(uint8 FragmentIndex);
 
-	const UYapDomainConfig& GetDomainConfig() const;
+	const UYapNodeConfig& GetNodeConfig() const;
 	
 	// ------------------------------------------
 	// OVERRIDES & THEIR HELPERS

@@ -15,7 +15,7 @@ struct FYapBitReplacement;
 enum class EYapTimeMode : uint8;
 enum class EYapLoadContext : uint8;
 struct FGameplayTag;
-class UYapDomainConfig;
+class UYapNodeConfig;
 
 #define LOCTEXT_NAMESPACE "Yap"
 
@@ -114,7 +114,7 @@ public:
 	void LoadContent(EYapLoadContext LoadContext) const;
 	
 	/** Gets the evaluated time duration to be used for this bit (incorporating project default settings and fallbacks) */
-	TOptional<float> GetSpeechTime(UWorld* World, EYapTimeMode TimeMode, EYapLoadContext LoadContext, const UYapDomainConfig& Domain) const;
+	TOptional<float> GetSpeechTime(UWorld* World, EYapTimeMode TimeMode, EYapLoadContext LoadContext, const UYapNodeConfig& Config) const;
 
 	// --------------------------------------------------------------------------------------------
 	// INTERNAL API
@@ -125,7 +125,7 @@ protected:
 	TOptional<float> GetManualTime() const { return ManualTime; }
 
 	/** Calculates the current text time. */
-	TOptional<float> GetTextTime(const UYapDomainConfig& Domain) const;
+	TOptional<float> GetTextTime(const UYapNodeConfig& NodeConfig) const;
 
 	/** Gets the current time of the audio asset. */
 	TOptional<float> GetAudioTime(UObject* WorldContext, EYapLoadContext LoadContext) const;

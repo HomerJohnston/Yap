@@ -817,7 +817,7 @@ FText SFlowGraphNode_YapDialogueWidget::Text_NodeHeader() const
 		}
 		case EYapDialogueNodeType::TalkAndAdvance:
 		{
-			return GetNodeConfig().GetAskModeTitle();
+			return GetNodeConfig().GetTalkAndAdvanceModeTitle();
 		}
 		case EYapDialogueNodeType::PlayerPrompt:
 		{
@@ -832,8 +832,7 @@ FText SFlowGraphNode_YapDialogueWidget::Text_NodeHeader() const
 
 FText SFlowGraphNode_YapDialogueWidget::Text_GroupLabel() const
 {
-	return INVTEXT("TODO");
-	//return FText::FromName( Yap::Tags::GetLeafTag(GetFlowYapDialogueNode()->GetDomainTag()) );
+	return GetFlowYapDialogueNode()->GetNodeConfig().General.GraphTitle;
 }
 
 // ------------------------------------------------------------------------------------------------

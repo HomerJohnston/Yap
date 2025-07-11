@@ -14,13 +14,35 @@ USTRUCT()
 struct FYapNodeConfigGroup_General
 {
 	GENERATED_BODY()
-	
+
+	/** Show an optional label for this node type on flow graphs. */
+	UPROPERTY(EditAnywhere)
+	FText GraphTitle;
+
+	/** Controls which node types are permitted to be used. */
 	UPROPERTY(EditAnywhere, meta = (Bitmask, BitmaskEnum = "/Script/Yap.EYapDialogueNodeType"))
 	int32 AllowableNodeTypes;
+
+	// OK so EditCondition doesn't have bitwise operators so let's hard code every number that would include the correct bit I hope I never change anything (extra keyword for future search: fuck)
+	// UPROPERTY(EditAnywhere, meta = (EditCondition = "AllowableNodeTypes & EYapDialogueNodeType > 0", EditConditionHides))
+
+	/**  */
+	UPROPERTY(EditAnywhere, meta = (EditCondition = "AllowableNodeTypes == 1 || AllowableNodeTypes == 3 || AllowableNodeTypes == 5 || AllowableNodeTypes == 7", EditConditionHides))
+	FText TalkLabelOverride;
 	
+	/**  */
+	UPROPERTY(EditAnywhere, meta = (EditCondition = "AllowableNodeTypes == 2 || AllowableNodeTypes == 3 || AllowableNodeTypes == 6 || AllowableNodeTypes == 7", EditConditionHides))
+	FText TalkAndAdvanceLabelOverride;
+	
+	/**  */
+	UPROPERTY(EditAnywhere, meta = (EditCondition = "AllowableNodeTypes == 4 || AllowableNodeTypes == 5 || AllowableNodeTypes == 6 || AllowableNodeTypes == 7", EditConditionHides))
+	FText PromptLabelOverride;
+
+	/** Use this to filter the character tag selector. If all of your game's character tags are under YourGame.Entity.Character.XYZ then set this to YourGame.Entity.Character for easier character selection. */
 	UPROPERTY(EditAnywhere)
 	FGameplayTag CharacterTagBase;
-	
+
+	/**  */
 	UPROPERTY(EditAnywhere)
 	FGameplayTag DialogueTagsParent;
 
@@ -151,15 +173,6 @@ struct FYapNodeConfigGroup_FlowGraphSettings
 	UPROPERTY(EditAnywhere, meta = (DoNotDraw))
 	FLinearColor GroupColor = FLinearColor::White;
 	
-	UPROPERTY(EditAnywhere)
-	FText TalkModeTitle = LOCTEXT("Talk_DefaultNodeTitle", "Talk");
-
-	UPROPERTY(EditAnywhere)
-	FText AskModeTitle = LOCTEXT("Ask_DefaultNodeTitle", "Talk & Advance");
-	
-	UPROPERTY(EditAnywhere)
-	FText PromptModeTitle = LOCTEXT("PlayerPrompt_DefaultNodeTitle", "Prompt");
-
 	/** Adjusts the width of all dialogue nodes in graph grid units (16 px). */
 	UPROPERTY(EditAnywhere, meta = (ClampMin = -6, ClampMax = +100, UIMin = -6, UIMax = 20, Delta = 1))
 	int32 DialogueWidthAdjustment = 0;
@@ -305,13 +318,13 @@ public:
 	
 	//float GetMinimumTimeElapsedToAllowSkip() const { return MinimumTimeElapsedToAllowSkip; }
 	
-	FText GetTalkModeTitle() const { return Graph.TalkModeTitle; }
+	FText GetTalkModeTitle() const;
 
-	FText GetAskModeTitle() const { return Graph.AskModeTitle; }
+    FText GetTalkAndAdvanceModeTitle() const;
 
-	FText GetPromptModeTitle() const { return Graph.PromptModeTitle; }
-	
-	int32 GetDialogueWidthAdjustment() const { return Graph.DialogueWidthAdjustment; }
+    FText GetPromptModeTitle() const;
+
+    int32 GetDialogueWidthAdjustment() const { return Graph.DialogueWidthAdjustment; }
 	
 	const FSlateFontInfo& GetGraphDialogueFont() const { return Graph.DialogueFont; }
 	

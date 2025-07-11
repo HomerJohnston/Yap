@@ -5,6 +5,7 @@
 
 #include "Engine/DeveloperSettings.h"
 #include "GameplayTagContainer.h"
+#include "YapCharacterDefinition.h"
 #include "YapNodeConfig.h"
 #include "Yap/Enums/YapTimeMode.h"
 #include "Yap/YapBroker.h"
@@ -124,6 +125,14 @@ protected:
 	UPROPERTY(Config, EditAnywhere, Category = "Other")
 	TSoftObjectPtr<UTexture2D> DefaultPortraitTexture;
 
+	// - - - - - OTHER - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
+	UPROPERTY(Config)
+	TMap<FGameplayTag, TSoftObjectPtr<UObject>> CharacterMap;
+
+	UPROPERTY(Config, EditAnywhere, Category = "Characters")
+	TArray<FYapCharacterDefinition> CharacterArray;
+	
 	// ============================================================================================
 	// STATE
 	// ============================================================================================
@@ -183,6 +192,10 @@ public:
 	
 	static const TSoftObjectPtr<UTexture2D> GetDefaultPortraitTextureAsset() { return Get().DefaultPortraitTexture; };
 
+	static const TSoftObjectPtr<UObject>* FindCharacter(FGameplayTag Character) { return Get().CharacterMap.Find(Character); }
+	
+	static const TMap<FGameplayTag, TSoftObjectPtr<UObject>>& GetCharacters() { return Get().CharacterMap; }
+	
 #if WITH_EDITOR
 public:
 	
@@ -200,6 +213,12 @@ public:
 
 protected:
 	void OnGetCategoriesMetaFromPropertyHandle(TSharedPtr<IPropertyHandle> PropertyHandle, FString& MetaString) const;
+
+	void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
+
+	void ProcessCharacterArray();
+	
+	void RebuildCharacterMap();
 #endif
 };
 

@@ -40,25 +40,31 @@ FAssetSupportResponse UAssetDefinition_YapNode::CanLocalize(const FAssetData& In
 
 
 
-
-
-
-
-
-FText FAssetTypeActions_YapNodeBlueprint::GetName() const
+FText UAssetDefinition_YapNodeBlueprint::GetAssetDisplayName() const
 {
-    return LOCTEXT("AssetTypeActions_FlowNodeBlueprint", "Flow Node Blueprint");
+    return LOCTEXT("YapNodeAssetName", "Yap Node Blueprint");
 }
 
-UClass* FAssetTypeActions_YapNodeBlueprint::GetSupportedClass() const
+FLinearColor UAssetDefinition_YapNodeBlueprint::GetAssetColor() const
 {
-    return UYapNodeBlueprint::StaticClass();
+    return FColor(255, 196, 128);
 }
 
+TSoftClassPtr<UObject> UAssetDefinition_YapNodeBlueprint::GetAssetClass() const
+{
+    return UFlowNodeBlueprint::StaticClass();
+}
 
+TConstArrayView<FAssetCategoryPath> UAssetDefinition_YapNodeBlueprint::GetAssetCategories() const
+{
+    static const auto Categories = { FYapAssetCategoryPaths::Yap };
 
+    return Categories;
+}
 
-
-
+FAssetSupportResponse UAssetDefinition_YapNodeBlueprint::CanLocalize(const FAssetData& InAsset) const
+{
+    return FAssetSupportResponse::Supported();
+}
 
 #undef LOCTEXT_NAMESPACE

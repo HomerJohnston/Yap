@@ -446,7 +446,7 @@ TSharedRef<SWidget> SYapDialogueEditor::BuildPaddingSettings_ExpandedEditor(floa
 						.MaxSliderValue(UYapProjectSettings::GetFragmentPaddingSliderMax())
 						.ToolTipText(LOCTEXT("FragmentTimeEntry_Tooltip", "Time this dialogue fragment will play for"))
 						.Justification(ETextJustify::Center)
-						.Value_Lambda( [this] () { return GetFragment().GetPaddingSetting().Get(0.0f); } )//GetPaddingValue(DialogueNode->GetWorld(), UYapProjectSettings::GetTypeGroup(DialogueNode->GetTypeGroupTag())); } )
+						.Value_Lambda( [this] () { return GetFragment().GetPaddingSetting().Get(0.0f); } )
 						.OnValueChanged_Lambda( [this] (float NewValue) { GetFragment().SetPaddingToNextFragment(NewValue); } )
 						.OnValueCommitted_Lambda( [this] (float NewValue, ETextCommit::Type) { GetFragment().SetPaddingToNextFragment(NewValue); } ) // TODO transactions
 					]

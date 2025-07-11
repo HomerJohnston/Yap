@@ -6,6 +6,7 @@
 #include "GameplayTagsManager.h"
 #include "GameplayTagsModule.h"
 #include "Nodes/Route/FlowNode_Reroute.h"
+#include "UObject/ObjectSaveContext.h"
 #include "Yap/YapBit.h"
 #include "Yap/YapCharacterAsset.h"
 #include "Yap/YapCondition.h"
@@ -549,7 +550,7 @@ bool UFlowNode_YapDialogue::TryBroadcastPrompts()
  		FYapData_PlayerPromptCreated Data;
  		Data.Conversation = Conversation.GetHandle();
  		Data.DirectedAt = TScriptInterface<IYapCharacterInterface>(const_cast<UObject*>(Fragment.GetDirectedAt(EYapLoadContext::Sync)));
- 		Data.Speaker = TScriptInterface<IYapCharacterInterface>(const_cast<UObject*>(Fragment.GetSpeaker(EYapLoadContext::Sync)));
+ 		Data.Speaker = TScriptInterface<IYapCharacterInterface>(const_cast<UObject*>(Fragment.GetSpeakerCharacter(EYapLoadContext::Sync)));
  		Data.MoodTag = Fragment.GetMoodTag();
  		Data.DialogueText = Bit.GetDialogueText();
 
@@ -700,7 +701,7 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 	FYapData_SpeechBegins Data;
 	Data.Conversation = Subsystem->GetConversationByOwner(GetWorld(), GetFlowAsset()).GetConversationName();
 	Data.DirectedAt = TScriptInterface<IYapCharacterInterface>(const_cast<UObject*>(Fragment.GetDirectedAt(EYapLoadContext::Sync)));
-	Data.Speaker = TScriptInterface<IYapCharacterInterface>(const_cast<UObject*>(Fragment.GetSpeaker(EYapLoadContext::Sync)));
+	Data.Speaker = TScriptInterface<IYapCharacterInterface>(const_cast<UObject*>(Fragment.GetSpeakerCharacter(EYapLoadContext::Sync)));
 	Data.MoodTag = Fragment.GetMoodTag();
 	Data.DialogueText = Bit.GetDialogueText();
 	Data.SpeechTime = EffectiveTime;
@@ -1432,17 +1433,27 @@ bool UFlowNode_YapDialogue::CheckActivationLimits() const
 #if WITH_EDITOR
 void UFlowNode_YapDialogue::ToggleNodeType()
 {
-	uint8 AsInt = static_cast<uint8>(DialogueNodeType) << 1;
-
-	if (AsInt >= static_cast<uint8>(EYapDialogueNodeType::COUNT))
+	// If the node config isn't valid, do nothing
+	if (GetNodeConfig().General.AllowableNodeTypes == 0)
 	{
-		DialogueNodeType = EYapDialogueNodeType::Talk;
-	}
-	else
-	{
-		DialogueNodeType = static_cast<EYapDialogueNodeType>(AsInt);
+		return;
 	}
 
+	uint8 AsInt = static_cast<uint8>(DialogueNodeType);
+
+	do
+	{
+		AsInt = AsInt << 1;
+		
+		if (AsInt >= static_cast<uint8>(EYapDialogueNodeType::COUNT))
+		{
+			AsInt = 1 << 0;
+		}
+	}
+	while ((AsInt & GetNodeConfig().General.AllowableNodeTypes) == 0); // If the next setting isn't an allowable node type keep trying new allowable node types
+
+	DialogueNodeType = static_cast<EYapDialogueNodeType>(AsInt);
+	
 	if (DialogueNodeType == EYapDialogueNodeType::TalkAndAdvance)
 	{
 		if (TalkSequencing < EYapDialogueTalkSequencing::SelectOne)
@@ -1502,6 +1513,87 @@ void UFlowNode_YapDialogue::PostLoad()
 	Super::PostLoad();
 	
 	TriggerPreload();
+}
+
+void UFlowNode_YapDialogue::PreSave(FObjectPreSaveContext SaveContext)
+{
+	Super::PreSave(SaveContext);
+	
+	// TODO this should be removed in ~2026
+	if (!IsTemplate() && !GEditor->IsPlayingSessionInEditor())
+	{
+		for (FYapFragment& Fragment : Fragments)
+		{
+			// Has a speaker asset set, but no tag
+			if (!Fragment.SpeakerAsset.IsNull() && !Fragment.Speaker.IsValid())
+			{
+				UObject* LoadedSpeakerAsset = Fragment.SpeakerAsset.LoadSynchronous();
+
+				if (const UBlueprint* Blueprint = Cast<UBlueprint>(LoadedSpeakerAsset))
+				{
+					LoadedSpeakerAsset = Blueprint->GeneratedClass.GetDefaultObject();
+				}
+
+				if (LoadedSpeakerAsset->Implements<UYapCharacterInterface>())
+				{
+					FGameplayTag AssetTag = IYapCharacterInterface::Execute_K2_GetYapCharacterTag(LoadedSpeakerAsset);
+
+					if (AssetTag.IsValid())
+					{
+						Fragment.Speaker = AssetTag;
+						Fragment.SpeakerAsset.Reset();
+
+						UE_LOG(LogYap, Display, TEXT("Fixed up fragment using old speaker data (set speaker from asset <%s> to gameplay tag <%s>)"), *LoadedSpeakerAsset->GetName(), *Fragment.Speaker.ToString());
+					
+						Modify();
+					}
+					else
+					{
+						UE_LOG(LogYap, Warning, TEXT("Could not fix up fragment using old speaker data (speaker uses asset <%s>, but asset has no gameplay tag set)"), *LoadedSpeakerAsset->GetName());
+					}
+				}
+			}
+			else if (!Fragment.SpeakerAsset.IsNull() && Fragment.Speaker.IsValid())
+			{
+				Fragment.SpeakerAsset.Reset();
+				Modify();
+			}
+
+			if (!Fragment.DirectedAtAsset.IsNull() && !Fragment.DirectedAt.IsValid())
+			{
+				UObject* LoadedDirectedAtAsset = Fragment.DirectedAtAsset.LoadSynchronous();
+
+				if (const UBlueprint* Blueprint = Cast<UBlueprint>(LoadedDirectedAtAsset))
+				{
+					LoadedDirectedAtAsset = Blueprint->GeneratedClass.GetDefaultObject();
+				}
+
+				if (LoadedDirectedAtAsset->Implements<UYapCharacterInterface>())
+				{
+					FGameplayTag AssetTag = IYapCharacterInterface::Execute_K2_GetYapCharacterTag(LoadedDirectedAtAsset);
+
+					if (AssetTag.IsValid())
+					{
+						Fragment.DirectedAt = AssetTag;
+						Fragment.DirectedAtAsset.Reset();
+
+						UE_LOG(LogYap, Display, TEXT("Fixed up fragment using old directed at data (set directed at from asset <%s> to gameplay tag <%s>)"), *LoadedDirectedAtAsset->GetName(), *Fragment.DirectedAt.ToString());
+					
+						Modify();
+					}
+					else
+					{
+						UE_LOG(LogYap, Warning, TEXT("Could not fix up fragment using old directed at data (directed at uses asset <%s>, but asset has no gameplay tag set)"), *LoadedDirectedAtAsset->GetName());
+					}
+				}
+			}
+			else if (!Fragment.DirectedAtAsset.IsNull() && Fragment.DirectedAt.IsValid())
+			{
+				Fragment.DirectedAtAsset.Reset();
+				Modify();
+			}
+		}
+	}
 }
 #endif
 

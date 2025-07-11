@@ -54,25 +54,29 @@ void FYapFragment::ResetOptionalPins()
 void FYapFragment::PreloadContent(UWorld* World, EYapMaturitySetting MaturitySetting, EYapLoadContext LoadContext)
 {
 	ResolveMaturitySetting(World, MaturitySetting);
+
+	// TODO after SpeakerAsset is removed, rename these
+	TSoftObjectPtr<UObject> SpeakerAsset__ = GetCharacterAsset(Speaker);
+	TSoftObjectPtr<UObject> DirectedAtAsset__ = GetCharacterAsset(DirectedAt);
 	
 	switch (LoadContext)
 	{
 		case EYapLoadContext::Async:
 		{
-			SpeakerHandle = FYapStreamableManager::Get().RequestAsyncLoad(SpeakerAsset.ToSoftObjectPath());;
-			DirectedAtHandle = FYapStreamableManager::Get().RequestAsyncLoad(DirectedAtAsset.ToSoftObjectPath());;
+			SpeakerHandle = FYapStreamableManager::Get().RequestAsyncLoad(SpeakerAsset__.ToSoftObjectPath());;
+			DirectedAtHandle = FYapStreamableManager::Get().RequestAsyncLoad(DirectedAtAsset__.ToSoftObjectPath());;
 			break;
 		}
 		case EYapLoadContext::AsyncEditorOnly:
 		{
-			FYapStreamableManager::Get().RequestAsyncLoad(SpeakerAsset.ToSoftObjectPath());;
-			FYapStreamableManager::Get().RequestAsyncLoad(DirectedAtAsset.ToSoftObjectPath());;
+			FYapStreamableManager::Get().RequestAsyncLoad(SpeakerAsset__.ToSoftObjectPath());;
+			FYapStreamableManager::Get().RequestAsyncLoad(DirectedAtAsset__.ToSoftObjectPath());;
 			break;
 		}
 		case EYapLoadContext::Sync:
 		{
-			SpeakerHandle = FYapStreamableManager::Get().RequestSyncLoad(SpeakerAsset.ToSoftObjectPath());;
-			DirectedAtHandle = FYapStreamableManager::Get().RequestSyncLoad(DirectedAtAsset.ToSoftObjectPath());;
+			SpeakerHandle = FYapStreamableManager::Get().RequestSyncLoad(SpeakerAsset__.ToSoftObjectPath());;
+			DirectedAtHandle = FYapStreamableManager::Get().RequestSyncLoad(DirectedAtAsset__.ToSoftObjectPath());;
 			break;
 		}
 	}
@@ -89,74 +93,92 @@ void FYapFragment::PreloadContent(UWorld* World, EYapMaturitySetting MaturitySet
 	}
 }
 
-const UObject* FYapFragment::GetSpeaker(EYapLoadContext LoadContext)
+const FGameplayTag& FYapFragment::GetSpeakerTag() const
 {
-	return GetCharacter_Internal(SpeakerAsset, SpeakerHandle, LoadContext);
+	return Speaker;
+}
+
+const UObject* FYapFragment::GetSpeakerCharacter(EYapLoadContext LoadContext)
+{
+	return GetCharacter_Internal(Speaker, SpeakerHandle, LoadContext);
 }
 
 bool FYapFragment::HasSpeakerAssigned()
 {
-	return !SpeakerAsset.IsNull();
+	return Speaker.IsValid();
 }
 
-
-bool FYapFragment::IsSpeakerPendingLoad()
+TSoftObjectPtr<UObject> FYapFragment::GetCharacterAsset(const FGameplayTag& CharacterTag) const
 {
-	return SpeakerAsset.IsPending();
-}
-
-const UObject* FYapFragment::GetDirectedAt(EYapLoadContext LoadContext)
-{
-	return GetCharacter_Internal(DirectedAtAsset, DirectedAtHandle, LoadContext);
-}
-
-const UObject* FYapFragment::GetCharacter_Internal(const TSoftObjectPtr<UObject>& InSpeakerAsset, TSharedPtr<FStreamableHandle>& Handle, EYapLoadContext LoadContext)
-{
-	if (InSpeakerAsset.IsNull())
+	if (!CharacterTag.IsValid())
 	{
 		return nullptr;
 	}
 
-	if (InSpeakerAsset.IsValid())
+	auto* Ref = UYapProjectSettings::FindCharacter(CharacterTag);
+
+	return (Ref) ? *Ref : nullptr;
+}
+
+const UObject* FYapFragment::GetDirectedAt(EYapLoadContext LoadContext)
+{
+	return GetCharacter_Internal(DirectedAt, DirectedAtHandle, LoadContext);
+}
+
+const UObject* FYapFragment::GetCharacter_Internal(const FGameplayTag& CharacterTag, TSharedPtr<FStreamableHandle>& Handle, EYapLoadContext LoadContext)
+{
+	if (!CharacterTag.IsValid())
 	{
-		if (const UBlueprint* Blueprint = Cast<UBlueprint>(InSpeakerAsset.Get()))
+		return nullptr;
+	}
+
+	TSoftObjectPtr<UObject> Asset = GetCharacterAsset(CharacterTag);
+	
+	if (Asset.IsNull())
+	{
+		return nullptr;
+	}
+
+	if (Asset.IsValid())
+	{
+		if (const UBlueprint* Blueprint = Cast<UBlueprint>(Asset.Get()))
 		{
 			return Blueprint->GeneratedClass->GetDefaultObject();
 		}
 		
-		return InSpeakerAsset.Get();
+		return Asset.Get();
 	}
 
 	switch (LoadContext)
 	{
 		case EYapLoadContext::Async:
 		{
-			Handle = FYapStreamableManager::Get().RequestAsyncLoad(InSpeakerAsset.ToSoftObjectPath());
+			Handle = FYapStreamableManager::Get().RequestAsyncLoad(Asset.ToSoftObjectPath());
 			break;
 		}
 		case EYapLoadContext::AsyncEditorOnly:
 		{
-			FYapStreamableManager::Get().RequestAsyncLoad(InSpeakerAsset.ToSoftObjectPath());
+			FYapStreamableManager::Get().RequestAsyncLoad(Asset.ToSoftObjectPath());
 			break;
 		}
 		case EYapLoadContext::Sync:
 		{
-			Handle = FYapStreamableManager::Get().RequestSyncLoad(InSpeakerAsset.ToSoftObjectPath());
+			Handle = FYapStreamableManager::Get().RequestSyncLoad(Asset.ToSoftObjectPath());
 			break;
 		}
 	}
 
-	if (IsSpeakerPendingLoad())
+	if (Asset.IsPending())
 	{
 		return nullptr;
 	}
 	
-	if (const UBlueprint* Blueprint = Cast<UBlueprint>(InSpeakerAsset.Get()))
+	if (const UBlueprint* Blueprint = Cast<UBlueprint>(Asset.Get()))
 	{
 		return Blueprint->GetClass()->GetDefaultObject();
 	}
 
-	return InSpeakerAsset.Get();
+	return Asset.Get();
 }
 
 const FText& FYapFragment::GetDialogueText(UWorld* World, EYapMaturitySetting MaturitySetting) const
@@ -434,15 +456,15 @@ void FYapFragment::InvalidateFragmentTag(UFlowNode_YapDialogue* OwnerNode)
 
 
 #if WITH_EDITOR
-void FYapFragment::SetSpeakerNew(TSoftObjectPtr<UObject> InSpeaker)
+void FYapFragment::SetSpeaker(const FGameplayTag& CharacterTag)
 {
-	SpeakerAsset = InSpeaker;
+	Speaker = CharacterTag;
 	SpeakerHandle = nullptr;
 }
 
-void FYapFragment::SetDirectedAt(TSoftObjectPtr<UYapCharacterAsset> InDirectedAt)
+void FYapFragment::SetDirectedAt(const FGameplayTag& CharacterTag)
 {
-	DirectedAtAsset = InDirectedAt;
+	DirectedAt = CharacterTag;
 	DirectedAtHandle = nullptr;
 }
 #endif

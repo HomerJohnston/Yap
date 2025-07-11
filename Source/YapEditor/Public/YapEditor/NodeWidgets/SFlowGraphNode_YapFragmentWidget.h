@@ -48,6 +48,20 @@ enum class EYapTextType : uint8
 	TitleText
 };
 
+enum class EFlowGraphNode_YapCharacterAssigned : uint8
+{
+	Unknown,
+	Assigned,
+	Unassigned,
+};
+
+enum class EFlowGraphNode_YapCharacterHasPortrait: uint8
+{
+	Unknown,
+	Found,
+	NotFound,
+};
+
 class SFlowGraphNode_YapFragmentWidget : public SCompoundWidget
 {
 	// ==========================================
@@ -115,6 +129,7 @@ protected:
 	//
 	TSharedPtr<SWidget> AudioIDButton = nullptr;
 
+	//
 	TSharedPtr<SWidget> RowHighlight = nullptr;
 
 	//
@@ -126,6 +141,17 @@ protected:
 	//
 	static FSlateFontInfo DialogueTextFont;
 
+	//
+	EFlowGraphNode_YapCharacterAssigned SpeakerState;
+
+	//
+	EFlowGraphNode_YapCharacterHasPortrait SpeakerPortraitState;
+
+	//
+	EFlowGraphNode_YapCharacterAssigned DirectedAtState;
+
+	//
+	EFlowGraphNode_YapCharacterHasPortrait DirectedAtPortraitState;
 	
 public:
 	// ================================================================================================

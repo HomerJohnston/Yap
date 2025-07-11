@@ -69,6 +69,9 @@ public:
 	friend class SFlowGraphNode_YapFragmentWidget;
 	friend class UFlowGraphNode_YapDialogue;
 	friend class SYapDialogueEditor;
+
+	// TODO this should be removed eventually (probably early 2026). I am only putting this in to allow deprecation of SpeakerAsset and DirectedAtAsset.
+	friend class UFlowNode_YapDialogue;
 #endif
 	
 	// ==========================================
@@ -77,12 +80,18 @@ protected:
 	UPROPERTY()
 	TArray<TObjectPtr<UYapCondition>> Conditions;
 
-	UPROPERTY()
+	UPROPERTY(EditAnywhere)
 	TSoftObjectPtr<UObject> SpeakerAsset;
+
+	UPROPERTY(EditAnywhere)
+	FGameplayTag Speaker;
 	
 	/**  */
-	UPROPERTY()
+	UPROPERTY(EditAnywhere)
 	TSoftObjectPtr<UObject> DirectedAtAsset;
+
+	UPROPERTY(EditAnywhere)
+	FGameplayTag DirectedAt;
 	
 	UPROPERTY()
 	FYapBit MatureBit;
@@ -207,16 +216,18 @@ public:
 	
 	void PreloadContent(UWorld* World, EYapMaturitySetting MaturitySetting, EYapLoadContext LoadContext);
 	
-	const UObject* GetSpeaker(EYapLoadContext LoadContext); // Non-const because of async loading handle
+	const FGameplayTag& GetSpeakerTag() const;
+
+	const UObject* GetSpeakerCharacter(EYapLoadContext LoadContext); // Non-const because of async loading handle
 
 	bool HasSpeakerAssigned();
-	
-	bool IsSpeakerPendingLoad();
 
+	TSoftObjectPtr<UObject> GetCharacterAsset(const FGameplayTag& CharacterTag) const;
+	
 	const UObject* GetDirectedAt(EYapLoadContext LoadContext); // Non-const because of async loading handle
 	
 private:
-	const UObject* GetCharacter_Internal(const TSoftObjectPtr<UObject>& SpeakerAsset, TSharedPtr<FStreamableHandle>& Handle, EYapLoadContext LoadContext);
+	const UObject* GetCharacter_Internal(const FGameplayTag& CharacterTag, TSharedPtr<FStreamableHandle>& Handle, EYapLoadContext LoadContext);
 
 public:
 	// TODO I don't think fragments should know where their position is!
@@ -298,10 +309,6 @@ public:
 
 	const TArray<UYapCondition*>& GetConditions() const { return Conditions; }
 
-	const TSoftObjectPtr<UObject>& GetSpeakerAsset() const { return SpeakerAsset; }
-	
-	const TSoftObjectPtr<UObject>& GetDirectedAtAsset() const { return DirectedAtAsset; }
-
 	FFlowPin GetPromptPin() const;
 
 	FFlowPin GetEndPin() const;
@@ -376,8 +383,8 @@ public:
 	// EDITOR API
 #if WITH_EDITOR
 public:
-	void SetSpeakerNew(TSoftObjectPtr<UObject> InSpeaker);
+	void SetSpeaker(const FGameplayTag& CharacterTag);
 	
-	void SetDirectedAt(TSoftObjectPtr<UYapCharacterAsset> InDirectedAt);
+	void SetDirectedAt(const FGameplayTag& CharacterTag);
 #endif
 };

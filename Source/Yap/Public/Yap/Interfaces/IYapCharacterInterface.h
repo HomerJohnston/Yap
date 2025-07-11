@@ -36,7 +36,7 @@ public:
     static FGameplayTag GetTag(const UObject* Character);
     
     /** Try to get the supplied character's portrait. Will log an error if the character does not implement the interface. */
-    static const UTexture2D* GetPortrait(const UObject* Character, FGameplayTag MoodTag = FGameplayTag::EmptyTag);
+    static const UTexture2D* GetPortrait(const UObject* CharacterAsset, FGameplayTag MoodTag = FGameplayTag::EmptyTag);
 
 protected:
     // -----------------------------------------------------

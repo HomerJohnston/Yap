@@ -76,7 +76,7 @@ public:
 
 // ------------------------------------------------------------------------------------------------
 /**
- * Emits Dialogue through UYapSubsystem.
+ * Subclass this to create different "domains" for yap nodes. It's recommended to use the base class for common dialogue, and add subclasses for other dialogue-like features such as tutorial popups.
  */
 UCLASS(Blueprintable, BlueprintType, meta = (DisplayName = "Dialogue", Keywords = "yap")) /*, ToolTip = "Emits Yap dialogue events"*/
 class YAP_API UFlowNode_YapDialogue : public UFlowNode
@@ -122,6 +122,7 @@ protected:
 	UPROPERTY(BlueprintReadOnly)
 	EYapDialogueTalkSequencing TalkSequencing;
 
+	// This is used to update the fragment sequencing mode when the talk mode is changed
 	EYapDialogueTalkSequencing OldTalkSequencing;
 
 	/** Controls if dialogue can be interrupted. */
@@ -397,6 +398,8 @@ public:
 	FText GetNodeToolTip() const override { return FText::GetEmpty(); };
 
 	void PostLoad() override;
+
+	void PreSave(FObjectPreSaveContext SaveContext) override;
 	
 	void PreloadContent() override;
 #endif // WITH_EDITOR

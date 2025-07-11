@@ -113,23 +113,30 @@ FGameplayTag IYapCharacterInterface::GetTag(const UObject* Character)
 
 // ----------------------------------------------
 
-const UTexture2D* IYapCharacterInterface::GetPortrait(const UObject* Character, FGameplayTag MoodTag)
+const UTexture2D* IYapCharacterInterface::GetPortrait(const UObject* CharacterAsset, FGameplayTag MoodTag)
 {
     const UTexture2D* Texture = nullptr;
     
-    if (IsValid(Character))
+    if (IsValid(CharacterAsset))
     {
-        if (const IYapCharacterInterface* Speaker = Cast<IYapCharacterInterface>(Character))
+        const UObject* TargetObject = CharacterAsset;
+        
+        if (const UBlueprint* Blueprint = Cast<UBlueprint>(TargetObject))
+        {
+            TargetObject = Blueprint->GeneratedClass.GetDefaultObject();
+        }
+        
+        if (const IYapCharacterInterface* Speaker = Cast<IYapCharacterInterface>(TargetObject))
         {
             Texture = Speaker->GetYapCharacterPortrait(MoodTag);
         }
-        else if (Character->Implements<UYapCharacterInterface>())
+        else if (TargetObject->Implements<UYapCharacterInterface>())
         {
-            Texture = IYapCharacterInterface::Execute_K2_GetYapCharacterPortrait(Character, MoodTag);
+            Texture = IYapCharacterInterface::Execute_K2_GetYapCharacterPortrait(TargetObject, MoodTag);
         }
-        else
+        else if (const UBlueprint* Blueprint = Cast<UBlueprint>(TargetObject))
         {
-            UE_LOG(LogYap, Error, TEXT("IYapCharacterInterface::GetPortrait failure - Object [%s] did not implement IYapCharacterInterface in C++ or blueprint!"), *Character->GetName());
+            UE_LOG(LogYap, Error, TEXT("IYapCharacterInterface::GetPortrait failure - Object [%s] did not implement IYapCharacterInterface in C++ or blueprint!"), *CharacterAsset->GetName());
         }
     }
 

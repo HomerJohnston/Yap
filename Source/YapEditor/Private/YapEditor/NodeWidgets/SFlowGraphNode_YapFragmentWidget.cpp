@@ -28,6 +28,7 @@
 #include "Yap/Enums/YapErrorLevel.h"
 #include "YapEditor/YapDeveloperSettings.h"
 #include "Framework/MultiBox/SToolBarButtonBlock.h"
+#include "Yap/YapStreamableManager.h"
 #include "Yap/Enums/YapLoadContext.h"
 #include "YapEditor/YapEditorEvents.h"
 #include "YapEditor/YapEditorLog.h"
@@ -49,6 +50,41 @@ TMap<EYapTimeMode, FLinearColor> SFlowGraphNode_YapFragmentWidget::TimeModeButto
 };
 
 #define LOCTEXT_NAMESPACE "YapEditor"
+
+// TODO code duplication with UFlowGraphNode_YapDialogue::AutoAssignAudioOnAllFragments()
+bool CheckAudioAssetUsesAudioID(const UFlowNode_YapDialogue* Node, int32 FragmentIndex, TSoftObjectPtr<UObject> Asset, bool& bCorrectMatch)
+{
+	int32 AudioIDLen = Node->GetAudioID().Len();
+	int32 FragmentIDLen = 3; // TODO magic number move this to project settings or some other constant
+	
+	// TODO make the naming pattern a project setting
+	FRegexPattern RegexActual(FString::Format(TEXT("[a-zA-Z]{{0}}-\\d{{1}}"), {AudioIDLen, FragmentIDLen}));
+	FRegexMatcher RegexMatcher(RegexActual, *Asset.ToString());
+
+	if (RegexMatcher.FindNext())
+	{
+		FString ID = RegexMatcher.GetCaptureGroup(0);
+
+		FString AudioID = ID.LeftChop(FragmentIDLen + 1); // TODO lots of duplicated code running around, centralize it all so this mechanism is consistent everywhere
+				
+		int32 IDInt = FCString::Atoi(*ID.RightChop(AudioIDLen + 1));
+
+		if (AudioID == Node->GetAudioID() && IDInt == FragmentIndex)
+		{
+			bCorrectMatch = true;
+		}
+		else
+		{
+			bCorrectMatch = false;
+		}
+
+		// This audio asset name contains an Audio ID (meaning it has AAA-000 somewhere in the asset name)
+		return true;
+	}
+
+	// This audio asset does not contain an Audio ID (it's just a random name)
+	return false;
+}
 
 SLATE_IMPLEMENT_WIDGET(SFlowGraphNode_YapFragmentWidget)
 void SFlowGraphNode_YapFragmentWidget::PrivateRegisterAttributes(struct FSlateAttributeDescriptor::FInitializer&)
@@ -906,41 +942,6 @@ EVisibility SFlowGraphNode_YapFragmentWidget::Visibility_DialogueErrorState() co
 	return EVisibility::Collapsed;
 }
 
-// TODO code duplication with UFlowGraphNode_YapDialogue::AutoAssignAudioOnAllFragments()
-bool CheckAudioAssetUsesAudioID(const UFlowNode_YapDialogue* Node, int32 FragmentIndex, TSoftObjectPtr<UObject> Asset, bool& bCorrectMatch)
-{
-	int32 AudioIDLen = Node->GetAudioID().Len();
-	int32 FragmentIDLen = 3; // TODO magic number move this to project settings or some other constant
-	
-	// TODO make the naming pattern a project setting
-	FRegexPattern RegexActual(FString::Format(TEXT("[a-zA-Z]{{0}}-\\d{{1}}"), {AudioIDLen, FragmentIDLen}));
-	FRegexMatcher RegexMatcher(RegexActual, *Asset.ToString());
-
-	if (RegexMatcher.FindNext())
-	{
-		FString ID = RegexMatcher.GetCaptureGroup(0);
-
-		FString AudioID = ID.LeftChop(FragmentIDLen + 1); // TODO lots of duplicated code running around, centralize it all so this mechanism is consistent everywhere
-				
-		int32 IDInt = FCString::Atoi(*ID.RightChop(AudioIDLen + 1));
-
-		if (AudioID == Node->GetAudioID() && IDInt == FragmentIndex)
-		{
-			bCorrectMatch = true;
-		}
-		else
-		{
-			bCorrectMatch = false;
-		}
-
-		// This audio asset name contains an Audio ID (meaning it has AAA-000 somewhere in the asset name)
-		return true;
-	}
-
-	// This audio asset does not contain an Audio ID (it's just a random name)
-	return false;
-}
-
 FSlateColor SFlowGraphNode_YapFragmentWidget::ColorAndOpacity_AudioIDText() const
 {
 	const TSoftObjectPtr<UObject>& MatureAudioAsset = GetFragment().GetMatureBit().AudioAsset;
@@ -1250,6 +1251,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::PopupContentGetter_Speaker
 
 void SFlowGraphNode_YapFragmentWidget::OnSetNewSpeakerAsset(const FAssetData& AssetData)
 {
+	/*
 	if (AssetData.IsValid())
 	{
 		if (!IsAsset_YapSpeaker(AssetData))
@@ -1269,9 +1271,10 @@ void SFlowGraphNode_YapFragmentWidget::OnSetNewSpeakerAsset(const FAssetData& As
 	
 	FYapTransactions::BeginModify(LOCTEXT("SetSpeakerCharacter", "Set speaker character"), GetDialogueNodeMutable());
 
-	GetFragmentMutable().SetSpeakerNew(Cast<UObject>(AssetData.GetAsset()));
+	GetFragmentMutable().SetSpeaker(Cast<UObject>(AssetData.GetAsset()));
 
 	FYapTransactions::EndModify();
+	*/
 }
 
 bool SFlowGraphNode_YapFragmentWidget::OnAreAssetsAcceptableForDrop_TextWidget(TArrayView<FAssetData> AssetDatas) const
@@ -1322,9 +1325,27 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateSpeakerWidget()
 	int32 BorderSize = 2;
 
 	FYapFragment& Fragment = GetFragmentMutable();
-	
-	const UObject* SpeakerAsset = Fragment.GetSpeaker(EYapLoadContext::AsyncEditorOnly);
 
+	FGameplayTag Speaker = Fragment.Speaker;
+	const UObject* SpeakerAsset = nullptr;
+	
+	if (Speaker.IsValid())
+	{
+		const TSoftObjectPtr<UObject>* CharacterAssetPtr = UYapProjectSettings::GetCharacters().Find(Speaker);
+
+		if (CharacterAssetPtr)
+		{
+			if (CharacterAssetPtr->IsPending())
+			{
+				FYapStreamableManager::Get().RequestAsyncLoad(CharacterAssetPtr->ToSoftObjectPath()); // We'll rely on the editor never unloading things
+			}
+			else if (CharacterAssetPtr->IsValid())
+			{
+				SpeakerAsset = CharacterAssetPtr->Get();
+			}
+		}
+	}
+	
 	return SNew(SLevelOfDetailBranchNode)
 	.UseLowDetailSlot(Owner, &SFlowGraphNode_YapDialogueWidget::UseLowDetail, EGraphRenderingLOD::MediumDetail)
 	.HighDetail()
@@ -1362,6 +1383,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateSpeakerWidget()
 
 void SFlowGraphNode_YapFragmentWidget::OnAssetsDropped_SpeakerWidget(const FDragDropEvent& DragDropEvent, TArrayView<FAssetData> AssetDatas)
 {
+	/*
 	bool bIsValid = IsDroppedAsset_YapSpeaker(AssetDatas);
 
 	if (!bIsValid)
@@ -1372,7 +1394,7 @@ void SFlowGraphNode_YapFragmentWidget::OnAssetsDropped_SpeakerWidget(const FDrag
 	UObject* AssetObject = AssetDatas[0].GetAsset();
 
 	FYapScopedTransaction Transaction(YapEditor::Event::None, LOCTEXT("SetSpeakerCharacter", "Set speaker character"), GetDialogueNodeMutable());
-	GetFragmentMutable().SetSpeakerNew(AssetObject);
+	GetFragmentMutable().SetSpeaker(AssetObject);
 	
 	if (!AssetObject->Implements<UYapCharacterInterface>())
 	{
@@ -1408,6 +1430,7 @@ void SFlowGraphNode_YapFragmentWidget::OnAssetsDropped_SpeakerWidget(const FDrag
 			}
 		}
 	}
+	*/
 }
 
 TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateSpeakerImageWidget(int32 PortraitSize, int32 BorderSize)
@@ -1455,7 +1478,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateSpeakerImageWidget(i
 
 FSlateColor SFlowGraphNode_YapFragmentWidget::BorderBackgroundColor_SpeakerImage() const
 {
-	const UObject* Speaker = GetFragmentMutable().GetSpeaker(EYapLoadContext::DoNotLoad);
+	const UObject* Speaker = GetFragmentMutable().GetSpeakerCharacter(EYapLoadContext::DoNotLoad);
 	
 	FLinearColor Color = IYapCharacterInterface::GetColor(Speaker);
 	
@@ -1477,8 +1500,29 @@ FSlateColor SFlowGraphNode_YapFragmentWidget::BorderBackgroundColor_SpeakerImage
 
 const FSlateBrush* SFlowGraphNode_YapFragmentWidget::Image_SpeakerImage() const
 {
-	const UObject* SpeakerAsset = GetFragmentMutable().GetSpeaker(EYapLoadContext::AsyncEditorOnly);
+	FYapFragment& Fragment = GetFragmentMutable();
 
+	FGameplayTag Speaker = Fragment.Speaker;
+	
+	const UObject* SpeakerAsset = nullptr;
+
+	if (Speaker.IsValid())
+	{
+		const TSoftObjectPtr<UObject>* CharacterAssetPtr = UYapProjectSettings::GetCharacters().Find(Speaker);
+
+		if (CharacterAssetPtr)
+		{
+			if (CharacterAssetPtr->IsPending())
+			{
+				FYapStreamableManager::Get().RequestAsyncLoad(CharacterAssetPtr->ToSoftObjectPath()); // We'll rely on the editor never unloading things
+			}
+			else if (CharacterAssetPtr->IsValid())
+			{
+				SpeakerAsset = CharacterAssetPtr->Get();
+			}
+		}
+	}
+	
 	//const UYapCharacter* Speaker = GetFragmentMutable().GetSpeaker(EYapLoadContext::AsyncEditorOnly);
 	const FGameplayTag& MoodTag = GetFragment().GetMoodTag();
 	
@@ -1502,13 +1546,15 @@ FText SFlowGraphNode_YapFragmentWidget::ToolTipText_SpeakerWidget() const
 	{
 		return LOCTEXT("SpeakerUnset_Label","Speaker Unset");
 	}
-	
+
+	/*
 	if (Fragment.IsSpeakerPendingLoad())
 	{
 		LOCTEXT("Loading...", "Loading...");
 	}
+	*/
 	
-	const UObject* Speaker = GetFragmentMutable().GetSpeaker(EYapLoadContext::DoNotLoad);	
+	const UObject* Speaker = GetFragmentMutable().GetSpeakerCharacter(EYapLoadContext::DoNotLoad);	
 
 	if (!IsValid(Speaker))
 	{
@@ -1534,13 +1580,15 @@ FText SFlowGraphNode_YapFragmentWidget::Text_SpeakerWidget() const
 	{
 		return LOCTEXT("SpeakerUnset_Label","Unset");
 	}
-	
+
+	/*
 	if (Fragment.IsSpeakerPendingLoad())
 	{
 		return LOCTEXT("Loading...", "Loading...");
 	}
-
-	const UObject* Speaker = Fragment.GetSpeaker(EYapLoadContext::DoNotLoad);
+	*/
+	
+	const UObject* Speaker = Fragment.GetSpeakerCharacter(EYapLoadContext::DoNotLoad);
 
 	// TODO I hate reading this twice although it probably isn't that expensive. Maybe I can toggle this on/off by events somehow later.		
 	if (Image_SpeakerImage() == nullptr)
@@ -1657,6 +1705,8 @@ FSlateColor SFlowGraphNode_YapFragmentWidget::BorderBackgroundColor_DirectedAtIm
 
 void SFlowGraphNode_YapFragmentWidget::OnAssetsDropped_DirectedAtWidget(const FDragDropEvent& DragDropEvent, TArrayView<FAssetData> AssetDatas)
 {
+	// TODO
+	/*
 	if (AssetDatas.Num() != 1)
 	{
 		return;
@@ -1669,10 +1719,12 @@ void SFlowGraphNode_YapFragmentWidget::OnAssetsDropped_DirectedAtWidget(const FD
 		FYapScopedTransaction Transaction(YapEditor::Event::None, LOCTEXT("SetDirectedAtCharacter", "Set directed-at character"), GetDialogueNodeMutable());
 		GetFragmentMutable().SetDirectedAt(Character);
 	}
+	*/
 }
 
 FReply SFlowGraphNode_YapFragmentWidget::OnClicked_DirectedAtWidget()
 {
+	/*
 	if (bCtrlPressed)
 	{
 		FYapTransactions::BeginModify(LOCTEXT("SetDirectedAtCharacter", "Set directed-at character"), GetDialogueNodeMutable());
@@ -1683,7 +1735,8 @@ FReply SFlowGraphNode_YapFragmentWidget::OnClicked_DirectedAtWidget()
 
 		return FReply::Handled();
 	}
-
+	*/
+	
 	return FReply::Unhandled();
 }
 
@@ -1746,11 +1799,13 @@ const FSlateBrush* SFlowGraphNode_YapFragmentWidget::Image_DirectedAtWidget() co
 
 void SFlowGraphNode_YapFragmentWidget::OnSetNewDirectedAtAsset(const FAssetData& AssetData)
 {
+	/*
 	FYapTransactions::BeginModify(LOCTEXT("SetDirectedAtCharacter", "Set directed-at character"), GetDialogueNodeMutable());
 
 	GetFragmentMutable().SetDirectedAt(Cast<UYapCharacterAsset>(AssetData.GetAsset()));
 
 	FYapTransactions::EndModify();
+	*/
 }
 
 // ================================================================================================

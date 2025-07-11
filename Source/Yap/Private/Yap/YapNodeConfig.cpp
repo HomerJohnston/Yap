@@ -7,6 +7,8 @@
 #include "Yap/YapProjectSettings.h"
 #include "Yap/Globals/YapFileUtilities.h"
 
+#define LOCTEXT_NAMESPACE "YapEditor"
+
 FYapNodeConfigGroup_FlowGraphSettings::FYapNodeConfigGroup_FlowGraphSettings()
 {
 }
@@ -20,8 +22,6 @@ FGameplayTagContainer FYapNodeConfigGroup_MoodTags::GetAllMoodTags()
 
 UYapNodeConfig::UYapNodeConfig()
 {
-    UGameplayTagsManager& TagsManager = UGameplayTagsManager::Get();
-    
     General.AllowableNodeTypes = static_cast<int32>(EYapDialogueNodeType::COUNT) - 1;
 }
 
@@ -150,6 +150,42 @@ TArray<FString>& UYapNodeConfig::GetDefaultMoodTags()
 }
 
 #if WITH_EDITOR
+FText UYapNodeConfig::GetTalkModeTitle() const
+{
+    if (General.TalkLabelOverride.IsEmpty())
+    {
+        return LOCTEXT("Talk_DefaultNodeTitle", "Talk");
+    }
+
+    return General.TalkLabelOverride;
+}
+#endif
+
+#if WITH_EDITOR
+FText UYapNodeConfig::GetTalkAndAdvanceModeTitle() const
+{
+    if (General.TalkAndAdvanceLabelOverride.IsEmpty())
+    {
+        return LOCTEXT("TalkAndAdvance_DefaultNodeTitle", "Talk & Advance");
+    }
+
+    return General.TalkAndAdvanceLabelOverride;
+}
+#endif
+
+#if WITH_EDITOR
+FText UYapNodeConfig::GetPromptModeTitle() const
+{
+    if (General.PromptLabelOverride.IsEmpty())
+    {
+        return LOCTEXT("PlayerPrompt_DefaultNodeTitle", "Prompt");
+    }
+		
+    return General.PromptLabelOverride;
+}
+#endif
+
+#if WITH_EDITOR
 FGameplayTagContainer UYapNodeConfig::GetMoodTags() const
 {
     UGameplayTagsManager& TagsManager = UGameplayTagsManager::Get();
@@ -157,3 +193,5 @@ FGameplayTagContainer UYapNodeConfig::GetMoodTags() const
     return TagsManager.RequestGameplayTagChildren(MoodTags.MoodTagsParent);
 }
 #endif
+
+#undef LOCTEXT_NAMESPACE

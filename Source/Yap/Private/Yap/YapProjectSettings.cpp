@@ -110,6 +110,110 @@ void UYapProjectSettings::OnGetCategoriesMetaFromPropertyHandle(TSharedPtr<IProp
 		MetaString = TagContainers[*Filter]->ToString();
 	}
 }
+
+void UYapProjectSettings::PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent)
+{
+	static FName CharacterArrayName = GET_MEMBER_NAME_CHECKED(ThisClass, CharacterArray);
+
+	if (PropertyChangedEvent.GetPropertyName() == CharacterArrayName || PropertyChangedEvent.GetMemberPropertyName() == CharacterArrayName)
+	{
+		RebuildCharacterMap();
+	}
+	
+	Super::PostEditChangeProperty(PropertyChangedEvent);
+}
+
+void UYapProjectSettings::ProcessCharacterArray()
+{
+	TSet<FGameplayTag> FoundCharacterTags;
+	TSet<TSoftObjectPtr<UObject>> FoundCharacterAssets;
+	TSet<FGameplayTag> DuplicateCharacterTags;
+	TSet<TSoftObjectPtr<UObject>> DuplicateCharacterAssets;
+	TSet<int32> UndefinedCharacters;
+	
+	FoundCharacterTags.Reserve(CharacterArray.Num());
+	FoundCharacterAssets.Reserve(CharacterArray.Num());
+	DuplicateCharacterTags.Reserve(CharacterArray.Num());
+	DuplicateCharacterAssets.Reserve(CharacterArray.Num());
+	
+	for (int32 i = 0; i < CharacterArray.Num(); ++i)
+	{
+		FYapCharacterDefinition& CharacterDefinition = CharacterArray[i];
+
+		if (CharacterDefinition.CharacterTag.IsValid())
+		{
+			bool bTagAlreadyExists = false;
+			FoundCharacterTags.Add(CharacterDefinition.CharacterTag, &bTagAlreadyExists);
+			
+			if (bTagAlreadyExists)
+			{
+				DuplicateCharacterTags.Add(CharacterDefinition.CharacterTag);
+			}
+		}
+
+		if (!CharacterDefinition.CharacterAsset.IsNull())
+		{			
+			bool bAssetAlreadyExists = false;
+			FoundCharacterAssets.Add(CharacterDefinition.CharacterAsset, &bAssetAlreadyExists);
+			
+			if (bAssetAlreadyExists)
+			{
+				DuplicateCharacterAssets.Add(CharacterDefinition.CharacterAsset);
+			}
+		}
+	}
+
+	for (int32 i = 0; i < CharacterArray.Num(); ++i)
+	{
+		FYapCharacterDefinition& CharacterDefinition = CharacterArray[i];
+
+		CharacterDefinition.ErrorState = EYapCharacterDefinitionErrorState::OK;
+
+		if (!CharacterDefinition.CharacterTag.IsValid())
+		{
+			UndefinedCharacters.Add(i);
+		}
+		else if (DuplicateCharacterTags.Contains(CharacterDefinition.CharacterTag))
+		{
+			CharacterDefinition.ErrorState |= EYapCharacterDefinitionErrorState::TagConflict;
+		}
+
+		if (CharacterDefinition.CharacterAsset.IsNull())
+		{
+			UndefinedCharacters.Add(i);
+		}
+		else if (DuplicateCharacterAssets.Contains(CharacterDefinition.CharacterAsset))
+		{
+			CharacterDefinition.ErrorState |= EYapCharacterDefinitionErrorState::AssetConflict;
+		}
+	}
+
+	CharacterMap.Empty(CharacterArray.Num());
+
+	for (int32 i = 0; i < CharacterArray.Num(); ++i)
+	{
+		if (UndefinedCharacters.Contains(i))
+		{
+			continue;
+		}
+		
+		const FYapCharacterDefinition& CharacterDefinition = CharacterArray[i];
+
+		if (CharacterDefinition.ErrorState == EYapCharacterDefinitionErrorState::OK)
+		{
+			CharacterMap.Add(CharacterDefinition.CharacterTag, CharacterDefinition.CharacterAsset);
+		}
+	}
+}
+
+void UYapProjectSettings::RebuildCharacterMap()
+{
+	Modify();
+
+	ProcessCharacterArray();
+	
+	TryUpdateDefaultConfigFile();
+}
 #endif
 
 #if WITH_EDITOR

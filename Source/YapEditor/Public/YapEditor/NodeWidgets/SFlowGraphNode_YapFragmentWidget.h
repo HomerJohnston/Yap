@@ -244,10 +244,14 @@ protected:
 	void					OnSetNewDirectedAtAsset(const FAssetData& AssetData);
 	
 	// ------------------------------------------
-	
+
+	void OnTextChanged_CharacterSelectorFilter(const FText& Text, TSharedRef<SScrollBox> ScrollBox);
 	TSharedRef<SWidget>		PopupContentGetter_SpeakerWidget(const UObject* Character);
+	void					UpdateCharacterSelector(FText FilterText, TSharedPtr<SScrollBox> CharacterList);
 	void					OnSetNewSpeakerAsset(const FAssetData& AssetData);
 
+	TSharedPtr<SWidget>		Temp;
+	
 	// ------------------------------------------
 
 	bool					OnAreAssetsAcceptableForDrop_TextWidget(TArrayView<FAssetData> AssetDatas) const;

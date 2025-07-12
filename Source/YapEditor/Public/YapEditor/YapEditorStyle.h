@@ -118,6 +118,7 @@ struct FYapStyles
 	FName ButtonStyle_TimeSetting;
 	FName ButtonStyle_TimeSettingOpener;
 	FName ButtonStyle_TagButton;
+	FName ButtonStyle_CharacterSelect;
 
 	FName CheckBoxStyle_Skippable;
 	FName CheckBoxStyle_TypeSettingsOverride;
@@ -140,6 +141,8 @@ struct FYapStyles
 	FName TextBlockStyle_GroupLabel;
 	FName TextBlockStyle_NodeSequencing;
 	FName TextBlockStyle_TitleText;
+	FName TextBlockStyle_CharacterName;
+	FName TextBlockStyle_CharacterTag;
 };
 
 struct FYapFonts
@@ -153,6 +156,8 @@ struct FYapFonts
 	FSlateFontInfo Font_CharacterAssetThumbnail;
 
 	FSlateFontInfo Font_WarningText;
+	FSlateFontInfo Font_CharacterName;
+	FSlateFontInfo Font_CharacterTag;
 
 	FSlateFontInfo Font_OpenSans_Regular;
 	FSlateFontInfo Font_NotoSans_Regular;
@@ -192,8 +197,8 @@ protected:
 	
 	static void Initialize_Internal();
 	
-	void OnPatchComplete();
-	FDelegateHandle OnPatchCompleteHandle;
+	static void OnPatchComplete();
+	static FDelegateHandle OnPatchCompleteHandle;
 
 	static TSharedPtr<FSlateStyleSet> StyleInstance;
 

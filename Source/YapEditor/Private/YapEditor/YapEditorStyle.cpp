@@ -5,12 +5,15 @@
 
 #include "YapEditor/YapEditorStyle.h"
 
+#include "ILiveCodingModule.h"
 #include "Interfaces/IPluginManager.h"
 #include "Styling/SlateStyleRegistry.h"
 #include "Yap/Globals/YapFileUtilities.h"
+#include "YapEditor/YapDeveloperSettings.h"
 #include "YapEditor/YapEditorColor.h"
 
 TArray<TStrongObjectPtr<UTexture2D>> FYapEditorStyle::Textures;
+FDelegateHandle FYapEditorStyle::OnPatchCompleteHandle;
 
 FYapFonts YapFonts;
 FYapBrushes YapBrushes;
@@ -79,28 +82,20 @@ ISlateStyle& FYapEditorStyle::Get()
 
 FYapEditorStyle::FYapEditorStyle()
 {
-/*
-#if WITH_LIVE_CODING
-	if (ILiveCodingModule* LiveCoding = FModuleManager::LoadModulePtr<ILiveCodingModule>(LIVE_CODING_MODULE_NAME))
-	{
-		OnPatchCompleteHandle = LiveCoding->GetOnPatchCompleteDelegate().AddRaw(this, &FYapEditorStyle::OnPatchComplete);
-	}
-#endif
-*/
 }
 
 FYapEditorStyle::~FYapEditorStyle()
 {
 	Textures.Empty();
-/*
+
 #if WITH_LIVE_CODING
 	if (ILiveCodingModule* LiveCoding = FModuleManager::GetModulePtr<ILiveCodingModule>(LIVE_CODING_MODULE_NAME))
 	{
 		LiveCoding->GetOnPatchCompleteDelegate().Remove(OnPatchCompleteHandle);
 	}
 #endif
-*/	
-	//FSlateStyleRegistry::UnRegisterSlateStyle(*StyleInstance);
+	
+	FSlateStyleRegistry::UnRegisterSlateStyle(*StyleInstance);
 }
 
 FName FYapEditorStyle::GetStyleSetName()
@@ -117,6 +112,12 @@ void FYapEditorStyle::Initialize()
 		FSlateStyleRegistry::RegisterSlateStyle(*StyleInstance);
 	}
 
+#if WITH_LIVE_CODING
+	if (ILiveCodingModule* LiveCoding = FModuleManager::LoadModulePtr<ILiveCodingModule>(LIVE_CODING_MODULE_NAME))
+	{
+		OnPatchCompleteHandle = LiveCoding->GetOnPatchCompleteDelegate().AddStatic(&FYapEditorStyle::OnPatchComplete);
+	}
+#endif
 	Initialize_Internal();
 }
 
@@ -141,14 +142,12 @@ TSharedRef<class FSlateStyleSet> FYapEditorStyle::Create()
 #if WITH_LIVE_CODING
 void FYapEditorStyle::OnPatchComplete()
 {
-	/*
 	if (UYapDeveloperSettings::GetCloseAndReopenAssetsOnLiveCoding())
 	{
-		FSlateStyleRegistry::UnRegisterSlateStyle(*this);
+		FSlateStyleRegistry::UnRegisterSlateStyle(*StyleInstance);
 		Initialize_Internal();
-		FSlateStyleRegistry::RegisterSlateStyle(*this);
+		FSlateStyleRegistry::RegisterSlateStyle(*StyleInstance);
 	}
-	*/
 }
 
 const ISlateStyle* FYapEditorStyle::GetParentStyle()
@@ -180,6 +179,8 @@ void FYapEditorStyle::Initialize_Internal()
 	YAP_DEFINE_FONT(Font_NodeSequencing,	"Italic",	9);
 	YAP_DEFINE_FONT(Font_CharacterAssetThumbnail, "Normal", 14);
 	YAP_DEFINE_FONT(Font_WarningText,		"Italic",	10);
+	YAP_DEFINE_FONT(Font_CharacterName,		"Bold",		12);
+	YAP_DEFINE_FONT(Font_CharacterTag,		"Italic",	9);
 
 	YAP_LOAD_FONT(Font_OpenSans_Regular, "Fonts/OpenSans-Regular.ttf", 10);
 	YAP_LOAD_FONT(Font_NotoSans_Regular, "Fonts/NotoSans-Regular.ttf", 10);
@@ -201,9 +202,7 @@ void FYapEditorStyle::Initialize_Internal()
 	YAP_DEFINE_BRUSH(FSlateImageBrush,			Icon_Timer,						"DialogueNodeIcons/Timer", ".png",		FVector2f(16, 16));
 	YAP_DEFINE_BRUSH(FSlateImageBrush,			Icon_LocalLimit,				"DialogueNodeIcons/LocalLimit", ".png",	FVector2f(16, 16));
 	YAP_DEFINE_BRUSH(FSlateImageBrush,			Icon_Speaker,					"Icon_Audio", ".png",					FVector2f(16, 16));
-	//YAP_DEFINE_BRUSH(FSlateVectorImageBrush,	Icon_Tag,						"Icon_Tag", ".svg",						FVector2f(16, 16));
-	YapBrushes.Icon_Tag = "Icon_Tag";
-	StyleInstance->Set("Icon_Tag", new FSlateVectorImageBrush(StyleInstance->RootToContentDir("Icon_Tag", TEXT(".svg")), FVector2f(16, 16)));
+	YAP_DEFINE_BRUSH(FSlateVectorImageBrush,	Icon_Tag,						"Icon_Tag", ".svg",						FVector2f(16, 16));
 
 	YAP_DEFINE_BRUSH(FSlateImageBrush,			Icon_Edit,						"Icon_Edit", ".png",					FVector2f(16, 16));
 	YAP_DEFINE_BRUSH(FSlateVectorImageBrush,	Icon_CornerDropdown_Right,		"Icon_CornerDropdown_Right", ".svg",	FVector2f(16, 16));
@@ -391,6 +390,14 @@ void FYapEditorStyle::Initialize_Internal()
 		.SetNormalPadding(FMargin(0,0,2,0))
 		.SetPressedPadding(FMargin(0,0,2,0));
 	);
+
+	YAP_DEFINE_STYLE(FButtonStyle, ButtonStyle_CharacterSelect, FButtonStyle::GetDefault(),
+		.SetNormal(Box_SolidLightGray_Rounded)
+		.SetHovered(Box_SolidWhite_Rounded)
+		.SetPressed(Box_SolidLightGray_Rounded)	
+		.SetHoveredForeground(YapColor::DimWhite)
+		.SetNormalForeground(YapColor::LightGray)
+		.SetPressedForeground(YapColor::LightGray));
 	
 	// ============================================================================================
 	// COMBO BUTTON STYLES
@@ -475,6 +482,16 @@ void FYapEditorStyle::Initialize_Internal()
 	YAP_DEFINE_STYLE(FTextBlockStyle, TextBlockStyle_NodeSequencing, GetParentStyle()->GetWidgetStyle<FTextBlockStyle>("NormalText"),
 		.SetFont(Font_NodeSequencing)
 		.SetColorAndOpacity(FSlateColor::UseForeground())
+	);
+	
+	YAP_DEFINE_STYLE(FTextBlockStyle, TextBlockStyle_CharacterName, GetParentStyle()->GetWidgetStyle<FTextBlockStyle>("NormalText"),
+		.SetFont(Font_CharacterName)
+		.SetColorAndOpacity(FSlateColor::UseForeground())
+	);
+	
+	YAP_DEFINE_STYLE(FTextBlockStyle, TextBlockStyle_CharacterTag, GetParentStyle()->GetWidgetStyle<FTextBlockStyle>("NormalText"),
+		.SetFont(Font_CharacterTag)
+		.SetColorAndOpacity(FSlateColor::UseSubduedForeground())
 	);
 	
 	// ============================================================================================

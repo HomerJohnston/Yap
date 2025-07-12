@@ -77,6 +77,32 @@ const TArray<const UClass*> UYapProjectSettings::GetAdditionalCharacterClasses()
 
 	return Classes;
 }
+
+/*
+TArray<const UClass*> UYapProjectSettings::GetCharacterClasses_SyncLoad()
+{
+	TArray<const UClass*> LoadedClasses;
+
+	TArray<TSoftClassPtr<UObject>> SourceClasses;
+
+	if (Get().AdditionalCharacterClasses.Num() > 0)
+	{
+		SourceClasses.Reserve(Get().AdditionalCharacterClasses.Num() + 1);
+		SourceClasses = Get().AdditionalCharacterClasses;
+		SourceClasses.Append(Get().DefaultCharacterClasses);
+	}
+
+	for (TSoftClassPtr<UObject> ClassPtr : SourceClasses)
+	{
+		if (!ClassPtr.IsNull())
+		{
+			LoadedClasses.Add(ClassPtr.LoadSynchronous());
+		}
+	}
+
+	return LoadedClasses;
+}
+*/
 #endif
 
 const TArray<TSoftClassPtr<UObject>>& UYapProjectSettings::GetAudioAssetClasses()

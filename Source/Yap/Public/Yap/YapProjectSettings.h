@@ -188,6 +188,8 @@ public:
 
 	static const TArray<const UClass*> GetAdditionalCharacterClasses();
 
+	static const TArray<FYapCharacterDefinition>& GetCharacterDefinitions() { return Get().CharacterArray; }
+	
 	static void AddAdditionalCharacterClass(TSoftClassPtr<UObject> Class);
 	
 	static bool HasCustomAudioAssetClasses() { return Get().AudioAssetClasses.Num() > 0; };

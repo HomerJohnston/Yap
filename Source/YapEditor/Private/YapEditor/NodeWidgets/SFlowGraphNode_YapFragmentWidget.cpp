@@ -8,6 +8,7 @@
 #include "PropertyCustomizationHelpers.h"
 #include "SAssetDropTarget.h"
 #include "SLevelOfDetailBranchNode.h"
+#include "Filters/SFilterSearchBox.h"
 #include "Yap/YapCharacterAsset.h"
 #include "YapEditor/YapEditorColor.h"
 #include "YapEditor/YapEditorSubsystem.h"
@@ -28,6 +29,7 @@
 #include "Yap/Enums/YapErrorLevel.h"
 #include "YapEditor/YapDeveloperSettings.h"
 #include "Framework/MultiBox/SToolBarButtonBlock.h"
+#include "Widgets/Colors/SColorBlock.h"
 #include "Yap/YapStreamableManager.h"
 #include "Yap/Enums/YapLoadContext.h"
 #include "YapEditor/YapEditorEvents.h"
@@ -36,6 +38,7 @@
 #include "YapEditor/Helpers/ProgressionSettingWidget.h"
 #include "YapEditor/SlateWidgets/SYapDialogueEditor.h"
 #include "YapEditor/SlateWidgets/SYapGameplayTagTypedPicker.h"
+#include "YapEditor/SlateWidgets/SYapHeadingBlock.h"
 #include "YapEditor/SlateWidgets/SYapTimeProgressionWidget.h"
 
 FSlateFontInfo SFlowGraphNode_YapFragmentWidget::DialogueTextFont;
@@ -1213,43 +1216,270 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::PopupContentGetter_Speaker
 
 	// TODO Consider revisiting this, it's rough and ugly?
 	UYapProjectSettings::UpdateReversedCharacterMap();
+
+	/*
+	TSharedRef<SScrollBox> RecentList = SNew(SScrollBox)
+	.Orientation(Orient_Vertical);
+
+	static TArray<FGameplayTag> RecentCharacterTags;
+	*/
 	
-	return SNew(SBorder)
+	TSharedRef<SScrollBox> CharacterList = SNew(SScrollBox)
+	.ScrollBarAlwaysVisible(true)
+	.ScrollBarPadding(FMargin(4, 4, 4, 4))
+	.Orientation(Orient_Vertical)
+	.AnimateWheelScrolling(true)
+	.WheelScrollMultiplier(2.0f);
+
+	TSharedRef<SWidget> FilterSearchBox = SNew(SFilterSearchBox)
+	.OnTextChanged(this, &ThisClass::OnTextChanged_CharacterSelectorFilter, CharacterList);
+
+	Temp = FilterSearchBox;
+	
+	UpdateCharacterSelector(FText::GetEmpty(), CharacterList);
+
+	auto OnClicked_Clear = [this] () -> FReply
+	{
+		FYapScopedTransaction Transaction(NAME_None, LOCTEXT("ClearSpeaker", "Clear Speaker"), GetDialogueNodeMutable());
+		
+		GetFragmentMutable().SetSpeaker(FGameplayTag::EmptyTag);
+		
+		return FReply::Handled();
+	};
+
+	TSharedRef<SBorder> Widget = SNew(SBorder)
 	.Padding(1, 1, 1, 1)
 	.BorderImage(FYapEditorStyle::GetImageBrush(YapBrushes.Box_SolidLightGray_Rounded))
 	.BorderBackgroundColor(YapColor::DimGray)
 	[
 		SNew(SHorizontalBox)
 		+ SHorizontalBox::Slot()
-		.AutoWidth()
-		.VAlign(VAlign_Center)
-		.HAlign(HAlign_Center)
-		.Padding(6, 0, 6, 0)
 		[
-			SNew(SBox)
-			.WidthOverride(15) // Rotated widgets are laid out per their original transform, use negative padding and a width override for rotated text
-			.Padding(-80) 
-			.VAlign(VAlign_Center)
-			.HAlign(HAlign_Center)
+			SNew(SVerticalBox)
+			+ SVerticalBox::Slot()
+			.AutoHeight()
 			[
-				SNew(STextBlock)
-				.Text(LOCTEXT("Speaker_PopupLabel", "SPEAKER"))
-				.SimpleTextMode(true)
-				.RenderTransformPivot(FVector2D(0.5, 0.5))
-				.RenderTransform(FSlateRenderTransform(FQuat2D(FMath::DegreesToRadians(-90.0f))))
-				.Font(YapFonts.Font_SectionHeader)
+				SNew(SYapHeadingBlock)
+				.HeadingText(INVTEXT("Current Speaker"))
+			]
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			.Padding(FMargin(12, 0, 12, 0))
+			[
+				SNew(SButton)
+				.ButtonStyle(&FAppStyle::Get().GetWidgetStyle<FButtonStyle>( "Menu.Button" ))
+				.OnClicked_Lambda(OnClicked_Clear)
+				[
+					SNew(SHorizontalBox)
+					+ SHorizontalBox::Slot()
+					.Padding(0, 0, 8, 0)
+					.AutoWidth()
+					[
+						SNew(SBox)
+						[
+							SNew(SImage)
+							.Image(FAppStyle::Get().GetBrush("GenericCommands.Delete"))
+						]
+					]
+					+ SHorizontalBox::Slot()
+					.VAlign(VAlign_Center)
+					[
+						SNew(STextBlock)
+						.Text(LOCTEXT("CharacterSelector_ClearButtonLabel", "Clear"))
+					]
+				]
+			]
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			[
+				SNew(SYapHeadingBlock)
+				.HeadingText(INVTEXT("Browse Speakers"))
+			]
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			.Padding(0, 0, 0, 8)
+			[
+				FilterSearchBox
+			]
+			+ SVerticalBox::Slot()
+			[
+				SNew(SBorder)
+				.Padding(4)
+				.BorderImage(FYapEditorStyle::GetImageBrush(YapBrushes.Box_SolidLightGray_Rounded))
+				.BorderBackgroundColor(YapColor::DarkGray)
+				[
+					SNew(SBox)
+					.MinDesiredWidth(300)
+					.MaxDesiredHeight(600)
+					[
+						CharacterList
+					]
+				]
 			]
 		]
-		+ SHorizontalBox::Slot()
-		[
-			SNew(SYapPropertyMenuAssetPicker)
-			.OnShouldFilterAsset(this, &ThisClass::ShouldFilter_YapSpeaker)
-			.AllowedClasses(UYapProjectSettings::GetAdditionalCharacterClasses())
-			.AllowClear(true)
-			.InitialObject(Character)
-			.OnSet(this, &ThisClass::OnSetNewSpeakerAsset)
-		]
 	];
+
+	return Widget;
+}
+
+void SFlowGraphNode_YapFragmentWidget::UpdateCharacterSelector(FText FilterText, TSharedPtr<SScrollBox> CharacterList)
+{
+	const float PortraitSize = 48;
+	const float BorderSize = 4;
+	
+	FYapFragment& Fragment = GetFragmentMutable();
+
+	FGameplayTag MoodTag = Fragment.GetMoodTag();
+
+	CharacterList->ClearChildren();
+
+	for (const FYapCharacterDefinition& CharacterDefinition : UYapProjectSettings::GetCharacterDefinitions())
+	{		
+		const UObject* Speaker = CharacterDefinition.CharacterAsset.LoadSynchronous();	
+
+		FText Name = FText::GetEmpty();
+		
+		if (IsValid(Speaker))
+		{
+			const UObject* Target = Speaker;
+			
+			if (const UBlueprint* Blueprint = Cast<UBlueprint>(Speaker))
+			{
+				Target = Blueprint->GeneratedClass.GetDefaultObject();
+			}
+
+			if (const IYapCharacterInterface* Interface = Cast<IYapCharacterInterface>(Target))
+			{
+				Name = Interface->GetName(Target);
+			}
+			else
+			{
+				Name = IYapCharacterInterface::GetName(Target);
+			}
+		}
+		
+		if (!Name.IsEmpty() && !FilterText.IsEmpty())
+		{
+			if (!Name.ToString().Contains(FilterText.ToString()))
+			{
+				continue;
+			}
+		}
+
+		auto SpeakerImage = [MoodTag, Speaker] () -> const FSlateBrush*
+		{
+			TSharedPtr<FSlateImageBrush> PortraitBrush = UYapEditorSubsystem::GetCharacterPortraitBrush(Speaker, MoodTag);
+
+			if (PortraitBrush && PortraitBrush->GetResourceObject())
+			{
+				return PortraitBrush.Get();
+			}
+			else
+			{
+				return FYapEditorStyle::GetImageBrush(YapBrushes.None);
+			}
+		};
+
+		auto SpeakerColor = [Speaker] () -> const FLinearColor
+		{
+			FLinearColor Color = YapColor::Black;
+
+			if (IsValid(Speaker))
+			{
+				const UObject* Target = Speaker;
+			
+				if (const UBlueprint* Blueprint = Cast<UBlueprint>(Speaker))
+				{
+					Target = Blueprint->GeneratedClass.GetDefaultObject();
+				}
+
+				if (const IYapCharacterInterface* Interface = Cast<IYapCharacterInterface>(Target))
+				{
+					Color = Interface->GetColor(Target);
+				}
+				else
+				{
+					Color = IYapCharacterInterface::GetColor(Target);
+				}
+			}
+	
+			Color.A *= UYapDeveloperSettings::GetPortraitBorderAlpha();
+
+			return Color;
+		};
+
+		auto OnClicked_SpeakerSelect = [this] (FGameplayTag NewSpeakerTag) -> FReply
+		{
+			GetFragmentMutable().SetSpeaker(NewSpeakerTag);
+			
+			return FReply::Handled();
+		};
+		
+		CharacterList->AddSlot()
+		.Padding(0, 2, 0, 4)
+		[
+			SNew(SButton)
+			.ButtonStyle(FYapEditorStyle::Get(), YapStyles.ButtonStyle_CharacterSelect)
+			.ButtonColorAndOpacity(YapColor::DarkGray)
+			.ContentPadding(4)
+			.OnClicked_Lambda(OnClicked_SpeakerSelect, CharacterDefinition.CharacterTag)
+			[
+				SNew(SHorizontalBox)
+				+ SHorizontalBox::Slot()
+				.AutoWidth()
+				[
+					SNew(SOverlay)
+					+ SOverlay::Slot()
+					.HAlign(HAlign_Fill)
+					.VAlign(VAlign_Fill)
+					.Padding(0.5 * BorderSize)
+					[
+						SNew(SColorBlock)
+						.Color(YapColor::Noir)
+					]
+					+ SOverlay::Slot()
+					.HAlign(HAlign_Fill)
+					.VAlign(VAlign_Fill)
+					[
+						SNew(SBorder)
+						.HAlign(HAlign_Center)
+						.VAlign(VAlign_Center)
+						.BorderImage(FYapEditorStyle::GetImageBrush(YapBrushes.Border_Thick_RoundedSquare))
+						.BorderBackgroundColor_Lambda(SpeakerColor)
+					]
+					+ SOverlay::Slot()
+					.HAlign(HAlign_Center)
+					.VAlign(VAlign_Center)
+					.Padding(BorderSize)
+					[
+						SNew(SImage)
+						.DesiredSizeOverride(FVector2D(PortraitSize, PortraitSize))
+						.Image_Lambda(SpeakerImage)
+						.ToolTipText(this, &ThisClass::ToolTipText_SpeakerWidget)
+					]
+				]
+				+ SHorizontalBox::Slot()
+				.Padding(8, 0, 8, 0)
+				.VAlign(VAlign_Center)
+				[
+					SNew(SVerticalBox)
+					+ SVerticalBox::Slot()
+					.Padding(0, 0, 0, 8)
+					[
+						SNew(STextBlock)
+						.TextStyle(FYapEditorStyle::Get(), YapStyles.TextBlockStyle_CharacterName)
+						.Text(Name)
+					]
+					+ SVerticalBox::Slot()
+					[
+						SNew(STextBlock)
+						.TextStyle(FYapEditorStyle::Get(), YapStyles.TextBlockStyle_CharacterTag)
+						.Text(FText::FromString(CharacterDefinition.CharacterTag.ToString()))	
+					]
+				]
+			]
+		];
+	}
 }
 
 void SFlowGraphNode_YapFragmentWidget::OnSetNewSpeakerAsset(const FAssetData& AssetData)
@@ -1355,6 +1585,13 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateSpeakerWidget()
 			}
 		}
 	}
+
+	auto OnPostPopup = [this] (bool& bOverrideFocus)
+	{
+		bOverrideFocus = true;
+
+		FSlateApplication::Get().SetKeyboardFocus(Temp);
+	};
 	
 	return SNew(SLevelOfDetailBranchNode)
 	.UseLowDetailSlot(Owner, &SFlowGraphNode_YapDialogueWidget::UseLowDetail, EGraphRenderingLOD::MediumDetail)
@@ -1371,8 +1608,8 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateSpeakerWidget()
 			[
 				SNew(SYapButtonPopup)
 				.PopupPlacement(MenuPlacement_BelowAnchor)
-				//.PopupContentGetter(FPopupContentGetter::CreateSP(this, &ThisClass::PopupContentGetter_SpeakerWidget, Character))
 				.PopupContentGetter(FPopupContentGetter::CreateSP(this, &ThisClass::PopupContentGetter_SpeakerWidget, SpeakerAsset))
+				.OnPostPopup_Lambda(OnPostPopup)
 				.ButtonStyle(FYapEditorStyle::Get(), YapStyles.ButtonStyle_SpeakerPopup)
 				.ButtonContent()
 				[
@@ -1534,7 +1771,6 @@ const FSlateBrush* SFlowGraphNode_YapFragmentWidget::Image_SpeakerImage() const
 		}
 	}
 	
-	//const UYapCharacter* Speaker = GetFragmentMutable().GetSpeaker(EYapLoadContext::AsyncEditorOnly);
 	const FGameplayTag& MoodTag = GetFragment().GetMoodTag();
 	
 	TSharedPtr<FSlateImageBrush> PortraitBrush = UYapEditorSubsystem::GetCharacterPortraitBrush(SpeakerAsset, MoodTag);
@@ -1827,6 +2063,11 @@ void SFlowGraphNode_YapFragmentWidget::OnSetNewDirectedAtAsset(const FAssetData&
 
 	FYapTransactions::EndModify();
 	*/
+}
+
+void SFlowGraphNode_YapFragmentWidget::OnTextChanged_CharacterSelectorFilter(const FText& Text, TSharedRef<SScrollBox> ScrollBox)
+{
+	UpdateCharacterSelector(Text, ScrollBox);
 }
 
 // ================================================================================================

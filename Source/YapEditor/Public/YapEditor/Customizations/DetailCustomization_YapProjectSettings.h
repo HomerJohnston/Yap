@@ -5,6 +5,7 @@
 
 #include "IDetailCustomization.h"
 
+class UYapProjectSettings;
 class SGameplayTagPicker;
 struct FGameplayTag;
 class IDetailCategoryBuilder;
@@ -36,6 +37,8 @@ private:
 	};
 
 	FName DialogueTagsParent {"DialogueTagsParent"};
+
+	FSlateFontInfo DetailFont;
 	
 public:
 	static TSharedRef<IDetailCustomization> MakeInstance()
@@ -44,6 +47,8 @@ public:
 	}
 
 protected:
+	TWeakObjectPtr<UYapProjectSettings> ProjectSettings;
+	
 	FText GetMoodTags() const;
 
 	const FSlateBrush* TODOBorderImage() const;
@@ -68,9 +73,16 @@ protected:
 
 	bool IsTagPropertySet(TSharedPtr<IPropertyHandle> TagPropertyHandle) const;
 
+	FReply OnClicked_SortCharacters() const;
+
+	FReply OnClicked_DeleteEmptyCharacters() const;
+
+	FReply OnClicked_PopulateFromParent() const;
+	
+	void ProcessCategory(IDetailCategoryBuilder& Category) const;
+	
 private:
 	FText GetDeletedTagsText(const TArray<FName>& TagNamesToDelete);
 };
-
 
 #undef LOCTEXT_NAMESPACE

@@ -1536,8 +1536,17 @@ void UFlowNode_YapDialogue::PreSave(FObjectPreSaveContext SaveContext)
 
 				if (LoadedSpeakerAsset->Implements<UYapCharacterInterface>())
 				{
-					FGameplayTag AssetTag = IYapCharacterInterface::Execute_K2_GetYapCharacterTag(LoadedSpeakerAsset);
-
+					FGameplayTag AssetTag;
+					
+					if (IYapCharacterInterface* I = Cast<IYapCharacterInterface>(LoadedSpeakerAsset))
+					{
+						AssetTag = I->GetYapCharacterTag();
+					}
+					else
+					{
+						AssetTag = IYapCharacterInterface::Execute_K2_GetYapCharacterTag(LoadedSpeakerAsset);
+					}
+				
 					if (AssetTag.IsValid())
 					{
 						Fragment.Speaker = AssetTag;

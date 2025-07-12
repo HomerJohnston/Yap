@@ -9,6 +9,7 @@
 
 class IAssetTypeActions;
 class IAssetTools;
+class FUICommandList;
 
 #define LOCTEXT_NAMESPACE "YapEditor"
 
@@ -24,6 +25,17 @@ public:
     
     virtual void StartupModule() override;
     virtual void ShutdownModule() override;
+
+    //
+
+public:
+    void OpenYapProjectSettings();
+    
+private:
+    void RegisterMenus();
+
+private:
+    TSharedPtr<FUICommandList> PluginCommands;
 };
 
 #undef LOCTEXT_NAMESPACE

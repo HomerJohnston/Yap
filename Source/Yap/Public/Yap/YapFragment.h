@@ -220,6 +220,8 @@ public:
 
 	const UObject* GetSpeakerCharacter(EYapLoadContext LoadContext); // Non-const because of async loading handle
 
+	bool HasDeprecatedSpeakerAsset();
+	
 	bool HasSpeakerAssigned();
 
 	TSoftObjectPtr<UObject> GetCharacterAsset(const FGameplayTag& CharacterTag) const;

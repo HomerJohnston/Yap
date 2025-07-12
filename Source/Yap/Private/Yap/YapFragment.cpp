@@ -103,6 +103,11 @@ const UObject* FYapFragment::GetSpeakerCharacter(EYapLoadContext LoadContext)
 	return GetCharacter_Internal(Speaker, SpeakerHandle, LoadContext);
 }
 
+bool FYapFragment::HasDeprecatedSpeakerAsset()
+{
+	return !SpeakerAsset.IsNull();
+}
+
 bool FYapFragment::HasSpeakerAssigned()
 {
 	return Speaker.IsValid();

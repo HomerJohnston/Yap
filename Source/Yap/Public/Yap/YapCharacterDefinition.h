@@ -7,6 +7,7 @@
 
 #include "YapCharacterDefinition.generated.h"
 
+UENUM()
 enum class EYapCharacterDefinitionErrorState : uint8
 {
     OK              = 0,
@@ -21,11 +22,26 @@ struct FYapCharacterDefinition
 {
     GENERATED_BODY()
 
+    FYapCharacterDefinition()
+    {
+    }
+
+    FYapCharacterDefinition(FGameplayTag InCharacterTag)
+        : CharacterTag(InCharacterTag)
+    {
+    }
+
     UPROPERTY(EditAnywhere)
     FGameplayTag CharacterTag;
 
     UPROPERTY(EditAnywhere)
     TSoftObjectPtr<UObject> CharacterAsset;
 
-    EYapCharacterDefinitionErrorState ErrorState;
+    UPROPERTY(Transient)
+    EYapCharacterDefinitionErrorState ErrorState = EYapCharacterDefinitionErrorState::OK;
+
+    bool operator< (const FYapCharacterDefinition& OtherCharacter) const
+    {
+        return CharacterTag < OtherCharacter.CharacterTag;
+    }
 };

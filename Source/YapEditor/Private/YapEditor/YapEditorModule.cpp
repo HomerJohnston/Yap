@@ -5,11 +5,13 @@
 
 #include "Yap/YapCharacterAsset.h"
 #include "Yap/YapProjectSettings.h"
+#include "YapEditor/YapButtonCommands.h"
 #include "YapEditor/AssetThumbnailRenderers/YapCharacterThumbnailRenderer.h"
 #include "YapEditor/YapEditorStyle.h"
 #include "YapEditor/Customizations/DetailCustomization_YapProjectSettings.h"
 #include "YapEditor/Customizations/DetailCustomization_YapCharacter.h"
 #include "YapEditor/Customizations/PropertyCustomization_YapCharacterDefinition.h"
+#include "YapEditor/Globals/YapEditorFuncs.h"
 
 #define LOCTEXT_NAMESPACE "YapEditor"
 
@@ -36,7 +38,19 @@ void FYapEditorModule::StartupModule()
 	// FGPGEditorModuleBase implementation END
 	
 	// Force the style to load (for some reason stuff is not initalized on the first call to this otherwise???
-	FYapEditorStyle::Get();
+	FYapEditorStyle::Initialize();
+	FYapEditorStyle::ReloadTextures();
+
+	FYapButtonCommands::Register();
+	
+	PluginCommands = MakeShareable(new FUICommandList);
+	
+	PluginCommands->MapAction(
+		FYapButtonCommands::Get().PluginAction,
+		FExecuteAction::CreateRaw(this, &FYapEditorModule::OpenYapProjectSettings),
+		FCanExecuteAction());
+
+	UToolMenus::RegisterStartupCallback(FSimpleMulticastDelegate::FDelegate::CreateRaw(this, &FYapEditorModule::RegisterMenus));
 }
 
 void FYapEditorModule::ShutdownModule()
@@ -44,6 +58,22 @@ void FYapEditorModule::ShutdownModule()
 	// FGPGEditorModuleBase implementation START
 	ShutdownModuleBase();
 	// FGPGEditorModuleBase implementation END
+}
+
+void FYapEditorModule::OpenYapProjectSettings()
+{
+	Yap::EditorFuncs::OpenProjectSettings();
+}
+
+void FYapEditorModule::RegisterMenus()
+{
+	FToolMenuOwnerScoped OwnerScoped(this);
+
+	UToolMenu* ToolbarMenu = UToolMenus::Get()->ExtendMenu("LevelEditor.LevelEditorToolBar.PlayToolBar");
+	FToolMenuSection& Section = ToolbarMenu->FindOrAddSection("PluginTools");
+	FToolMenuEntry& Entry = Section.AddEntry(FToolMenuEntry::InitToolBarButton(FYapButtonCommands::Get().PluginAction));
+
+	Entry.SetCommandList(PluginCommands);
 }
 
 IMPLEMENT_MODULE(FYapEditorModule, YapEditor)

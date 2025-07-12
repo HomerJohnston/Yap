@@ -166,16 +166,12 @@ extern FYapFonts YapFonts;
 extern FYapBrushes YapBrushes;
 extern FYapStyles YapStyles;
 
-class FYapEditorStyle final : public FSlateStyleSet
+class FYapEditorStyle
 {
 public:
 	static TArray<TStrongObjectPtr<UTexture2D>> Textures;
 	
-	static FYapEditorStyle& Get()
-	{
-		static FYapEditorStyle Instance;
-		return Instance;
-	}
+	static ISlateStyle& Get();
 
 	static const FSlateBrush* GetImageBrush(FName BrushName)
 	{
@@ -183,13 +179,26 @@ public:
 	}
 	
 	FYapEditorStyle();
-	virtual ~FYapEditorStyle() override;
+	virtual ~FYapEditorStyle();
 
+	static FName GetStyleSetName();
+
+	static void Initialize();
+
+	static void ReloadTextures();
+	
 protected:
-	void Initialize();
+	static TSharedRef< class FSlateStyleSet > Create();
+	
+	static void Initialize_Internal();
+	
 	void OnPatchComplete();
 	FDelegateHandle OnPatchCompleteHandle;
 
+	static TSharedPtr<FSlateStyleSet> StyleInstance;
+
+	static const ISlateStyle* GetParentStyle();
+	
 private:
 	// DO NOT USE THIS FOR ANYTHING. It's a dumb macro placeholder.
 	FSlateImageBrush* TEMP;

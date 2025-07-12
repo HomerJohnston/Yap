@@ -8,6 +8,7 @@
 #include "DetailWidgetRow.h"
 #include "GameplayTagsEditorModule.h"
 #include "SGameplayTagPicker.h"
+#include "SGameplayTagWidget.h"
 #include "YapEditor/YapTransactions.h"
 #include "Yap/YapProjectSettings.h"
 #include "Yap/Globals/YapFileUtilities.h"
@@ -71,17 +72,9 @@ const FSlateBrush* FDetailCustomization_YapProjectSettings::TODOBorderImage() co
 
 void SortCategory(const TMap<FName, IDetailCategoryBuilder*>& AllCategoryMap, int32& Order, TSet<FName>& SortedCategories, FName NextCategory)
 {
-	IDetailCategoryBuilder* Builder = (*AllCategoryMap.Find(FName("Core")));
-	
-	if (!Builder)
-	{
-		UE_LOG(LogYapEditor, Error, TEXT("Could not find project settings category %s"), *NextCategory.ToString());
-		return;
-	}
-
 	SortedCategories.Add(NextCategory);
-	
-	Builder->SetSortOrder(Order++);
+
+	(*AllCategoryMap.Find(NextCategory))->SetSortOrder(Order);
 }
 
 void CustomSortYapProjectSettingsCategories(const TMap<FName, IDetailCategoryBuilder*>& AllCategoryMap )
@@ -91,14 +84,12 @@ void CustomSortYapProjectSettingsCategories(const TMap<FName, IDetailCategoryBui
 	TSet<FName> SortedCategories;
 
 	SortCategory(AllCategoryMap, i, SortedCategories, "Core");
-	SortCategory(AllCategoryMap, i, SortedCategories, "Mood Tags");
-	SortCategory(AllCategoryMap, i, SortedCategories, "Dialogue Tags");
-	SortCategory(AllCategoryMap, i, SortedCategories, "Dialogue Playback");
 	SortCategory(AllCategoryMap, i, SortedCategories, "Editor");
 	SortCategory(AllCategoryMap, i, SortedCategories, "Flow Graph Settings");
 	SortCategory(AllCategoryMap, i, SortedCategories, "Error Handling");
 	SortCategory(AllCategoryMap, i, SortedCategories, "Other");
-
+	SortCategory(AllCategoryMap, i, SortedCategories, "Characters");
+	
 	if (SortedCategories.Num() != AllCategoryMap.Num())
 	{
 		UE_LOG(LogYapEditor, Error, TEXT("Not all categories were sorted!"));
@@ -107,10 +98,97 @@ void CustomSortYapProjectSettingsCategories(const TMap<FName, IDetailCategoryBui
 
 void FDetailCustomization_YapProjectSettings::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 {	
-	DetailBuilder.SortCategories(&CustomSortYapProjectSettingsCategories);
+	TArray<TWeakObjectPtr<UObject>> Objects;
+	DetailBuilder.GetObjectsBeingCustomized(Objects);
+	DetailFont = DetailBuilder.GetDetailFont();
 	
-	IDetailCategoryBuilder& MoodTagsCategory = DetailBuilder.EditCategory("Mood Tags");
-	IDetailCategoryBuilder& DialogueTagsCategory = DetailBuilder.EditCategory("Dialogue Tags");
+	ProjectSettings = nullptr;
+	
+	for (TWeakObjectPtr<UObject>& Object : Objects)
+	{
+		if (Object->IsA<UYapProjectSettings>())
+		{
+			ProjectSettings = Cast<UYapProjectSettings>(Object.Get());
+			break;
+		}
+	}
+
+	if (ProjectSettings.IsValid())
+	{
+		DetailBuilder.SortCategories(&CustomSortYapProjectSettingsCategories);
+		
+		IDetailCategoryBuilder& CharactersCategory = DetailBuilder.EditCategory("Characters");
+		ProcessCategory(CharactersCategory);
+	}
+}
+
+void FDetailCustomization_YapProjectSettings::ProcessCategory(IDetailCategoryBuilder& Category) const
+{
+	TArray<TSharedRef<IPropertyHandle>> Properties;
+	Category.GetDefaultProperties(Properties, true, true);
+	
+	for (TSharedPtr<IPropertyHandle> PropertyHandle : Properties)
+	{
+		static FName CharacterArrayPropertyName = GET_MEMBER_NAME_CHECKED(UYapProjectSettings, CharacterArray);
+		static FName CharacterTagParentPropertyName = GET_MEMBER_NAME_CHECKED(UYapProjectSettings, CharacterTagRoot);
+
+		/*
+		if (PropertyHandle->GetProperty()->GetFName() == CharacterTagParentPropertyName)
+		{
+		}
+		*/
+		
+		Category.AddProperty(PropertyHandle);
+	}
+
+	Category.AddCustomRow(INVTEXT(""));
+			
+	Category.AddCustomRow(INVTEXT("Utilities"))
+	.NameContent()
+	[
+		SNew(STextBlock)
+		.Text(LOCTEXT("CharacterManagementButtonsLabel", "Character Map Utilities:"))
+		.Font(DetailFont)
+	]
+	.ValueContent()
+	[
+		SNew(SBox)
+		.WidthOverride(200)
+		[
+			SNew(SVerticalBox)
+			+ SVerticalBox::Slot()
+			.Padding(0, 8, 0, 8)
+			.AutoHeight()
+			[
+					SNew(SButton)
+					.HAlign(HAlign_Center)
+					.Text(LOCTEXT("SortCharactersButton_Label", "Sort Alphabetically"))
+					.ToolTipText(LOCTEXT("SortCharactersButton_ToolTip", "Sorts the list using the character tags."))
+					.OnClicked(this, &FDetailCustomization_YapProjectSettings::OnClicked_SortCharacters)	
+			]
+			+ SVerticalBox::Slot()
+			.Padding(0, 0, 0, 8)
+			.AutoHeight()
+			[
+				SNew(SButton)
+				.HAlign(HAlign_Center)
+				.Text(LOCTEXT("RemoveEmptyCharactersButton_Label", "Remove Empty"))
+				.ToolTipText(LOCTEXT("RemoveEmptyCharactersButton_ToolTip", "Removes entries which have both the tag and the asset unset."))
+				.OnClicked(this, &FDetailCustomization_YapProjectSettings::OnClicked_DeleteEmptyCharacters)	
+			]
+			+ SVerticalBox::Slot()
+			.Padding(0, 0, 0, 8)
+			.AutoHeight()
+			[
+				SNew(SButton)
+				.IsEnabled_Lambda([this] () { return ProjectSettings.Get()->CharacterTagRoot.IsValid() ? true : false; })
+				.HAlign(HAlign_Center)
+				.Text(LOCTEXT("PopulateCharactersFromParentButton_ToolTip", "Populate from Parent"))
+				.ToolTipText(LOCTEXT("PopulateCharactersFromParentButton_ToolTip", "Finds all child (leaf) tags under the set character tag parent above and adds rows into the map for them."))
+				.OnClicked(this, &FDetailCustomization_YapProjectSettings::OnClicked_PopulateFromParent)	
+			]
+		]
+	];
 }
 
 FReply FDetailCustomization_YapProjectSettings::OnClicked_ResetDefaultMoodTags() const
@@ -359,6 +437,74 @@ bool FDetailCustomization_YapProjectSettings::IsTagPropertySet(TSharedPtr<IPrope
 	const FGameplayTag* Tag = reinterpret_cast<const FGameplayTag*>(RawData[0]);
 
 	return Tag->IsValid();
+}
+
+FReply FDetailCustomization_YapProjectSettings::OnClicked_SortCharacters() const
+{
+	if (!ProjectSettings.IsValid())
+	{
+		return FReply::Handled();
+	}
+
+	FYapScopedTransaction Transaction(NAME_None, INVTEXT("TODO"), ProjectSettings.Get());
+	
+	ProjectSettings->CharacterArray.StableSort();
+	ProjectSettings->Modify();
+	ProjectSettings->TryUpdateDefaultConfigFile();
+	
+	return FReply::Handled();
+}
+
+FReply FDetailCustomization_YapProjectSettings::OnClicked_DeleteEmptyCharacters() const
+{
+	if (!ProjectSettings.IsValid())
+	{
+		return FReply::Handled();
+	}
+
+	auto RemoveEmpty = [] (const FYapCharacterDefinition& CharacterDefinition) -> bool
+	{
+		return CharacterDefinition.CharacterAsset.IsNull() && !CharacterDefinition.CharacterTag.IsValid();
+	};
+	
+	FYapScopedTransaction Transaction(NAME_None, INVTEXT("TODO"), ProjectSettings.Get());
+	
+	ProjectSettings->CharacterArray.RemoveAll(RemoveEmpty);
+	ProjectSettings->Modify();
+	ProjectSettings->TryUpdateDefaultConfigFile();
+	
+	return FReply::Handled();
+}
+
+FReply FDetailCustomization_YapProjectSettings::OnClicked_PopulateFromParent() const
+{
+	if (!ProjectSettings.IsValid())
+	{
+		return FReply::Handled();
+	}
+
+	UGameplayTagsManager& TagsManager = UGameplayTagsManager::Get();
+	
+	FGameplayTagContainer CharacterTags = TagsManager.RequestGameplayTagChildren(ProjectSettings->CharacterTagRoot);
+
+	TSet<FGameplayTag> Existing;
+	
+	for (const FYapCharacterDefinition& CharacterDefinition : ProjectSettings.Get()->CharacterArray)
+	{
+		Existing.Add(CharacterDefinition.CharacterTag);
+	}
+	
+	for (const FGameplayTag& Tag : CharacterTags)
+	{
+		if (Existing.Contains(Tag))
+		{
+			continue;
+		}
+		
+		ProjectSettings->CharacterArray.Emplace(FYapCharacterDefinition(Tag));
+	}
+	
+	return FReply::Handled();
 }
 
 FText FDetailCustomization_YapProjectSettings::GetDeletedTagsText(const TArray<FName>& TagNamesToDelete)

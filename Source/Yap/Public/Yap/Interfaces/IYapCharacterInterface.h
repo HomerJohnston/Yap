@@ -38,7 +38,7 @@ public:
     /** Try to get the supplied character's portrait. Will log an error if the character does not implement the interface. */
     static const UTexture2D* GetPortrait(const UObject* CharacterAsset, FGameplayTag MoodTag = FGameplayTag::EmptyTag);
 
-protected:
+public:
     // -----------------------------------------------------
     // Protected C++ Interface - Override these in a C++ class which inherits this interface
     // -----------------------------------------------------
@@ -54,7 +54,8 @@ protected:
     
     /** Override this on a C++ class. */
     virtual const UTexture2D* GetYapCharacterPortrait(const FGameplayTag& MoodTag) const;
-    
+
+protected:
     // -----------------------------------------------------
     // Blueprint Interface - Override these in a blueprint on which you've added this interface
     // -----------------------------------------------------

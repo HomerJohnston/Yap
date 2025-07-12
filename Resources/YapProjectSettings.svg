@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
+
+<svg
+   width="800px"
+   height="800px"
+   viewBox="0 0 24 24"
+   fill="none"
+   version="1.1"
+   id="svg1"
+   sodipodi:docname="YapProjectSettings.svg"
+   inkscape:version="1.4 (86a8ad7, 2024-10-11)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1">
+    <rect
+       x="0"
+       y="0"
+       width="468.31824"
+       height="800"
+       id="rect1" />
+    <rect
+       x="0"
+       y="0"
+       width="468.31824"
+       height="800"
+       id="rect1-4" />
+    <rect
+       x="0"
+       y="0"
+       width="468.31824"
+       height="800"
+       id="rect1-4-5" />
+  </defs>
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#505050"
+     bordercolor="#eeeeee"
+     borderopacity="1"
+     inkscape:showpageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#505050"
+     inkscape:zoom="0.83703765"
+     inkscape:cx="13.738928"
+     inkscape:cy="350.04399"
+     inkscape:window-width="5120"
+     inkscape:window-height="2089"
+     inkscape:window-x="1192"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg1" />
+  <path
+     style="font-size:192px;font-family:'Rousseau Deco';-inkscape-font-specification:'Rousseau Deco';white-space:pre;fill:#ffffff;stroke-width:0.445373;stroke-linejoin:bevel"
+     d="m 10.305372,2.4348466 q 0.05656,-0.1414063 0.197968,-0.22625 0.169689,-0.113125 0.311094,-0.113125 h 2.771562 q 0.367657,0 0.226251,0.339375 L 8.6084973,14.878596 v 7.01375 q 0,0.367655 -0.3676562,0.367655 H 5.6389664 q -0.3959374,0 -0.3959374,-0.367655 v -7.01375 L 0.03927951,2.4348466 Q -0.10212673,2.0954716 0.26552949,2.0954716 H 3.0088104 q 0.3959374,0 0.5373437,0.339375 l 3.3937497,8.4278114 z"
+     id="text1"
+     aria-label="Y" />
+  <path
+     style="font-size:192px;font-family:'Rousseau Deco';-inkscape-font-specification:'Rousseau Deco';white-space:pre;fill:#ffffff;stroke-width:0.217508;stroke-linejoin:bevel"
+     d="M 11.056052,22.260001 H 9.63435 q -0.09272,0 -0.1545331,-0.04938 -0.061814,-0.06173 -0.061814,-0.123446 v -6.122956 q 0,-0.53082 0.2472531,-0.999918 0.262706,-0.469097 0.695398,-0.814748 0.448145,-0.345651 1.035369,-0.543165 0.587226,-0.209859 1.251717,-0.209859 0.66449,0 1.251716,0.209859 0.587224,0.197514 1.019916,0.543165 0.432692,0.345651 0.679944,0.814748 0.262706,0.469098 0.262706,0.999918 v 6.122956 q 0,0.06173 -0.06181,0.123446 -0.06181,0.04938 -0.154532,0.04938 h -1.421702 q -0.07726,0 -0.139079,-0.04938 -0.06181,-0.06173 -0.06181,-0.123446 v -2.851619 h -2.766136 v 2.851619 q 0,0.06173 -0.06181,0.123446 -0.06181,0.04938 -0.139079,0.04938 z m 2.967029,-4.407046 v -1.975146 q 0,-0.456754 -0.401785,-0.777715 -0.401785,-0.320961 -0.973556,-0.320961 -0.587225,0 -0.989011,0.320961 -0.401784,0.320961 -0.401784,0.777715 v 1.975146 z"
+     id="text1-8"
+     aria-label="A" />
+  <path
+     style="font-size:192px;font-family:'Rousseau Deco';-inkscape-font-specification:'Rousseau Deco';white-space:pre;fill:#ffffff;stroke-width:0.217508;stroke-linejoin:bevel"
+     d="m 16.802313,13.445908 h 3.461535 q 0.757211,0 1.421702,0.234549 0.679945,0.222205 1.17445,0.629578 0.509959,0.39503 0.788117,0.938196 0.293612,0.53082 0.293612,1.135709 0,0.604889 -0.293612,1.148054 -0.278158,0.53082 -0.788117,0.925849 -0.494505,0.395031 -1.17445,0.629579 -0.664491,0.234549 -1.421702,0.234549 h -1.83894 v 2.765206 q 0,0.06173 -0.06181,0.123446 -0.06181,0.04938 -0.139079,0.04938 h -1.421702 q -0.09271,0 -0.154532,-0.04938 -0.06181,-0.06173 -0.06181,-0.123446 V 13.60639 q 0,-0.160482 0.216346,-0.160482 z m 3.461535,1.382604 h -1.83894 v 3.110857 h 1.83894 q 0.386331,0 0.710851,-0.111104 0.339973,-0.123446 0.587225,-0.320961 0.247251,-0.197515 0.386332,-0.469099 0.139079,-0.271582 0.154532,-0.654266 0,-0.39503 -0.154532,-0.654268 -0.139081,-0.271582 -0.386332,-0.469097 -0.247252,-0.197514 -0.587225,-0.308618 -0.32452,-0.123445 -0.710851,-0.123444 z"
+     id="text1-8-1"
+     aria-label="p" />
+</svg>

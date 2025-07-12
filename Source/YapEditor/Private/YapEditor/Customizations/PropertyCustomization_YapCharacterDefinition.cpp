@@ -6,6 +6,7 @@
 #include "DetailWidgetRow.h"
 #include "Widgets/Colors/SColorBlock.h"
 #include "Yap/YapCharacterDefinition.h"
+#include "Yap/YapProjectSettings.h"
 #include "YapEditor/YapEditorColor.h"
 
 #define LOCTEXT_NAMESPACE "YapEditor"
@@ -43,7 +44,7 @@ void FPropertyCustomization_YapCharacterDefinition::CustomizeHeader(TSharedRef<I
             .WidthOverride(8)
             [
                 SNew(SColorBlock)
-                .Color(this, &FPropertyCustomization_YapCharacterDefinition::TagErrorColor, CharacterDefinition)    
+                .Color(this, &FPropertyCustomization_YapCharacterDefinition::TagStatusColor, CharacterDefinition)    
             ]
         ]
         + SOverlay::Slot()
@@ -58,24 +59,43 @@ void FPropertyCustomization_YapCharacterDefinition::CustomizeHeader(TSharedRef<I
     .HAlign(HAlign_Fill)
     .VAlign(VAlign_Fill)
     [
-        SNew(SOverlay)
-        + SOverlay::Slot()
-        .Padding(-12, 0, -38, 0)
-        .HAlign(HAlign_Left)
+        SNew(SHorizontalBox)
+        + SHorizontalBox::Slot()
         [
-            SNew(SBox)
-            .WidthOverride(8)
+            SNew(SOverlay)
+            + SOverlay::Slot()
+            .Padding(-12, 0, -38, 0)
+            .HAlign(HAlign_Left)
             [
-                SNew(SColorBlock)
-                .Color(this, &FPropertyCustomization_YapCharacterDefinition::AssetErrorColor, CharacterDefinition)
+                SNew(SBox)
+                .WidthOverride(8)
+                [
+                    SNew(SColorBlock)
+                    .Color(this, &FPropertyCustomization_YapCharacterDefinition::AssetStatusColor, CharacterDefinition)
+                ]
+            ]
+            + SOverlay::Slot()
+            .Padding(0, 0, 0, 0)
+            .VAlign(VAlign_Center)
+            .HAlign(HAlign_Fill)
+            [
+                AssetPropertyHandle->CreatePropertyValueWidgetWithCustomization(nullptr)
             ]
         ]
-        + SOverlay::Slot()
-        .Padding(0, 0, 0, 0)
+        + SHorizontalBox::Slot()
+        .AutoWidth()
+        .Padding(8, 4, 0, 4)
         .VAlign(VAlign_Center)
-        .HAlign(HAlign_Fill)
         [
-            AssetPropertyHandle->CreatePropertyValueWidgetWithCustomization(nullptr)
+            SNew(SBox)
+            .HeightOverride(32)
+            [
+                SNew(SButton)
+                .Text(INVTEXT("Dialogue"))
+                .IsEnabled(false)
+                .ToolTipText(INVTEXT("Placeholder button."))
+                .VAlign(VAlign_Center)
+            ]
         ]
     ];
 }
@@ -85,7 +105,7 @@ void FPropertyCustomization_YapCharacterDefinition::CustomizeChildren(TSharedRef
     
 }
 
-FLinearColor FPropertyCustomization_YapCharacterDefinition::AssetErrorColor(FYapCharacterDefinition* CharacterDefinition) const
+FLinearColor FPropertyCustomization_YapCharacterDefinition::AssetStatusColor(FYapCharacterDefinition* CharacterDefinition) const
 {
     if (CharacterDefinition->ErrorState == EYapCharacterDefinitionErrorState::AssetConflict)
     {
@@ -100,16 +120,23 @@ FLinearColor FPropertyCustomization_YapCharacterDefinition::AssetErrorColor(FYap
     return OKColor();
 }
 
-FLinearColor FPropertyCustomization_YapCharacterDefinition::TagErrorColor(FYapCharacterDefinition* CharacterDefinition) const
+FLinearColor FPropertyCustomization_YapCharacterDefinition::TagStatusColor(FYapCharacterDefinition* CharacterDefinition) const
 {
     if (CharacterDefinition->ErrorState == EYapCharacterDefinitionErrorState::TagConflict)
     {
         return ErrorColor();
     }
 
-    if (!CharacterDefinition->CharacterTag.IsValid())
+    const FGameplayTag& Tag = CharacterDefinition->CharacterTag;
+    
+    if (!Tag.IsValid())
     {
         return WarningColor();
+    }
+
+    if (!Tag.MatchesTag(UYapProjectSettings::GetCharacterTagParent()))
+    {
+        return TagNotInParentColor();
     }
 
     return OKColor();
@@ -127,5 +154,10 @@ FLinearColor FPropertyCustomization_YapCharacterDefinition::WarningColor()
 
 FLinearColor FPropertyCustomization_YapCharacterDefinition::OKColor()
 {
-    return YapColor::LightBlue_SuperGlass;
+    return YapColor::Noir_Glass;
+}
+
+FLinearColor FPropertyCustomization_YapCharacterDefinition::TagNotInParentColor()
+{
+    return YapColor::Blue_Glass;
 }

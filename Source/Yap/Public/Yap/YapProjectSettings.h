@@ -23,6 +23,7 @@ enum class EYap_TagFilter : uint8
 {
 	Conditions,
 	Prompts,
+	Characters,
 };
 
 UCLASS(Config = Game, DefaultConfig, DisplayName = "Yap")
@@ -127,11 +128,16 @@ protected:
 
 	// - - - - - OTHER - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
-	UPROPERTY(Config)
-	TMap<FGameplayTag, TSoftObjectPtr<UObject>> CharacterMap;
-
-	UPROPERTY(Config, EditAnywhere, Category = "Characters")
+	/** Optional setting. You should only set this if all of your characters are under a common root tag. Setting this will filter character tag selectors elsewhere in Yap. */
+	UPROPERTY(Config, EditAnywhere, Category = "Characters", DisplayName = "Root Tag")
+	FGameplayTag CharacterTagRoot;
+	
+	/** Map gameplay tags to your game's characters here. Any blueprints or assets which implement the Yap Character interface can be used. */
+	UPROPERTY(Config, EditAnywhere, Category = "Characters", DisplayName = "Characters")
 	TArray<FYapCharacterDefinition> CharacterArray;
+
+	// Not exposed for editing, this is updated automatically whenever the character array is edited. Game code actually uses this as the character source. 
+	TMap<FGameplayTag, TSoftObjectPtr<UObject>> CharacterMap;
 	
 	// ============================================================================================
 	// STATE
@@ -180,7 +186,7 @@ public:
 	static const UYapBroker* GetEditorBrokerDefault();
 #endif
 
-	static const TArray<TSoftClassPtr<UObject>>& GetAdditionalCharacterClasses() { return Get().AdditionalCharacterClasses; }
+	static const TArray<const UClass*> GetAdditionalCharacterClasses();
 
 	static void AddAdditionalCharacterClass(TSoftClassPtr<UObject> Class);
 	
@@ -195,6 +201,14 @@ public:
 	static const TSoftObjectPtr<UObject>* FindCharacter(FGameplayTag Character) { return Get().CharacterMap.Find(Character); }
 	
 	static const TMap<FGameplayTag, TSoftObjectPtr<UObject>>& GetCharacters() { return Get().CharacterMap; }
+
+	static const FGameplayTag& GetCharacterTagParent() { return Get().CharacterTagRoot; }
+
+#if WITH_EDITOR
+	// TODO this is kind of ugly
+	static TMap<TSoftObjectPtr<UObject>, FGameplayTag> ReversedCharacterMap;
+	static void UpdateReversedCharacterMap();
+#endif
 	
 #if WITH_EDITOR
 public:
@@ -216,7 +230,11 @@ protected:
 
 	void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
 
-	void ProcessCharacterArray();
+	void PostLoad() override;
+
+	void PostInitProperties() override;
+	
+	void ProcessCharacterArray(bool bUpdateMap);
 	
 	void RebuildCharacterMap();
 #endif

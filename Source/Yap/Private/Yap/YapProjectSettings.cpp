@@ -6,6 +6,7 @@
 #if WITH_EDITOR
 #include "GameplayTagsManager.h"
 #endif
+#include "Engine/AssetManager.h"
 #include "Yap/YapCharacterAsset.h"
 #include "Yap/Globals/YapFileUtilities.h"
 
@@ -13,6 +14,7 @@
 
 #if WITH_EDITOR
 FName UYapProjectSettings::CategoryName = FName("Yap");
+TMap<TSoftObjectPtr<UObject>, FGameplayTag> UYapProjectSettings::ReversedCharacterMap;
 #endif
 
 UYapProjectSettings::UYapProjectSettings()
@@ -21,6 +23,7 @@ UYapProjectSettings::UYapProjectSettings()
 	TagContainers =
 	{
 		//{ EYap_TagFilter::Prompts, &DefaultGroup.DialogueTagsParent }
+		{ EYap_TagFilter::Characters, &CharacterTagRoot }
 	};
 #endif
 
@@ -52,6 +55,28 @@ const UYapBroker* UYapProjectSettings::GetEditorBrokerDefault()
 
 	return BrokerClass.LoadSynchronous()->GetDefaultObject<UYapBroker>();
 }
+
+const TArray<const UClass*> UYapProjectSettings::GetAdditionalCharacterClasses()
+{
+	TArray<const UClass*> Classes;
+	Classes.Reserve(Get().AdditionalCharacterClasses.Num() + Get().DefaultCharacterClasses.Num());
+
+	for (auto& ClassSoftPtr : Get().DefaultCharacterClasses)
+	{
+		UClass* LoadedClass = ClassSoftPtr.LoadSynchronous();
+		UE_LOG(LogTemp, Display, TEXT(":::::::::: %s"), *LoadedClass->GetFullName());
+		Classes.Add(LoadedClass);
+	}
+	
+	for (auto& ClassSoftPtr : Get().AdditionalCharacterClasses)
+	{
+		UClass* LoadedClass = ClassSoftPtr.LoadSynchronous();
+		UE_LOG(LogTemp, Display, TEXT(":::::::::: %s"), *LoadedClass->GetFullName());
+		Classes.Add(LoadedClass);
+	}
+
+	return Classes;
+}
 #endif
 
 const TArray<TSoftClassPtr<UObject>>& UYapProjectSettings::GetAudioAssetClasses()
@@ -72,6 +97,19 @@ void UYapProjectSettings::AddAdditionalCharacterClass(TSoftClassPtr<UObject> Cla
 #endif
 
 #if WITH_EDITOR
+void UYapProjectSettings::UpdateReversedCharacterMap()
+{
+	auto& CharMap = Get().CharacterMap;
+	auto& RevCharMap = Get().ReversedCharacterMap;
+	
+	Get().ReversedCharacterMap.Empty(Get().CharacterMap.Num());
+	
+	for (const TTuple<FGameplayTag, TSoftObjectPtr<>>& Pair : Get().CharacterMap)
+	{
+		Get().ReversedCharacterMap.Add(Pair.Value, Pair.Key);
+	}
+}
+
 void UYapProjectSettings::RegisterTagFilter(UObject* ClassSource, FName PropertyName, EYap_TagFilter Filter)
 {
 	TMap<UClass*, EYap_TagFilter>& ClassFiltersForProperty = Get().TagFilterSubscriptions.FindOrAdd(PropertyName);
@@ -87,7 +125,26 @@ void UYapProjectSettings::OnGetCategoriesMetaFromPropertyHandle(TSharedPtr<IProp
 	{
 		return;
 	}
+
+	TArray<UObject*> OuterObjects;
+	PropertyHandle->GetOuterObjects(OuterObjects);
+
+	for (const UObject* PropertyOuter : OuterObjects)
+	{
+		if (PropertyOuter != this)
+		{
+			continue;
+		}
+
+		//static const FName CharacterTagRootName = GET_MEMBER_NAME_CHECKED(ThisClass, CharacterTagRoot);
+		
+		if (PropertyHandle->GetProperty()->GetFName() == "CharacterTag")
+		{
+			MetaString = CharacterTagRoot.ToString();			
+		}
+	}
 	
+	/*
 	const TMap<UClass*, EYap_TagFilter>* ClassFilters = TagFilterSubscriptions.Find(PropertyHandle->GetProperty()->GetFName());
 
 	if (!ClassFilters)
@@ -109,6 +166,7 @@ void UYapProjectSettings::OnGetCategoriesMetaFromPropertyHandle(TSharedPtr<IProp
 
 		MetaString = TagContainers[*Filter]->ToString();
 	}
+	*/
 }
 
 void UYapProjectSettings::PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent)
@@ -117,19 +175,35 @@ void UYapProjectSettings::PostEditChangeProperty(struct FPropertyChangedEvent& P
 
 	if (PropertyChangedEvent.GetPropertyName() == CharacterArrayName || PropertyChangedEvent.GetMemberPropertyName() == CharacterArrayName)
 	{
-		RebuildCharacterMap();
+		if (PropertyChangedEvent.ChangeType != EPropertyChangeType::ArrayMove)
+		{
+			RebuildCharacterMap();
+		}
 	}
 	
 	Super::PostEditChangeProperty(PropertyChangedEvent);
 }
 
-void UYapProjectSettings::ProcessCharacterArray()
+void UYapProjectSettings::PostLoad()
+{
+	Super::PostLoad();
+	
+	UYapProjectSettings::RegisterTagFilter(this, GET_MEMBER_NAME_CHECKED(ThisClass, CharacterTagRoot), EYap_TagFilter::Characters);
+}
+
+void UYapProjectSettings::PostInitProperties()
+{
+	Super::PostInitProperties();
+	
+	ProcessCharacterArray(true);
+}
+
+void UYapProjectSettings::ProcessCharacterArray(bool bUpdateMap)
 {
 	TSet<FGameplayTag> FoundCharacterTags;
 	TSet<TSoftObjectPtr<UObject>> FoundCharacterAssets;
 	TSet<FGameplayTag> DuplicateCharacterTags;
 	TSet<TSoftObjectPtr<UObject>> DuplicateCharacterAssets;
-	TSet<int32> UndefinedCharacters;
 	
 	FoundCharacterTags.Reserve(CharacterArray.Num());
 	FoundCharacterAssets.Reserve(CharacterArray.Num());
@@ -163,43 +237,44 @@ void UYapProjectSettings::ProcessCharacterArray()
 		}
 	}
 
+	if (bUpdateMap)
+	{
+		CharacterMap.Empty(CharacterArray.Num());
+	}
+	
 	for (int32 i = 0; i < CharacterArray.Num(); ++i)
 	{
 		FYapCharacterDefinition& CharacterDefinition = CharacterArray[i];
+
+		bool bAddToMap = true;
 
 		CharacterDefinition.ErrorState = EYapCharacterDefinitionErrorState::OK;
 
 		if (!CharacterDefinition.CharacterTag.IsValid())
 		{
-			UndefinedCharacters.Add(i);
+			bAddToMap = false;
 		}
 		else if (DuplicateCharacterTags.Contains(CharacterDefinition.CharacterTag))
 		{
+			UE_LOG(LogTemp, Warning, TEXT("Marking tag"));
+			
 			CharacterDefinition.ErrorState |= EYapCharacterDefinitionErrorState::TagConflict;
+			bAddToMap = false;
 		}
 
 		if (CharacterDefinition.CharacterAsset.IsNull())
 		{
-			UndefinedCharacters.Add(i);
+			bAddToMap = false;
 		}
 		else if (DuplicateCharacterAssets.Contains(CharacterDefinition.CharacterAsset))
 		{
+			UE_LOG(LogTemp, Warning, TEXT("Marking asset"));
+			
 			CharacterDefinition.ErrorState |= EYapCharacterDefinitionErrorState::AssetConflict;
+			bAddToMap = false;
 		}
-	}
 
-	CharacterMap.Empty(CharacterArray.Num());
-
-	for (int32 i = 0; i < CharacterArray.Num(); ++i)
-	{
-		if (UndefinedCharacters.Contains(i))
-		{
-			continue;
-		}
-		
-		const FYapCharacterDefinition& CharacterDefinition = CharacterArray[i];
-
-		if (CharacterDefinition.ErrorState == EYapCharacterDefinitionErrorState::OK)
+		if (bAddToMap && bUpdateMap)
 		{
 			CharacterMap.Add(CharacterDefinition.CharacterTag, CharacterDefinition.CharacterAsset);
 		}
@@ -210,7 +285,7 @@ void UYapProjectSettings::RebuildCharacterMap()
 {
 	Modify();
 
-	ProcessCharacterArray();
+	ProcessCharacterArray(true);
 	
 	TryUpdateDefaultConfigFile();
 }

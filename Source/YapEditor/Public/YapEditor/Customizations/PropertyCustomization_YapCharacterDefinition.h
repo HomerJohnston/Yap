@@ -21,7 +21,6 @@ public:
     // STATE --------------------------------------------------------------------------------------
     
 protected:
-
     
     // OVERRIDES ----------------------------------------------------------------------------------
 
@@ -33,9 +32,9 @@ protected:
 
     // METHODS ------------------------------------------------------------------------------------
 
-    FLinearColor AssetErrorColor(FYapCharacterDefinition* CharacterDefinition) const;
+    FLinearColor AssetStatusColor(FYapCharacterDefinition* CharacterDefinition) const;
     
-    FLinearColor TagErrorColor(FYapCharacterDefinition* CharacterDefinition) const;
+    FLinearColor TagStatusColor(FYapCharacterDefinition* CharacterDefinition) const;
 
 protected:
 
@@ -44,4 +43,6 @@ protected:
     static FLinearColor WarningColor();
 
     static FLinearColor OKColor();
+
+    static FLinearColor TagNotInParentColor();
 };

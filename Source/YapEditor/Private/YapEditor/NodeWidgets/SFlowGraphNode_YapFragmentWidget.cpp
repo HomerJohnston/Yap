@@ -1210,6 +1210,9 @@ bool SFlowGraphNode_YapFragmentWidget::Bool_PaddingTimeIsSet() const
 TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::PopupContentGetter_SpeakerWidget(const UObject* Character)
 {
 	UE_LOG(LogYapEditor, VeryVerbose, TEXT("PopupContentGetter_SpeakerWidgetNew"));
+
+	// TODO Consider revisiting this, it's rough and ugly?
+	UYapProjectSettings::UpdateReversedCharacterMap();
 	
 	return SNew(SBorder)
 	.Padding(1, 1, 1, 1)
@@ -1240,8 +1243,8 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::PopupContentGetter_Speaker
 		+ SHorizontalBox::Slot()
 		[
 			SNew(SYapPropertyMenuAssetPicker)
-			.OnShouldFilterAsset(this, &ThisClass::ShouldFilter_YapSpeaker) // This works lovely... but it loads all assets. It's slow, ugly, occupies memory, and fills the output log with every asset error in the project.
-			//.AllowedClasses(UYapProjectSettings::GetCharacterClasses_SyncLoad())
+			.OnShouldFilterAsset(this, &ThisClass::ShouldFilter_YapSpeaker)
+			.AllowedClasses(UYapProjectSettings::GetAdditionalCharacterClasses())
 			.AllowClear(true)
 			.InitialObject(Character)
 			.OnSet(this, &ThisClass::OnSetNewSpeakerAsset)
@@ -1251,7 +1254,6 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::PopupContentGetter_Speaker
 
 void SFlowGraphNode_YapFragmentWidget::OnSetNewSpeakerAsset(const FAssetData& AssetData)
 {
-	/*
 	if (AssetData.IsValid())
 	{
 		if (!IsAsset_YapSpeaker(AssetData))
@@ -1271,10 +1273,18 @@ void SFlowGraphNode_YapFragmentWidget::OnSetNewSpeakerAsset(const FAssetData& As
 	
 	FYapTransactions::BeginModify(LOCTEXT("SetSpeakerCharacter", "Set speaker character"), GetDialogueNodeMutable());
 
-	GetFragmentMutable().SetSpeaker(Cast<UObject>(AssetData.GetAsset()));
+	FGameplayTag* CharacterTag = UYapProjectSettings::ReversedCharacterMap.Find(AssetData.GetAsset());
+
+	if (CharacterTag)
+	{
+		GetFragmentMutable().SetSpeaker(*CharacterTag);
+	}
+	else
+	{
+		Yap::EditorFuncs::PostNotificationInfo_Warning(LOCTEXT("AssignCharracter_ErrorTitle", "Error"), LOCTEXT("AssignCharacter_NoTagFoundDescription", "No tag found, check project settings?"));
+	}
 
 	FYapTransactions::EndModify();
-	*/
 }
 
 bool SFlowGraphNode_YapFragmentWidget::OnAreAssetsAcceptableForDrop_TextWidget(TArrayView<FAssetData> AssetDatas) const
@@ -1337,7 +1347,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateSpeakerWidget()
 		{
 			if (CharacterAssetPtr->IsPending())
 			{
-				FYapStreamableManager::Get().RequestAsyncLoad(CharacterAssetPtr->ToSoftObjectPath()); // We'll rely on the editor never unloading things
+				FYapStreamableManager::Get().RequestAsyncLoad(CharacterAssetPtr->ToSoftObjectPath()); // We'll rely on the editor's wonderful feature of never unloading things
 			}
 			else if (CharacterAssetPtr->IsValid())
 			{
@@ -1467,6 +1477,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateSpeakerImageWidget(i
 		.VAlign(VAlign_Center)
 		[
 			SNew(STextBlock)
+			.Visibility(EVisibility::HitTestInvisible)
 			.Text(this, &ThisClass::Text_SpeakerWidget)
 			.SimpleTextMode(true)
 			.Font(FCoreStyle::GetDefaultFontStyle("Normal", 8))
@@ -1542,6 +1553,11 @@ FText SFlowGraphNode_YapFragmentWidget::ToolTipText_SpeakerWidget() const
 {
 	FYapFragment& Fragment = GetFragmentMutable();
 
+	if (Fragment.HasDeprecatedSpeakerAsset())
+	{
+		return INVTEXT("Make sure your project's characters are set up in project settings,\nthen save this flow asset to fix up this fragment's speaker setting.");
+	}
+	
 	if (!Fragment.HasSpeakerAssigned())
 	{
 		return LOCTEXT("SpeakerUnset_Label","Speaker Unset");
@@ -1575,6 +1591,11 @@ FText SFlowGraphNode_YapFragmentWidget::ToolTipText_SpeakerWidget() const
 FText SFlowGraphNode_YapFragmentWidget::Text_SpeakerWidget() const
 {
 	FYapFragment& Fragment = GetFragmentMutable();
+
+	if (Fragment.HasDeprecatedSpeakerAsset())
+	{
+		return INVTEXT("SAVE\nFLOW\nASSET");
+	}
 
 	if (!Fragment.HasSpeakerAssigned())
 	{
@@ -2381,6 +2402,12 @@ bool SFlowGraphNode_YapFragmentWidget::IsDroppedAsset_YapSpeaker(TArrayView<FAss
 
 bool SFlowGraphNode_YapFragmentWidget::IsAsset_YapSpeaker(const FAssetData& AssetData) const
 {
+	auto& Map = UYapProjectSettings::ReversedCharacterMap;
+
+	UE_LOG(LogTemp, Display, TEXT("::: %s"), *AssetData.GetFullName());
+	
+	return Map.Contains(AssetData.GetAsset());
+	/*
 	const UClass* Class = AssetData.GetClass();
 
 	if (!Class)
@@ -2418,8 +2445,8 @@ bool SFlowGraphNode_YapFragmentWidget::IsAsset_YapSpeaker(const FAssetData& Asse
 			}
 		}
 	}
-	
-	return false;
+	*/
+	//return false;
 }
 
 bool SFlowGraphNode_YapFragmentWidget::ShouldFilter_YapSpeaker(const FAssetData& AssetData) const

@@ -5,15 +5,10 @@
 
 #include "YapEditor/YapEditorStyle.h"
 
-#include "FindInBlueprints.h"
-#include "ILiveCodingModule.h"
-#include "ImageUtils.h"
-#include "Styling/SlateStyleMacros.h"
+#include "Interfaces/IPluginManager.h"
 #include "Styling/SlateStyleRegistry.h"
 #include "Yap/Globals/YapFileUtilities.h"
 #include "YapEditor/YapEditorColor.h"
-#include "YapEditor/YapDeveloperSettings.h"
-#include "YapEditor/YapEditorEvents.h"
 
 TArray<TStrongObjectPtr<UTexture2D>> FYapEditorStyle::Textures;
 
@@ -36,66 +31,129 @@ FYapStyles YapStyles;
 /** Define a new brush */
 #define YAP_DEFINE_BRUSH(TYPE, BRUSHNAME, FILENAME, EXTENSION, ...)\
 	YapBrushes.BRUSHNAME = YAP_QUOTE(BRUSHNAME);\
-	Set(YAP_QUOTE(BRUSHNAME), new TYPE(RootToContentDir(FILENAME, TEXT(EXTENSION)), __VA_ARGS__));\
-	const TYPE& BRUSHNAME = *static_cast<const TYPE*>(GetBrush(YAP_QUOTE(BRUSHNAME)))
+	StyleInstance->Set(YAP_QUOTE(BRUSHNAME), new TYPE(StyleInstance->RootToContentDir(FILENAME, TEXT(EXTENSION)), __VA_ARGS__));\
+	const TYPE& BRUSHNAME = *static_cast<const TYPE*>(StyleInstance->GetBrush(YAP_QUOTE(BRUSHNAME)))
 
 /** Define a new style */
 #define YAP_DEFINE_STYLE(TYPE, STYLENAME, TEMPLATE, MODS)\
 	YapStyles.STYLENAME = YAP_QUOTE(STYLENAME);\
-	Set(YAP_QUOTE(STYLENAME), TYPE(TEMPLATE));\
-	TYPE& STYLENAME = const_cast<TYPE&>(GetWidgetStyle<TYPE>(YAP_QUOTE(STYLENAME)));\
+	StyleInstance->Set(YAP_QUOTE(STYLENAME), TYPE(TEMPLATE));\
+	TYPE& STYLENAME = const_cast<TYPE&>(StyleInstance->GetWidgetStyle<TYPE>(YAP_QUOTE(STYLENAME)));\
 	STYLENAME MODS
 	
 /** Used to copy an existing UE brush into Yap style for easier use */
 #define YAP_REDEFINE_UE_BRUSH(TYPE, YAPNAME, UESTYLESET, UENAME, ...)\
 	YapBrushes.YAPNAME = YAP_QUOTE(YAPNAME);\
 	const TYPE& YAPNAME = *(new TYPE(UESTYLESET::GetBrush(UENAME)->GetResourceName().ToString(), __VA_ARGS__));\
-	Set(YAP_QUOTE(YAPNAME), const_cast<TYPE*>(&YAPNAME))
-	
+	StyleInstance->Set(YAP_QUOTE(YAPNAME), const_cast<TYPE*>(&YAPNAME))
+
+
+
+#define IMAGE_BRUSH( RelativePath, ... ) FSlateImageBrush( StyleInstance->RootToContentDir( RelativePath, TEXT(".png") ), __VA_ARGS__ )
+#define BOX_BRUSH( RelativePath, ... ) FSlateBoxBrush( StyleInstance->RootToContentDir( RelativePath, TEXT(".png") ), __VA_ARGS__ )
+#define BORDER_BRUSH( RelativePath, ... ) FSlateBorderBrush( StyleInstance->RootToContentDir( RelativePath, TEXT(".png") ), __VA_ARGS__ )
+
+#define IMAGE_BRUSH_SVG( RelativePath, ... ) FSlateVectorImageBrush(StyleInstance->RootToContentDir(RelativePath, TEXT(".svg")), __VA_ARGS__)
+#define BOX_BRUSH_SVG( RelativePath, ... ) FSlateVectorBoxBrush(StyleInstance->RootToContentDir(RelativePath, TEXT(".svg")), __VA_ARGS__)
+#define BORDER_BRUSH_SVG( RelativePath, ... ) FSlateVectorBorderBrush(StyleInstance->RootToContentDir(RelativePath, TEXT(".svg")), __VA_ARGS__)
+
+#define CORE_IMAGE_BRUSH( RelativePath, ... ) FSlateImageBrush( StyleInstance->RootToCoreContentDir( RelativePath, TEXT(".png") ), __VA_ARGS__ )
+#define CORE_BOX_BRUSH( RelativePath, ... ) FSlateBoxBrush( StyleInstance->RootToCoreContentDir( RelativePath, TEXT(".png") ), __VA_ARGS__ )
+#define CORE_BORDER_BRUSH( RelativePath, ... ) FSlateBorderBrush( StyleInstance->RootToCoreContentDir( RelativePath, TEXT(".png") ), __VA_ARGS__ )
+
+#define CORE_IMAGE_BRUSH_SVG( RelativePath, ... ) FSlateVectorImageBrush(StyleInstance->RootToCoreContentDir(RelativePath, TEXT(".svg")), __VA_ARGS__)
+#define CORE_BOX_BRUSH_SVG( RelativePath, ... ) FSlateVectorBoxBrush(StyleInstance->RootToCoreContentDir(RelativePath, TEXT(".svg")), __VA_ARGS__)
+#define CORE_BORDER_BRUSH_SVG( RelativePath, ... ) FSlateVectorBorderBrush(StyleInstance->RootToCoreContentDir(RelativePath, TEXT(".svg")), __VA_ARGS__)
+
+#define DEFAULT_FONT(...) FCoreStyle::GetDefaultFontStyle(__VA_ARGS__)
+
 #define LOCTEXT_NAMESPACE "YapEditor"
 
-FYapEditorStyle::FYapEditorStyle()
-	: FSlateStyleSet("YapEditor")
-{
-	SetParentStyleName(FAppStyle::GetAppStyleSetName());
-	SetContentRoot(FPaths::ProjectPluginsDir() / TEXT("Yap/Resources"));
-	SetCoreContentRoot(FPaths::EngineContentDir() / TEXT("Editor/Slate"));
+TSharedPtr<FSlateStyleSet> FYapEditorStyle::StyleInstance = nullptr;
 
-	Initialize();
-	
-	FSlateStyleRegistry::RegisterSlateStyle(*this);
-	
+ISlateStyle& FYapEditorStyle::Get()
+{
+	TSharedPtr<FSlateStyleSet> FUFKYOU = StyleInstance;
+	return *StyleInstance;
+}
+
+FYapEditorStyle::FYapEditorStyle()
+{
+/*
 #if WITH_LIVE_CODING
 	if (ILiveCodingModule* LiveCoding = FModuleManager::LoadModulePtr<ILiveCodingModule>(LIVE_CODING_MODULE_NAME))
 	{
 		OnPatchCompleteHandle = LiveCoding->GetOnPatchCompleteDelegate().AddRaw(this, &FYapEditorStyle::OnPatchComplete);
 	}
 #endif
+*/
 }
 
 FYapEditorStyle::~FYapEditorStyle()
 {
 	Textures.Empty();
-	
+/*
 #if WITH_LIVE_CODING
 	if (ILiveCodingModule* LiveCoding = FModuleManager::GetModulePtr<ILiveCodingModule>(LIVE_CODING_MODULE_NAME))
 	{
 		LiveCoding->GetOnPatchCompleteDelegate().Remove(OnPatchCompleteHandle);
 	}
 #endif
+*/	
+	//FSlateStyleRegistry::UnRegisterSlateStyle(*StyleInstance);
+}
+
+FName FYapEditorStyle::GetStyleSetName()
+{
+	static FName StyleSetName(TEXT("YapEditorStyle"));
+	return StyleSetName;
+}
+
+void FYapEditorStyle::Initialize()
+{
+	if (!StyleInstance.IsValid())
+	{
+		StyleInstance = Create();
+		FSlateStyleRegistry::RegisterSlateStyle(*StyleInstance);
+	}
+
+	Initialize_Internal();
+}
+
+void FYapEditorStyle::ReloadTextures()
+{
+	if (FSlateApplication::IsInitialized())
+	{
+		FSlateApplication::Get().GetRenderer()->ReloadTextureResources();
+	}
+}
+
+TSharedRef<class FSlateStyleSet> FYapEditorStyle::Create()
+{
+	TSharedRef<FSlateStyleSet> Style = MakeShareable(new FSlateStyleSet(GetStyleSetName()));
+	Style->SetParentStyleName(FAppStyle::GetAppStyleSetName());
+	Style->SetContentRoot(IPluginManager::Get().FindPlugin("Yap")->GetBaseDir() / TEXT("Resources"));
+	Style->SetCoreContentRoot(FPaths::EngineContentDir() / TEXT("Editor/Slate"));
 	
-	FSlateStyleRegistry::UnRegisterSlateStyle(*this);
+	return Style;
 }
 
 #if WITH_LIVE_CODING
 void FYapEditorStyle::OnPatchComplete()
 {
+	/*
 	if (UYapDeveloperSettings::GetCloseAndReopenAssetsOnLiveCoding())
 	{
 		FSlateStyleRegistry::UnRegisterSlateStyle(*this);
-		Initialize();
+		Initialize_Internal();
 		FSlateStyleRegistry::RegisterSlateStyle(*this);
 	}
+	*/
+}
+
+const ISlateStyle* FYapEditorStyle::GetParentStyle()
+{
+	return &FAppStyle::Get();
 }
 #endif
 
@@ -104,7 +162,7 @@ void FYapEditorStyle::OnPatchComplete()
 #define YAP_COMMON_PRESSED_PADDING FMargin(0, 1, 0, -1) // Push down by one pixel
 #define YAP_COMMON_CHECKBOXSTYLE FAppStyle::Get().GetWidgetStyle<FCheckBoxStyle>("ToggleButtonCheckBox")
 
-void FYapEditorStyle::Initialize()
+void FYapEditorStyle::Initialize_Internal()
 {
 	YAP_REDEFINE_UE_BRUSH(FSlateImageBrush,			None,							FAppStyle,	"NoBorder",					FVector2f(16, 16), YapColor::Transparent);
 	YAP_REDEFINE_UE_BRUSH(FSlateVectorImageBrush,	Icon_FilledCircle,				FAppStyle,	"Icons.FilledCircle",		FVector2f(16, 16));
@@ -143,7 +201,10 @@ void FYapEditorStyle::Initialize()
 	YAP_DEFINE_BRUSH(FSlateImageBrush,			Icon_Timer,						"DialogueNodeIcons/Timer", ".png",		FVector2f(16, 16));
 	YAP_DEFINE_BRUSH(FSlateImageBrush,			Icon_LocalLimit,				"DialogueNodeIcons/LocalLimit", ".png",	FVector2f(16, 16));
 	YAP_DEFINE_BRUSH(FSlateImageBrush,			Icon_Speaker,					"Icon_Audio", ".png",					FVector2f(16, 16));
-	YAP_DEFINE_BRUSH(FSlateVectorImageBrush,	Icon_Tag,						"Icon_Tag", ".svg",						FVector2f(16, 16));
+	//YAP_DEFINE_BRUSH(FSlateVectorImageBrush,	Icon_Tag,						"Icon_Tag", ".svg",						FVector2f(16, 16));
+	YapBrushes.Icon_Tag = "Icon_Tag";
+	StyleInstance->Set("Icon_Tag", new FSlateVectorImageBrush(StyleInstance->RootToContentDir("Icon_Tag", TEXT(".svg")), FVector2f(16, 16)));
+
 	YAP_DEFINE_BRUSH(FSlateImageBrush,			Icon_Edit,						"Icon_Edit", ".png",					FVector2f(16, 16));
 	YAP_DEFINE_BRUSH(FSlateVectorImageBrush,	Icon_CornerDropdown_Right,		"Icon_CornerDropdown_Right", ".svg",	FVector2f(16, 16));
 	YAP_DEFINE_BRUSH(FSlateVectorImageBrush,	Icon_Checkmark,					"Icon_Checkmark", ".svg",				FVector2f(16, 16));
@@ -211,7 +272,7 @@ void FYapEditorStyle::Initialize()
 	// ============================================================================================
 	// SLIDER STYLES
 	// ============================================================================================
-	
+
 	YAP_DEFINE_STYLE(FSliderStyle, SliderStyle_FragmentTimePadding, FSliderStyle::GetDefault(),
 		.SetBarThickness(0.f)
 		.SetNormalThumbImage(IMAGE_BRUSH("ProgressBar_Fill", CoreStyleConstants::Icon8x8, YapColor::Gray))
@@ -450,6 +511,8 @@ void FYapEditorStyle::Initialize()
 		.SetFillImage(Box_SolidWhite)
 		.SetEnableFillAnimation(false)
 	);
+
+	StyleInstance->Set("YapEditor.PluginAction", new FSlateVectorImageBrush(StyleInstance->RootToContentDir(L"YapProjectSettings", TEXT(".svg")), CoreStyleConstants::Icon20x20));
 }
 
 #undef LOCTEXT_NAMESPACE

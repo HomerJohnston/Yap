@@ -205,7 +205,7 @@ struct FYapNodeConfigGroup_MoodTags
 	
 	/** Parent tag to use for mood tags. All sub-tags of this parent will be used as mood tags. If unset, will not use mood tags for this group. */
 	UPROPERTY(EditAnywhere, meta = (EditCondition = "!bDisableMoodTags", EditConditionHides))
-	FGameplayTag MoodTagsParent;
+	FGameplayTag MoodTagsRoot;
 
 	/** Optional default mood tag to use, for fragments which do not have a mood tag set. */
 	UPROPERTY(EditAnywhere, meta = (EditCondition = "!bDisableMoodTags", EditConditionHides))
@@ -344,7 +344,7 @@ public:
 
 	int32 GetTextWordsPerMinute() { return DialoguePlayback.TimeSettings.TextWordsPerMinute; }
 
-	const FGameplayTag& GetMoodTagsParent() const { return MoodTags.MoodTagsParent; };
+	const FGameplayTag& GetMoodTagsParent() const { return MoodTags.MoodTagsRoot; };
 
 	const FGameplayTag& GetDefaultMoodTag() const { return MoodTags.DefaultMoodTag; };
 

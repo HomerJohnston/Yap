@@ -21,63 +21,20 @@
 
 #define LOCTEXT_NAMESPACE "YapEditor"
 
-FText FDetailCustomization_YapProjectSettings::GetMoodTags() const
-{
-	return INVTEXT("TODO");
-
-	/*
-	const UYapProjectSettings* ProjectSettings = GetDefault<UYapProjectSettings>();
-	
-	const FGameplayTag& ParentTag = ProjectSettings->GetMoodTagsParent();
-
-	if (!ParentTag.IsValid())
-	{
-		return LOCTEXT("None_Label", "<None>");
-	}
-	
-	FGameplayTagContainer MoodTags = ProjectSettings->GetMoodTags();
-	
-	FString TagString;
-	bool bFirst = true;
-	int32 ParentTagLen = ParentTag.ToString().Len() + 1;
-	
-	for (const FGameplayTag& Tag : MoodTags)
-	{
-		if (bFirst)
-		{			
-			bFirst = false;
-		}
-		else
-		{
-			TagString += "\n";
-		}
-		
-		TagString += Tag.ToString().RightChop(ParentTagLen);
-	}
-
-	if (TagString.IsEmpty())
-	{
-		TagString = "<None>";
-	}
-	
-	return FText::FromString(TagString);
-	*/
-}
-
 const FSlateBrush* FDetailCustomization_YapProjectSettings::TODOBorderImage() const
 {
 	return FAppStyle::Get().GetBrush("SCSEditor.Background");
 	//return FAppStyle::GetBrush("Menu.Background");
 }
 
-void SortCategory(const TMap<FName, IDetailCategoryBuilder*>& AllCategoryMap, int32& Order, TSet<FName>& SortedCategories, FName NextCategory)
+void FDetailCustomization_YapProjectSettings::SortCategory(const TMap<FName, IDetailCategoryBuilder*>& AllCategoryMap, int32& Order, TSet<FName>& SortedCategories, FName NextCategory)
 {
 	SortedCategories.Add(NextCategory);
 
 	(*AllCategoryMap.Find(NextCategory))->SetSortOrder(Order);
 }
 
-void CustomSortYapProjectSettingsCategories(const TMap<FName, IDetailCategoryBuilder*>& AllCategoryMap )
+void FDetailCustomization_YapProjectSettings::CustomSortYapProjectSettingsCategories(const TMap<FName, IDetailCategoryBuilder*>& AllCategoryMap)
 {
 	int i = 0;
 
@@ -115,7 +72,7 @@ void FDetailCustomization_YapProjectSettings::CustomizeDetails(IDetailLayoutBuil
 
 	if (ProjectSettings.IsValid())
 	{
-		DetailBuilder.SortCategories(&CustomSortYapProjectSettingsCategories);
+		DetailBuilder.SortCategories(&FDetailCustomization_YapProjectSettings::CustomSortYapProjectSettingsCategories);
 		
 		IDetailCategoryBuilder& CharactersCategory = DetailBuilder.EditCategory("Characters");
 		ProcessCategory(CharactersCategory);

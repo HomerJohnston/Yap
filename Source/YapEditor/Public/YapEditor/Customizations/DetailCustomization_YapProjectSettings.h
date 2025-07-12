@@ -27,23 +27,17 @@ public:
 
 protected:
 	TWeakObjectPtr<UYapProjectSettings> ProjectSettings;
-	
+
+	static void SortCategory(const TMap<FName, IDetailCategoryBuilder*>& AllCategoryMap, int32& Order, TSet<FName>& SortedCategories, FName NextCategory);
+
+	static void CustomSortYapProjectSettingsCategories(const TMap<FName, IDetailCategoryBuilder*>& AllCategoryMap);
+
 	const FSlateBrush* TODOBorderImage() const;
 
 	void CustomizeDetails(IDetailLayoutBuilder& DetailBuilder) override;
-	
-	FReply OnClicked_ResetDefaultMoodTags() const;
-
-	FReply OnClicked_DeleteAllMoodTags() const;
-
-	FReply OnClicked_OpenMoodTagsManager();
 
 	FReply OnClicked_OpenDialogueTagsManager(const FGameplayTag& DomainTag);
 
-	/*
-	FReply OnClicked_CleanupDialogueTags();
-	*/
-	
 	FReply OnClicked_RefreshMoodTagIcons();
 	
 	FText ToolTipText_DefaultMoodTags() const;

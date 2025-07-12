@@ -16,27 +16,6 @@ class FDetailCustomization_YapNodeConfig : public IDetailCustomization
 {
     //FSlateColor ForegroundColor_Button(FLinearColor Col, TSharedPtr<SButton> Button) const { return YapColor::Error; };
 
-    const FString DefaultMoodTagRoot = "Yap.Dialogue.Mood";
-    
-private:
-    const TArray<const FString> DefaultMoodTags
-    {
-        "Angry",
-        "Calm",
-        "Confused",
-        "Disgusted",
-        "Happy",
-        "Injured",
-        "Laughing",
-        "Panicked",
-        "Sad",
-        "Scared",
-        "Smirking",
-        "Stressed",
-        "Surprised",
-        "Thinking",
-        "Tired"
-    };
 
     FSlateFontInfo DetailFont;
 	
@@ -52,19 +31,8 @@ protected:
     const FSlateBrush* TODOBorderImage() const;
 
     void CustomizeDetails(IDetailLayoutBuilder& DetailBuilder) override;
-	
-    FReply OnClicked_ResetDefaultMoodTags() const;
 
-    FReply OnClicked_DeleteAllMoodTags() const;
-
-    FReply OnClicked_OpenMoodTagsManager();
-
-    FReply OnClicked_RefreshMoodTagIcons();
-	
-    FText ToolTipText_DefaultMoodTags() const;
-
-    bool IsTagPropertySet(TSharedPtr<IPropertyHandle> TagPropertyHandle) const;
-
+    void ProcessCategory(IDetailCategoryBuilder& Category) const;
 private:
 };
 

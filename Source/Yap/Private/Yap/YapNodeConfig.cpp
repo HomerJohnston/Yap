@@ -17,7 +17,7 @@ FGameplayTagContainer FYapNodeConfigGroup_MoodTags::GetAllMoodTags()
 {
     UGameplayTagsManager& TagsManager = UGameplayTagsManager::Get();
 	
-    return TagsManager.RequestGameplayTagChildren(MoodTagsParent);
+    return TagsManager.RequestGameplayTagChildren(MoodTagsRoot);
 }
 
 UYapNodeConfig::UYapNodeConfig()
@@ -190,7 +190,7 @@ FGameplayTagContainer UYapNodeConfig::GetMoodTags() const
 {
     UGameplayTagsManager& TagsManager = UGameplayTagsManager::Get();
 	
-    return TagsManager.RequestGameplayTagChildren(MoodTags.MoodTagsParent);
+    return TagsManager.RequestGameplayTagChildren(MoodTags.MoodTagsRoot);
 }
 #endif
 

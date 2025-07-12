@@ -11,6 +11,7 @@
 #include "YapEditor/Customizations/DetailCustomization_YapProjectSettings.h"
 #include "YapEditor/Customizations/DetailCustomization_YapCharacter.h"
 #include "YapEditor/Customizations/PropertyCustomization_YapCharacterDefinition.h"
+#include "YapEditor/Customizations/PropertyCustomization_YapNodeConfigGroup_MoodTags.h"
 #include "YapEditor/Globals/YapEditorFuncs.h"
 
 #define LOCTEXT_NAMESPACE "YapEditor"
@@ -31,6 +32,7 @@ void FYapEditorModule::StartupModule()
 
 	//REGISTER_PROPERTY_CUSTOMIZATION(FYapDomainSettings, FPropertyCustomization_YapGroupSettings);
 	REGISTER_PROPERTY_CUSTOMIZATION(FYapCharacterDefinition, FPropertyCustomization_YapCharacterDefinition);
+	REGISTER_PROPERTY_CUSTOMIZATION(FYapNodeConfigGroup_MoodTags, FPropertyCustomization_YapNodeConfigGroup_MoodTags);
 
 	REGISTER_THUMBNAIL_RENDERER(UYapCharacterAsset, UYapCharacterThumbnailRenderer);
 	

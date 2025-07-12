@@ -65,15 +65,6 @@ struct FYapFragmentRunData
 	FTimerHandle PaddingTimerHandle;
 };
 
-UCLASS(meta = (DisplayName="Default Config"))
-class YAP_API UYapNodeConfig_Default : public UYapNodeConfig
-{
-	GENERATED_BODY()
-
-public:
-	UYapNodeConfig_Default();
-};
-
 // ------------------------------------------------------------------------------------------------
 /**
  * Subclass this to create different "domains" for yap nodes. It's recommended to use the base class for common dialogue, and add subclasses for other dialogue-like features such as tutorial popups.
@@ -198,6 +189,8 @@ public:
 	/** Is this dialogue a Talk node or a Player Prompt node? */
 	bool IsPlayerPrompt() const { return DialogueNodeType == EYapDialogueNodeType::PlayerPrompt; }
 
+	bool HasValidConfig() const;
+
 	const UYapNodeConfig& GetNodeConfig() const;
 	
 	/** Does this node use title text? */
@@ -257,6 +250,13 @@ private:
 	// ============================================================================================
 
 protected:
+#if WITH_EDITOR
+	/** UFlowNodeBase override */
+	FString GetStatusString() const override;
+
+	/** UFlowNodeBase override */
+	FString GetNodeDescription() const override;
+#endif
 	/** UFlowNodeBase override */
 	void InitializeInstance() override;
 
@@ -381,8 +381,6 @@ private:
 	void SwapFragments(uint8 IndexA, uint8 IndexB);
 	
 public:
-	FString GetNodeDescription() const override;
-
 	const FGameplayTag& GetDialogueTag() const { return DialogueTag; }
 	
 	void OnFilterGameplayTagChildren(const FString& String, TSharedPtr<FGameplayTagNode>& GameplayTagNode, bool& bArg) const;

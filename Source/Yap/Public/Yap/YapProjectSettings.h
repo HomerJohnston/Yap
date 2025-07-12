@@ -73,7 +73,7 @@ protected:
 	TArray<TSoftClassPtr<UObject>> AdditionalCharacterClasses;
 
 	UPROPERTY(Config, EditAnywhere, Category = "Core")
-	TSoftClassPtr<UYapNodeConfig> DefaultNodeConfig;
+	TSoftObjectPtr<UYapNodeConfig> DefaultNodeConfig;
 	
 	// - - - - - EDITOR - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	
@@ -180,7 +180,7 @@ public:
 	
 	static const TArray<TSoftClassPtr<UObject>>& GetAudioAssetClasses();
 
-	static const TSoftClassPtr<UYapNodeConfig>& GetDefaultNodeConfig() { return Get().DefaultNodeConfig; }
+	static const TSoftObjectPtr<UYapNodeConfig>& GetDefaultNodeConfig() { return Get().DefaultNodeConfig; }
 	
 #if WITH_EDITOR
 	static const UYapBroker* GetEditorBrokerDefault();

@@ -250,7 +250,9 @@ protected:
 	void					UpdateCharacterSelector(FText FilterText, TSharedPtr<SScrollBox> CharacterList);
 	void					OnSetNewSpeakerAsset(const FAssetData& AssetData);
 
-	TSharedPtr<SWidget>		Temp;
+	// TODO lol wtf do I call this? Can I stop using it? It's in use to allow me to focus on the character search input after i popup my character selector.
+	// I should study the normal object asset selector to see if I can do something else.  
+	TSharedPtr<SWidget>		TempVar;
 	
 	// ------------------------------------------
 

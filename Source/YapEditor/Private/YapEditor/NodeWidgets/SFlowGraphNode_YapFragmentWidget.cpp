@@ -1216,13 +1216,6 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::PopupContentGetter_Speaker
 
 	// TODO Consider revisiting this, it's rough and ugly?
 	UYapProjectSettings::UpdateReversedCharacterMap();
-
-	/*
-	TSharedRef<SScrollBox> RecentList = SNew(SScrollBox)
-	.Orientation(Orient_Vertical);
-
-	static TArray<FGameplayTag> RecentCharacterTags;
-	*/
 	
 	TSharedRef<SScrollBox> CharacterList = SNew(SScrollBox)
 	.ScrollBarAlwaysVisible(true)
@@ -1234,7 +1227,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::PopupContentGetter_Speaker
 	TSharedRef<SWidget> FilterSearchBox = SNew(SFilterSearchBox)
 	.OnTextChanged(this, &ThisClass::OnTextChanged_CharacterSelectorFilter, CharacterList);
 
-	Temp = FilterSearchBox;
+	TempVar = FilterSearchBox;
 	
 	UpdateCharacterSelector(FText::GetEmpty(), CharacterList);
 
@@ -1248,7 +1241,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::PopupContentGetter_Speaker
 	};
 
 	TSharedRef<SBorder> Widget = SNew(SBorder)
-	.Padding(1, 1, 1, 1)
+	.Padding(16, 16, 16, 16)
 	.BorderImage(FYapEditorStyle::GetImageBrush(YapBrushes.Box_SolidLightGray_Rounded))
 	.BorderBackgroundColor(YapColor::DimGray)
 	[
@@ -1291,6 +1284,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::PopupContentGetter_Speaker
 			]
 			+ SVerticalBox::Slot()
 			.AutoHeight()
+			.Padding(0, 8, 0, 0)
 			[
 				SNew(SYapHeadingBlock)
 				.HeadingText(INVTEXT("Browse Speakers"))
@@ -1324,7 +1318,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::PopupContentGetter_Speaker
 
 void SFlowGraphNode_YapFragmentWidget::UpdateCharacterSelector(FText FilterText, TSharedPtr<SScrollBox> CharacterList)
 {
-	const float PortraitSize = 48;
+	const float PortraitSize = 32;
 	const float BorderSize = 4;
 	
 	FYapFragment& Fragment = GetFragmentMutable();
@@ -1333,8 +1327,10 @@ void SFlowGraphNode_YapFragmentWidget::UpdateCharacterSelector(FText FilterText,
 
 	CharacterList->ClearChildren();
 
-	for (const FYapCharacterDefinition& CharacterDefinition : UYapProjectSettings::GetCharacterDefinitions())
-	{		
+	static TArray<FName> RecentlySelectedCharacterTags;
+
+	auto CreateCharacterListEntry = [this, MoodTag, PortraitSize, BorderSize, FilterText, CharacterList] (const FYapCharacterDefinition& CharacterDefinition)
+	{
 		const UObject* Speaker = CharacterDefinition.CharacterAsset.LoadSynchronous();	
 
 		FText Name = FText::GetEmpty();
@@ -1358,11 +1354,11 @@ void SFlowGraphNode_YapFragmentWidget::UpdateCharacterSelector(FText FilterText,
 			}
 		}
 		
-		if (!Name.IsEmpty() && !FilterText.IsEmpty())
+		if (!FilterText.IsEmpty())
 		{
 			if (!Name.ToString().Contains(FilterText.ToString()))
 			{
-				continue;
+				return;
 			}
 		}
 
@@ -1410,7 +1406,20 @@ void SFlowGraphNode_YapFragmentWidget::UpdateCharacterSelector(FText FilterText,
 
 		auto OnClicked_SpeakerSelect = [this] (FGameplayTag NewSpeakerTag) -> FReply
 		{
+			FYapScopedTransaction Transaction(NAME_None, LOCTEXT("SelectSpeaker", "Select Speaker"), GetDialogueNodeMutable());
+			
 			GetFragmentMutable().SetSpeaker(NewSpeakerTag);
+
+			FSlateApplication::Get().ClearAllUserFocus();
+
+			RecentlySelectedCharacterTags.Remove(NewSpeakerTag.GetTagName());
+
+			RecentlySelectedCharacterTags.Insert(NewSpeakerTag.GetTagName(), 0);
+
+			while (RecentlySelectedCharacterTags.Num() > 3)
+			{
+				RecentlySelectedCharacterTags.Pop();
+			}
 			
 			return FReply::Handled();
 		};
@@ -1479,6 +1488,38 @@ void SFlowGraphNode_YapFragmentWidget::UpdateCharacterSelector(FText FilterText,
 				]
 			]
 		];
+	};
+
+	if (RecentlySelectedCharacterTags.Num() > 0)
+	{
+		CharacterList->AddSlot()
+		[
+			SNew(SYapHeadingBlock)
+			.HeadingText(LOCTEXT("CharacterSelector_RecentlySelectedHeading", "Recently Selected"))
+		];
+
+		for (const FYapCharacterDefinition& CharacterDefinition : UYapProjectSettings::GetCharacterDefinitions())
+		{
+			if (RecentlySelectedCharacterTags.Contains(CharacterDefinition.CharacterTag.GetTagName()))
+			{
+				CreateCharacterListEntry(CharacterDefinition);
+			}
+		}
+	}
+
+	
+	CharacterList->AddSlot()
+	[
+		SNew(SYapHeadingBlock)
+		.HeadingText(LOCTEXT("CharacterSelector_ListStartHeading", "All Characters"))
+	];
+	
+	for (const FYapCharacterDefinition& CharacterDefinition : UYapProjectSettings::GetCharacterDefinitions())
+	{
+		if (!RecentlySelectedCharacterTags.Contains(CharacterDefinition.CharacterTag.GetTagName()))
+		{
+			CreateCharacterListEntry(CharacterDefinition);
+		}
 	}
 }
 
@@ -1590,7 +1631,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateSpeakerWidget()
 	{
 		bOverrideFocus = true;
 
-		FSlateApplication::Get().SetKeyboardFocus(Temp);
+		FSlateApplication::Get().SetKeyboardFocus(TempVar);
 	};
 	
 	return SNew(SLevelOfDetailBranchNode)

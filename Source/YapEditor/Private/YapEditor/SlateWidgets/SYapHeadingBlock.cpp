@@ -17,7 +17,7 @@ void SYapHeadingBlock::Construct( const FArguments& InArgs )
     HeadingText = InArgs._HeadingText;
     
     ChildSlot
-    .Padding(8, 16, 16, 8)
+    .Padding(16, 4, 16, 4)
     [
         SNew(SHorizontalBox)
         + SHorizontalBox::Slot()

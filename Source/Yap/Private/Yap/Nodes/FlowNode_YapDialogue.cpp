@@ -23,13 +23,6 @@ FName UFlowNode_YapDialogue::BypassPinName = FName("Bypass");
 
 // ------------------------------------------------------------------------------------------------
 
-UYapNodeConfig_Default::UYapNodeConfig_Default()
-{
-	UGameplayTagsManager& TagsManager = UGameplayTagsManager::Get();
-    
-	MoodTags.MoodTagsParent = TagsManager.AddNativeGameplayTag("Yap.Dialogue.Mood");
-}
-
 UFlowNode_YapDialogue::UFlowNode_YapDialogue()
 {
 #if WITH_EDITOR
@@ -418,6 +411,18 @@ bool UFlowNode_YapDialogue::CheckConditions()
 
 // ------------------------------------------------------------------------------------------------
 
+bool UFlowNode_YapDialogue::HasValidConfig() const
+{
+	if (IsValid(Config))
+	{
+		return true;
+	}
+
+	return !UYapProjectSettings::GetDefaultNodeConfig().IsNull();
+}
+
+// ------------------------------------------------------------------------------------------------
+
 const UYapNodeConfig& UFlowNode_YapDialogue::GetNodeConfig() const
 {
 	if (IsValid(Config))
@@ -425,15 +430,15 @@ const UYapNodeConfig& UFlowNode_YapDialogue::GetNodeConfig() const
 		return *Config;
 	}
 
-	const TSoftClassPtr<UYapNodeConfig>& ConfigClass = UYapProjectSettings::GetDefaultNodeConfig();
+	const TSoftObjectPtr<UYapNodeConfig>& ConfigAsset = UYapProjectSettings::GetDefaultNodeConfig();
 	
-	if (ConfigClass.IsNull())
+	if (ConfigAsset.IsNull())
 	{
 		return *GetDefault<UYapNodeConfig>();
 	}
 
-	// TODO URGENT I should probably pin this somehow or make sure it's always loaded by Yap
-	return *ConfigClass.LoadSynchronous()->GetDefaultObject<UYapNodeConfig>();
+	// TODO I should probably pin this somehow or make sure it's always loaded by Yap
+	return *ConfigAsset.LoadSynchronous();
 }
 
 bool UFlowNode_YapDialogue::UsesTitleText() const
@@ -1368,6 +1373,18 @@ void UFlowNode_YapDialogue::SwapFragments(uint8 IndexA, uint8 IndexB)
 #if WITH_EDITOR
 FString UFlowNode_YapDialogue::GetNodeDescription() const
 {
+	FString SuperDescription = Super::GetNodeDescription();
+
+	if (!SuperDescription.IsEmpty())
+	{
+		return SuperDescription;
+	}
+
+	if (!HasValidConfig())
+	{
+		return "Invalid config!\nAssign a config in the Yap Node asset -OR- assign a default config in Yap project settings!";
+	}
+
 	return "";
 }
 #endif
@@ -1469,6 +1486,11 @@ void UFlowNode_YapDialogue::ToggleNodeType()
 			TalkSequencing = OldTalkSequencing;
 		}
 	}
+}
+
+FString UFlowNode_YapDialogue::GetStatusString() const
+{
+	return "Hello World";
 }
 #endif
 

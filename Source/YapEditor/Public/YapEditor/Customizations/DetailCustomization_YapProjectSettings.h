@@ -14,28 +14,7 @@ class IDetailCategoryBuilder;
 
 class FDetailCustomization_YapProjectSettings : public IDetailCustomization
 {
-	//FSlateColor ForegroundColor_Button(FLinearColor Col, TSharedPtr<SButton> Button) const { return YapColor::Error; };
-
 private:
-	TArray<FString> DefaultMoodTags
-	{
-		"Angry",
-		"Calm",
-		"Confused",
-		"Disgusted",
-		"Happy",
-		"Injured",
-		"Laughing",
-		"Panicked",
-		"Sad",
-		"Scared",
-		"Smirking",
-		"Stressed",
-		"Surprised",
-		"Thinking",
-		"Tired"
-	};
-
 	FName DialogueTagsParent {"DialogueTagsParent"};
 
 	FSlateFontInfo DetailFont;
@@ -49,8 +28,6 @@ public:
 protected:
 	TWeakObjectPtr<UYapProjectSettings> ProjectSettings;
 	
-	FText GetMoodTags() const;
-
 	const FSlateBrush* TODOBorderImage() const;
 
 	void CustomizeDetails(IDetailLayoutBuilder& DetailBuilder) override;

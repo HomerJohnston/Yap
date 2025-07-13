@@ -36,6 +36,27 @@ const UTexture2D* IYapCharacterInterface::GetYapCharacterPortrait(const FGamepla
     return K2_GetYapCharacterPortrait(MoodTag);
 }
 
+bool IYapCharacterInterface::IsAsset_YapCharacter(const TSoftObjectPtr<UObject> AssetSoftPtr)
+{
+    const UObject* Asset = AssetSoftPtr.LoadSynchronous();
+
+    if (Asset->Implements<UYapCharacterInterface>())
+    {
+        return true;
+    }
+
+    if (const UBlueprint* AssetBlueprint = Cast<UBlueprint>(Asset))
+    {
+        // If the blueprint's generated class implements the interface, return true
+        if (AssetBlueprint->GeneratedClass && AssetBlueprint->GeneratedClass->ImplementsInterface(UYapCharacterInterface::StaticClass()))
+        {
+            return true;
+        }
+    }
+    
+    return false;
+}
+
 bool IYapCharacterInterface::IsAsset_YapCharacter(const FAssetData& AssetData)
 {
     const UClass* Class = AssetData.GetClass();

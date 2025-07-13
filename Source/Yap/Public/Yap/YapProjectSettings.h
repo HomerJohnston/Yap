@@ -128,10 +128,11 @@ protected:
 
 	// Not exposed for editing, this is updated automatically whenever the character array is edited. Game code actually uses this as the character source. 
 	TMap<FGameplayTag, TSoftObjectPtr<UObject>> CharacterMap;
-	
+
+	// TODO: SAssetView doesn't support blueprint classes, so we can't use this yet.
 	/** By default, Yap will discover all native C++ classes that inherit the Yap Character interface. You can add blueprint classes which inherit it here. This avoids forcefully loading all assets to discover them. */
-	UPROPERTY(Config, EditAnywhere, Category = "Core", meta = (AllowAbstract, DisplayName = "Character Classes"))
-	TArray<TSoftClassPtr<UObject>> AdditionalCharacterClasses;
+	//UPROPERTY(Config, EditAnywhere, Category = "Core", meta = (AllowAbstract, DisplayName = "Character Classes"))
+	//TArray<TSoftClassPtr<UObject>> AdditionalCharacterClasses;
 
 	// ============================================================================================
 	// STATE
@@ -198,7 +199,7 @@ public:
 	
 	static const TMap<FGameplayTag, TSoftObjectPtr<UObject>>& GetCharacters() { return Get().CharacterMap; }
 
-	static const FGameplayTag& GetCharacterTagParent() { return Get().CharacterTagRoot; }
+	static const FGameplayTag& GetCharacterRootTag() { return Get().CharacterTagRoot; }
 
 #if WITH_EDITOR
 	// TODO this is kind of ugly

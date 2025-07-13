@@ -25,21 +25,27 @@ protected:
     // OVERRIDES ----------------------------------------------------------------------------------
 
 protected:
+    
     void CustomizeHeader(TSharedRef<IPropertyHandle> StructPropertyHandle, FDetailWidgetRow& HeaderRow, IPropertyTypeCustomizationUtils& StructCustomizationUtils) override;
 
     void CustomizeChildren(TSharedRef<IPropertyHandle> StructPropertyHandle, IDetailChildrenBuilder& StructBuilder, IPropertyTypeCustomizationUtils& StructCustomizationUtils) override;
 
     // METHODS ------------------------------------------------------------------------------------
 
+    FText ToolTipText_AssetStatus(FYapCharacterDefinition* CharacterDefinition) const;
+    
     FLinearColor AssetStatusColor(FYapCharacterDefinition* CharacterDefinition) const;
     
-    FLinearColor TagStatusColor(FYapCharacterDefinition* CharacterDefinition) const;
-
+    FText ToolTipText_TagStatus(FYapCharacterDefinition* CharacterDefinition) const;
     
-    void OnSetNewCharacterAsset(const FAssetData& AssetData) const;
+    FLinearColor Color_TagStatus(FYapCharacterDefinition* CharacterDefinition) const;
+    
+    void OnSetNewCharacterAsset(TSharedPtr<IPropertyHandle> AssetPropertyHandle) const;
 
 protected:
 
+    static FLinearColor InvalidCharacterColor();
+    
     static FLinearColor ErrorColor();
 
     static FLinearColor WarningColor();

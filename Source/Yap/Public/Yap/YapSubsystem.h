@@ -159,10 +159,10 @@ public:
 	//static void UnregisterConversationHandlerAllTypeGroups(UObject* HandlerToRemove);
 	
 	/** Register a conversation handler. Conversation handlers will receive yap dialogue events. Must implement IYapConversationHandler either in C++ or BP. */
-	static void RegisterFreeSpeechHandler(UObject* NewHandler, const TSubclassOf<UFlowNode_YapDialogue> NodeType);
+	static void RegisterFreeSpeechHandler(UObject* NewHandler, TSubclassOf<UFlowNode_YapDialogue> NodeType);
 
 	/** Register a conversation handler. Conversation handlers will receive yap dialogue events. Must implement IYapConversationHandler either in C++ or BP. */
-	static void UnregisterFreeSpeechHandler(UObject* HandlerToRemove, const TSubclassOf<UFlowNode_YapDialogue> NodeType);
+	static void UnregisterFreeSpeechHandler(UObject* HandlerToRemove, TSubclassOf<UFlowNode_YapDialogue> NodeType);
 
 	/** Register a conversation handler. Conversation handlers will receive yap dialogue events. Must implement IYapConversationHandler either in C++ or BP. */
 	//static void UnregisterFreeSpeechHandlerAllTypeGroups(UObject* HandlerToRemove);
@@ -216,6 +216,9 @@ public:
 protected:  // TODO should some of these be public?
 	/**  */
 	void RegisterTaggedFragment(const FGameplayTag& FragmentTag, UFlowNode_YapDialogue* DialogueNode);
+
+	// TODO I should just make a wrapper for the tsubclassof that automatically sanitizes the node type
+	static void SanitizeNodeType(TSubclassOf<UFlowNode_YapDialogue>& NodeType);
 
 public:
 	// Main open conversation function, and is called by the Open Conversation flow node
@@ -305,13 +308,13 @@ public:
 	/**  */
 	void UnregisterCharacterComponent(UYapCharacterComponent* YapCharacterComponent);
 
-	TArray<TObjectPtr<UObject>>& FindOrAddConversationHandlerArray(const TSubclassOf<UFlowNode_YapDialogue> NodeType);
+	TArray<TObjectPtr<UObject>>& FindOrAddConversationHandlerArray(TSubclassOf<UFlowNode_YapDialogue> NodeType);
 
-	TArray<TObjectPtr<UObject>>* FindConversationHandlerArray(const TSubclassOf<UFlowNode_YapDialogue> NodeType);
+	TArray<TObjectPtr<UObject>>* FindConversationHandlerArray(TSubclassOf<UFlowNode_YapDialogue> NodeType);
 	
-	TArray<TObjectPtr<UObject>>& FindOrAddFreeSpeechHandlerArray(const TSubclassOf<UFlowNode_YapDialogue> NodeType);
+	TArray<TObjectPtr<UObject>>& FindOrAddFreeSpeechHandlerArray(TSubclassOf<UFlowNode_YapDialogue> NodeType);
 	
-	TArray<TObjectPtr<UObject>>* FindFreeSpeechHandlerArray(const TSubclassOf<UFlowNode_YapDialogue> NodeType);
+	TArray<TObjectPtr<UObject>>* FindFreeSpeechHandlerArray(TSubclassOf<UFlowNode_YapDialogue> NodeType);
 
 	FYapSpeechHandle GetNewSpeechHandle(FGuid Guid);
 	

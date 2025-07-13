@@ -33,7 +33,12 @@ public:
 	/** Built-in simple helper function to retrieve the length of an Unreal sound. */
 	UFUNCTION(BlueprintCallable, Category = "Yap|Audio")
 	static float GetSoundLength(USoundBase* Sound);
-	
+
+	/**
+	 * Test
+	 * @param NewHandler Test 
+	 * @param NodeType Leave blank to register for the default dialogue node type ("Dialogue" in the Flow pallet)
+	 */
 	UFUNCTION(BlueprintCallable, Category = "Yap|Registration")
 	static void RegisterConversationHandler(UObject* NewHandler, TSubclassOf<UFlowNode_YapDialogue> NodeType);
 	

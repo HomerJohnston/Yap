@@ -78,6 +78,9 @@ protected:
     const UTexture2D* K2_GetYapCharacterPortrait(const FGameplayTag& MoodTag) const;
 
 #if WITH_EDITOR
+public:
+    static bool IsAsset_YapCharacter(const TSoftObjectPtr<UObject> Asset);
+    
     static bool IsAsset_YapCharacter(const FAssetData& AssetData);
 #endif
 };

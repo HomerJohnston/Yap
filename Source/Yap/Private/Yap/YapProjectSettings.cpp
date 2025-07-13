@@ -27,7 +27,7 @@ UYapProjectSettings::UYapProjectSettings()
 	
 	DefaultPortraitTexture = FSoftObjectPath("/Yap/T_Avatar_Missing.T_Avatar_Missing");
 
-	AddGameplayTagFilterStatic("CharacterArray.CharacterTag", &UYapProjectSettings::GetCharacterTagParent);
+	AddGameplayTagFilterStatic("CharacterArray.CharacterTag", &UYapProjectSettings::GetCharacterRootTag);
 }
 
 #if WITH_EDITOR
@@ -47,7 +47,8 @@ const UYapBroker* UYapProjectSettings::GetEditorBrokerDefault()
 const TArray<const UClass*> UYapProjectSettings::GetAllowableCharacterClasses()
 {
 	TArray<const UClass*> Classes;
-	Classes.Reserve(Get().AdditionalCharacterClasses.Num() + Get().DefaultCharacterClasses.Num());
+	
+	// Classes.Reserve(Get().AdditionalCharacterClasses.Num() + Get().DefaultCharacterClasses.Num());
 
 	for (auto& ClassSoftPtr : Get().DefaultCharacterClasses)
 	{
@@ -56,12 +57,14 @@ const TArray<const UClass*> UYapProjectSettings::GetAllowableCharacterClasses()
 		Classes.Add(LoadedClass);
 	}
 	
+	/*
 	for (auto& ClassSoftPtr : Get().AdditionalCharacterClasses)
 	{
 		UClass* LoadedClass = ClassSoftPtr.LoadSynchronous();
 		UE_LOG(LogTemp, Display, TEXT(":::::::::: %s"), *LoadedClass->GetFullName());
 		Classes.Add(LoadedClass);
 	}
+	*/
 
 	return Classes;
 }
@@ -106,7 +109,7 @@ const TArray<TSoftClassPtr<UObject>>& UYapProjectSettings::GetAudioAssetClasses(
 #if WITH_EDITOR
 void UYapProjectSettings::AddAdditionalCharacterClass(TSoftClassPtr<UObject> Class)
 {
-	Get().AdditionalCharacterClasses.Add(Class);
+	//Get().AdditionalCharacterClasses.Add(Class);
 }
 #endif
 

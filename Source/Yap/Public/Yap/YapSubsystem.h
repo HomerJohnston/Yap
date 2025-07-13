@@ -50,6 +50,60 @@ struct FYapHandlersArray
 
 // ================================================================================================
 
+// Alias for TSubclassOf<UFlowNode_YapDialogue>.
+// This is a wrapper to auto-convert a null type to the default Yap dialogue node type.
+USTRUCT(BlueprintType)
+struct FYapDialogueNodeType
+{
+	GENERATED_BODY()
+
+	FYapDialogueNodeType()
+	{
+		NodeType = UFlowNode_YapDialogue::StaticClass();
+	}
+	
+	FYapDialogueNodeType(UClass* InNodeType)
+	{
+		if (InNodeType && InNodeType->IsChildOf(UFlowNode_YapDialogue::StaticClass()))
+		{
+			NodeType = InNodeType;
+		}
+		else
+		{
+			NodeType = UFlowNode_YapDialogue::StaticClass();
+		}
+	}
+
+	FYapDialogueNodeType(TSubclassOf<UFlowNode_YapDialogue> InNodeType)
+	{
+		if (InNodeType && InNodeType->IsChildOf(UFlowNode_YapDialogue::StaticClass()))
+		{
+			NodeType = InNodeType;
+		}
+		else
+		{
+			NodeType = UFlowNode_YapDialogue::StaticClass();
+		}
+	}
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSubclassOf<UFlowNode_YapDialogue> NodeType;
+
+	// Implicit conversion... usually works but not everywhere?
+	operator TSubclassOf<UFlowNode_YapDialogue>() const
+	{
+		return NodeType;
+	}
+
+	// Explicit getter
+	TSubclassOf<UFlowNode_YapDialogue> Get() const
+	{
+		return NodeType;
+	}
+};
+
+// ================================================================================================
+
 UCLASS()
 class YAP_API UYapSubsystem : public UWorldSubsystem
 {
@@ -149,25 +203,25 @@ public:
 	// =========================================
 public:
 	
-	/** Register a conversation handler to a specific type group, or EmptyTag for the default type group. */
-	static void RegisterConversationHandler(UObject* NewHandler, TSubclassOf<UFlowNode_YapDialogue> NodeType);
+	/** Register a conversation handler for a node type. Nullptr will use the default yap node. */
+	static void RegisterConversationHandler(UObject* NewHandler, FYapDialogueNodeType NodeType);
 
-	/** Unregister a conversation handler from a specific type group. */
-	static void UnregisterConversationHandler(UObject* HandlerToRemove, TSubclassOf<UFlowNode_YapDialogue> NodeType);
+	/** Unregister a conversation handler for a node type. Nullptr will use the default yap node. */
+	static void UnregisterConversationHandler(UObject* HandlerToRemove, FYapDialogueNodeType NodeType);
 	
-	/** Unregister a conversation handler.*/
-	//static void UnregisterConversationHandlerAllTypeGroups(UObject* HandlerToRemove);
+	/**  */
+	//static void UnregisterConversationHandlerAllTypes(UObject* HandlerToRemove);
 	
-	/** Register a conversation handler. Conversation handlers will receive yap dialogue events. Must implement IYapConversationHandler either in C++ or BP. */
-	static void RegisterFreeSpeechHandler(UObject* NewHandler, TSubclassOf<UFlowNode_YapDialogue> NodeType);
+	/** Register a free speech handler for a node type. Nullptr will use the default yap node. */
+	static void RegisterFreeSpeechHandler(UObject* NewHandler, FYapDialogueNodeType NodeType);
 
-	/** Register a conversation handler. Conversation handlers will receive yap dialogue events. Must implement IYapConversationHandler either in C++ or BP. */
-	static void UnregisterFreeSpeechHandler(UObject* HandlerToRemove, TSubclassOf<UFlowNode_YapDialogue> NodeType);
+	/** Unregister a free speech handler for a node type. Nullptr will use the default yap node.*/
+	static void UnregisterFreeSpeechHandler(UObject* HandlerToRemove, FYapDialogueNodeType NodeType);
 
-	/** Register a conversation handler. Conversation handlers will receive yap dialogue events. Must implement IYapConversationHandler either in C++ or BP. */
-	//static void UnregisterFreeSpeechHandlerAllTypeGroups(UObject* HandlerToRemove);
+	/**  */
+	//static void UnregisterFreeSpeechHandlerAllTypes(UObject* HandlerToRemove);
 
-	/** Given a character identity tag, find the character component in the world. */
+	/** Given a character identity tag, attempt to find the character component in the world. */
 	static UYapCharacterComponent* FindCharacterComponent(UWorld* World, FGameplayTag CharacterTag);
 
 	// =========================================
@@ -217,9 +271,6 @@ protected:  // TODO should some of these be public?
 	/**  */
 	void RegisterTaggedFragment(const FGameplayTag& FragmentTag, UFlowNode_YapDialogue* DialogueNode);
 
-	// TODO I should just make a wrapper for the tsubclassof that automatically sanitizes the node type
-	static void SanitizeNodeType(TSubclassOf<UFlowNode_YapDialogue>& NodeType);
-
 public:
 	// Main open conversation function, and is called by the Open Conversation flow node
 	FYapConversation& OpenConversation(FGameplayTag ConversationName, UObject* ConversationOwner); // Called by Open Conversation node
@@ -242,18 +293,9 @@ protected:
 
 	// Actually closes a conversation
 	EYapConversationState StartClosingConversation(FYapConversationHandle& Handle);
-
-
-
+	
 	/** The current focused conversation; same as Con */
 	const FYapConversationHandle& GetActiveConversation();;
-
-
-
-
-
-
-
 	
 	void StartNextQueuedConversation();
 
@@ -261,15 +303,13 @@ protected:
 	void OnActiveConversationClosed(UObject* Instigator, FYapConversationHandle Handle);
 	
 	/**  */
-	FYapPromptHandle BroadcastPrompt(const FYapData_PlayerPromptCreated& Data, TSubclassOf<UFlowNode_YapDialogue> NodeType);
+	FYapPromptHandle BroadcastPrompt(const FYapData_PlayerPromptCreated& Data, FYapDialogueNodeType NodeType);
 
 	/**  */
-	void OnFinishedBroadcastingPrompts(const FYapData_PlayerPromptsReady& Data, TSubclassOf<UFlowNode_YapDialogue> NodeType);
+	void OnFinishedBroadcastingPrompts(const FYapData_PlayerPromptsReady& Data, FYapDialogueNodeType NodeType);
 
 public:
-	/**  */
-	UFUNCTION(BlueprintCallable)
-	FYapSpeechHandle RunSpeech(const FYapData_SpeechBegins& SpeechData, TSubclassOf<UFlowNode_YapDialogue> NodeType, FYapSpeechHandle& Handle);
+	void RunSpeech(const FYapData_SpeechBegins& SpeechData, FYapDialogueNodeType NodeType, FYapSpeechHandle& Handle);
 
 	// TODO I hate this thing
 	static FYapConversation NullConversation;
@@ -308,13 +348,13 @@ public:
 	/**  */
 	void UnregisterCharacterComponent(UYapCharacterComponent* YapCharacterComponent);
 
-	TArray<TObjectPtr<UObject>>& FindOrAddConversationHandlerArray(TSubclassOf<UFlowNode_YapDialogue> NodeType);
+	TArray<TObjectPtr<UObject>>& FindOrAddConversationHandlerArray(FYapDialogueNodeType NodeType);
 
-	TArray<TObjectPtr<UObject>>* FindConversationHandlerArray(TSubclassOf<UFlowNode_YapDialogue> NodeType);
+	TArray<TObjectPtr<UObject>>* FindConversationHandlerArray(FYapDialogueNodeType NodeType);
 	
-	TArray<TObjectPtr<UObject>>& FindOrAddFreeSpeechHandlerArray(TSubclassOf<UFlowNode_YapDialogue> NodeType);
+	TArray<TObjectPtr<UObject>>& FindOrAddFreeSpeechHandlerArray(FYapDialogueNodeType NodeType);
 	
-	TArray<TObjectPtr<UObject>>* FindFreeSpeechHandlerArray(TSubclassOf<UFlowNode_YapDialogue> NodeType);
+	TArray<TObjectPtr<UObject>>* FindFreeSpeechHandlerArray(FYapDialogueNodeType NodeType);
 
 	FYapSpeechHandle GetNewSpeechHandle(FGuid Guid);
 	

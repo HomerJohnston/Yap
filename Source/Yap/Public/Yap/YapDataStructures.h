@@ -46,27 +46,27 @@ struct FYapData_SpeechBegins
 	FGameplayTag Conversation;
 	
 	/** Who is being speaked towards. */
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadWrite)
 	TScriptInterface<IYapCharacterInterface> DirectedAt = nullptr;
 
 	/** Who is speaking. */
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadWrite)
 	TScriptInterface<IYapCharacterInterface> Speaker;
 
 	/** Mood of the speaker. */
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadWrite)
 	FGameplayTag MoodTag;
 
 	/** Text being spoken. */
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadWrite)
 	FText DialogueText;
 
 	/** Optional title text representing the dialogue. */
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadWrite)
 	FText TitleText;
 	
 	/** How long this dialogue is expected to play for. */
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadWrite)
 	float SpeechTime = 0;
 
 	// TODO: I'm not sure if this data belongs in here. It's here because it might be useful for UI to have... but it's irrelevant to the subsystem and actual dialogue engine, only the flow graph.
@@ -76,11 +76,11 @@ struct FYapData_SpeechBegins
 	//float FragmentTime = 0;
 
 	/** Audio asset, you are responsible to cast to your proper type to use. */
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadWrite)
 	TObjectPtr<const UObject> DialogueAudioAsset;
 
 	/** Can this dialogue be skipped? */
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadWrite)
 	bool bSkippable = false;
 };
 

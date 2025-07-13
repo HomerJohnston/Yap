@@ -35,24 +35,41 @@ public:
 	static float GetSoundLength(USoundBase* Sound);
 
 	/**
-	 * Test
-	 * @param NewHandler Test 
+	 * @param NewHandler
 	 * @param NodeType Leave blank to register for the default dialogue node type ("Dialogue" in the Flow pallet)
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Yap|Registration")
 	static void RegisterConversationHandler(UObject* NewHandler, TSubclassOf<UFlowNode_YapDialogue> NodeType);
 	
+	/**  */
 	UFUNCTION(BlueprintCallable, Category = "Yap|Registration")
 	static void RegisterFreeSpeechHandler(UObject* NewHandler, TSubclassOf<UFlowNode_YapDialogue> NodeType);
 	
+	/**  */
 	UFUNCTION(BlueprintCallable, Category = "Yap|Registration")
 	static void UnregisterConversationHandler(UObject* HandlerToUnregister, TSubclassOf<UFlowNode_YapDialogue> NodeType);
 	
+	/**  */
 	UFUNCTION(BlueprintCallable, Category = "Yap|Registration")
 	static void UnregisterFreeSpeechHandler(UObject* HandlerToUnregister, TSubclassOf<UFlowNode_YapDialogue> NodeType);
 
+	/**  */
 	UFUNCTION(BlueprintCallable, Category = "Yap|Character", meta = (WorldContext = "WorldContext"))
 	static AActor* FindYapCharacterActor(UObject* WorldContext, TScriptInterface<IYapCharacterInterface> Speaker);
+
+	/**  */
+	UFUNCTION(BlueprintCallable, DisplayName = "Run Speech", Category = "Yap", meta = (DefaultToSelf = "Speaker"))
+	static FYapSpeechHandle K2_RunSpeech(
+		TScriptInterface<IYapCharacterInterface> Speaker,
+		TScriptInterface<IYapCharacterInterface> DirectedAt,
+		FText DialogueText,
+		float SpeechTime,
+		UObject* DialogueAudioAsset,
+		FGameplayTag MoodTag,
+		FText TitleText,
+		FGameplayTag Conversation,
+		bool bSkippable,
+		UObject* WorldContext);
 };
 
 

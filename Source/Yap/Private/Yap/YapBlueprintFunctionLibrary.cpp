@@ -92,6 +92,47 @@ AActor* UYapBlueprintFunctionLibrary::FindYapCharacterActor(UObject* WorldContex
 	return Comp->GetOwner();
 }
 
+FYapSpeechHandle UYapBlueprintFunctionLibrary::K2_RunSpeech(TScriptInterface<IYapCharacterInterface> Speaker, TScriptInterface<IYapCharacterInterface> DirectedAt, FText DialogueText, float SpeechTime, UObject* DialogueAudioAsset, FGameplayTag MoodTag, FText TitleText, FGameplayTag Conversation, bool bSkippable, UObject* WorldContext)
+{
+	UObject* WCO = WorldContext ? WorldContext : Speaker.GetObject();
+
+	if (!IsValid(WCO))
+	{
+		UE_LOG(LogYap, Error, TEXT("K2_RunSpeech called with invalid WorldContext!"));
+		return FYapSpeechHandle();
+	}
+
+	UYapSubsystem* Subsystem = UYapSubsystem::Get(WCO);
+	
+	FYapSpeechHandle NewSpeechHandle = Subsystem->GetNewSpeechHandle(FGuid::NewGuid());
+
+	FYapData_SpeechBegins SpeechData;
+	SpeechData.Speaker = Speaker;
+	SpeechData.DirectedAt = DirectedAt;
+	SpeechData.DialogueText = DialogueText;
+	SpeechData.SpeechTime = SpeechTime;
+	SpeechData.DialogueAudioAsset = DialogueAudioAsset;
+	SpeechData.MoodTag = MoodTag;
+	SpeechData.TitleText = TitleText;
+	SpeechData.Conversation = Conversation;
+	SpeechData.bSkippable = bSkippable;
+	
+	Subsystem->RunSpeech(SpeechData, UFlowNode_YapDialogue::StaticClass(), NewSpeechHandle);
+
+	return NewSpeechHandle;
+}
+
+/*
+FYapSpeechHandle UYapBlueprintFunctionLibrary::K2_RunSpeech(FGameplayTag Conversation, TScriptInterface<IYapCharacterInterface> DirectedAt, TScriptInterface<IYapCharacterInterface> Speaker, FGameplayTag MoodTag, FText DialogueText, FText TitleText, float SpeechTime, UObject* DialogueAudioAsset,	bool bSkippable)
+{
+	FYapSpeechHandle NewSpeechHandle = UYapSubsystem::Get(this)->GetNewSpeechHandle(FGuid::NewGuid());
+	
+	RunSpeech(SpeechData, NodeType, NewSpeechHandle);
+
+	return NewSpeechHandle;
+}
+*/
+
 // ------------------------------------------------------------------------------------------------
 
 #undef LOCTEXT_NAMESPACE

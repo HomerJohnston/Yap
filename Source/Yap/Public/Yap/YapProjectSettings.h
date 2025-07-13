@@ -180,7 +180,7 @@ public:
 	static const UYapBroker* GetEditorBrokerDefault();
 #endif
 
-	static const TArray<const UClass*> GetAdditionalCharacterClasses();
+	static const TArray<const UClass*> GetAllowableCharacterClasses();
 
 	static const TArray<FYapCharacterDefinition>& GetCharacterDefinitions() { return Get().CharacterArray; }
 	

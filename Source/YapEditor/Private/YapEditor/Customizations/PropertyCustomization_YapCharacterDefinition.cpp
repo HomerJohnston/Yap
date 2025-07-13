@@ -84,6 +84,7 @@ void FPropertyCustomization_YapCharacterDefinition::CustomizeHeader(TSharedRef<I
                 // AssetPropertyHandle->CreatePropertyValueWidgetWithCustomization(nullptr)
                 
                 SNew(SYapPropertyMenuAssetPicker)
+                .AllowedClasses(UYapProjectSettings::GetAllowableCharacterClasses())
                 .OnShouldFilterAsset_Lambda( [] (const FAssetData& AssetData)
                 {
                     const UClass* Class = AssetData.GetClass();

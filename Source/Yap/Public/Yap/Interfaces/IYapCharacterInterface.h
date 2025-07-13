@@ -76,6 +76,10 @@ protected:
     /** Implement this on a blueprint. */
     UFUNCTION(BlueprintImplementableEvent, Category = "Yap|Character", DisplayName = "Get Portrait")
     const UTexture2D* K2_GetYapCharacterPortrait(const FGameplayTag& MoodTag) const;
+
+#if WITH_EDITOR
+    static bool IsAsset_YapCharacter(const FAssetData& AssetData);
+#endif
 };
 
 /**

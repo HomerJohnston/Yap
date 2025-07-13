@@ -44,7 +44,7 @@ const UYapBroker* UYapProjectSettings::GetEditorBrokerDefault()
 	return BrokerClass.LoadSynchronous()->GetDefaultObject<UYapBroker>();
 }
 
-const TArray<const UClass*> UYapProjectSettings::GetAdditionalCharacterClasses()
+const TArray<const UClass*> UYapProjectSettings::GetAllowableCharacterClasses()
 {
 	TArray<const UClass*> Classes;
 	Classes.Reserve(Get().AdditionalCharacterClasses.Num() + Get().DefaultCharacterClasses.Num());

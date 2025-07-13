@@ -5,6 +5,7 @@
 
 #include "GameplayTagContainer.h"
 #include "Yap/YapLog.h"
+#include "Yap/YapProjectSettings.h"
 
 // ================================================================================================
 // Default C++ implementations, can be overridden by C++ classes
@@ -33,6 +34,49 @@ FGameplayTag IYapCharacterInterface::GetYapCharacterTag() const
 const UTexture2D* IYapCharacterInterface::GetYapCharacterPortrait(const FGameplayTag& MoodTag) const
 {
     return K2_GetYapCharacterPortrait(MoodTag);
+}
+
+bool IYapCharacterInterface::IsAsset_YapCharacter(const FAssetData& AssetData)
+{
+    const UClass* Class = AssetData.GetClass();
+
+    if (!Class)
+    {
+        return false;
+    }
+
+    if (Class->ImplementsInterface(UYapCharacterInterface::StaticClass()))
+    {
+        //UE_LOG(LogYapEditor, VeryVerbose, TEXT("Found valid speaker class from asset: %s"), *Class->GetName());
+        return true;
+    }
+	
+    const TArray<const UClass*> AllowableClasses = UYapProjectSettings::GetAllowableCharacterClasses();
+
+    FString AllowableClassStringTemp;
+	
+    if (AllowableClasses.Num() > 0)
+    {
+        for (TSoftClassPtr<UObject> AllowableClass : AllowableClasses)
+        {
+            if (!AllowableClass)
+            {
+                continue;
+            }
+			
+            const FString PackageName = AssetData.PackageName.ToString();
+			
+            AllowableClassStringTemp = AllowableClass->GetPackage()->GetName();
+			
+            if (PackageName == AllowableClassStringTemp)
+            {
+                //UE_LOG(LogYapEditor, VeryVerbose, TEXT("Found valid speaker class from package path comparison: %s"), *Class->GetName());
+                return true;
+            }
+        }
+    }
+	
+    return false;
 }
 
 // ================================================================================================

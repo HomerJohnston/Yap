@@ -6,54 +6,59 @@
 #include "Yap/Enums/YapMissingAudioErrorLevel.h"
 #include "Yap/Enums/YapTimeMode.h"
 #include "GameplayTagContainer.h"
+#include "GameplayTagFilterHelper.h"
 #include "YapNodeConfig.generated.h"
 
 #define LOCTEXT_NAMESPACE "YapEditor"
+
+// ================================================================================================
 
 USTRUCT()
 struct FYapNodeConfigGroup_General
 {
 	GENERATED_BODY()
 
-	/** Show an optional label for this node type on flow graphs. */
+	/** Show an optional label for this node type on flow graphs, this will appear on the right side of the node's header area. */
 	UPROPERTY(EditAnywhere)
-	FText GraphTitle;
+	FText NodeLabel;
 
-	/** Controls which node types are permitted to be used. */
+	/** Controls which node types are permitted to be selected. */
 	UPROPERTY(EditAnywhere, meta = (Bitmask, BitmaskEnum = "/Script/Yap.EYapDialogueNodeType"))
 	int32 AllowableNodeTypes;
 
-	// OK so EditCondition doesn't have bitwise operators so let's hard code every number that would include the correct bit I hope I never change anything (extra keyword for future search: fuck)
+	// OK so EditCondition doesn't have bitwise operators so let's hard code every number that would include the correct bit I hope I never change anything
 	// UPROPERTY(EditAnywhere, meta = (EditCondition = "AllowableNodeTypes & EYapDialogueNodeType > 0", EditConditionHides))
 
-	/**  */
+	/** Optional, change the flow graph node title from 'Talk' to '...'. */
 	UPROPERTY(EditAnywhere, meta = (EditCondition = "AllowableNodeTypes == 1 || AllowableNodeTypes == 3 || AllowableNodeTypes == 5 || AllowableNodeTypes == 7", EditConditionHides))
 	FText TalkLabelOverride;
 	
-	/**  */
+	/** Optional, change the flow graph node title from 'Talk & Advance' to '...'. */
 	UPROPERTY(EditAnywhere, meta = (EditCondition = "AllowableNodeTypes == 2 || AllowableNodeTypes == 3 || AllowableNodeTypes == 6 || AllowableNodeTypes == 7", EditConditionHides))
 	FText TalkAndAdvanceLabelOverride;
 	
-	/**  */
+	/** Optional, change the flow graph node title from 'Prompt' to '...'. */
 	UPROPERTY(EditAnywhere, meta = (EditCondition = "AllowableNodeTypes == 4 || AllowableNodeTypes == 5 || AllowableNodeTypes == 6 || AllowableNodeTypes == 7", EditConditionHides))
 	FText PromptLabelOverride;
 
 	/** Use this to filter the character tag selector. If all of your game's character tags are under YourGame.Entity.Character.XYZ then set this to YourGame.Entity.Character for easier character selection. */
 	UPROPERTY(EditAnywhere)
 	FGameplayTag CharacterTagBase;
-
-	/**  */
+	
+	/** TODO - this may become deprecated. */
 	UPROPERTY(EditAnywhere)
 	FGameplayTag DialogueTagsParent;
 
-	/** If this type group doesn't require any speaker info (such as for generic tutorial popups or simple player prompts), you can enable this to clean up the flow graph. */
+	/** If this type group doesn't require any speaker info (such as for generic tutorial popups or simple player prompts), you can enable this. */
 	UPROPERTY(EditAnywhere)
 	bool bDisableSpeaker = false;
 
-	/** If this type group doesn't require any child safe info (such as for generic tutorial popups or simple player prompts), you can enable this to clean up the flow graph. */
+	/** If this type group doesn't require any child safe info (such as for generic tutorial popups or simple player prompts), you can enable this. */
 	UPROPERTY(EditAnywhere)
 	bool bDisableChildSafe = false;
 };
+
+// ================================================================================================
 
 USTRUCT()
 struct FYapNodeConfigGroup_Audio
@@ -74,7 +79,7 @@ struct FYapNodeConfigGroup_Audio
 	FDirectoryPath FlowAssetsRootFolder;
 #endif
 
-	// TODO make error not package
+	// TODO make errors fail packaging
 	/** Controls how missing audio fields are handled. */ 
 	UPROPERTY(EditAnywhere, DisplayName = "Missing Audio Handling", meta = (EditCondition = "!bDisableAudio", EditConditionHides))
 	EYapMissingAudioErrorLevel MissingAudioErrorLevel = EYapMissingAudioErrorLevel::Warning;
@@ -83,6 +88,8 @@ struct FYapNodeConfigGroup_Audio
 	UPROPERTY(EditAnywhere, meta = (EditCondition = "!bDisableAudio", EditConditionHides))
 	bool bHideAudioID = false;
 };
+
+// ================================================================================================
 
 USTRUCT()
 struct FYapNodeConfigGroup_DialoguePlaybackTime
@@ -124,6 +131,8 @@ struct FYapNodeConfigGroup_DialoguePlaybackTime
 	float TextWordsPerMinute = 120;	
 };
 
+// ================================================================================================
+
 USTRUCT()
 struct FYapNodeConfigGroup_DialoguePlayback
 {
@@ -145,6 +154,8 @@ struct FYapNodeConfigGroup_DialoguePlayback
 	FYapNodeConfigGroup_DialoguePlaybackTime TimeSettings;
 };
 
+// ================================================================================================
+
 USTRUCT()
 struct FYapNodeConfigGroup_PromptSettings
 {
@@ -162,6 +173,8 @@ struct FYapNodeConfigGroup_PromptSettings
 	UPROPERTY(EditAnywhere)
 	bool bWarnWhenTalkNodeEntersPrompt = false;
 };
+
+// ================================================================================================
 
 USTRUCT()
 struct FYapNodeConfigGroup_FlowGraphSettings
@@ -192,7 +205,15 @@ struct FYapNodeConfigGroup_FlowGraphSettings
 	/** Set the default font for dialogue. */
 	UPROPERTY(EditAnywhere)
 	FSlateFontInfo DialogueFont;
+	
+	// TODO: replace my start/end pins with N timed pins instead? To kick off stuff at any time through a dialogue?
+	/** Turn off to hide the On Start / On End pin-buttons, useful if you want a simpler graph without these features. */
+	UPROPERTY(Config, EditAnywhere, Category = "Flow Graph Settings")
+	bool bHidePinEnableButtons = false;
+	
 };
+
+// ================================================================================================
 
 USTRUCT()
 struct FYapNodeConfigGroup_MoodTags
@@ -218,11 +239,13 @@ struct FYapNodeConfigGroup_MoodTags
 	FGameplayTagContainer GetAllMoodTags();
 };
 
+// ================================================================================================
+
 /**
  * Yap node config assets can be created and used to control how different dialogue node subclasses play.
  */
 UCLASS(Blueprintable)
-class YAP_API UYapNodeConfig : public UObject
+class YAP_API UYapNodeConfig : public UObject, public FGameplayTagFilterHelper<UYapNodeConfig>
 {
     GENERATED_BODY()
 
@@ -328,6 +351,8 @@ public:
 	
 	const FSlateFontInfo& GetGraphDialogueFont() const { return Graph.DialogueFont; }
 	
+	bool ShowPinEnableButtons()  { return !Graph.bHidePinEnableButtons; }
+	
 	bool GetPreventDialogueTextWrapping() const { return Graph.bPreventDialogueTextWrapping; }
 
 	bool GetShowTitleTextOnTalkNodes() const { return Graph.bShowTitleTextOnTalkNodes; }
@@ -350,12 +375,6 @@ public:
 
 	FGameplayTagContainer GetMoodTags() const;
 
-	/*
-#if WITH_EDITOR
-	FString GetMoodTagIconPath(FGameplayTag Key, FString FileExtension);
-#endif
-*/
-
 #if WITH_EDITOR
 public:
 	const FDirectoryPath& GetMoodTagEditorIconsPath() const { return MoodTags.EditorIconsPath; };
@@ -371,6 +390,13 @@ public:
     TSharedPtr<FSlateImageBrush> GetMoodTagIcon(FGameplayTag MoodTag) const;
 
 	const FSlateBrush* GetMoodTagBrush(FGameplayTag Name) const;
+
+	bool CanEditChange(const FProperty* InProperty) const override;
+
+	bool CanEditChange(const FEditPropertyChain& PropertyChain) const override;
+
+	const FGameplayTag& GetMoodTagsRoot() const;
+	
 #endif
 
 	TMap<FGameplayTag, TSharedPtr<FSlateImageBrush>> MoodTagIconBrushes;

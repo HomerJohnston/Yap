@@ -19,6 +19,10 @@ private:
 
 	FSlateFontInfo DetailFont;
 	
+	IDetailLayoutBuilder* CachedDetailBuilder = nullptr;
+
+	TSharedPtr<IPropertyHandle> CachedCharacterArrayPropertyHandle;
+	
 public:
 	static TSharedRef<IDetailCustomization> MakeInstance()
 	{
@@ -50,7 +54,7 @@ protected:
 
 	FReply OnClicked_PopulateFromParent() const;
 	
-	void ProcessCategory(IDetailCategoryBuilder& Category) const;
+	void ProcessCategory(IDetailCategoryBuilder& Category, IDetailLayoutBuilder& DetailBuilder);
 	
 private:
 	FText GetDeletedTagsText(const TArray<FName>& TagNamesToDelete);

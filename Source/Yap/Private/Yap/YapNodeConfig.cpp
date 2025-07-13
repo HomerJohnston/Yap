@@ -23,6 +23,10 @@ FGameplayTagContainer FYapNodeConfigGroup_MoodTags::GetAllMoodTags()
 UYapNodeConfig::UYapNodeConfig()
 {
     General.AllowableNodeTypes = static_cast<int32>(EYapDialogueNodeType::COUNT) - 1;
+
+    void(UYapNodeConfig::*X)(const FGameplayTag& MoodTag) = &UYapNodeConfig::BuildIcon;
+
+    AddGameplayTagFilter(GET_MEMBER_NAME_CHECKED(ThisClass, MoodTags.DefaultMoodTag), &UYapNodeConfig::GetMoodTagsRoot);
 }
 
 #if WITH_EDITOR
@@ -125,6 +129,38 @@ const FSlateBrush* UYapNodeConfig::GetMoodTagBrush(FGameplayTag Name) const
 }
 #endif
 
+#if WITH_EDITOR
+bool UYapNodeConfig::CanEditChange(const FProperty* InProperty) const
+{
+    bool bSuper = Super::CanEditChange(InProperty);
+
+    if (!bSuper)
+    {
+        return false;
+    }
+
+    TSet<FName> MoodTagPropertyNames =
+    {
+        GET_MEMBER_NAME_CHECKED(FYapNodeConfigGroup_MoodTags, DefaultMoodTag),
+        GET_MEMBER_NAME_CHECKED(FYapNodeConfigGroup_MoodTags, EditorIconsPath),
+    };
+    
+    if (MoodTagPropertyNames.Contains(InProperty->GetFName()))
+    {
+        return MoodTags.MoodTagsRoot.IsValid();
+    }
+
+    return true;
+}
+#endif
+
+#if WITH_EDITOR
+bool UYapNodeConfig::CanEditChange(const FEditPropertyChain& PropertyChain) const
+{
+    return UObject::CanEditChange(PropertyChain);
+}
+#endif
+
 TArray<FString>& UYapNodeConfig::GetDefaultMoodTags()
 {
     static TArray<FString> Tags
@@ -148,6 +184,13 @@ TArray<FString>& UYapNodeConfig::GetDefaultMoodTags()
 
     return Tags;
 }
+
+#if WITH_EDITOR
+const FGameplayTag& UYapNodeConfig::GetMoodTagsRoot() const
+{
+    return MoodTags.MoodTagsRoot; 
+}
+#endif
 
 #if WITH_EDITOR
 FText UYapNodeConfig::GetTalkModeTitle() const

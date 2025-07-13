@@ -832,7 +832,7 @@ FText SFlowGraphNode_YapDialogueWidget::Text_NodeHeader() const
 
 FText SFlowGraphNode_YapDialogueWidget::Text_GroupLabel() const
 {
-	return GetFlowYapDialogueNode()->GetNodeConfig().General.GraphTitle;
+	return GetFlowYapDialogueNode()->GetNodeConfig().General.NodeLabel;
 }
 
 // ------------------------------------------------------------------------------------------------

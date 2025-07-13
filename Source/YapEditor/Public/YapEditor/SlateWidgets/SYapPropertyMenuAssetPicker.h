@@ -13,6 +13,7 @@
 
 class UFactory;
 
+// This is a copy of SPropertyEditorAssetPicker, but with some slight tweaks to allow for properly filtering multiple assets. It's possible to select either blueprints or assets with this.
 class SYapPropertyMenuAssetPicker : public SCompoundWidget
 {
 public:

@@ -7,7 +7,9 @@
 #include "Widgets/Colors/SColorBlock.h"
 #include "Yap/YapCharacterDefinition.h"
 #include "Yap/YapProjectSettings.h"
+#include "Yap/Interfaces/IYapCharacterInterface.h"
 #include "YapEditor/YapEditorColor.h"
+#include "YapEditor/SlateWidgets/SYapPropertyMenuAssetPicker.h"
 
 #define LOCTEXT_NAMESPACE "YapEditor"
 
@@ -79,7 +81,38 @@ void FPropertyCustomization_YapCharacterDefinition::CustomizeHeader(TSharedRef<I
             .VAlign(VAlign_Center)
             .HAlign(HAlign_Fill)
             [
-                AssetPropertyHandle->CreatePropertyValueWidgetWithCustomization(nullptr)
+                // AssetPropertyHandle->CreatePropertyValueWidgetWithCustomization(nullptr)
+                
+                SNew(SYapPropertyMenuAssetPicker)
+                .OnShouldFilterAsset_Lambda( [] (const FAssetData& AssetData)
+                {
+                    const UClass* Class = AssetData.GetClass();
+
+                    if (!Class)
+                    {
+                        return true;
+                    }
+				
+                    if (Class->ImplementsInterface(UYapCharacterInterface::StaticClass()))
+                    {
+                        return false;
+                    }
+
+                    if (Class->IsChildOf(UBlueprint::StaticClass()))
+                    {
+                        const UBlueprint* BlueprintAsset = Cast<UBlueprint>(AssetData.GetAsset());
+
+                        if (BlueprintAsset && BlueprintAsset->GeneratedClass->ImplementsInterface(UYapCharacterInterface::StaticClass()))
+                        {
+                            return false;
+                        }
+                    }
+
+                    return true;
+                })
+                .AllowClear(true)
+                .InitialObject(CharacterDefinition->CharacterAsset.LoadSynchronous())
+                .OnSet(this, &FPropertyCustomization_YapCharacterDefinition::OnSetNewCharacterAsset)
             ]
         ]
         + SHorizontalBox::Slot()
@@ -107,7 +140,7 @@ void FPropertyCustomization_YapCharacterDefinition::CustomizeChildren(TSharedRef
 
 FLinearColor FPropertyCustomization_YapCharacterDefinition::AssetStatusColor(FYapCharacterDefinition* CharacterDefinition) const
 {
-    if (CharacterDefinition->ErrorState == EYapCharacterDefinitionErrorState::AssetConflict)
+    if ((CharacterDefinition->ErrorState & EYapCharacterDefinitionErrorState::AssetConflict) != EYapCharacterDefinitionErrorState::OK)
     {
         return ErrorColor();
     }
@@ -122,7 +155,7 @@ FLinearColor FPropertyCustomization_YapCharacterDefinition::AssetStatusColor(FYa
 
 FLinearColor FPropertyCustomization_YapCharacterDefinition::TagStatusColor(FYapCharacterDefinition* CharacterDefinition) const
 {
-    if (CharacterDefinition->ErrorState == EYapCharacterDefinitionErrorState::TagConflict)
+    if ((CharacterDefinition->ErrorState & EYapCharacterDefinitionErrorState::TagConflict) != EYapCharacterDefinitionErrorState::OK)
     {
         return ErrorColor();
     }
@@ -140,6 +173,11 @@ FLinearColor FPropertyCustomization_YapCharacterDefinition::TagStatusColor(FYapC
     }
 
     return OKColor();
+}
+
+void FPropertyCustomization_YapCharacterDefinition::OnSetNewCharacterAsset(const FAssetData& AssetData) const
+{
+    
 }
 
 FLinearColor FPropertyCustomization_YapCharacterDefinition::ErrorColor()

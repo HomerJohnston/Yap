@@ -7,8 +7,8 @@
 #include "GameplayTagContainer.h"
 #include "YapCharacterDefinition.h"
 #include "YapNodeConfig.h"
-#include "Yap/Enums/YapTimeMode.h"
 #include "Yap/YapBroker.h"
+#include "Yap/GameplayTagFilterHelper.h"
 
 #include "YapProjectSettings.generated.h"
 
@@ -19,15 +19,8 @@ enum class EYapMissingAudioErrorLevel : uint8;
 
 #define LOCTEXT_NAMESPACE "Yap"
 
-enum class EYap_TagFilter : uint8
-{
-	Conditions,
-	Prompts,
-	Characters,
-};
-
 UCLASS(Config = Game, DefaultConfig, DisplayName = "Yap")
-class YAP_API UYapProjectSettings : public UDeveloperSettings
+class YAP_API UYapProjectSettings : public UDeveloperSettings, public FGameplayTagFilterHelper<UYapProjectSettings>
 {
 	GENERATED_BODY()
 
@@ -68,10 +61,6 @@ protected:
 	UPROPERTY(Config, EditAnywhere, Category = "Core", meta = (AllowAbstract))
 	TArray<TSoftClassPtr<UObject>> AudioAssetClasses;
 	
-	/** By default, Yap will discover all native C++ classes that inherit the Yap Character interface. You can add blueprint classes which inherit it here. This avoids forcefully loading all assets to discover them. */
-	UPROPERTY(Config, EditAnywhere, Category = "Core", meta = (AllowAbstract))
-	TArray<TSoftClassPtr<UObject>> AdditionalCharacterClasses;
-
 	UPROPERTY(Config, EditAnywhere, Category = "Core")
 	TSoftObjectPtr<UYapNodeConfig> DefaultNodeConfig;
 	
@@ -86,21 +75,20 @@ protected:
 	bool bPreventCachingAudioLength = false;
 
 	/** This is used when setting AutoAdvanceToPromptNodes is enabled; the graph will attempt to search through these nodes for Prompt nodes. */
-	UPROPERTY(Config, EditAnywhere, Category = "Editor")
-	TArray<TSubclassOf<UFlowNode>> PassThroughNodeTypes;
+	//UPROPERTY(Config, EditAnywhere, Category = "Editor")
+	//TArray<TSubclassOf<UFlowNode>> PassThroughNodeTypes;
 
 	/** This is used when setting AutoAdvanceToPromptNodes is enabled; the graph will only recursively visit this many child nodes looking for Prompt nodes. */
-	UPROPERTY(Config, EditAnywhere, Category = "Editor")
-	int32 MaxPassthroughSearchDepth = 2;
+	//UPROPERTY(Config, EditAnywhere, Category = "Editor")
+	//int32 MaxPassthroughSearchDepth = 2;
+
+	/** Placeholder. This does nothing for now. */
+	UPROPERTY(Config, EditAnywhere, Category = "Editor", meta = (EditCondition = "false"))
+	bool bPromptRequiresTalkAndAdvance = false;
 	
 	// - - - - - GRAPH APPEARANCE - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 #if WITH_EDITORONLY_DATA
-	// TODO: replace my start/end pins with N timed pins instead? To kick off stuff at any time through a dialogue?
-	/** Turn off to hide the On Start / On End pin-buttons, useful if you want a simpler graph without these features. */
-	UPROPERTY(Config, EditAnywhere, Category = "Flow Graph Settings")
-	bool bHidePinEnableButtons = false;
-	
 	/** Controls how large the portrait widgets are in the graph. Sizes smaller than 64 will result in some odd slate snapping. */
 	UPROPERTY(Config, EditAnywhere, Category = "Flow Graph Settings", meta = (ClampMin = 64, ClampMax = 128, UIMin = 32, UIMax = 128, Multiple = 16))
 	int32 PortraitSize = 64;
@@ -128,7 +116,9 @@ protected:
 
 	// - - - - - OTHER - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
-	/** Optional setting. You should only set this if all of your characters are under a common root tag. Setting this will filter character tag selectors elsewhere in Yap. */
+	/** Optional. Setting this will helpfully filter character tag selectors.
+	 *  NOTE:You will need to close and reopen the project settings window for changes to this to take effect.
+	 */
 	UPROPERTY(Config, EditAnywhere, Category = "Characters", DisplayName = "Root Tag")
 	FGameplayTag CharacterTagRoot;
 	
@@ -139,6 +129,10 @@ protected:
 	// Not exposed for editing, this is updated automatically whenever the character array is edited. Game code actually uses this as the character source. 
 	TMap<FGameplayTag, TSoftObjectPtr<UObject>> CharacterMap;
 	
+	/** By default, Yap will discover all native C++ classes that inherit the Yap Character interface. You can add blueprint classes which inherit it here. This avoids forcefully loading all assets to discover them. */
+	UPROPERTY(Config, EditAnywhere, Category = "Core", meta = (AllowAbstract, DisplayName = "Character Classes"))
+	TArray<TSoftClassPtr<UObject>> AdditionalCharacterClasses;
+
 	// ============================================================================================
 	// STATE
 	// ============================================================================================
@@ -146,10 +140,10 @@ protected:
 
 #if WITH_EDITORONLY_DATA
 	/**  */
-	TMap<EYap_TagFilter, FGameplayTag*> TagContainers;
+	//TMap<EYap_TagFilter, FGameplayTag*> TagContainers;
 	
 	/** A registered property name (FName) will get bound to a map of classes and the type of tag filter to use for it */
-	TMultiMap<FName, TMap<UClass*, EYap_TagFilter>> TagFilterSubscriptions;
+	//TMultiMap<FName, TMap<UClass*, EYap_TagFilter>> TagFilterSubscriptions;
 #endif
 	
 	// ------------------------------------------
@@ -220,12 +214,10 @@ public:
 	static float GetDialogueTimeSliderMax() { return Get().DialogueTimeSliderMax; }
 
 	static float GetFragmentPaddingSliderMax() { return Get().PaddingTimeSliderMax; }
-	
-	static bool ShowPinEnableButtons()  { return !Get().bHidePinEnableButtons; }
-	
-	static void RegisterTagFilter(UObject* ClassSource, FName PropertyName, EYap_TagFilter Filter);
+		
+	//static void RegisterTagFilter(UObject* ClassSource, FName PropertyName, EYap_TagFilter Filter);
 
-	static FString GetTrimmedGameplayTagString(EYap_TagFilter Filter, const FGameplayTag& PropertyTag);
+	//static FString GetTrimmedGameplayTagString(EYap_TagFilter Filter, const FGameplayTag& PropertyTag);
 
 protected:
 	void OnGetCategoriesMetaFromPropertyHandle(TSharedPtr<IPropertyHandle> PropertyHandle, FString& MetaString) const;

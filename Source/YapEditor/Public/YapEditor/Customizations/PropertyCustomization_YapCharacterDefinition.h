@@ -25,7 +25,6 @@ protected:
     // OVERRIDES ----------------------------------------------------------------------------------
 
 protected:
-    
     void CustomizeHeader(TSharedRef<IPropertyHandle> StructPropertyHandle, FDetailWidgetRow& HeaderRow, IPropertyTypeCustomizationUtils& StructCustomizationUtils) override;
 
     void CustomizeChildren(TSharedRef<IPropertyHandle> StructPropertyHandle, IDetailChildrenBuilder& StructBuilder, IPropertyTypeCustomizationUtils& StructCustomizationUtils) override;
@@ -36,6 +35,9 @@ protected:
     
     FLinearColor TagStatusColor(FYapCharacterDefinition* CharacterDefinition) const;
 
+    
+    void OnSetNewCharacterAsset(const FAssetData& AssetData) const;
+
 protected:
 
     static FLinearColor ErrorColor();
@@ -45,4 +47,5 @@ protected:
     static FLinearColor OKColor();
 
     static FLinearColor TagNotInParentColor();
+
 };

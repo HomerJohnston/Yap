@@ -45,7 +45,7 @@ UFlowNode_YapDialogue::UFlowNode_YapDialogue()
 
 #if WITH_EDITOR
 	// TODO use the subsystem to manage crap like this
-	UYapProjectSettings::RegisterTagFilter(this, GET_MEMBER_NAME_CHECKED(ThisClass, DialogueTag), EYap_TagFilter::Prompts);
+	//UYapProjectSettings::RegisterTagFilter(this, GET_MEMBER_NAME_CHECKED(ThisClass, DialogueTag), EYap_TagFilter::Prompts);
 	
 	if (IsTemplate())
 	{
@@ -1410,11 +1410,13 @@ void UFlowNode_YapDialogue::OnFilterGameplayTagChildren(const FString& String, T
 	
 	const FGameplayTagContainer& ParentTagContainer = ParentTagNode->GetSingleTagContainer();
 
+	/*
 	if (ParentTagContainer.HasTagExact(GetNodeConfig().GetDialogueTagsParent()))
 	{
 		bArg = true;
 	}
-
+	*/
+	
 	bArg = false;
 }
 #endif

@@ -13,7 +13,7 @@
 UFlowNode_YapReplaceFragment::UFlowNode_YapReplaceFragment()
 {
 #if WITH_EDITOR
-	UYapProjectSettings::RegisterTagFilter(this, GET_MEMBER_NAME_CHECKED(ThisClass, TargetFragmentTag), EYap_TagFilter::Prompts);
+	//UYapProjectSettings::RegisterTagFilter(this, GET_MEMBER_NAME_CHECKED(ThisClass, TargetFragmentTag), EYap_TagFilter::Prompts);
 
 	if (IsTemplate())
 	{

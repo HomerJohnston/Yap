@@ -49,7 +49,7 @@ public class Yap : ModuleRules
 				"Engine",
 				"Slate",
 				"SlateCore",
-				"DeveloperSettings",
+				"DeveloperSettings", 
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);

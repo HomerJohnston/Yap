@@ -19,25 +19,15 @@ TMap<TSoftObjectPtr<UObject>, FGameplayTag> UYapProjectSettings::ReversedCharact
 
 UYapProjectSettings::UYapProjectSettings()
 {
-#if WITH_EDITORONLY_DATA
-	TagContainers =
-	{
-		//{ EYap_TagFilter::Prompts, &DefaultGroup.DialogueTagsParent }
-		{ EYap_TagFilter::Characters, &CharacterTagRoot }
-	};
-#endif
-
 	DefaultAssetAudioClasses = { USoundBase::StaticClass() };
 
 	DefaultCharacterClasses = { UYapCharacterAsset::StaticClass() };
 
 	UGameplayTagsManager& TagsManager = UGameplayTagsManager::Get();
-		
+	
 	DefaultPortraitTexture = FSoftObjectPath("/Yap/T_Avatar_Missing.T_Avatar_Missing");
 
-#if WITH_EDITOR
-	TagsManager.OnGetCategoriesMetaFromPropertyHandle.AddUObject(this, &ThisClass::OnGetCategoriesMetaFromPropertyHandle);
-#endif
+	AddGameplayTagFilterStatic("CharacterArray.CharacterTag", &UYapProjectSettings::GetCharacterTagParent);
 }
 
 #if WITH_EDITOR
@@ -133,70 +123,17 @@ void UYapProjectSettings::UpdateReversedCharacterMap()
 		Get().ReversedCharacterMap.Add(Pair.Value, Pair.Key);
 	}
 }
-
-void UYapProjectSettings::RegisterTagFilter(UObject* ClassSource, FName PropertyName, EYap_TagFilter Filter)
-{
-	TMap<UClass*, EYap_TagFilter>& ClassFiltersForProperty = Get().TagFilterSubscriptions.FindOrAdd(PropertyName);
-
-	ClassFiltersForProperty.Add(ClassSource->GetClass(), Filter);
-}
 #endif
-
-#if WITH_EDITOR
-void UYapProjectSettings::OnGetCategoriesMetaFromPropertyHandle(TSharedPtr<IPropertyHandle> PropertyHandle, FString& MetaString) const
-{
-	if (!PropertyHandle)
-	{
-		return;
-	}
-
-	TArray<UObject*> OuterObjects;
-	PropertyHandle->GetOuterObjects(OuterObjects);
-
-	for (const UObject* PropertyOuter : OuterObjects)
-	{
-		if (PropertyOuter != this)
-		{
-			continue;
-		}
-
-		//static const FName CharacterTagRootName = GET_MEMBER_NAME_CHECKED(ThisClass, CharacterTagRoot);
-		
-		if (PropertyHandle->GetProperty()->GetFName() == "CharacterTag")
-		{
-			MetaString = CharacterTagRoot.ToString();			
-		}
-	}
-	
-	/*
-	const TMap<UClass*, EYap_TagFilter>* ClassFilters = TagFilterSubscriptions.Find(PropertyHandle->GetProperty()->GetFName());
-
-	if (!ClassFilters)
-	{
-		return;
-	}
-
-	TArray<UObject*> OuterObjects;
-	PropertyHandle->GetOuterObjects(OuterObjects);
-
-	for (const UObject* PropertyOuter : OuterObjects)
-	{
-		const EYap_TagFilter* Filter = ClassFilters->Find(PropertyOuter->GetClass());
-
-		if (!Filter)
-		{
-			continue;
-		}
-
-		MetaString = TagContainers[*Filter]->ToString();
-	}
-	*/
-}
 
 void UYapProjectSettings::PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent)
 {
 	static FName CharacterArrayName = GET_MEMBER_NAME_CHECKED(ThisClass, CharacterArray);
-
+	static FName CharacterTagRootName = GET_MEMBER_NAME_CHECKED(ThisClass, CharacterTagRoot);
+	
+	if (PropertyChangedEvent.GetPropertyName() == CharacterTagRootName)
+	{
+	}
+	
 	if (PropertyChangedEvent.GetPropertyName() == CharacterArrayName || PropertyChangedEvent.GetMemberPropertyName() == CharacterArrayName)
 	{
 		if (PropertyChangedEvent.ChangeType != EPropertyChangeType::ArrayMove)
@@ -212,7 +149,7 @@ void UYapProjectSettings::PostLoad()
 {
 	Super::PostLoad();
 	
-	UYapProjectSettings::RegisterTagFilter(this, GET_MEMBER_NAME_CHECKED(ThisClass, CharacterTagRoot), EYap_TagFilter::Characters);
+	//UYapProjectSettings::RegisterTagFilter(this, GET_MEMBER_NAME_CHECKED(ThisClass, CharacterTagRoot), EYap_TagFilter::Characters);
 }
 
 void UYapProjectSettings::PostInitProperties()
@@ -269,11 +206,11 @@ void UYapProjectSettings::ProcessCharacterArray(bool bUpdateMap)
 	for (int32 i = 0; i < CharacterArray.Num(); ++i)
 	{
 		FYapCharacterDefinition& CharacterDefinition = CharacterArray[i];
-
+		
 		bool bAddToMap = true;
-
+		
 		CharacterDefinition.ErrorState = EYapCharacterDefinitionErrorState::OK;
-
+		
 		if (!CharacterDefinition.CharacterTag.IsValid())
 		{
 			bAddToMap = false;
@@ -305,6 +242,7 @@ void UYapProjectSettings::ProcessCharacterArray(bool bUpdateMap)
 	}
 }
 
+#if WITH_EDITOR
 void UYapProjectSettings::RebuildCharacterMap()
 {
 	Modify();
@@ -312,26 +250,6 @@ void UYapProjectSettings::RebuildCharacterMap()
 	ProcessCharacterArray(true);
 	
 	TryUpdateDefaultConfigFile();
-}
-#endif
-
-#if WITH_EDITOR
-// TODO someone posted a nicer way to do this in Slackers without this... something about simple name? using the node?? can't remember
-FString UYapProjectSettings::GetTrimmedGameplayTagString(EYap_TagFilter Filter, const FGameplayTag& PropertyTag)
-{
-	const FGameplayTag& ParentContainer = *Get().TagContainers[Filter];
-	
-	if (ParentContainer.IsValid() && ParentContainer != FGameplayTag::EmptyTag && PropertyTag.MatchesTag(ParentContainer))
-	{
-		return PropertyTag.ToString().RightChop(ParentContainer.ToString().Len() + 1);
-	}
-
-	if (PropertyTag == FGameplayTag::EmptyTag)
-	{
-		return "";
-	}
-	
-	return PropertyTag.ToString();
 }
 #endif
 

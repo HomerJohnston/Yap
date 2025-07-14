@@ -882,40 +882,9 @@ FReply SYapDialogueEditor::OnClicked_AudioPreviewWidget(const TSoftObjectPtr<UOb
 		return FReply::Handled();
 	}
 
-	const UYapBroker* BrokerCDO = UYapProjectSettings::GetEditorBrokerDefault();
+	const UYapBroker& Broker = UYapSubsystem::GetBroker_Editor();
 
-	if (IsValid(BrokerCDO))
-	{
-		if (BrokerCDO->ImplementsPreviewAudioAsset_Internal())
-		{
-			bool bResult = BrokerCDO->PreviewAudioAsset_Internal(Object->LoadSynchronous());
-
-			if (!bResult)
-			{
-				Yap::EditorFuncs::PostNotificationInfo_Warning
-				(
-					LOCTEXT("AudioPreview_UnknownWarning_Title", "Cannot Play Audio Preview"),
-					LOCTEXT("AudioPreview_UnknownWarning_Description", "Unknown error!")
-				);
-			}
-		}
-		else
-		{
-			Yap::EditorFuncs::PostNotificationInfo_Warning
-			(
-				LOCTEXT("AudioPreview_BrokerPlayFunctionMissingWarning_Title", "Cannot Play Audio Preview"),
-				LOCTEXT("AudioPreview_BrokerPlayFunctionMissingWarning_Description", "Your Broker Class must implement the \"PlayDialogueAudioAssetInEditor\" function.")
-			);
-		}
-	}
-	else
-	{
-		Yap::EditorFuncs::PostNotificationInfo_Warning
-		(
-			LOCTEXT("AudioPreview_BrokerPlayFunctionMissingWarning_Title", "Cannot Play Audio Preview"),
-			LOCTEXT("AudioPreview_BrokerMissingWarning_Description", "Yap Broker class missing - you must set a Yap Broker class in project settings.")
-		);
-	}
+	(void)Broker.PreviewAudioAsset(Object->LoadSynchronous());
 	
 	return FReply::Handled();
 }

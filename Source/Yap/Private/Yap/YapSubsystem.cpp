@@ -152,15 +152,34 @@ UYapCharacterComponent* UYapSubsystem::FindCharacterComponent(UWorld* World, FGa
 
 // ------------------------------------------------------------------------------------------------
 
-UYapBroker* UYapSubsystem::GetBroker(UObject* WorldContext)
-{
-	UYapBroker* Broker = Get(WorldContext->GetWorld())->Broker;
-
 #if WITH_EDITOR
-	ensureMsgf(IsValid(Broker), TEXT("Conversation Broker is invalid. Did you create one and assign it in project settings? Docs: https://github.com/HomerJohnston/UE-FlowYap/wiki/Conversation-Broker"));
+const UYapBroker& UYapSubsystem::GetBroker_Editor()
+{
+	// During play, use GEditor to get the broker normally
+	if (GEditor && GEditor->IsPlaySessionInProgress())
+	{
+		return GetBroker(GEditor->PlayWorld);
+	}
+
+	// Outside of play, get a default instance of the broker class
+	TSubclassOf<UYapBroker> BrokerClass = UYapProjectSettings::GetBrokerClass();
+
+	return *BrokerClass.GetDefaultObject();
+}
 #endif
+
+UYapBroker& UYapSubsystem::GetBroker(UObject* WorldContext)
+{
+	UYapSubsystem* Instance = Get(WorldContext);
 	
-	return Broker;		
+	if (!IsValid(Instance->Broker))
+	{
+		TSubclassOf<UYapBroker> BrokerClass = UYapProjectSettings::GetBrokerClass();
+		
+		Instance->Broker = NewObject<UYapBroker>(Instance, BrokerClass);
+	}
+
+	return *Instance->Broker;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -174,16 +193,9 @@ EYapMaturitySetting UYapSubsystem::GetCurrentMaturitySetting(UWorld* World)
 		return EYapMaturitySetting::Mature;
 	}
 	
-	UYapBroker* Broker = GetBroker(World);
+	UYapBroker& Broker = GetBroker(World);
 
-	if (ensureMsgf(IsValid(Broker), TEXT("No broker set in project settings! Defaulting to mature.")))
-	{
-		MaturitySetting = Broker->GetMaturitySetting();
-	}
-	else
-	{
-		MaturitySetting = EYapMaturitySetting::Mature;
-	}	
+	MaturitySetting = Broker.GetMaturitySetting();
 
 	// Something went wrong... we will hard-code default to mature.
 	if (MaturitySetting == EYapMaturitySetting::Unspecified)
@@ -808,13 +820,7 @@ void UYapSubsystem::UnregisterSpeechHandle(FYapSpeechHandle& Handle)
 
 void UYapSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
-	// TODO handle null unset values
-	TSubclassOf<UYapBroker> BrokerClass = UYapProjectSettings::GetBrokerClass().LoadSynchronous();
-
-	if (BrokerClass)
-	{
-		Broker = NewObject<UYapBroker>(this, BrokerClass);
-	}
+	Broker = NewObject<UYapBroker>(this, UYapProjectSettings::GetBrokerClass());
 
 	bGetGameMaturitySettingWarningIssued = false;
 

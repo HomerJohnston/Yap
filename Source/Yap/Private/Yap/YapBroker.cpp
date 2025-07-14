@@ -194,6 +194,30 @@ thread_local bool bSuppressPreviewAudioAssetWarning = false;
 
 bool UYapBroker::PreviewAudioAsset(const UObject* AudioAsset) const
 {
+	/*
+	if (ImplementsPreviewAudioAsset_Internal())
+	{
+		bool bResult = PreviewAudioAsset_Internal(AudioAsset);
+
+		if (!bResult)
+		{
+			Yap::Editor::PostNotificationInfo_Warning
+			(
+				LOCTEXT("AudioPreview_UnknownWarning_Title", "Cannot Play Audio Preview"),
+				LOCTEXT("AudioPreview_UnknownWarning_Description", "Unknown error!")
+			);
+		}
+	}
+	else
+	{
+		Yap::Editor::PostNotificationInfo_Warning
+		(
+			LOCTEXT("AudioPreview_BrokerPlayFunctionMissingWarning_Title", "Cannot Play Audio Preview"),
+			LOCTEXT("AudioPreview_BrokerPlayFunctionMissingWarning_Description", "Your Broker Class must implement the \"PlayDialogueAudioAssetInEditor\" function.")
+		);
+	}
+	*/
+
 	if (UYapProjectSettings::HasCustomAudioAssetClasses())
 	{
 		bool bShowUnimplementedWarning = true; // TODO true if audio classes aren't set to default unreal classes, false otherwise?

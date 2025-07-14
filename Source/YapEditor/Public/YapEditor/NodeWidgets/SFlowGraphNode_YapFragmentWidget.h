@@ -241,13 +241,11 @@ protected:
 	FReply					OnClicked_DirectedAtWidget();
 	TSharedRef<SWidget>		PopupContentGetter_DirectedAtWidget();
 	const FSlateBrush*		Image_DirectedAtWidget()const;
-	void					OnSetNewDirectedAtAsset(const FAssetData& AssetData);
 	
 	// ------------------------------------------
 
 	void OnTextChanged_CharacterSelectorFilter(const FText& Text, TSharedRef<SScrollBox> ScrollBox);
 	TSharedRef<SWidget>		PopupContentGetter_SpeakerWidget(const UObject* Character);
-	void					UpdateCharacterSelector(FText FilterText, TSharedPtr<SScrollBox> CharacterList);
 	void					OnSetNewSpeakerAsset(const FAssetData& AssetData);
 
 	// TODO lol wtf do I call this? Can I stop using it? It's in use to allow me to focus on the character search input after i popup my character selector.

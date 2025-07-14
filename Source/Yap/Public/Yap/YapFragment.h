@@ -217,6 +217,8 @@ public:
 	void PreloadContent(UWorld* World, EYapMaturitySetting MaturitySetting, EYapLoadContext LoadContext);
 	
 	const FGameplayTag& GetSpeakerTag() const;
+	
+	const FGameplayTag& GetDirectedAtTag() const;
 
 	const UObject* GetSpeakerCharacter(EYapLoadContext LoadContext); // Non-const because of async loading handle
 

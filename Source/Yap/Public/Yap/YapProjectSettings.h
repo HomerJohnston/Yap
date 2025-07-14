@@ -171,16 +171,12 @@ public:
 
 	static bool GetSuppressBrokerWarnings() { return Get().bSuppressBrokerWarnings; }
 
-	static const TSoftClassPtr<UYapBroker>& GetBrokerClass() { return Get().BrokerClass; }
-	
+	static const TSubclassOf<UYapBroker> GetBrokerClass();
+
 	static const TArray<TSoftClassPtr<UObject>>& GetAudioAssetClasses();
 
 	static const TSoftObjectPtr<UYapNodeConfig>& GetDefaultNodeConfig() { return Get().DefaultNodeConfig; }
 	
-#if WITH_EDITOR
-	static const UYapBroker* GetEditorBrokerDefault();
-#endif
-
 	static const TArray<const UClass*> GetAllowableCharacterClasses();
 
 	static const TArray<FYapCharacterDefinition>& GetCharacterDefinitions() { return Get().CharacterArray; }

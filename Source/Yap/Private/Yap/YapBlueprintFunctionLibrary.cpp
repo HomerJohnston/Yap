@@ -9,6 +9,7 @@
 
 #include "Yap/YapCharacterAsset.h"
 #include "Yap/YapLog.h"
+#include "Yap/YapProjectSettings.h"
 #include "Yap/Handles/YapPromptHandle.h"
 #include "Yap/YapSubsystem.h"
 #include "Yap/Nodes/FlowNode_YapDialogue.h"
@@ -92,7 +93,18 @@ AActor* UYapBlueprintFunctionLibrary::FindYapCharacterActor(UObject* WorldContex
 	return Comp->GetOwner();
 }
 
-FYapSpeechHandle UYapBlueprintFunctionLibrary::K2_RunSpeech(TScriptInterface<IYapCharacterInterface> Speaker, TScriptInterface<IYapCharacterInterface> DirectedAt, FText DialogueText, float SpeechTime, UObject* DialogueAudioAsset, FGameplayTag MoodTag, FText TitleText, FGameplayTag Conversation, bool bSkippable, UObject* WorldContext)
+FYapSpeechHandle UYapBlueprintFunctionLibrary::K2_RunSpeech(
+	TScriptInterface<IYapCharacterInterface> Speaker,
+	FText DialogueText,
+	UObject* DialogueAudioAsset,
+	FGameplayTag MoodTag,
+	float SpeechTime,
+	FText TitleText,
+	TScriptInterface<IYapCharacterInterface> DirectedAt,
+	FGameplayTag Conversation,
+	bool bSkippable,
+	TSubclassOf<UFlowNode_YapDialogue> NodeType,
+	UObject* WorldContext)
 {
 	UObject* WCO = WorldContext ? WorldContext : Speaker.GetObject();
 
@@ -106,6 +118,24 @@ FYapSpeechHandle UYapBlueprintFunctionLibrary::K2_RunSpeech(TScriptInterface<IYa
 	
 	FYapSpeechHandle NewSpeechHandle = Subsystem->GetNewSpeechHandle(FGuid::NewGuid());
 
+	if (SpeechTime == 0.0f)
+	{
+		UYapBroker& Broker = UYapSubsystem::GetBroker(WCO);
+
+		if (DialogueAudioAsset)
+		{
+			SpeechTime = Broker.GetAudioAssetDuration(DialogueAudioAsset);
+		}
+		else
+		{
+			const UYapNodeConfig& Config = NodeType.GetDefaultObject()->GetNodeConfig();
+
+			int32 WordCount = Broker.CalculateWordCount(DialogueText);
+			int32 CharCount = DialogueText.ToString().Len();
+			SpeechTime = Broker.CalculateTextTime(WordCount, CharCount, Config);			
+		}
+	}
+	
 	FYapData_SpeechBegins SpeechData;
 	SpeechData.Speaker = Speaker;
 	SpeechData.DirectedAt = DirectedAt;
@@ -117,7 +147,7 @@ FYapSpeechHandle UYapBlueprintFunctionLibrary::K2_RunSpeech(TScriptInterface<IYa
 	SpeechData.Conversation = Conversation;
 	SpeechData.bSkippable = bSkippable;
 	
-	Subsystem->RunSpeech(SpeechData, UFlowNode_YapDialogue::StaticClass(), NewSpeechHandle);
+	Subsystem->RunSpeech(SpeechData, NodeType, NewSpeechHandle);
 
 	return NewSpeechHandle;
 }

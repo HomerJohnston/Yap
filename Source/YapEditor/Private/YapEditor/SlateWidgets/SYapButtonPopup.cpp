@@ -60,22 +60,29 @@ FReply SYapButtonPopup::OnClicked_Button()
 	{
 		return ButtonReply;
 	}
+
+	TSharedRef<SWidget> PopupContent = PopupContentGetter.Execute();
 	
-	SetMenuContent(PopupContentGetter.Execute());
+	SetMenuContent(PopupContent);
+
+	bool bShouldOpen = ShouldOpenDueToClick();
+	bool bIs = IsOpen();
 	
-	SetIsOpen(ShouldOpenDueToClick(), false);
+	SetIsOpen(bShouldOpen, true);
 	
 	if (IsOpen())
 	{
 		(void)OnOpened.ExecuteIfBound();
 
-		FSlateApplication::Get().SetKeyboardFocus(MenuContent);
+		FSlateApplication::Get().SetKeyboardFocus(PopupContent);
 	}
 
+	/*
 	if (!RunPostPopupDelegate())
 	{
 		ButtonReply.SetUserFocus(MenuContent.ToSharedRef(), EFocusCause::SetDirectly);
 	}
+	*/
 	
 	return ButtonReply;
 }

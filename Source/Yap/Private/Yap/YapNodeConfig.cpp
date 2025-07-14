@@ -26,7 +26,7 @@ UYapNodeConfig::UYapNodeConfig()
 
     void(UYapNodeConfig::*X)(const FGameplayTag& MoodTag) = &UYapNodeConfig::BuildIcon;
 
-    AddGameplayTagFilter(GET_MEMBER_NAME_CHECKED(ThisClass, MoodTags.DefaultMoodTag), &UYapNodeConfig::GetMoodTagsRoot);
+    AddGameplayTagFilter(GET_MEMBER_NAME_CHECKED(ThisClass, MoodTags.DefaultMoodTag), FGameplayTagFilterDelegate::CreateUObject(this, &ThisClass::GetMoodTagsRoot));
 }
 
 #if WITH_EDITOR

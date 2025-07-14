@@ -1136,6 +1136,13 @@ const FYapFragment& UFlowNode_YapDialogue::GetFragmentByIndex(uint8 Index) const
 	return Fragments[Index];
 }
 
+FYapFragment& UFlowNode_YapDialogue::GetFragmentMutableByIndex(uint8 Index)
+{
+	check(Fragments.IsValidIndex(Index));
+
+	return Fragments[Index];
+}
+
 void UFlowNode_YapDialogue::OnPromptChosen(UObject* Instigator, FYapPromptHandle Handle)
 {
 	UYapSubsystem::Get(GetWorld())->OnPromptChosen.RemoveDynamic(this, &ThisClass::OnPromptChosen);

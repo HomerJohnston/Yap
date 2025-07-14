@@ -51,11 +51,7 @@ protected:
 	UPROPERTY()
 	float ManualTime = 0;
 
-#if WITH_EDITORONLY_DATA
-	/** Whether the dialogue data of this bit can be edited. Dialogue should be locked after exporting a .PO file for translators to make it harder to accidentally edit source text. */
-	UPROPERTY()
-	bool bLocked = false;
-	
+#if WITH_EDITORONLY_DATA	
 	/** Optional field to type in extra localization comments. For .PO export these will be prepended with a #. symbol.*/
 	UPROPERTY()
 	FString DialogueLocalizationComments;
@@ -145,8 +141,6 @@ public:
 	void SetManualTime(float NewValue) { ManualTime = NewValue; }
 
 private:
-	void RecacheSpeakingTime();
-
 	void RecalculateTextWordCount(FText& Text, float& CachedTime);
 
 	void RecalculateAudioTime(TOptional<float>& CachedTime);

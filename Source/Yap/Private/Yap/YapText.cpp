@@ -4,6 +4,7 @@
 #include "Yap/YapText.h"
 
 #include "Yap/YapProjectSettings.h"
+#include "Yap/YapSubsystem.h"
 
 #if WITH_EDITOR
 void FYapText::Set(const FText& InText)
@@ -29,12 +30,9 @@ void FYapText::UpdateInternalWordCount()
 		return;
 	}
 	
-	const UYapBroker* Broker = UYapProjectSettings::GetEditorBrokerDefault();
+	const UYapBroker& Broker = UYapSubsystem::GetBroker_Editor();
 
-	if (IsValid(Broker))
-	{
-		NewWordCount = Broker->CalculateWordCount(Text);
-	}
+	NewWordCount = Broker.CalculateWordCount(Text);
 
 	if (NewWordCount < 0)
 	{

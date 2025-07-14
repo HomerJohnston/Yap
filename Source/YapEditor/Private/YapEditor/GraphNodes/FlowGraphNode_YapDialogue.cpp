@@ -9,6 +9,7 @@
 #include "Graph/FlowGraphUtils.h"
 #include "UObject/ObjectSaveContext.h"
 #include "Yap/YapProjectSettings.h"
+#include "Yap/YapSubsystem.h"
 #include "Yap/Nodes/FlowNode_YapDialogue.h"
 #include "YapEditor/YapEditorColor.h"
 #include "YapEditor/YapDialogueNodeCommands.h"
@@ -291,9 +292,9 @@ void UFlowGraphNode_YapDialogue::RandomizeAudioID()
 	
 	if (!GetYapDialogueNode()->GetDialogueTag().IsValid() && true /* // TODO UYapProjectSettings::GetGenerateDialogueNodeTags()*/)
 	{
-		const UYapBroker* Broker = UYapProjectSettings::GetEditorBrokerDefault();
+		const UYapBroker& Broker = UYapSubsystem::GetBroker_Editor();
 
-		FString Tag = Broker->GenerateDialogueAudioID(GetYapDialogueNode());
+		FString Tag = Broker.GenerateDialogueAudioID(GetYapDialogueNode());
 
 		GetYapDialogueNode()->AudioID = Tag;
 	}

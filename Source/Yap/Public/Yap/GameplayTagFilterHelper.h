@@ -1,5 +1,5 @@
-// Copyright Ghost Pepper Games, Inc. All Rights Reserved.
-// This work is MIT-licensed. Feel free to use it however you wish, within the confines of the MIT license. 
+// Originally written by Kyle Wilcox (HoJo/Homer Johnston), Ghost Pepper Games Inc.
+// This file is public domain.
 
 #pragma once
 
@@ -7,10 +7,12 @@
 #include "PackageTools.h"
 #include <type_traits>
 
+typedef TDelegate<const FGameplayTag&()> FGameplayTagFilterDelegate;
+
 /**
- * Use this copy-pastable header to make it easier to implement dynamic gameplay tag filters onto UObject properties.
- *
+ * - Use this copy-pastable header to make it easier to implement dynamic gameplay tag filters onto UObject properties.
  * - Inherit from this class, e.g.
+ *
  *      class UE_API UYourFancyObject : public UObject, public GameplayTagFilterHelper<UYourFancyObject>
  *      {
  *          UPROPERTY(...)
@@ -21,48 +23,33 @@
  *      }
  *
  * - In your constructor, register filters for any gameplay tag properties.
- *
+ * - When referencing sub-properties of structs or collections, use a dot to separate each level, e.g. MemberArray[6]->StructPropertyName would become MemberArray.StructPropertyName
+ * - The property path MUST originate from "ThisClass" so if it's nested you may not be able to use GET_MEMBER_NAME_CHECKED.
+ * - Example:
+ * 
  *      UYourFancyObject::UYourFancyObject()
  *      {
- *          AddGameplayTagFilter(GET_MEMBER_NAME_CHECKED(ThisClass, WeaponType), &UYourFancyObject::GetWeaponTypesRootTag);
- *          AddGameplayTagFilter("WeaponDefinitions.Thing", &UYourFancyObject::GetWeaponTypesRootTag);
+ *          AddGameplayTagFilter(GET_MEMBER_NAME_CHECKED(ThisClass, WeaponType), FGameplayTagFilterDelegate::CreateUObject(this, &ThisClass::GetWeaponTypesRootTag));
+ *          AddGameplayTagFilter("WeaponDefinitions.Thing", FGameplayTagFilterDelegate::CreateStatic(&ThisClass::GetWeaponTypesRootTag));
  *      }
- * 
- *  That's it!
  */
 template<typename T>
 class FGameplayTagFilterHelper
 {
-    // Internal
-    typedef const FGameplayTag& (T::*GameplayTagMemberFnPtr)() const;
-    typedef const FGameplayTag& (*GameplayTagStaticFnPtr)();
-
 public:
     /** Use this function to register filters */
-    void AddGameplayTagFilter(FName PropertyPath, GameplayTagMemberFnPtr Func)
+    void AddGameplayTagFilter(FName PropertyPath, FGameplayTagFilterDelegate Func)
     {
         #if WITH_EDITOR
         if (static_cast<T*>(this)->IsTemplate())
         {
-            RegisteredMemberFilters.Add(PropertyPath.ToString(), Func);
+            RegisteredFilters.Add(PropertyPath.ToString(), Func);
         }
         #endif
     }
-
-    /** Use this function to register filters */
-    void AddGameplayTagFilterStatic(FName PropertyPath, GameplayTagStaticFnPtr Func)
-    {
-#if WITH_EDITOR
-        if (static_cast<T*>(this)->IsTemplate())
-        {
-            RegisteredStaticFilters.Add(PropertyPath.ToString(), Func);
-        }
-#endif
-    }
     
     // Internal. Holds registered filters.
-    TMap<FString, GameplayTagMemberFnPtr> RegisteredMemberFilters;
-    TMap<FString, GameplayTagStaticFnPtr> RegisteredStaticFilters;
+    TMap<FString, FGameplayTagFilterDelegate> RegisteredFilters;
 
     // Internal. Registers the tag filter on startup using the CDO initialization.
     FGameplayTagFilterHelper()
@@ -145,24 +132,11 @@ public:
                         PropertyPath = PropertyPath.Left(ArrayMatcher.GetMatchBeginning()) + PropertyPath.Mid(ArrayMatcher.GetMatchEnding());
                     }
                     
-                    GameplayTagMemberFnPtr* FuncPtr = RegisteredMemberFilters.Find(PropertyPath);
+                    FGameplayTagFilterDelegate* FuncPtr = RegisteredFilters.Find(PropertyPath);
 
                     if (FuncPtr)
                     {
-                        const FGameplayTag& NewMetaString = std::invoke(*FuncPtr, *OuterAsTPtr);
-
-                        if (NewMetaString.IsValid())
-                        {
-                            MetaString = NewMetaString.ToString();
-                            return;
-                        }
-                    }
-
-                    GameplayTagStaticFnPtr* FuncPtrStatic = RegisteredStaticFilters.Find(PropertyPath);
-
-                    if (FuncPtrStatic)
-                    {
-                        const FGameplayTag& NewMetaString = (*FuncPtrStatic)();
+                        const FGameplayTag& NewMetaString = (*FuncPtr).Execute();
 
                         if (NewMetaString.IsValid())
                         {

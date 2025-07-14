@@ -132,41 +132,10 @@ TOptional<float> FYapBit::GetAudioTime(UObject* WorldContext, EYapLoadContext Lo
 	{
 		return NullOpt;
 	}
-	
-	UYapBroker* Broker = nullptr;
 
-#if WITH_EDITOR
-	if (GEditor && GEditor->IsPlayingSessionInEditor())
-	{
-		Broker = UYapSubsystem::GetBroker(GEditor->PlayWorld);
-	}
-	else
-	{
-		// This is running at editor time only
-		const TSoftClassPtr<UYapBroker>& BrokerClass = UYapProjectSettings::GetBrokerClass();
-	
-		if (BrokerClass.IsNull())
-		{
-			UE_LOG(LogYap, Warning, TEXT("No broker found in project settings! Cannot determine audio time!")); 
-			return NullOpt;
-		}
-		
-		if (!BrokerClass.IsNull())
-		{
-			Broker = BrokerClass.LoadSynchronous()->GetDefaultObject<UYapBroker>();
-		}
-	}
-#else
-	Broker = UYapSubsystem::GetBroker(WorldContext);
-#endif
+	const UYapBroker& Broker = UYapSubsystem::GetBroker_Editor(); 
 
-	if (!Broker)
-	{
-		UE_LOG(LogYap, Warning, TEXT("No broker found! Cannot determine audio time!")); 
-		return NullOpt;
-	}
-		
-	return Broker->GetAudioAssetDuration(GetAudioAsset<UObject>());
+	return Broker.GetAudioAssetDuration(GetAudioAsset<UObject>());
 }
 
 // --------------------------------------------------------------------------------------------
@@ -222,28 +191,15 @@ void FYapBit::SetDialogueText(const FText& NewText)
 // --------------------------------------------------------------------------------------------
 
 #if WITH_EDITOR
-void FYapBit::RecacheSpeakingTime()
-{
-	// TODO
-	//RecalculateTextWordCount(MatureDialogueText, CachedMatureWordCount);
-}
-#endif
-
-// --------------------------------------------------------------------------------------------
-
-#if WITH_EDITOR
 void FYapBit::RecalculateTextWordCount(FText& Text, float& CachedWordCount)
 {
 	int32 WordCount = -1;
 
 	if (UYapProjectSettings::CacheFragmentWordCountAutomatically())
 	{
-		const UYapBroker* Broker = UYapProjectSettings::GetEditorBrokerDefault();
+		const UYapBroker& Broker = UYapSubsystem::GetBroker_Editor();
 
-		if (IsValid(Broker))
-		{
-			WordCount = Broker->CalculateWordCount(Text);
-		}
+		WordCount = Broker.CalculateWordCount(Text);
 	}
 
 	if (WordCount < 0)
@@ -269,18 +225,9 @@ void FYapBit::SetDialogueAudioAsset(UObject* NewAudio)
 #if WITH_EDITOR
 void FYapBit::RecalculateAudioTime(TOptional<float>& CachedTime)
 {
-	const TSoftClassPtr<UYapBroker>& BrokerClass = UYapProjectSettings::GetBrokerClass();
+	const UYapBroker& Broker = UYapSubsystem::GetBroker_Editor();
 	
-	if (BrokerClass.IsNull())
-	{
-		UE_LOG(LogYap, Warning, TEXT("No audio time cache class found in project settings! Cannot set audio time!")); 
-		CachedTime.Reset();
-		return;
-	}
-	
-	UYapBroker* BrokerCDO = BrokerClass.LoadSynchronous()->GetDefaultObject<UYapBroker>();
-
-	float NewCachedTime = BrokerCDO->GetAudioAssetDuration(AudioAsset.LoadSynchronous());
+	float NewCachedTime = Broker.GetAudioAssetDuration(AudioAsset.LoadSynchronous());
 
 	if (NewCachedTime > 0)
 	{

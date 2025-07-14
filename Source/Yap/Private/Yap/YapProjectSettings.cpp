@@ -23,27 +23,12 @@ UYapProjectSettings::UYapProjectSettings()
 
 	DefaultCharacterClasses = { UYapCharacterAsset::StaticClass() };
 
-	UGameplayTagsManager& TagsManager = UGameplayTagsManager::Get();
-	
 	DefaultPortraitTexture = FSoftObjectPath("/Yap/T_Avatar_Missing.T_Avatar_Missing");
 
-	AddGameplayTagFilterStatic("CharacterArray.CharacterTag", &UYapProjectSettings::GetCharacterRootTag);
+	AddGameplayTagFilter("CharacterArray.CharacterTag", FGameplayTagFilterDelegate::CreateStatic(&UYapProjectSettings::GetCharacterRootTag));
 }
 
 #if WITH_EDITOR
-const UYapBroker* UYapProjectSettings::GetEditorBrokerDefault()
-{ 
-	TSoftClassPtr<UYapBroker> BrokerClass = UYapProjectSettings::GetBrokerClass();
-
-	if (BrokerClass.IsNull())
-	{
-		UE_LOG(LogYap, Error, TEXT("No broker class set! Set a Yap Broker class in project settings."));
-		return nullptr;
-	}
-
-	return BrokerClass.LoadSynchronous()->GetDefaultObject<UYapBroker>();
-}
-
 const TArray<const UClass*> UYapProjectSettings::GetAllowableCharacterClasses()
 {
 	TArray<const UClass*> Classes;
@@ -53,18 +38,8 @@ const TArray<const UClass*> UYapProjectSettings::GetAllowableCharacterClasses()
 	for (auto& ClassSoftPtr : Get().DefaultCharacterClasses)
 	{
 		UClass* LoadedClass = ClassSoftPtr.LoadSynchronous();
-		UE_LOG(LogTemp, Display, TEXT(":::::::::: %s"), *LoadedClass->GetFullName());
 		Classes.Add(LoadedClass);
 	}
-	
-	/*
-	for (auto& ClassSoftPtr : Get().AdditionalCharacterClasses)
-	{
-		UClass* LoadedClass = ClassSoftPtr.LoadSynchronous();
-		UE_LOG(LogTemp, Display, TEXT(":::::::::: %s"), *LoadedClass->GetFullName());
-		Classes.Add(LoadedClass);
-	}
-	*/
 
 	return Classes;
 }
@@ -95,6 +70,20 @@ TArray<const UClass*> UYapProjectSettings::GetCharacterClasses_SyncLoad()
 }
 */
 #endif
+
+const TSubclassOf<UYapBroker> UYapProjectSettings::GetBrokerClass()
+{
+	const TSoftClassPtr<UYapBroker> BrokerClassSoftPtr = Get().BrokerClass;
+
+	TSubclassOf<UYapBroker> BrokerClass = BrokerClassSoftPtr.LoadSynchronous();
+
+	if (BrokerClass == nullptr)
+	{
+		return UYapBroker::StaticClass();
+	}
+	
+	return BrokerClass;
+}
 
 const TArray<TSoftClassPtr<UObject>>& UYapProjectSettings::GetAudioAssetClasses()
 {

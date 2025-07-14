@@ -98,6 +98,11 @@ const FGameplayTag& FYapFragment::GetSpeakerTag() const
 	return Speaker;
 }
 
+const FGameplayTag& FYapFragment::GetDirectedAtTag() const
+{
+	return DirectedAt;
+}
+
 const UObject* FYapFragment::GetSpeakerCharacter(EYapLoadContext LoadContext)
 {
 	return GetCharacter_Internal(Speaker, SpeakerHandle, LoadContext);

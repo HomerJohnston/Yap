@@ -140,6 +140,11 @@ protected:
 	UPROPERTY(EditInstanceOnly)
 	TArray<FYapFragment> Fragments;
 
+	/** Whether the dialogue data of this bit can be edited. Dialogue should be locked after exporting a .PO file for translators to make it harder to accidentally edit source text. */
+	// Placeholder - not implemented yet
+	//UPROPERTY()
+	//bool bLocked = false;
+	
 	// ============================================================================================
 	// STATE
 	// ============================================================================================
@@ -307,6 +312,13 @@ public:
 	
 	int16 FindFragmentIndex(const FGuid& InFragmentGuid) const;
 
+	const FYapFragment& GetFragmentByIndex(uint8 Index) const;
+
+#if WITH_EDITOR
+	FYapFragment& GetFragmentMutableByIndex(uint8 Index);
+#endif
+
+	
 protected:
 	void TriggerSpeechStartPin(uint8 FragmentIndex);
 
@@ -318,7 +330,6 @@ protected:
 	
 	bool FragmentCanRun(uint8 FragmentIndex);
 	
-	const FYapFragment& GetFragmentByIndex(uint8 Index) const;
 	
 	UFUNCTION()
 	void OnPromptChosen(UObject* Instigator, FYapPromptHandle Handle);

@@ -260,7 +260,11 @@ public:
 	}
 	
 public:
-	static UYapBroker* GetBroker(UObject* WorldContext);
+#if WITH_EDITOR
+	static const UYapBroker& GetBroker_Editor();
+#endif
+	
+	static UYapBroker& GetBroker(UObject* WorldContext);
 	
 	static EYapMaturitySetting GetCurrentMaturitySetting(UWorld* World);
 

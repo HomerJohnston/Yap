@@ -42,6 +42,8 @@ void SYapDialogueEditor::Construct(const FArguments& InArgs)
 	FragmentIndex = InArgs._FragmentIndexIn;
 	bNeedsChildSafe = InArgs._bNeedsChildSafeIn;
 	Owner = InArgs._OwnerIn;
+	InitialFocusText = InArgs._InitialFocusText;
+	InitialFocusMaturity = InArgs._InitialFocusMaturity;
 	
     float Width = bNeedsChildSafe ? 500 : 600;
     
@@ -1039,13 +1041,46 @@ EYapMaturitySetting SYapDialogueEditor::GetDisplayMaturitySetting() const
 	{
 		return EYapMaturitySetting::Mature;
 	}
-	
+
 	return Owner->GetIsChildSafeCheckBoxHovered() ? EYapMaturitySetting::ChildSafe : EYapMaturitySetting::Mature;
 }
 
 const UYapNodeConfig& SYapDialogueEditor::GetNodeConfig() const
 {
 	return DialogueNode->GetNodeConfig();
+}
+
+FReply SYapDialogueEditor::OnFocusReceived(const FGeometry& MyGeometry, const FFocusEvent& InFocusEvent)
+{
+	switch (InitialFocusText)
+	{
+		case EYapTextType::Speech:
+		{
+			if (InitialFocusMaturity == EYapMaturitySetting::Mature)
+			{
+				SetFocus_MatureDialogue();
+			}
+			else
+			{
+				SetFocus_ChildSafeDialogue();
+			}
+			break;
+		}
+		case EYapTextType::TitleText:
+		{
+			if (InitialFocusMaturity == EYapMaturitySetting::Mature)
+			{
+				SetFocus_MatureTitleText();
+			}
+			else
+			{
+				SetFocus_ChildSafeTitleText();
+			}
+			break;
+		}
+	}
+	
+	return FReply::Handled();
 }
 
 void SYapDialogueEditor::SetFocus_MatureDialogue()

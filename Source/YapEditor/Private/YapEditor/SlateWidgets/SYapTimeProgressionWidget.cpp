@@ -43,7 +43,7 @@ void Draw(float Left, float Right, float MaxTime, float DownScaling, float GeoWi
 
 	float LeftPos = Left * GeoWidth;
 	float Width = (Right - Left) * GeoWidth;
-		
+	
 	FSlateDrawElement::MakeBox
 	(
 		OutDrawElements,

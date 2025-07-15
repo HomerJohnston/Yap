@@ -78,6 +78,8 @@ protected:
 	TArray<TSharedPtr<SFlowGraphNode_YapFragmentWidget>> FragmentWidgets;
 	
 	TSharedPtr<SYapConditionDetailsViewWidget> FocusedConditionWidget;
+
+	TSharedPtr<SWidget> AppendFragmentButton;
 	
 	double FocusedConditionWidgetStartTime = -1;
 	
@@ -174,9 +176,11 @@ protected:
 protected:
 	TSharedRef<SWidget> CreateContentFooter();
 
-	EVisibility			Visibility_BottomAddFragmentButton() const;
-	FReply				OnClicked_BottomAddFragmentButton();
-	EVisibility Visibility_AddonsSeparator() const;
+	EVisibility			Visibility_AppendFragmentButton() const;
+	FReply				OnClicked_AppendFragmentButton();
+	FSlateColor			BorderBackgroundColor_AppendFragmentButton() const;
+
+	EVisibility			Visibility_AddonsSeparator() const;
 
 public:
 	void OnClick_DeleteConditionButton(int32 FragmentIndex, int32 ConditionIndex);

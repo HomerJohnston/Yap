@@ -14,6 +14,13 @@ struct FYapBit;
 enum class EYapMaturitySetting : uint8;
 enum class EYapErrorLevel : uint8;
 
+enum class EYapTextType : uint8
+{
+	Unspecified,
+	Speech,
+	TitleText
+};
+
 /***
  * The actual popup editor for dialogue, title text, audio, time settings, etc.
  */
@@ -28,6 +35,8 @@ public:
 		SLATE_ARGUMENT(bool, bNeedsChildSafeIn)
 		SLATE_ARGUMENT(TSharedPtr<SFlowGraphNode_YapFragmentWidget>, OwnerIn)
 
+		SLATE_ARGUMENT(EYapTextType, InitialFocusText)
+		SLATE_ARGUMENT(EYapMaturitySetting, InitialFocusMaturity)
 	SLATE_END_ARGS()
 
 	void Construct(const FArguments& InArgs);
@@ -52,7 +61,11 @@ public:
 	TSharedPtr<SWidget> MatureTitleText;
 
 	TSharedPtr<SWidget> ChildSafeTitleText;
-	
+
+	EYapTextType InitialFocusText;
+
+	EYapMaturitySetting InitialFocusMaturity;
+
 	// -----------
 	TSharedRef<SWidget> 	BuildDialogueEditors_ExpandedEditor(float Width);
 	
@@ -103,12 +116,17 @@ public:
 	FSlateColor				ButtonColorAndOpacity_UseTimeMode(EYapTimeMode TimeMode, FLinearColor ColorTint, EYapMaturitySetting MaturitySetting) const;
 	
 	FSlateColor				ForegroundColor_TimeSettingButton(EYapTimeMode TimeMode, FLinearColor ColorTint) const;
-	
-	EYapMaturitySetting				GetDisplayMaturitySetting() const;
+
+	// TODO this should NOT be required, it exists because of a limitation in my GetFragment()->GetTimeMode function, fix it!
+	EYapMaturitySetting	 	GetDisplayMaturitySetting() const;
 	
 	const UYapNodeConfig&	GetNodeConfig() const;
 
 public:
+	bool SupportsKeyboardFocus() const override { return true; }
+	
+	FReply OnFocusReceived(const FGeometry& MyGeometry, const FFocusEvent& InFocusEvent);
+	
 	void SetFocus_MatureDialogue();
 
 	void SetFocus_MatureTitleText();
@@ -118,6 +136,7 @@ public:
 	void SetFocus_ChildSafeTitleText();
 	
 	void PressEndKey();
+	
 };
 
 #undef LOCTEXT_NAMESPACE

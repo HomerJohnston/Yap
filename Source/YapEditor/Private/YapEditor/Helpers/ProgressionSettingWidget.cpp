@@ -5,6 +5,7 @@
 
 #define LOCTEXT_NAMESPACE "YapEditor"
 
+/*
 TSharedRef<SWidget> PopupContentGetter_ProgressionSettings(TOptional<bool>* bSkippable, TOptional<bool>* bAutoAdvance)
 {
 	TSharedRef<SWidget> Box = SNew(SVerticalBox)
@@ -13,9 +14,11 @@ TSharedRef<SWidget> PopupContentGetter_ProgressionSettings(TOptional<bool>* bSki
 
 	return Box;
 }
+*/
 
 // ------------------------------------------------------------------------------------------------
 
+/*
 SVerticalBox::FSlot::FSlotArguments MakeFragmentProgressionSettingRow(TOptional<bool>* Setting, FText Label)
 {
 	SVerticalBox::FSlot::FSlotArguments Slot(SVerticalBox::Slot());
@@ -76,7 +79,9 @@ SVerticalBox::FSlot::FSlotArguments MakeFragmentProgressionSettingRow(TOptional<
 
 	return Slot;
 }
+*/
 
+/*
 SOverlay::FOverlaySlot::FSlotArguments MakePopupImage(TOptional<bool>* SettingRaw, TAttribute<bool> EvaluatedAttr, FName OffIcon, FName OnIcon)
 {
 	SOverlay::FOverlaySlot::FSlotArguments Slot(SOverlay::Slot());
@@ -105,28 +110,96 @@ SOverlay::FOverlaySlot::FSlotArguments MakePopupImage(TOptional<bool>* SettingRa
 	
 	return Slot;
 }
+*/
 
+/*
 TSharedRef<SWidget> MakeProgressionPopupButton(TOptional<bool>* SkippableSettingRaw, TAttribute<bool> SkippableEvaluatedAttr, TOptional<bool>* AutoAdvanceSettingRaw, TAttribute<bool> AutoAdvanceEvaluatedAttr)
 {
-	return SNew(SYapButtonPopup)
+	auto MakeButton = [] (TOptional<bool>* SettingPtr, TAttribute<bool> EvaluatedAttr, FName OffIcon, FName OnIcon, FText OffText, FText OnText) -> TSharedPtr<SButton>
+	{
+		auto OnClicked = [SettingPtr] () -> FReply
+		{
+			TOptional<bool>& Setting = *SettingPtr;
+			
+			if (!Setting.IsSet())
+			{
+				Setting = true;
+			}
+			else
+			{
+				Setting = !Setting.GetValue();
+			}
+
+			return FReply::Handled();
+		};
+
+		auto ToolTipText = [SettingPtr, OffText, OnText] () -> FText
+		{
+			if (!SettingPtr->IsSet())
+			{
+				return LOCTEXT("ProgressionSetting_Tooltip_Unset", "Unset");
+			}
+
+			return SettingPtr->GetValue() ? OnText : OffText;
+		};
+		
+		return SNew(SButton)
+		.Cursor(EMouseCursor::Default)
 		.ButtonStyle(FYapEditorStyle::Get(), YapStyles.ButtonStyle_HoverHintOnly)
-		.PopupPlacement(MenuPlacement_RightLeftCenter)
-		.ButtonForegroundColor(YapColor::DarkGray_SemiGlass)
-		.ButtonContentPadding(0)
-		.HAlign(HAlign_Center)
-		.VAlign(VAlign_Center)
-		.PopupContentGetter(FPopupContentGetter::CreateLambda( [SkippableSettingRaw, AutoAdvanceSettingRaw] () { return PopupContentGetter_ProgressionSettings(SkippableSettingRaw, AutoAdvanceSettingRaw); }))
-		.ButtonContent()
+		.ContentPadding(0)
+		.OnClicked_Lambda(OnClicked)
+		.ToolTipText_Lambda(ToolTipText)
+		[
+			SNew(SImage)
+			.Image_Lambda( [EvaluatedAttr, OffIcon, OnIcon] ()
+			{			
+				bool bEvaluatedValue = EvaluatedAttr.Get();
+			
+				return FYapEditorStyle::GetImageBrush( bEvaluatedValue ? OnIcon : OffIcon);
+			})
+			.ColorAndOpacity_Lambda( [=] ()
+			{
+				if (!SettingPtr->IsSet())
+				{
+					return YapColor::Button_Unset();
+				}
+			
+				bool bEvaluatedValue = EvaluatedAttr.Get();
+
+				return bEvaluatedValue ? YapColor::LightGreen : YapColor::Orange;  
+			})
+		];
+	};
+
+	FText NotSkippable = LOCTEXT("SkippableButtonToolTip_NotSkippable", "Not Skippable");
+	FText Skippable = LOCTEXT("SkippableButtonToolTip_Skippable", "Skippable");
+
+	FText ManualAdvance = LOCTEXT("AutoAdvanceButtonToolTip_ManualAdvance", "Manual Advance");
+	FText AutoAdvance = LOCTEXT("AutoAdvanceButtonToolTip_AutoAdvance", "Auto Advance");
+	
+	return SNew(SBox)
+	.WidthOverride(16)
+	.HeightOverride(16)
+	[
+		SNew(SVerticalBox)
+		+ SVerticalBox::Slot()
 		[
 			SNew(SBox)
-			.WidthOverride(16)
-			.HeightOverride(16)
+			.HeightOverride(8)
 			[
-				SNew(SOverlay)
-				+ MakePopupImage(SkippableSettingRaw, SkippableEvaluatedAttr, YapBrushes.Icon_NotSkippable, YapBrushes.Icon_Skippable)
-				+ MakePopupImage(AutoAdvanceSettingRaw, AutoAdvanceEvaluatedAttr, YapBrushes.Icon_ManualAdvance, YapBrushes.Icon_AutoAdvance)
+				MakeButton(SkippableSettingRaw, SkippableEvaluatedAttr, YapBrushes.Icon_NotSkippable, YapBrushes.Icon_Skippable, NotSkippable, Skippable).ToSharedRef()
 			]
-		];
+		]
+		+ SVerticalBox::Slot()
+		[
+			SNew(SBox)
+			.HeightOverride(8)
+			[
+				MakeButton(AutoAdvanceSettingRaw, AutoAdvanceEvaluatedAttr, YapBrushes.Icon_ManualAdvance, YapBrushes.Icon_AutoAdvance, ManualAdvance, AutoAdvance).ToSharedRef()
+			]
+		]
+	];
 }
+*/
 
 #undef LOCTEXT_NAMESPACE

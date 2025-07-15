@@ -34,12 +34,14 @@
 #include "Yap/Enums/YapLoadContext.h"
 #include "YapEditor/YapEditorEvents.h"
 #include "YapEditor/YapEditorLog.h"
+#include "YapEditor/YapInputTracker.h"
 #include "YapEditor/Globals/YapEditorFuncs.h"
 #include "YapEditor/Helpers/ProgressionSettingWidget.h"
 #include "YapEditor/SlateWidgets/SYapCharacterSelectWidget.h"
 #include "YapEditor/SlateWidgets/SYapDialogueEditor.h"
 #include "YapEditor/SlateWidgets/SYapGameplayTagTypedPicker.h"
 #include "YapEditor/SlateWidgets/SYapHeadingBlock.h"
+#include "YapEditor/SlateWidgets/SYapProgressionSettingsWidget.h"
 #include "YapEditor/SlateWidgets/SYapTimeProgressionWidget.h"
 
 FSlateFontInfo SFlowGraphNode_YapFragmentWidget::DialogueTextFont;
@@ -138,10 +140,9 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateCentreTextDisplayWid
 			[
 				SNew(SYapButtonPopup)
 				.ButtonStyle(FYapEditorStyle::Get(), YapStyles.ButtonStyle_NoBorder)
-				.PopupContentGetter(FPopupContentGetter::CreateSP(this, &ThisClass::PopupContentGetter_ExpandedEditor))
+				.PopupContentGetter(FPopupContentGetter::CreateSP(this, &ThisClass::PopupContentGetter_DialogueEditor, EYapTextType::Speech))
 				.PopupPlacement(MenuPlacement_Center)
 				.ButtonForegroundColor(YapColor::DarkGray_SemiGlass)
-				.OnPostPopup(this, &ThisClass::OnPostPopup_TextEditor, EYapTextType::Speech, GetDisplayMaturitySetting())
 				.ButtonContent()
 				[
 					CreateDialogueDisplayWidget()
@@ -178,10 +179,9 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateCentreTextDisplayWid
 			[
 				SNew(SYapButtonPopup)
 				.ButtonStyle(FYapEditorStyle::Get(), YapStyles.ButtonStyle_NoBorder)
-				.PopupContentGetter(FPopupContentGetter::CreateSP(this, &ThisClass::PopupContentGetter_ExpandedEditor))
+				.PopupContentGetter(FPopupContentGetter::CreateSP(this, &ThisClass::PopupContentGetter_DialogueEditor, EYapTextType::TitleText))
 				.PopupPlacement(MenuPlacement_Center)
 				.ButtonForegroundColor(YapColor::DarkGray_SemiGlass)
-				.OnPostPopup(this, &ThisClass::OnPostPopup_TextEditor, EYapTextType::TitleText, GetDisplayMaturitySetting())
 				.ButtonContent()
 				[
 					CreateTitleTextDisplayWidget()
@@ -206,7 +206,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateCentreTextDisplayWid
 	];
 }
 
-TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::PopupContentGetter_ExpandedEditor()
+TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::PopupContentGetter_DialogueEditor(EYapTextType FocusText)
 {
 	TSharedRef<SFlowGraphNode_YapFragmentWidget> x = StaticCastSharedRef<SFlowGraphNode_YapFragmentWidget>(AsShared());
 	
@@ -214,38 +214,9 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::PopupContentGetter_Expande
 		.OwnerIn(x)
 		.DialogueNodeIn(GetDialogueNodeMutable())
 		.FragmentIndexIn(FragmentIndex)
-		.bNeedsChildSafeIn(NeedsChildSafeData());
-}
-
-void SFlowGraphNode_YapFragmentWidget::OnPostPopup_TextEditor(bool& bOverrideFocus, EYapTextType TextType, EYapMaturitySetting Maturity)
-{
-	switch (TextType)
-	{
-		case EYapTextType::Speech:
-		{
-			if (Maturity == EYapMaturitySetting::Mature)
-			{
-				ExpandedDialogueEditor.Pin()->SetFocus_MatureDialogue();
-			}
-			else
-			{
-				ExpandedDialogueEditor.Pin()->SetFocus_ChildSafeDialogue();
-			}
-			break;
-		}
-		case EYapTextType::TitleText:
-		{
-			if (Maturity == EYapMaturitySetting::Mature)
-			{
-				ExpandedDialogueEditor.Pin()->SetFocus_MatureTitleText();
-			}
-			else
-			{
-				ExpandedDialogueEditor.Pin()->SetFocus_ChildSafeTitleText();
-			}
-			break;
-		}
-	}
+		.bNeedsChildSafeIn(NeedsChildSafeData())
+		.InitialFocusText(FocusText)
+		.InitialFocusMaturity(GetDisplayMaturitySetting());
 }
 
 int32 SFlowGraphNode_YapFragmentWidget::GetFragmentActivationCount() const
@@ -507,7 +478,11 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateUpperFragmentBar()
 		return GetDialogueNode()->GetFragmentAutoAdvance(FragmentIndex);
 	});
 
-	TSharedRef<SWidget> ProgressionPopupButton = MakeProgressionPopupButton(SkippableSettingRaw, SkippableEvaluatedAttr, AutoAdvanceSettingRaw, AutoAdvanceEvaluatedAttr);
+	TSharedRef<SWidget> ProgressionPopupButton = SNew(SYapProgressionSettingsWidget)
+		.SkippableSettingRaw(SkippableSettingRaw)
+		.SkippableEvaluatedAttr(SkippableEvaluatedAttr)
+		.AutoAdvanceSettingRaw(AutoAdvanceSettingRaw)
+		.AutoAdvanceEvaluatedAttr(AutoAdvanceEvaluatedAttr);
 
 	return SNew(SBox)
 	.Padding(0, 0, 32, 4)
@@ -570,9 +545,6 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateUpperFragmentBar()
 				SNew(SBox)
 				.WidthOverride(20)
 				.Visibility_Lambda( [this] () { return GetDialogueNode()->GetNodeType() == EYapDialogueNodeType::TalkAndAdvance ? EVisibility::Collapsed : EVisibility::Visible; } )
-				[
-					MakeProgressionPopupButton(SkippableSettingRaw, SkippableEvaluatedAttr, AutoAdvanceSettingRaw, AutoAdvanceEvaluatedAttr)
-				]
 				[
 					ProgressionPopupButton
 				]
@@ -2384,9 +2356,8 @@ FSlateColor SFlowGraphNode_YapFragmentWidget::GetNodeTitleColor() const
 
 void SFlowGraphNode_YapFragmentWidget::Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime)
 {
-	// TODO might use modifier keys to dynamically spawn widgets like fragment up/down. Might save a few CPU cycles.
-	//bCtrlPressed = GEditor->GetEditorSubsystem<UYapEditorSubsystem>()->GetInputTracker()->GetControlPressed();
-	//bShiftPressed = GEditor->GetEditorSubsystem<UYapEditorSubsystem>()->GetInputTracker()->GetShiftPressed();
+	bCtrlPressed = GEditor->GetEditorSubsystem<UYapEditorSubsystem>()->GetInputTracker()->GetControlPressed();
+	bShiftPressed = GEditor->GetEditorSubsystem<UYapEditorSubsystem>()->GetInputTracker()->GetShiftPressed();
 
 	bool bOwnerSelected = Owner->GetIsSelected();
 	

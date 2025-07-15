@@ -53,7 +53,7 @@ public:
 
     void SelectCharacter(const FGameplayTag& NewCharacterTag);
     
-	FReply OnFocusReceived(const FGeometry& MyGeometry, const FFocusEvent& InFocusEvent);
+    bool SupportsKeyboardFocus() const override { return true; }
     
-    virtual bool SupportsKeyboardFocus() const override { return true; }
+	FReply OnFocusReceived(const FGeometry& MyGeometry, const FFocusEvent& InFocusEvent);
 };

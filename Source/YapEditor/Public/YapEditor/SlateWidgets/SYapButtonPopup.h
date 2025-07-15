@@ -28,8 +28,6 @@ public:
 
 		SLATE_EVENT( FOnIsOpenChanged, OnPopupOpenChanged )
 
-		SLATE_EVENT( FPostPopupDelegate, OnPostPopup )
-		
 		/** Pass in a delegate that builds the popup, e.g. (FPopupContentGetter::Create...); this lets us avoid building this whole popup widget until we actually need it */
 		SLATE_ARGUMENT( FPopupContentGetter, PopupContentGetter ) // TODO is there a way for me to take in a delegate arg the same way that a SLATE_EVENT allows?
 
@@ -73,8 +71,6 @@ public:
 	TSharedPtr<SButton> Button;
 
 	FOnClicked OnClicked;
-
-	FPostPopupDelegate OnPostPopup;
 
 	TSharedPtr<SWidget> FocusWidget;
 	

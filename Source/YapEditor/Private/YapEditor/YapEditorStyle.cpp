@@ -440,7 +440,7 @@ void FYapEditorStyle::Initialize_Internal()
 		.SetUncheckedHoveredImage(Icon_Switch_Off)
 		.SetUncheckedPressedImage(Icon_Switch_Off)
 	);
-		
+	
 	// ============================================================================================
 	// SCROLLBAR STYLES
 	// ============================================================================================

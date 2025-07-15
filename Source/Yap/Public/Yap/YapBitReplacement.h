@@ -58,6 +58,9 @@ struct FYapBitReplacement
 	UPROPERTY(EditAnywhere)
 	TOptional<FGameplayTag> MoodTag = FGameplayTag::EmptyTag;
 
+	UPROPERTY(EditAnywhere)
+	FGameplayTag Test = FGameplayTag::EmptyTag;
+	
 	/**  */
 	UPROPERTY(EditAnywhere)
 	TOptional<EYapTimeMode> TimeMode = EYapTimeMode::AudioTime;

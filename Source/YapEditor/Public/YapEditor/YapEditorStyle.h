@@ -206,7 +206,7 @@ protected:
 	
 private:
 	// DO NOT USE THIS FOR ANYTHING. It's a dumb macro placeholder.
-	FSlateImageBrush* TEMP;
+	// FSlateImageBrush* TEMP;
 };
 
 #undef LOCTEXT_NAMESPACE

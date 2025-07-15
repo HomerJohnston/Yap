@@ -18,8 +18,6 @@ void SYapButtonPopup::Construct(const FArguments& InArgs)
 
 	OnClicked = InArgs._OnClicked;
 
-	OnPostPopup = InArgs._OnPostPopup;
-
 	FocusWidget = InArgs._FocusWidget;
 	
 	SMenuAnchor::Construct(SMenuAnchor::FArguments()
@@ -85,19 +83,6 @@ FReply SYapButtonPopup::OnClicked_Button()
 	*/
 	
 	return ButtonReply;
-}
-
-bool SYapButtonPopup::RunPostPopupDelegate()
-{
-	if (OnPostPopup.IsBound())
-	{
-		bool bOverrideFocus;
-		OnPostPopup.Execute(bOverrideFocus);
-
-		return bOverrideFocus;
-	}
-
-	return false;
 }
 
 void SYapButtonPopup::SetMenuContent(TSharedRef<SWidget> InMenuContent)

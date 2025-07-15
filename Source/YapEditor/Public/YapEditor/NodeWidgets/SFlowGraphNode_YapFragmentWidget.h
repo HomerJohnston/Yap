@@ -33,6 +33,7 @@ enum class EYapTimeMode : uint8;
 enum class EYapMissingAudioErrorLevel : uint8;
 enum class EYapErrorLevel : uint8;
 enum class EYapMaturitySetting : uint8;
+enum class EYapTextType : uint8;
 
 #define LOCTEXT_NAMESPACE "YapEditor"
 
@@ -40,12 +41,6 @@ enum class EYapFragmentControlsDirection : uint8
 {
 	Up,
 	Down,
-};
-
-enum class EYapTextType : uint8
-{
-	Speech,
-	TitleText
 };
 
 enum class EFlowGraphNode_YapCharacterAssigned : uint8
@@ -205,10 +200,8 @@ protected:
 	
 	TSharedRef<SWidget>		CreateCentreTextDisplayWidget();
 	
-	TSharedRef<SWidget>		PopupContentGetter_ExpandedEditor();
+	TSharedRef<SWidget>		PopupContentGetter_DialogueEditor(EYapTextType FocusText);
 
-	void					OnPostPopup_TextEditor(bool& bOverrideFocus, EYapTextType TextType, EYapMaturitySetting Maturity);
-	
 	// ------------------------------------------
 	
 	TOptional<float>		Percent_FragmentTime() const;

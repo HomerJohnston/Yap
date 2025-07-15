@@ -32,6 +32,7 @@
 #include "YapEditor/SlateWidgets/SYapConditionsScrollBox.h"
 #include "YapEditor/SlateWidgets/SYapGraphPinExec.h"
 #include "YapEditor/SlateWidgets/SYapGameplayTagTypedPicker.h"
+#include "YapEditor/SlateWidgets/SYapProgressionSettingsWidget.h"
 
 #define LOCTEXT_NAMESPACE "YapEditor"
 
@@ -379,6 +380,12 @@ TSharedRef<SWidget> SFlowGraphNode_YapDialogueWidget::CreateTitleWidget(TSharedP
 		return GetFlowYapDialogueNode()->GetNodeAutoAdvance();
 	});
 	
+	TSharedRef<SWidget> ProgressionPopupButton = SNew(SYapProgressionSettingsWidget)
+		.SkippableSettingRaw(SkippableSettingRaw)
+		.SkippableEvaluatedAttr(SkippableEvaluatedAttr)
+		.AutoAdvanceSettingRaw(AutoAdvanceSettingRaw)
+		.AutoAdvanceEvaluatedAttr(AutoAdvanceEvaluatedAttr);
+
 	return SNew(SLevelOfDetailBranchNode)
 	.UseLowDetailSlot(this, &SFlowGraphNode_YapDialogueWidget::UseLowDetail, EGraphRenderingLOD::DefaultDetail)
 	.HighDetail()
@@ -452,7 +459,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapDialogueWidget::CreateTitleWidget(TSharedP
 				.HAlign(HAlign_Center)
 				.Visibility_Lambda( [this] () { return GetFlowYapDialogueNode()->GetNodeType() == EYapDialogueNodeType::TalkAndAdvance ? EVisibility::Collapsed : EVisibility::Visible; } )
 				[
-					MakeProgressionPopupButton(SkippableSettingRaw, SkippableEvaluatedAttr, AutoAdvanceSettingRaw, AutoAdvanceEvaluatedAttr)
+					ProgressionPopupButton
 				]
 			]
 		]
@@ -956,7 +963,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapDialogueWidget::CreateContentFooter()
 		SNew(SHorizontalBox)
 		.IsEnabled_Lambda([]() { return GEditor->PlayWorld == nullptr; })
 		+ SHorizontalBox::Slot()
-		.HAlign(HAlign_Fill)
+		.HAlign(HAlign_Center)
 		.VAlign(VAlign_Fill)
 		.Padding(31, 4, 7, 4)
 		[
@@ -964,27 +971,39 @@ TSharedRef<SWidget> SFlowGraphNode_YapDialogueWidget::CreateContentFooter()
 			.UseLowDetailSlot(this, &SFlowGraphNode_YapDialogueWidget::UseLowDetail, EGraphRenderingLOD::DefaultDetail)
 			.HighDetail()
 			[
-				SNew(SBox)
-				.Visibility(this, &SFlowGraphNode_YapDialogueWidget::Visibility_BottomAddFragmentButton)
-				.HeightOverride(14)
+				SNew(SBorder)
+				.Cursor(EMouseCursor::Default)
+				.HAlign(HAlign_Center)
 				.VAlign(VAlign_Center)
-				.Padding(0, 2, 0, 0)
+				.BorderImage(FYapEditorStyle::GetImageBrush(YapBrushes.Icon_FilledCircle))
+				.BorderBackgroundColor(this, &SFlowGraphNode_YapDialogueWidget::BorderBackgroundColor_AppendFragmentButton)
+				.Padding(0)
 				[
-					SNew(SButton)
-					.Cursor(EMouseCursor::Default)
+					SNew(SBox)
+					.Visibility(this, &SFlowGraphNode_YapDialogueWidget::Visibility_AppendFragmentButton)
+					.WidthOverride(20)
+					.HeightOverride(20)
+					.VAlign(VAlign_Center)
 					.HAlign(HAlign_Center)
-					.ButtonStyle(FAppStyle::Get(), "SimpleButton")
-					.ToolTipText(LOCTEXT("DialogueAddFragment_Tooltip", "Add Fragment"))
-					.OnClicked(this, &SFlowGraphNode_YapDialogueWidget::OnClicked_BottomAddFragmentButton)
-					.ContentPadding(0)
+					.Padding(0)
 					[
-						SNew(SBox)
-						.VAlign(VAlign_Center)
+						SAssignNew(AppendFragmentButton, SButton)
+						.Cursor(EMouseCursor::Default)
+						.HAlign(HAlign_Center)
+						.ButtonStyle(FYapEditorStyle::Get(), YapStyles.ButtonStyle_NoBorder)
+						.ToolTipText(LOCTEXT("DialogueAddFragment_Tooltip", "Add Fragment"))
+						.OnClicked(this, &SFlowGraphNode_YapDialogueWidget::OnClicked_AppendFragmentButton)
+						.ContentPadding(0)
 						[
-							SNew(SImage)
-							.Image(FYapEditorStyle::GetImageBrush(YapBrushes.Icon_PlusSign))
-							.DesiredSizeOverride(FVector2D(12, 12))
-							.ColorAndOpacity(YapColor::DarkGray)
+							SNew(SBox)
+							.VAlign(VAlign_Center)
+							.Padding(0)
+							[
+								SNew(SImage)
+								.Image(FYapEditorStyle::GetImageBrush(YapBrushes.Icon_PlusSign))
+								//.DesiredSizeOverride(FVector2D(12, 12))
+								.ColorAndOpacity(YapColor::DarkGray)
+							]
 						]
 					]
 				]
@@ -1155,7 +1174,7 @@ FSlateColor SFlowGraphNode_YapDialogueWidget::ColorAndOpacity_FragmentSequencing
 }
 
 // ------------------------------------------------------------------------------------------------
-EVisibility SFlowGraphNode_YapDialogueWidget::Visibility_BottomAddFragmentButton() const
+EVisibility SFlowGraphNode_YapDialogueWidget::Visibility_AppendFragmentButton() const
 {
 	if (GEditor->PlayWorld)
 	{
@@ -1166,7 +1185,7 @@ EVisibility SFlowGraphNode_YapDialogueWidget::Visibility_BottomAddFragmentButton
 }
 
 // ------------------------------------------------------------------------------------------------
-FReply SFlowGraphNode_YapDialogueWidget::OnClicked_BottomAddFragmentButton()
+FReply SFlowGraphNode_YapDialogueWidget::OnClicked_AppendFragmentButton()
 {
 	FYapTransactions::BeginModify(LOCTEXT("AddFragment", "Add fragment"), GetFlowYapDialogueNodeMutable());
 
@@ -1179,6 +1198,16 @@ FReply SFlowGraphNode_YapDialogueWidget::OnClicked_BottomAddFragmentButton()
 	SetNodeSelected();
 	
 	return FReply::Handled();
+}
+
+FSlateColor SFlowGraphNode_YapDialogueWidget::BorderBackgroundColor_AppendFragmentButton() const
+{
+	if (AppendFragmentButton->IsHovered())
+	{
+		return YapColor::DarkGray;
+	}
+
+	return YapColor::Transparent;
 }
 
 // ------------------------------------------------------------------------------------------------

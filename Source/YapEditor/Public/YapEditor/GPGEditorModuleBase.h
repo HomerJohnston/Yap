@@ -1,9 +1,9 @@
-// Copyright Ghost Pepper Games, Inc. All Rights Reserved.
-// This work is MIT-licensed. Feel free to use it however you wish, within the confines of the MIT license. 
+// Originally written by Kyle Wilcox (HoJo/Homer Johnston), Ghost Pepper Games Inc.
+// This file is public domain.
 
 // This is a drop-in header to assist with basic module definition, customization registration/deregistration, etc.
 // It is intended to be copy/pasted in any module that wishes to use it.
-// For usage, see comments in SETTINGS section below.
+// For usage, see additional comments below.
 
 #pragma once
 
@@ -18,11 +18,35 @@ class IAssetTools;
 using UAssetClass = TSubclassOf<UObject>;
 using UThumbnailClass = TSubclassOf<UThumbnailRenderer>;
 
-#define REGISTER_ASSET_TYPE_ACTION(NAME) AssetTypeActions.Add(MakeShared<NAME>())
+#define REGISTER_ASSET_TYPE_ACTION(NAME) AssetTypeActions.Add(MakeShared<NAME>()) // Obsolete, use UAssetDefinition for your assets instead
 #define REGISTER_DETAIL_CUSTOMIZATION(CLASSNAME, CUSTOMIZATIONNAME) DetailCustomizations.Append({{ CLASSNAME::StaticClass(), FOnGetDetailCustomizationInstance::CreateStatic(&CUSTOMIZATIONNAME::MakeInstance)}})
 #define REGISTER_PROPERTY_CUSTOMIZATION(CLASSNAME, CUSTOMIZATIONNAME) PropertyCustomizations.Append({{ *CLASSNAME::StaticStruct(), FOnGetPropertyTypeCustomizationInstance::CreateStatic(&CUSTOMIZATIONNAME::MakeInstance) }});
 #define REGISTER_THUMBNAIL_RENDERER(CLASSNAME, THUMBNAILRENDERERNAME) ClassThumbnailRenderers.Append({{ CLASSNAME::StaticClass(), THUMBNAILRENDERERNAME::StaticClass() }});
 
+/*
+ * Inherit your editor module class from this, and then register customizations per the example below. You must call StartupModuleBase() in your StartupModule() and ShutdownModuleBase() in your ShutdownModule().
+ * Example:
+ *
+ *	StartupModule()
+ *	{
+ *		AssetCategory = { "Yap", LOCTEXT("Yap", "Yap") };
+ *
+ *		REGISTER_DETAIL_CUSTOMIZATION(UYapProjectSettings, FDetailCustomization_YapProjectSettings);
+ *		REGISTER_PROPERTY_CUSTOMIZATION(FYapCharacterDefinition, FPropertyCustomization_YapCharacterDefinition);
+ *		REGISTER_THUMBNAIL_RENDERER(UYapCharacterAsset, UYapCharacterThumbnailRenderer);
+ * 
+ *		StartupModuleBase(); <--- this actually registers everything and stashes the registrations
+ *
+ *		... other startup code of your own ...
+ *	}
+ *
+ *	ShutdownModule()
+ *	{
+ *		ShutdownModuleBase(); <--- this actually unregisters everything
+ *
+ *		... other shutdown code of your own ...
+ *	}
+*/
 class FGPGEditorModuleBase
 {
 	// ============================================================================================
@@ -34,22 +58,7 @@ protected:
 	TArray<TPair<TSubclassOf<UObject>, const FOnGetDetailCustomizationInstance>> DetailCustomizations;
 	TArray<TPair<const UScriptStruct&, const FOnGetPropertyTypeCustomizationInstance>> PropertyCustomizations;
 	TArray<TPair<UAssetClass, UThumbnailClass>> ClassThumbnailRenderers;
-	/* Example, this code would be in StartupModule():
-	// --------
-	AssetCategory = { "Yap", LOCTEXT("Yap", "Yap") };
 
-	AssetTypeActions.Add(MakeShareable(new FAssetTypeActions_Type()));
-	AssetTypeActions.Add(MakeShareable(new FAssetTypeActions_Type()));
-	
-	DetailCustomizations.Add(UClassType::StaticClass(), FOnGetDetailCustomizationInstance::CreateStatic(&FDetailCustomization_ClassType::MakeInstance));
-	DetailCustomizations.Add(UClassType::StaticClass(), FOnGetDetailCustomizationInstance::CreateStatic(&FDetailCustomization_ClassType::MakeInstance));
-	
-	PropertyCustomizations.Add(*FStructType::StaticStruct(), FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FPropertyCustomization_StructType::MakeInstance));
-	PropertyCustomizations.Add(*UClassType::StaticStruct(), FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FPropertyCustomization_ClassType::MakeInstance));
-
-	StartupModuleBase();
-	// --------
-	*/
 
 	// ============================================================================================
 	// STATE

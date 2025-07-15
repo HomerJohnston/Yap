@@ -42,9 +42,7 @@ void FDetailCustomization_YapProjectSettings::CustomSortYapProjectSettingsCatego
 
 	SortCategory(AllCategoryMap, i, SortedCategories, "Core");
 	SortCategory(AllCategoryMap, i, SortedCategories, "Editor");
-	SortCategory(AllCategoryMap, i, SortedCategories, "Flow Graph Settings");
 	SortCategory(AllCategoryMap, i, SortedCategories, "Error Handling");
-	SortCategory(AllCategoryMap, i, SortedCategories, "Other");
 	SortCategory(AllCategoryMap, i, SortedCategories, "Characters");
 	
 	if (SortedCategories.Num() != AllCategoryMap.Num())

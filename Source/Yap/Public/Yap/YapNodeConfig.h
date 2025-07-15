@@ -41,6 +41,10 @@ struct FYapNodeConfigGroup_General
 	UPROPERTY(EditAnywhere, meta = (EditCondition = "AllowableNodeTypes == 4 || AllowableNodeTypes == 5 || AllowableNodeTypes == 6 || AllowableNodeTypes == 7", EditConditionHides))
 	FText PromptLabelOverride;
 
+	/** Placeholder. This does nothing for now. */
+	UPROPERTY(Config, EditAnywhere, meta = (EditCondition = "false && (AllowableNodeTypes == 7)", EditConditionHides))
+	bool bPromptRequiresTalkAndAdvance = false;
+	
 	/** Use this to filter the character tag selector. If all of your game's character tags are under YourGame.Entity.Character.XYZ then set this to YourGame.Entity.Character for easier character selection. */
 	UPROPERTY(EditAnywhere)
 	FGameplayTag CharacterTagBase;
@@ -49,11 +53,15 @@ struct FYapNodeConfigGroup_General
 	UPROPERTY(EditAnywhere)
 	FGameplayTag DialogueTagsParent;
 
-	/** If this type group doesn't require any speaker info (such as for generic tutorial popups or simple player prompts), you can enable this. */
+	/** If this node type doesn't require any speaker info (such as for generic tutorial popups or simple player prompts), you can enable this. Requires graph refresh. */
 	UPROPERTY(EditAnywhere)
 	bool bDisableSpeaker = false;
 
-	/** If this type group doesn't require any child safe info (such as for generic tutorial popups or simple player prompts), you can enable this. */
+	/** If this node type doesn't require any directed at info (such as for generic tutorial popups or simple player prompts), you can enable this. Requires graph refresh. */
+	UPROPERTY(EditAnywhere)
+	bool bDisableDirectedAt = false;
+	
+	/** If this node type doesn't require any child safe info (such as for generic tutorial popups or simple player prompts), you can enable this. Requires graph refresh. */
 	UPROPERTY(EditAnywhere)
 	bool bDisableChildSafe = false;
 };
@@ -183,6 +191,7 @@ struct FYapNodeConfigGroup_FlowGraphSettings
 
 	FYapNodeConfigGroup_FlowGraphSettings();
 
+#if WITH_EDITORONLY_DATA
 	UPROPERTY(EditAnywhere, meta = (DoNotDraw))
 	FLinearColor GroupColor = FLinearColor::White;
 	
@@ -208,9 +217,21 @@ struct FYapNodeConfigGroup_FlowGraphSettings
 	
 	// TODO: replace my start/end pins with N timed pins instead? To kick off stuff at any time through a dialogue?
 	/** Turn off to hide the On Start / On End pin-buttons, useful if you want a simpler graph without these features. */
-	UPROPERTY(Config, EditAnywhere, Category = "Flow Graph Settings")
+	UPROPERTY(Config, EditAnywhere)
 	bool bHidePinEnableButtons = false;
 	
+	/** Controls how large the portrait widgets are in the graph. Sizes smaller than 64 will result in some odd slate snapping. */
+	UPROPERTY(Config, EditAnywhere, meta = (ClampMin = 64, ClampMax = 128, UIMin = 32, UIMax = 128, Multiple = 16))
+	int32 PortraitSize = 64;
+
+	/** Controls the length of the time progress line on the dialogue widget (left side, for time of the running dialogue). */
+	UPROPERTY(Config, EditAnywhere, meta = (ClampMin = 0.0, ClampMax = 60.0, UIMin = 0.0, UIMax = 10.0, Delta = 0.01))
+	float DialogueTimeSliderMax = 5.0f;
+	
+	/** Controls the length of the time progress line on the dialogue widget (right side, for delay to next action). */
+	UPROPERTY(Config, EditAnywhere, meta = (ClampMin = 0.0, ClampMax = 60.0, UIMin = 0.0, UIMax = 10.0, Delta = 0.01))
+	float PaddingTimeSliderMax = 2.0f;	
+#endif
 };
 
 // ================================================================================================
@@ -220,7 +241,7 @@ struct FYapNodeConfigGroup_MoodTags
 {
 	GENERATED_BODY()
 
-	/** If this type group doesn't require any mood info (such as for generic tutorial popups or simple player prompts), you can enable this to clean up the flow graph. */
+	/** If this type group doesn't require any mood info (such as for generic tutorial popups or simple player prompts), you can enable this to clean up the flow graph. Requires graph refresh. */
 	UPROPERTY(EditAnywhere)
 	bool bDisableMoodTags = false;
 	
@@ -353,6 +374,12 @@ public:
 	
 	bool ShowPinEnableButtons()  { return !Graph.bHidePinEnableButtons; }
 	
+	int32 GetPortraitSize() const { return Graph.PortraitSize; }
+
+	float GetDialogueTimeSliderMax() const { return Graph.DialogueTimeSliderMax; }
+
+	float GetFragmentPaddingSliderMax() const { return Graph.PaddingTimeSliderMax; }
+		
 	bool GetPreventDialogueTextWrapping() const { return Graph.bPreventDialogueTextWrapping; }
 
 	bool GetShowTitleTextOnTalkNodes() const { return Graph.bShowTitleTextOnTalkNodes; }
@@ -360,6 +387,8 @@ public:
 	bool GetHideTitleTextOnPromptNodes() const { return Graph.bHideTitleTextOnPromptNodes; }
 	
 	bool GetDisableSpeaker() const { return General.bDisableSpeaker; }
+	
+	bool GetDisableDirectedAt() const { return General.bDisableDirectedAt; }
 
 	bool GetDisableMoodTags() const { return MoodTags.bDisableMoodTags; }
 	

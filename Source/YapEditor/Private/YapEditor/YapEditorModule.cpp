@@ -21,16 +21,12 @@ FAssetCategoryPath FYapAssetCategoryPaths::Yap(LOCTEXT("Yap", "Yap"));
 
 void FYapEditorModule::StartupModule()
 {
-	AssetCategory = { "Yap", LOCTEXT("Yap", "Yap") };
-
 	// FGPGEditorModuleBase implementation START
-	//REGISTER_ASSET_TYPE_ACTION(FAssetTypeActions_FlowYapCharacter);
-	//REGISTER_ASSET_TYPE_ACTION(FAssetTypeActions_YapNodeBlueprint);
+	AssetCategory = { "Yap", LOCTEXT("Yap", "Yap") };
 
 	REGISTER_DETAIL_CUSTOMIZATION(UYapProjectSettings, FDetailCustomization_YapProjectSettings);
 	REGISTER_DETAIL_CUSTOMIZATION(UYapCharacterAsset, FDetailCustomization_YapCharacter);
 
-	//REGISTER_PROPERTY_CUSTOMIZATION(FYapDomainSettings, FPropertyCustomization_YapGroupSettings);
 	REGISTER_PROPERTY_CUSTOMIZATION(FYapCharacterDefinition, FPropertyCustomization_YapCharacterDefinition);
 	REGISTER_PROPERTY_CUSTOMIZATION(FYapNodeConfigGroup_MoodTags, FPropertyCustomization_YapNodeConfigGroup_MoodTags);
 

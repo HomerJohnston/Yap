@@ -445,7 +445,7 @@ TSharedRef<SWidget> SYapDialogueEditor::BuildPaddingSettings_ExpandedEditor(floa
 						.AllowSpin(true)
 						.Delta(0.01f)
 						.MinSliderValue(-1.0f)
-						.MaxSliderValue(UYapProjectSettings::GetFragmentPaddingSliderMax())
+						.MaxSliderValue(GetNodeConfig().GetFragmentPaddingSliderMax())
 						.ToolTipText(LOCTEXT("FragmentTimeEntry_Tooltip", "Time this dialogue fragment will play for"))
 						.Justification(ETextJustify::Center)
 						.Value_Lambda( [this] () { return GetFragment().GetPaddingSetting().Get(0.0f); } )

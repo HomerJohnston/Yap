@@ -24,8 +24,6 @@ UYapNodeConfig::UYapNodeConfig()
 {
     General.AllowableNodeTypes = static_cast<int32>(EYapDialogueNodeType::COUNT) - 1;
 
-    void(UYapNodeConfig::*X)(const FGameplayTag& MoodTag) = &UYapNodeConfig::BuildIcon;
-
     AddGameplayTagFilter(GET_MEMBER_NAME_CHECKED(ThisClass, MoodTags.DefaultMoodTag), FGameplayTagFilterDelegate::CreateUObject(this, &ThisClass::GetMoodTagsRoot));
 }
 

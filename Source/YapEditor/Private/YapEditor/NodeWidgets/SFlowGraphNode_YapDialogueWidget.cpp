@@ -289,7 +289,7 @@ void SFlowGraphNode_YapDialogueWidget::OnTagChanged_DialogueTag_PostEdit(TArray<
 FOptionalSize SFlowGraphNode_YapDialogueWidget::GetMaxNodeWidth() const
 {
 	const float GraphGridSize = 16;
-	return FMath::Max(YAP_MIN_NODE_WIDTH + UYapProjectSettings::GetPortraitSize(), YAP_DEFAULT_NODE_WIDTH + GraphGridSize * GetNodeConfig().GetDialogueWidthAdjustment());
+	return FMath::Max(YAP_MIN_NODE_WIDTH + GetNodeConfig().GetPortraitSize(), YAP_DEFAULT_NODE_WIDTH + GraphGridSize * GetNodeConfig().GetDialogueWidthAdjustment());
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -304,9 +304,9 @@ bool SFlowGraphNode_YapDialogueWidget::UseLowDetail(EGraphRenderingLOD::Type LOD
 {
 	if (const SGraphPanel* MyOwnerPanel = GetOwnerPanel().Get())
 	{
-		auto CurrentLOD = MyOwnerPanel->GetCurrentLOD();
+		//auto CurrentLOD = MyOwnerPanel->GetCurrentLOD();
 
-		float Zoom = MyOwnerPanel->GetZoomAmount();
+		//float Zoom = MyOwnerPanel->GetZoomAmount();
 		
 		return (MyOwnerPanel->GetCurrentLOD() < LOD);
 	}

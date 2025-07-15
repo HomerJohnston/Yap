@@ -369,6 +369,8 @@ FReply SFlowGraphNode_YapFragmentWidget::OnClicked_AudioPreviewWidget(const TSof
 
 	const UYapBroker& Broker = UYapSubsystem::GetBroker_Editor();
 
+	(void)Broker.PreviewAudioAsset(Object->LoadSynchronous());
+
 	return FReply::Handled();
 }
 
@@ -467,7 +469,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateUpperFragmentBar()
 	});
 	TOptional<bool>* AutoAdvanceSettingRaw = &GetFragmentMutable().AutoAdvance;
 	const TAttribute<bool> AutoAdvanceDefaultAttr = TAttribute<bool>::CreateLambda( [this] () { return GetDialogueNode()->GetNodeAutoAdvance(); });
-	const TAttribute<bool> AutoAdvanceEvaluatedAttr = TAttribute<bool>::CreateLambda( [this, AutoAdvanceDefaultAttr] ()
+	const TAttribute<bool> AutoAdvanceEvaluatedAttr = TAttribute<bool>::CreateLambda( [this] ()
 	{
 		return GetDialogueNode()->GetFragmentAutoAdvance(FragmentIndex);
 	});
@@ -665,9 +667,95 @@ void SFlowGraphNode_YapFragmentWidget::OnAssetsDropped_ChildSafeButton(const FDr
 
 TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateFragmentWidget()
 {
-	int32 PortraitSize = UYapProjectSettings::GetPortraitSize();
+	int32 PortraitSize = GetNodeConfig().GetPortraitSize();
 	int32 PortraitBorder = 2;
 
+	TSharedRef<SHorizontalBox> MiddleBox = SNew(SHorizontalBox);
+
+	if (!GetNodeConfig().GetDisableSpeaker())
+	{
+		MiddleBox->AddSlot()
+		.HAlign(HAlign_Center)
+		.VAlign(VAlign_Top)
+		.AutoWidth()
+		.Padding(0, 0, 0, 0)
+		[
+			CreateSpeakerWidget()
+		];
+	}
+	
+	MiddleBox->AddSlot()
+	.HAlign(HAlign_Fill)
+	.VAlign(VAlign_Fill)
+	.FillWidth(1.0f)
+	.Padding(0, 0, 0, 0)
+	[
+		CreateCentreTextDisplayWidget()
+	];
+
+	TSharedRef<SVerticalBox> LeftFragmentBox = SNew(SVerticalBox);
+
+	if (!GetNodeConfig().GetDisableChildSafe())
+	{
+		LeftFragmentBox->AddSlot()
+		.AutoHeight()
+		.HAlign(HAlign_Center)
+		.Padding(0, 0, 0, 2)
+		[
+			SNew(SBox)
+			.Visibility_Lambda( [this] () { return GetNodeConfig().GetDisableChildSafe() ? EVisibility::Collapsed : EVisibility::Visible; } )
+			.WidthOverride(22)
+			.HeightOverride(22)
+			[
+				SNew(SAssetDropTarget)
+				.bSupportsMultiDrop(false)
+				.OnAreAssetsAcceptableForDrop(this, &ThisClass::OnAreAssetsAcceptableForDrop_ChildSafeButton)
+				.OnAssetsDropped(this, &ThisClass::OnAssetsDropped_ChildSafeButton)
+				[
+					SAssignNew(ChildSafeCheckBox, SCheckBox)
+					.Cursor(EMouseCursor::Default)
+					.Style(FYapEditorStyle::Get(), YapStyles.CheckBoxStyle_Skippable)
+					.Padding(FMargin(0, 0))
+					.CheckBoxContentUsesAutoWidth(true)
+					.ToolTip(nullptr) // Don't show a tooltip, it's distracting
+					.IsChecked(this, &ThisClass::IsChecked_ChildSafeSettings)
+					.OnCheckStateChanged(this, &ThisClass::OnCheckStateChanged_MaturitySettings)
+					.Content()
+					[
+						SNew(SBox)
+						.WidthOverride(20)
+						.HeightOverride(20)
+						.HAlign(HAlign_Center)
+						.VAlign(VAlign_Center)
+						[
+							SNew(SImage)
+							.Image(FYapEditorStyle::GetImageBrush(YapBrushes.Icon_Baby))
+							.DesiredSizeOverride(FVector2D(16, 16))
+							.ColorAndOpacity(this, &ThisClass::ColorAndOpacity_ChildSafeSettingsCheckBox)
+						]
+					]
+				]
+			]
+		];
+	}
+
+	if (!GetNodeConfig().GetDisableMoodTags())
+	{
+		LeftFragmentBox->AddSlot()
+		.AutoHeight()
+		.HAlign(HAlign_Center)
+		.Padding(0, 2, 0, 0)
+		[
+			SNew(SBox)
+			.Visibility_Lambda( [this] () { return GetNodeConfig().GetDisableMoodTags() ? EVisibility::Collapsed : EVisibility::Visible; } )
+			.WidthOverride(22)
+			.HeightOverride(22)
+			[
+				CreateMoodTagSelectorWidget()
+			]
+		];
+	}
+	
 	return SAssignNew(FragmentWidgetOverlay, SOverlay)
 	.ToolTip(nullptr)
 	+ SOverlay::Slot()
@@ -698,59 +786,10 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateFragmentWidget()
 						.UseLowDetailSlot(Owner, &SFlowGraphNode_YapDialogueWidget::UseLowDetail, EGraphRenderingLOD::DefaultDetail)
 						.HighDetail()
 						[
-							SNew(SVerticalBox)
-							+ SVerticalBox::Slot()
-							.AutoHeight()
-							.HAlign(HAlign_Center)
-							.Padding(0, 0, 0, 2)
+							SNew(SBox)
+							.WidthOverride(22)
 							[
-								SNew(SBox)
-								.Visibility_Lambda( [this] () { return GetNodeConfig().GetDisableChildSafe() ? EVisibility::Collapsed : EVisibility::Visible; } )
-								.WidthOverride(22)
-								.HeightOverride(22)
-								[
-									SNew(SAssetDropTarget)
-									.bSupportsMultiDrop(false)
-									.OnAreAssetsAcceptableForDrop(this, &ThisClass::OnAreAssetsAcceptableForDrop_ChildSafeButton)
-									.OnAssetsDropped(this, &ThisClass::OnAssetsDropped_ChildSafeButton)
-									[
-										SAssignNew(ChildSafeCheckBox, SCheckBox)
-										.Cursor(EMouseCursor::Default)
-										.Style(FYapEditorStyle::Get(), YapStyles.CheckBoxStyle_Skippable)
-										.Padding(FMargin(0, 0))
-										.CheckBoxContentUsesAutoWidth(true)
-										.ToolTip(nullptr) // Don't show a tooltip, it's distracting
-										.IsChecked(this, &ThisClass::IsChecked_ChildSafeSettings)
-										.OnCheckStateChanged(this, &ThisClass::OnCheckStateChanged_MaturitySettings)
-										.Content()
-										[
-											SNew(SBox)
-											.WidthOverride(20)
-											.HeightOverride(20)
-											.HAlign(HAlign_Center)
-											.VAlign(VAlign_Center)
-											[
-												SNew(SImage)
-												.Image(FYapEditorStyle::GetImageBrush(YapBrushes.Icon_Baby))
-												.DesiredSizeOverride(FVector2D(16, 16))
-												.ColorAndOpacity(this, &ThisClass::ColorAndOpacity_ChildSafeSettingsCheckBox)
-											]
-										]
-									]
-								]
-							]
-							+ SVerticalBox::Slot()
-							.AutoHeight()
-							.HAlign(HAlign_Center)
-							.Padding(0, 2, 0, 0)
-							[
-								SNew(SBox)
-								.Visibility_Lambda( [this] () { return GetNodeConfig().GetDisableMoodTags() ? EVisibility::Collapsed : EVisibility::Visible; } )
-								.WidthOverride(22)
-								.HeightOverride(22)
-								[
-									CreateMoodTagSelectorWidget()
-								]
+								LeftFragmentBox
 							]
 						]
 						.LowDetail()
@@ -769,23 +808,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateFragmentWidget()
 						SNew(SBox)
 						.HeightOverride(PortraitSize + 2 * PortraitBorder)
 						[
-							SNew(SHorizontalBox)
-							+ SHorizontalBox::Slot()
-							.HAlign(HAlign_Center)
-							.VAlign(VAlign_Top)
-							.AutoWidth()
-							.Padding(0, 0, 0, 0)
-							[
-								CreateSpeakerWidget()
-							]
-							+ SHorizontalBox::Slot()
-							.HAlign(HAlign_Fill)
-							.VAlign(VAlign_Fill)
-							.FillWidth(1.0f)
-							.Padding(0, 0, 0, 0)
-							[
-								CreateCentreTextDisplayWidget()
-							]
+							MiddleBox
 						]
 					]
 					+ SOverlay::Slot()
@@ -820,7 +843,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateFragmentWidget()
 						.PaddingIsSet(this, &ThisClass::Bool_PaddingTimeIsSet)
 						.SpeechTime_Lambda( [this] () { return GetDialogueNode()->GetSpeechTime(FragmentIndex, GetDisplayMaturitySetting(), EYapLoadContext::AsyncEditorOnly); } )
 						.PaddingTime_Lambda( [this] () { return GetDialogueNode()->GetPadding(FragmentIndex); } )
-						.MaxDisplayTime_Lambda( [this] () { return UYapProjectSettings::GetDialogueTimeSliderMax(); } )
+						.MaxDisplayTime_Lambda( [this] () { return GetNodeConfig().GetDialogueTimeSliderMax(); } )
 						.PlaybackTime_Lambda( [this] () { return Percent_FragmentTime(); } )
 					]
 				]
@@ -952,8 +975,6 @@ EVisibility SFlowGraphNode_YapFragmentWidget::Visibility_TimeProgressionWidget()
 
 TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateDialogueDisplayWidget()
 {
-	int32 TimeSliderSize = 8;
-
 	FNumberFormattingOptions Args;
 	Args.UseGrouping = false;
 	Args.MinimumIntegralDigits = 3;
@@ -962,9 +983,10 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateDialogueDisplayWidge
 	TWeakObjectPtr<UFlowNode_YapDialogue> DialogueNode = GetDialogueNodeMutable();
 
 	const FYapBit& Bit = GetFragment().GetBit(GEditor->EditorWorld, GetDisplayMaturitySetting());
-	
-	return SNew(SOverlay)
-	+ SOverlay::Slot()
+
+	TSharedRef<SOverlay> Overlay = SNew(SOverlay);
+
+	Overlay->AddSlot()
 	[
 		SNew(SAssetDropTarget)
 		.bSupportsMultiDrop(false)
@@ -1023,15 +1045,19 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateDialogueDisplayWidge
 				]
 			]
 		]
-	]
-	+ SOverlay::Slot()
-	.VAlign(VAlign_Top)
-	.HAlign(HAlign_Right)
-	.Padding(-4)
-	[
-		CreateDirectedAtWidget()
-	]
-	+ SOverlay::Slot()
+	];
+
+	if (!GetNodeConfig().GetDisableDirectedAt())
+	{
+		Overlay->AddSlot()	.VAlign(VAlign_Top)
+		.HAlign(HAlign_Right)
+		.Padding(-4)
+		[
+			CreateDirectedAtWidget()
+		];
+	}
+
+	Overlay->AddSlot()
 	.VAlign(VAlign_Fill)
 	.HAlign(HAlign_Fill)
 	.Padding(-2)
@@ -1041,8 +1067,9 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateDialogueDisplayWidge
 		.BorderImage(FAppStyle::GetBrush("MarqueeSelection"))
 		.Visibility(this, &ThisClass::Visibility_DialogueErrorState)
 		.BorderBackgroundColor(YapColor::Red)
-	]
-	+ SOverlay::Slot()
+	];
+	
+	Overlay->AddSlot()
 	.VAlign(VAlign_Bottom)
 	.HAlign(HAlign_Right)
 	.Padding(0)
@@ -1084,6 +1111,8 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateDialogueDisplayWidge
 			]
 		]
 	];
+
+	return Overlay;
 }
 
 // ================================================================================================
@@ -1236,7 +1265,7 @@ void SFlowGraphNode_YapFragmentWidget::OnAssetsDropped_TextWidget(const FDragDro
 
 TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateSpeakerWidget()
 {
-	int32 PortraitSize = UYapProjectSettings::GetPortraitSize();
+	int32 PortraitSize = GetNodeConfig().GetPortraitSize();
 	int32 BorderSize = 2;
 
 	FYapFragment& Fragment = GetFragmentMutable();
@@ -1562,7 +1591,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateSpeakerImageWidget_L
 
 TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateDirectedAtWidget()
 {
-	int32 PortraitSize = UYapProjectSettings::GetPortraitSize() / 3;
+	int32 PortraitSize = GetNodeConfig().GetPortraitSize() / 3;
 	
 	return SAssignNew(DirectedAtWidget, SBorder)
 	.Cursor(EMouseCursor::Default)
@@ -2405,7 +2434,7 @@ void SFlowGraphNode_YapFragmentWidget::Tick(const FGeometry& AllottedGeometry, c
 		}
 	}
 
-	bChildSafeCheckBoxHovered = ChildSafeCheckBox->IsHovered();
+	bChildSafeCheckBoxHovered = (ChildSafeCheckBox.IsValid()) ? ChildSafeCheckBox->IsHovered() : false;
 }
 
 FSlateColor SFlowGraphNode_YapFragmentWidget::ColorAndOpacity_FragmentDataIcon() const

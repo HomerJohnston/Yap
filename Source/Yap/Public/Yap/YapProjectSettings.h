@@ -82,36 +82,14 @@ protected:
 	//UPROPERTY(Config, EditAnywhere, Category = "Editor")
 	//int32 MaxPassthroughSearchDepth = 2;
 
-	/** Placeholder. This does nothing for now. */
-	UPROPERTY(Config, EditAnywhere, Category = "Editor", meta = (EditCondition = "false"))
-	bool bPromptRequiresTalkAndAdvance = false;
-	
-	// - - - - - GRAPH APPEARANCE - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-#if WITH_EDITORONLY_DATA
-	/** Controls how large the portrait widgets are in the graph. Sizes smaller than 64 will result in some odd slate snapping. */
-	UPROPERTY(Config, EditAnywhere, Category = "Flow Graph Settings", meta = (ClampMin = 64, ClampMax = 128, UIMin = 32, UIMax = 128, Multiple = 16))
-	int32 PortraitSize = 64;
-
-	/** Controls the length of the time progress line on the dialogue widget (left side, for time of the running dialogue). */
-	UPROPERTY(Config, EditAnywhere, Category = "Flow Graph Settings", meta = (ClampMin = 0.0, ClampMax = 60.0, UIMin = 0.0, UIMax = 10.0, Delta = 0.01))
-	float DialogueTimeSliderMax = 5.0f;
-	
-	/** Controls the length of the time progress line on the dialogue widget (right side, for delay to next action). */
-	UPROPERTY(Config, EditAnywhere, Category = "Flow Graph Settings", meta = (ClampMin = 0.0, ClampMax = 60.0, UIMin = 0.0, UIMax = 10.0, Delta = 0.01))
-	float PaddingTimeSliderMax = 2.0f;
-#endif
-
 	// - - - - - ERROR HANDLING - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 	/** If set, you will not be warned when Yap is using default broker functions. Turn this on if you do not need to customize your broker. */
 	UPROPERTY(Config, EditAnywhere, Category = "Error Handling")
 	bool bSuppressBrokerWarnings = false;
 
-	// - - - - - OTHER - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-
 	/** Default texture to use for missing character portraits. */
-	UPROPERTY(Config, EditAnywhere, Category = "Other")
+	UPROPERTY(Config, EditAnywhere, Category = "Error Handling")
 	TSoftObjectPtr<UTexture2D> DefaultPortraitTexture;
 
 	// - - - - - OTHER - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -206,16 +184,6 @@ public:
 #if WITH_EDITOR
 public:
 	
-	static int32 GetPortraitSize() { return Get().PortraitSize; }
-
-	static float GetDialogueTimeSliderMax() { return Get().DialogueTimeSliderMax; }
-
-	static float GetFragmentPaddingSliderMax() { return Get().PaddingTimeSliderMax; }
-		
-	//static void RegisterTagFilter(UObject* ClassSource, FName PropertyName, EYap_TagFilter Filter);
-
-	//static FString GetTrimmedGameplayTagString(EYap_TagFilter Filter, const FGameplayTag& PropertyTag);
-
 protected:
 	void OnGetCategoriesMetaFromPropertyHandle(TSharedPtr<IPropertyHandle> PropertyHandle, FString& MetaString) const;
 

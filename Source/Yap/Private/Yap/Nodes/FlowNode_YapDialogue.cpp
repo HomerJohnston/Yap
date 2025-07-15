@@ -611,7 +611,7 @@ bool UFlowNode_YapDialogue::TryStartFragments()
 {
 	bool bStartedSuccessfully = false;
 
-	if (GetNodeType() == EYapDialogueNodeType::TalkAndAdvance)
+	if (GetMultipleFragmentSequencing() == EYapDialogueTalkSequencing::SelectRandom)
 	{
 		TArray<uint8> ValidFragments;
 
@@ -634,6 +634,9 @@ bool UFlowNode_YapDialogue::TryStartFragments()
 			else if (UYapSubsystem* Subsystem = UYapSubsystem::Get(this))
 			{
 				double Val = Subsystem->GetNoiseGenerator().NextReal();
+				double Val2 = Subsystem->GetNoiseGenerator().NextReal();
+				double Val3 = Subsystem->GetNoiseGenerator().NextReal();
+				double Val4 = Subsystem->GetNoiseGenerator().NextReal();
 
 				double IntervalVal = Val * (double)ValidFragments.Num();
 
@@ -653,7 +656,7 @@ bool UFlowNode_YapDialogue::TryStartFragments()
 			{
 				break;
 			}
-		}
+		}	
 	}
 	
 	return bStartedSuccessfully;

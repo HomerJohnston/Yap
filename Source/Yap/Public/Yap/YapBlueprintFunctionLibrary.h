@@ -59,7 +59,7 @@ public:
 
 	/**  */
 	UFUNCTION(BlueprintCallable, DisplayName = "Run Speech", Category = "Yap|Global", meta = (DefaultToSelf = "Speaker", AdvancedDisplay = 4))
-	static FYapSpeechHandle K2_RunSpeech(
+	static UPARAM(DisplayName = "Handle") FYapSpeechHandle K2_RunSpeech(
 		TScriptInterface<IYapCharacterInterface> Speaker,
 		FText DialogueText,
 		UObject* DialogueAudioAsset,

@@ -139,7 +139,6 @@ namespace YapSquirrel
 }
 
 #if WITH_EDITOR
-
 void FYapSquirrelState::RandomizeState()
 {
 	// It is allowable and expected to get a non-seeded random value in the editor, hence using 'Rand' here.
@@ -157,7 +156,7 @@ void UYapSquirrel::PostInitProperties()
 
 	if (!IsTemplate())
 	{
-		if (const UWorld* World = GEngine->GetWorldFromContextObject(GetTypedOuter<AActor>(), EGetWorldErrorMode::ReturnNull))
+		if (const UWorld* World = GetWorld())
 		{
 			// At runtime, Squirrels should be given random (but still seeded) positions
 			if (World->HasBegunPlay())

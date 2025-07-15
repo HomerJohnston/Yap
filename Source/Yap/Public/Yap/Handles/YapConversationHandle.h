@@ -79,37 +79,37 @@ class YAP_API UYapConversationHandleBFL : public UBlueprintFunctionLibrary
 public:
     /** Bind a delegate to a conversation opening event. This will be called when a "Open Conversation" flow node is entered. Use it to start opening your conversation UI. */
     UFUNCTION(BlueprintCallable, Category = "Yap|ConversationHandle", meta = (WorldContext = "WorldContext"))
-    static UPARAM(DisplayName = Handle) FYapConversationHandle BindToConversationOpening(UObject* WorldContext, FYapConversationHandle Handle, FYapConversationEventDelegate Delegate);
+    static UPARAM(DisplayName = "Handle") FYapConversationHandle BindToConversationOpening(UObject* WorldContext, FYapConversationHandle Handle, FYapConversationEventDelegate Delegate);
 
     /** Bind a delegate to a conversation opened event. This will be called when a "Open Conversation" flow node is finished and triggering its output pin. */
     UFUNCTION(BlueprintCallable, Category = "Yap|ConversationHandle", meta = (WorldContext = "WorldContext"))
-    static UPARAM(DisplayName = Handle) FYapConversationHandle BindToConversationOpened(UObject* WorldContext, FYapConversationHandle Handle, FYapConversationEventDelegate Delegate);
+    static UPARAM(DisplayName = "Handle") FYapConversationHandle BindToConversationOpened(UObject* WorldContext, FYapConversationHandle Handle, FYapConversationEventDelegate Delegate);
 
     /** Bind a delegate to a conversation closing event. This will be called when a "Close Conversation" flow node is entered. Use it to start closing your conversation UI. */
     UFUNCTION(BlueprintCallable, Category = "Yap|ConversationHandle", meta = (WorldContext = "WorldContext"))
-    static UPARAM(DisplayName = Handle) FYapConversationHandle BindToConversationClosing(UObject* WorldContext, FYapConversationHandle Handle, FYapConversationEventDelegate Delegate);
+    static UPARAM(DisplayName = "Handle") FYapConversationHandle BindToConversationClosing(UObject* WorldContext, FYapConversationHandle Handle, FYapConversationEventDelegate Delegate);
 
     /** Bind a delegate to a conversation closed event. This will be called when a "Close Conversation" flow node is finished and triggering its output pin. */
     UFUNCTION(BlueprintCallable, Category = "Yap|ConversationHandle", meta = (WorldContext = "WorldContext"))
-    static UPARAM(DisplayName = Handle) FYapConversationHandle BindToConversationClosed(UObject* WorldContext, FYapConversationHandle Handle, FYapConversationEventDelegate Delegate);
+    static UPARAM(DisplayName = "Handle") FYapConversationHandle BindToConversationClosed(UObject* WorldContext, FYapConversationHandle Handle, FYapConversationEventDelegate Delegate);
 
     /** Call this function to either skip running dialogue or to manually advance stepped dialogue. */
     UFUNCTION(BlueprintCallable, Category = "Yap|ConversationHandle", meta = (WorldContext = "WorldContext"))
-    static UPARAM(DisplayName = Handle) FYapConversationHandle AdvanceConversation(UObject* WorldContext, FYapConversationHandle Handle);
+    static UPARAM(DisplayName = "Handle") FYapConversationHandle AdvanceConversation(UObject* WorldContext, FYapConversationHandle Handle);
     
     /** Apply an interlock on Conversation Opening to prevent the "Open Conversation" flow node from finishing. Play animations or await other things before finally finishing the Open Conversation node. */
     UFUNCTION(BlueprintCallable, Category = "Yap|ConversationHandle", meta = (DefaultToSelf = "LockObject"))
-    static UPARAM(DisplayName = Handle) FYapConversationHandle ApplyOpeningInterlock(FYapConversationHandle Handle, UObject* LockObject);
+    static UPARAM(DisplayName = "Handle") FYapConversationHandle ApplyOpeningInterlock(FYapConversationHandle Handle, UObject* LockObject);
 
     /** Remove an interlock to allow an "Open Conversation" flow node to finish. When all interlocks are removed it will progress immediately. */
     UFUNCTION(BlueprintCallable, Category = "Yap|ConversationHandle", meta = (DefaultToSelf = "LockObject"))
-    static UPARAM(DisplayName = Handle) FYapConversationHandle ReleaseOpeningInterlock(FYapConversationHandle Handle, UObject* LockObject);
+    static UPARAM(DisplayName = "Handle") FYapConversationHandle ReleaseOpeningInterlock(FYapConversationHandle Handle, UObject* LockObject);
 
     /** Apply an interlock on Conversation Closing to prevent the "Close Conversation" flow node from finishing. Play animations or await other things before finally finishing the Close Conversation node. */
     UFUNCTION(BlueprintCallable, Category = "Yap|ConversationHandle", meta = (DefaultToSelf = "LockObject"))
-    static UPARAM(DisplayName = Handle) FYapConversationHandle ApplyClosingInterlock(FYapConversationHandle Handle, UObject* LockObject);
+    static UPARAM(DisplayName = "Handle") FYapConversationHandle ApplyClosingInterlock(FYapConversationHandle Handle, UObject* LockObject);
     
     /** Remove an interlock to allow a "Close Conversation" flow node to finish. When all interlocks are removed it will progress immediately. */
     UFUNCTION(BlueprintCallable, Category = "Yap|ConversationHandle", meta = (DefaultToSelf = "LockObject"))
-    static UPARAM(DisplayName = Handle) FYapConversationHandle ReleaseClosingInterlock(FYapConversationHandle Handle, UObject* LockObject);
+    static UPARAM(DisplayName = "Handle") FYapConversationHandle ReleaseClosingInterlock(FYapConversationHandle Handle, UObject* LockObject);
 };

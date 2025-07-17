@@ -894,7 +894,8 @@ void UYapSubsystem::OnSpeechComplete(FYapSpeechHandle Handle)
 
 bool UYapSubsystem::DoesSupportWorldType(const EWorldType::Type WorldType) const
 {
-	return WorldType == EWorldType::GamePreview || WorldType == EWorldType::Game || WorldType == EWorldType::PIE;
+	return true;
+	//return WorldType == EWorldType::GamePreview || WorldType == EWorldType::Game || WorldType == EWorldType::PIE;
 }
 
 // ------------------------------------------------------------------------------------------------

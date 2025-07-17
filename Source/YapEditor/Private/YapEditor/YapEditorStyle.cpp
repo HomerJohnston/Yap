@@ -161,8 +161,11 @@ const ISlateStyle* FYapEditorStyle::GetParentStyle()
 #define YAP_COMMON_PRESSED_PADDING FMargin(0, 1, 0, -1) // Push down by one pixel
 #define YAP_COMMON_CHECKBOXSTYLE FAppStyle::Get().GetWidgetStyle<FCheckBoxStyle>("ToggleButtonCheckBox")
 
+
 void FYapEditorStyle::Initialize_Internal()
 {
+	FSlateApplication::Get().GetRenderer()->ReloadTextureResources();
+	
 	YAP_REDEFINE_UE_BRUSH(FSlateImageBrush,			None,							FAppStyle,	"NoBorder",					FVector2f(16, 16), YapColor::Transparent);
 	YAP_REDEFINE_UE_BRUSH(FSlateVectorImageBrush,	Icon_FilledCircle,				FAppStyle,	"Icons.FilledCircle",		FVector2f(16, 16));
 	YAP_REDEFINE_UE_BRUSH(FSlateVectorImageBrush,	Icon_PlusSign,					FAppStyle,	"Icons.Plus",				FVector2f(16, 16));
@@ -227,8 +230,9 @@ void FYapEditorStyle::Initialize_Internal()
 	
 	YAP_DEFINE_BRUSH(FSlateVectorImageBrush,	Icon_Random,					"Icon_Random", ".svg",					FVector2f(32, 32));
 
-	YAP_DEFINE_BRUSH(FSlateImageBrush,			Bar_NegativePadding,			"Bar_NegativePadding", ".png",			FVector2f(5, 3), FLinearColor::White, ESlateBrushTileType::Horizontal);
-	YAP_DEFINE_BRUSH(FSlateImageBrush,			Bar_PositivePadding,			"Bar_PositivePadding", ".png",			FVector2f(3, 3), FLinearColor::White, ESlateBrushTileType::Horizontal);
+	YAP_DEFINE_BRUSH(FSlateImageBrush,			Bar_NormalPadding,				"Bar_NormalPadding", ".png",			FVector2f(5, 5), FLinearColor::White, ESlateBrushTileType::Horizontal);
+	YAP_DEFINE_BRUSH(FSlateImageBrush,			Bar_NegativePadding,			"Bar_NegativePadding", ".png",			FVector2f(5, 5), FLinearColor::White, ESlateBrushTileType::Horizontal);
+	YAP_DEFINE_BRUSH(FSlateImageBrush,			Bar_PositivePadding,			"Bar_PositivePadding", ".png",			FVector2f(3, 5), FLinearColor::White, ESlateBrushTileType::Horizontal);
 	
 	YAP_DEFINE_BRUSH(FSlateBorderBrush, 		Border_SharpSquare,				"Border_Sharp", ".png",					FMargin(4.0/8.0));
 	YAP_DEFINE_BRUSH(FSlateBorderBrush, 		Border_DeburredSquare,			"Border_Deburred", ".png",				FMargin(4.0/8.0));

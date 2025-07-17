@@ -80,17 +80,16 @@ protected:
 	UPROPERTY()
 	TArray<TObjectPtr<UYapCondition>> Conditions;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY()
 	TSoftObjectPtr<UObject> SpeakerAsset;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY()
 	FGameplayTag Speaker;
 	
-	/**  */
-	UPROPERTY(EditAnywhere)
+	UPROPERTY()
 	TSoftObjectPtr<UObject> DirectedAtAsset;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY()
 	FGameplayTag DirectedAt;
 	
 	UPROPERTY()

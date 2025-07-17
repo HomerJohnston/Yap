@@ -27,6 +27,7 @@
 #include "Yap/Enums/YapErrorLevel.h"
 #include "YapEditor/YapDeveloperSettings.h"
 #include "Framework/MultiBox/SToolBarButtonBlock.h"
+#include "Widgets/Input/SSlider.h"
 #include "Yap/YapStreamableManager.h"
 #include "Yap/Enums/YapLoadContext.h"
 #include "YapEditor/YapEditorLog.h"
@@ -827,18 +828,20 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateFragmentWidget()
 				]
 			]
 			+ SOverlay::Slot()
-			.Padding(32, 0, 32, -7)
+			.Padding(32, 2, 32, -11)
 			.VAlign(EVerticalAlignment::VAlign_Bottom)
 			[
 				SNew(SLevelOfDetailBranchNode)
 				.UseLowDetailSlot(Owner, &SFlowGraphNode_YapDialogueWidget::UseLowDetail, EGraphRenderingLOD::DefaultDetail)
-				.HighDetail()
+				.HighDetail() 
 				[
 					SNew(SBox)
-					.HeightOverride(3)
+					.HeightOverride(7)
 					.Visibility(this, &ThisClass::Visibility_TimeProgressionWidget)
 					[
 						SNew(SYapTimeProgressionWidget)
+						.DialogueNode(GetDialogueNodeMutable())
+						.FragmentIndex(FragmentIndex)
 						.BarColor(this, &ThisClass::ColorAndOpacity_FragmentTimeIndicator)
 						.PaddingIsSet(this, &ThisClass::Bool_PaddingTimeIsSet)
 						.SpeechTime_Lambda( [this] () { return GetDialogueNode()->GetSpeechTime(FragmentIndex, GetDisplayMaturitySetting(), EYapLoadContext::AsyncEditorOnly); } )
@@ -1162,6 +1165,8 @@ FLinearColor SFlowGraphNode_YapFragmentWidget::ColorAndOpacity_FragmentTimeIndic
 	{
 		Color *= YapColor::Gray;
 	}
+
+	Color.A = 0.6f;
 
 	return Color;
 }

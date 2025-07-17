@@ -59,6 +59,7 @@ struct FYapBrushes
 	
 	FName Icon_Random;
 
+	FName Bar_NormalPadding;
 	FName Bar_NegativePadding;
 	FName Bar_PositivePadding;
 	

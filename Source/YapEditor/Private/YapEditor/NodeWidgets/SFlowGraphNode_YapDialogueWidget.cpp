@@ -382,6 +382,82 @@ TSharedRef<SWidget> SFlowGraphNode_YapDialogueWidget::CreateTitleWidget(TSharedP
 		.AutoAdvanceSettingRaw(AutoAdvanceSettingRaw)
 		.AutoAdvanceEvaluatedAttr(AutoAdvanceEvaluatedAttr);
 
+	TSharedRef<SHorizontalBox> Row = SNew(SHorizontalBox);
+
+	Row->AddSlot()
+	.HAlign(HAlign_Left)
+	.VAlign(VAlign_Center)
+	.AutoWidth()
+	.Padding(-10, -8, 14, -8)
+	[
+		SNew(SLevelOfDetailBranchNode)
+		//.UseLowDetailSlot(this, &SFlowGraphNode_YapDialogueWidget::UseLowDetail, EGraphRenderingLOD::DefaultDetail)
+		.HighDetail()
+		[
+			SNew(SYapActivationCounterWidget, FOnTextCommitted::CreateSP(this, &SFlowGraphNode_YapDialogueWidget::OnTextCommitted_DialogueActivationLimit))
+			.ActivationCount(this, &SFlowGraphNode_YapDialogueWidget::GetDialogueActivationCount)
+			.ActivationLimit(this, &SFlowGraphNode_YapDialogueWidget::GetDialogueActivationLimit)
+			.FontHeight(10)
+		]
+		.LowDetail()
+		[
+			SNew(SSpacer)
+			.Size(20)
+		]
+	];
+
+	Row->AddSlot()
+	.HAlign(HAlign_Fill)
+	.Padding(-10,0,2,0)
+	[
+		SNew(SLevelOfDetailBranchNode)
+		//.UseLowDetailSlot(this, &SFlowGraphNode_YapDialogueWidget::UseLowDetail, EGraphRenderingLOD::DefaultDetail)
+		.HighDetail()
+		[
+			SAssignNew(DialogueConditionsScrollBox, SYapConditionsScrollBox)
+			.DialogueNode_Lambda( [this] () { return GetFlowYapDialogueNodeMutable(); } )
+			.ConditionsArrayProperty(FindFProperty<FArrayProperty>(UFlowNode_YapDialogue::StaticClass(), GET_MEMBER_NAME_CHECKED(UFlowNode_YapDialogue, Conditions)))
+			.ConditionsContainer_Lambda( [this] () { return GetFlowYapDialogueNodeMutable(); } )
+			.OnConditionsArrayChanged(this, &SFlowGraphNode_YapDialogueWidget::OnConditionsArrayChanged)
+		]
+	];
+
+	if (GetNodeConfig().General.DialogueTagsParent.IsValid())
+	{
+		Row->AddSlot()
+		.HAlign(HAlign_Right)
+		.Padding(2,0,5,0)
+		.AutoWidth()
+		.VAlign(VAlign_Fill)
+		[
+			SNew(SLevelOfDetailBranchNode)
+			//.UseLowDetailSlot(this, &SFlowGraphNode_YapDialogueWidget::UseLowDetail, EGraphRenderingLOD::DefaultDetail)
+			.HighDetail()
+			[
+				SNew(SYapGameplayTagTypedPicker)
+				.Tag(TAttribute<FGameplayTag>::CreateSP(this, &SFlowGraphNode_YapDialogueWidget::Value_DialogueTag))
+				.Filter(GameplayTagFilter) // TODO extra safety if things are unset
+				.OnTagChanged(this, &SFlowGraphNode_YapDialogueWidget::OnTagChanged_DialogueTag)
+				.ToolTipText(LOCTEXT("DialogueTag", "Dialogue tag"))
+				.Asset(GetFlowYapDialogueNodeMutable()->GetFlowAsset())
+			]
+		];
+	}
+	
+	Row->AddSlot()
+	.HAlign(HAlign_Right)
+	.AutoWidth()
+	.Padding(2, -2, -25, -2)
+	[
+		SNew(SBox)
+		.WidthOverride(20)
+		.HAlign(HAlign_Center)
+		.Visibility_Lambda( [this] () { return GetFlowYapDialogueNode()->GetNodeType() == EYapDialogueNodeType::TalkAndAdvance ? EVisibility::Collapsed : EVisibility::Visible; } )
+		[
+			ProgressionPopupButton
+		]
+	];
+	
 	return SNew(SLevelOfDetailBranchNode)
 	.UseLowDetailSlot(this, &SFlowGraphNode_YapDialogueWidget::UseLowDetail, EGraphRenderingLOD::DefaultDetail)
 	.HighDetail()
@@ -390,74 +466,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapDialogueWidget::CreateTitleWidget(TSharedP
 		.Visibility_Lambda([]() { return GEditor->PlayWorld == nullptr ? EVisibility::Visible : EVisibility::HitTestInvisible; })
 		.MaxDesiredWidth(this, &SFlowGraphNode_YapDialogueWidget::GetMaxTitleWidth)
 		[
-			SNew(SHorizontalBox)
-			+ SHorizontalBox::Slot()
-			.HAlign(HAlign_Left)
-			.VAlign(VAlign_Center)
-			.AutoWidth()
-			.Padding(-10, -8, 14, -8)
-			[
-				SNew(SLevelOfDetailBranchNode)
-				.UseLowDetailSlot(this, &SFlowGraphNode_YapDialogueWidget::UseLowDetail, EGraphRenderingLOD::DefaultDetail)
-				.HighDetail()
-				[
-					SNew(SYapActivationCounterWidget, FOnTextCommitted::CreateSP(this, &SFlowGraphNode_YapDialogueWidget::OnTextCommitted_DialogueActivationLimit))
-					.ActivationCount(this, &SFlowGraphNode_YapDialogueWidget::GetDialogueActivationCount)
-					.ActivationLimit(this, &SFlowGraphNode_YapDialogueWidget::GetDialogueActivationLimit)
-					.FontHeight(10)
-				]
-				.LowDetail()
-				[
-					SNew(SSpacer)
-					.Size(20)
-				]
-			]
-			+ SHorizontalBox::Slot()
-			.HAlign(HAlign_Fill)
-			.Padding(-10,0,2,0)
-			[
-				SNew(SLevelOfDetailBranchNode)
-				.UseLowDetailSlot(this, &SFlowGraphNode_YapDialogueWidget::UseLowDetail, EGraphRenderingLOD::DefaultDetail)
-				.HighDetail()
-				[
-					SAssignNew(DialogueConditionsScrollBox, SYapConditionsScrollBox)
-					.DialogueNode_Lambda( [this] () { return GetFlowYapDialogueNodeMutable(); } )
-					.ConditionsArrayProperty(FindFProperty<FArrayProperty>(UFlowNode_YapDialogue::StaticClass(), GET_MEMBER_NAME_CHECKED(UFlowNode_YapDialogue, Conditions)))
-					.ConditionsContainer_Lambda( [this] () { return GetFlowYapDialogueNodeMutable(); } )
-					.OnConditionsArrayChanged(this, &SFlowGraphNode_YapDialogueWidget::OnConditionsArrayChanged)
-				]
-			]
-			+ SHorizontalBox::Slot()
-			.HAlign(HAlign_Right)
-			.Padding(2,0,5,0)
-			.AutoWidth()
-			.VAlign(VAlign_Fill)
-			[
-				SNew(SLevelOfDetailBranchNode)
-				.UseLowDetailSlot(this, &SFlowGraphNode_YapDialogueWidget::UseLowDetail, EGraphRenderingLOD::DefaultDetail)
-				.HighDetail()
-				[
-					SNew(SYapGameplayTagTypedPicker)
-					.Tag(TAttribute<FGameplayTag>::CreateSP(this, &SFlowGraphNode_YapDialogueWidget::Value_DialogueTag))
-					.Filter(GameplayTagFilter) // TODO extra safety if things are unset
-					.OnTagChanged(this, &SFlowGraphNode_YapDialogueWidget::OnTagChanged_DialogueTag)
-					.ToolTipText(LOCTEXT("DialogueTag", "Dialogue tag"))
-					.Asset(GetFlowYapDialogueNodeMutable()->GetFlowAsset())
-				]
-			]
-			+ SHorizontalBox::Slot()
-			.HAlign(HAlign_Right)
-			.AutoWidth()
-			.Padding(2, -2, -25, -2)
-			[
-				SNew(SBox)
-				.WidthOverride(20)
-				.HAlign(HAlign_Center)
-				.Visibility_Lambda( [this] () { return GetFlowYapDialogueNode()->GetNodeType() == EYapDialogueNodeType::TalkAndAdvance ? EVisibility::Collapsed : EVisibility::Visible; } )
-				[
-					ProgressionPopupButton
-				]
-			]
+			Row
 		]
 	]
 	.LowDetail()
@@ -961,7 +970,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapDialogueWidget::CreateContentFooter()
 		+ SHorizontalBox::Slot()
 		.HAlign(HAlign_Center)
 		.VAlign(VAlign_Fill)
-		.Padding(31, 4, 7, 4)
+		.Padding(31, 18, 7, -10)
 		[
 			SNew(SLevelOfDetailBranchNode)
 			.UseLowDetailSlot(this, &SFlowGraphNode_YapDialogueWidget::UseLowDetail, EGraphRenderingLOD::DefaultDetail)
@@ -969,9 +978,10 @@ TSharedRef<SWidget> SFlowGraphNode_YapDialogueWidget::CreateContentFooter()
 			[
 				SNew(SBorder)
 				.Cursor(EMouseCursor::Default)
-				.HAlign(HAlign_Center)
-				.VAlign(VAlign_Center)
+				.HAlign(HAlign_Fill)
+				.VAlign(VAlign_Fill)
 				.BorderImage(FYapEditorStyle::GetImageBrush(YapBrushes.Icon_FilledCircle))
+				//.BorderImage(FYapEditorStyle::GetImageBrush(YapBrushes.Box_SolidWhite_Rounded))
 				.BorderBackgroundColor(this, &SFlowGraphNode_YapDialogueWidget::BorderBackgroundColor_AppendFragmentButton)
 				.Padding(0)
 				[
@@ -980,26 +990,27 @@ TSharedRef<SWidget> SFlowGraphNode_YapDialogueWidget::CreateContentFooter()
 					.WidthOverride(20)
 					.HeightOverride(20)
 					.VAlign(VAlign_Center)
-					.HAlign(HAlign_Center)
+					.HAlign(HAlign_Fill)
 					.Padding(0)
 					[
 						SAssignNew(AppendFragmentButton, SButton)
 						.Cursor(EMouseCursor::Default)
 						.HAlign(HAlign_Center)
+						.VAlign(VAlign_Center)
 						.ButtonStyle(FYapEditorStyle::Get(), YapStyles.ButtonStyle_NoBorder)
 						.ToolTipText(LOCTEXT("DialogueAddFragment_Tooltip", "Add Fragment"))
 						.OnClicked(this, &SFlowGraphNode_YapDialogueWidget::OnClicked_AppendFragmentButton)
-						.ContentPadding(0)
+						.ContentPadding(2)
 						[
-							SNew(SBox)
-							.VAlign(VAlign_Center)
-							.Padding(0)
-							[
+							//SNew(SBox)
+							//.VAlign(VAlign_Center)
+							//.Padding(0)
+							//[
 								SNew(SImage)
 								.Image(FYapEditorStyle::GetImageBrush(YapBrushes.Icon_PlusSign))
-								//.DesiredSizeOverride(FVector2D(12, 12))
+								.DesiredSizeOverride(FVector2D(16, 16))
 								.ColorAndOpacity(YapColor::DarkGray)
-							]
+							//]
 						]
 					]
 				]
@@ -1203,7 +1214,7 @@ FSlateColor SFlowGraphNode_YapDialogueWidget::BorderBackgroundColor_AppendFragme
 		return YapColor::DarkGray;
 	}
 
-	return YapColor::Transparent;
+	return YapColor::Noir;
 }
 
 // ------------------------------------------------------------------------------------------------

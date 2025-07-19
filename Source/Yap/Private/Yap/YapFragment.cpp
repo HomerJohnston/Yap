@@ -56,30 +56,8 @@ void FYapFragment::PreloadContent(UWorld* World, EYapMaturitySetting MaturitySet
 	ResolveMaturitySetting(World, MaturitySetting);
 
 	// TODO after SpeakerAsset is removed, rename these
-	TSoftObjectPtr<UObject> SpeakerAsset__ = GetCharacterAsset(Speaker);
-	TSoftObjectPtr<UObject> DirectedAtAsset__ = GetCharacterAsset(DirectedAt);
-	
-	switch (LoadContext)
-	{
-		case EYapLoadContext::Async:
-		{
-			SpeakerHandle = FYapStreamableManager::Get().RequestAsyncLoad(SpeakerAsset__.ToSoftObjectPath());;
-			DirectedAtHandle = FYapStreamableManager::Get().RequestAsyncLoad(DirectedAtAsset__.ToSoftObjectPath());;
-			break;
-		}
-		case EYapLoadContext::AsyncEditorOnly:
-		{
-			FYapStreamableManager::Get().RequestAsyncLoad(SpeakerAsset__.ToSoftObjectPath());;
-			FYapStreamableManager::Get().RequestAsyncLoad(DirectedAtAsset__.ToSoftObjectPath());;
-			break;
-		}
-		case EYapLoadContext::Sync:
-		{
-			SpeakerHandle = FYapStreamableManager::Get().RequestSyncLoad(SpeakerAsset__.ToSoftObjectPath());;
-			DirectedAtHandle = FYapStreamableManager::Get().RequestSyncLoad(DirectedAtAsset__.ToSoftObjectPath());;
-			break;
-		}
-	}
+	TSoftObjectPtr<UObject> SpeakerAsset__ = GetCharacterAsset(Speaker, SpeakerHandle, LoadContext);
+	TSoftObjectPtr<UObject> DirectedAtAsset__ = GetCharacterAsset(DirectedAt, DirectedAtHandle, LoadContext);
 	
 	// TODO I need some way for Yap to act upon the user changing their maturity setting. Broker needs an "OnMaturitySettingChanged" delegate?
 	
@@ -118,16 +96,14 @@ bool FYapFragment::HasSpeakerAssigned()
 	return Speaker.IsValid();
 }
 
-TSoftObjectPtr<UObject> FYapFragment::GetCharacterAsset(const FGameplayTag& CharacterTag) const
+TSoftObjectPtr<UObject> FYapFragment::GetCharacterAsset(const FGameplayTag& CharacterTag, TSharedPtr<FStreamableHandle>& Handle, EYapLoadContext LoadContext) const
 {
 	if (!CharacterTag.IsValid())
 	{
 		return nullptr;
 	}
 
-	auto* Ref = UYapProjectSettings::FindCharacter(CharacterTag);
-
-	return (Ref) ? *Ref : nullptr;
+	return UYapProjectSettings::FindCharacter(CharacterTag, Handle, LoadContext);
 }
 
 const UObject* FYapFragment::GetDirectedAt(EYapLoadContext LoadContext)
@@ -142,53 +118,7 @@ const UObject* FYapFragment::GetCharacter_Internal(const FGameplayTag& Character
 		return nullptr;
 	}
 
-	TSoftObjectPtr<UObject> Asset = GetCharacterAsset(CharacterTag);
-	
-	if (Asset.IsNull())
-	{
-		return nullptr;
-	}
-
-	if (Asset.IsValid())
-	{
-		if (const UBlueprint* Blueprint = Cast<UBlueprint>(Asset.Get()))
-		{
-			return Blueprint->GeneratedClass->GetDefaultObject();
-		}
-		
-		return Asset.Get();
-	}
-
-	switch (LoadContext)
-	{
-		case EYapLoadContext::Async:
-		{
-			Handle = FYapStreamableManager::Get().RequestAsyncLoad(Asset.ToSoftObjectPath());
-			break;
-		}
-		case EYapLoadContext::AsyncEditorOnly:
-		{
-			FYapStreamableManager::Get().RequestAsyncLoad(Asset.ToSoftObjectPath());
-			break;
-		}
-		case EYapLoadContext::Sync:
-		{
-			Handle = FYapStreamableManager::Get().RequestSyncLoad(Asset.ToSoftObjectPath());
-			break;
-		}
-	}
-
-	if (Asset.IsPending())
-	{
-		return nullptr;
-	}
-	
-	if (const UBlueprint* Blueprint = Cast<UBlueprint>(Asset.Get()))
-	{
-		return Blueprint->GetClass()->GetDefaultObject();
-	}
-
-	return Asset.Get();
+	return UYapProjectSettings::FindCharacter(CharacterTag, Handle, LoadContext);
 }
 
 const FText& FYapFragment::GetDialogueText(UWorld* World, EYapMaturitySetting MaturitySetting) const

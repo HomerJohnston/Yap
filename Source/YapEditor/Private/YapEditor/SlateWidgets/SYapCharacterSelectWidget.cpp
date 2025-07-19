@@ -13,6 +13,7 @@
 #include "YapEditor/YapEditorStyle.h"
 #include "YapEditor/YapTransactions.h"
 #include "Yap/YapFragment.h"
+#include "Yap/Enums/YapLoadContext.h"
 #include "YapEditor/YapDeveloperSettings.h"
 #include "YapEditor/YapEditorLog.h"
 #include "YapEditor/YapEditorSubsystem.h"
@@ -191,7 +192,9 @@ void SYapCharacterSelectWidget::UpdateCharacterSelector(const FText& FilterText)
 
 	auto CreateCharacterListEntry = [this, MoodTag, PortraitSize, BorderSize, FilterText, &NumCharactersAdded, &LastCharacterTag] (const FYapCharacterDefinition& CharacterDefinition)
 	{
-		const UObject* Character = CharacterDefinition.CharacterAsset.LoadSynchronous();
+		TSharedPtr<FStreamableHandle> Temp;
+		
+		const UObject* Character = CharacterDefinition.GetCharacter(Temp, EYapLoadContext::Sync);
 		
 		FText Name = FText::GetEmpty();
 		

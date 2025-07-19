@@ -4,6 +4,7 @@
 #include "YapEditor/Customizations/PropertyCustomization_YapCharacterDefinition.h"
 
 #include "DetailWidgetRow.h"
+#include "ThumbnailRendering/ThumbnailManager.h"
 #include "Widgets/Colors/SColorBlock.h"
 #include "Yap/YapCharacterAsset.h"
 #include "Yap/YapCharacterDefinition.h"
@@ -15,13 +16,50 @@
 
 #define LOCTEXT_NAMESPACE "YapEditor"
 
+void FPropertyCustomization_YapCharacterDefinition::OnSetNewCharacterAsset_New2(const FAssetData& AssetData, TSharedPtr<IPropertyHandle> AssetPropertyHandle, TSharedPtr<IPropertyHandle> ClassPropertyHandle)
+{
+    UObject* Object = AssetData.GetAsset();
+    
+    if (Object)
+    {
+        if (UBlueprint* Blueprint = Cast<UBlueprint>(Object))
+        {
+            UClass* ObjectClass = Blueprint->GeneratedClass;
+
+            if (ObjectClass)
+            {
+                ClassPropertyHandle->SetValue(ObjectClass);
+                AssetPropertyHandle->SetValue(static_cast<UObject*>(nullptr));
+            }
+        }
+        else
+        {
+            ClassPropertyHandle->SetValue(static_cast<UObject*>(nullptr));
+            AssetPropertyHandle->SetValue(Object);
+        }
+    }
+    else
+    {
+        AssetPropertyHandle->SetValue(static_cast<UObject*>(nullptr));
+        ClassPropertyHandle->SetValue(static_cast<UObject*>(nullptr));
+    }
+    /*
+    if (!Object->Implements<UYapCharacterInterface>())
+    {
+        Yap::Editor::PostNotificationInfo_Warning(LOCTEXT("CharacterAsset_ErrorTitle", "Error"), LOCTEXT("CharacterAsset_ErrorDescription", "The selected asset is not a valid Yap character! Please select a valid character asset."));
+    }
+    */
+}
+
 void FPropertyCustomization_YapCharacterDefinition::CustomizeHeader(TSharedRef<IPropertyHandle> StructPropertyHandle, FDetailWidgetRow& HeaderRow, IPropertyTypeCustomizationUtils& StructCustomizationUtils)
 {
     static const FName TagPropertyName = GET_MEMBER_NAME_CHECKED(FYapCharacterDefinition, CharacterTag);
     static const FName AssetPropertyName = GET_MEMBER_NAME_CHECKED(FYapCharacterDefinition, CharacterAsset);
+    static const FName ClassPropertyName = GET_MEMBER_NAME_CHECKED(FYapCharacterDefinition, CharacterClass);
 
     TSharedPtr<IPropertyHandle> TagPropertyHandle = StructPropertyHandle->GetChildHandle(TagPropertyName);
     TSharedPtr<IPropertyHandle> AssetPropertyHandle = StructPropertyHandle->GetChildHandle(AssetPropertyName);
+    TSharedPtr<IPropertyHandle> ClassPropertyHandle = StructPropertyHandle->GetChildHandle(ClassPropertyName);
 
     TSharedPtr<IPropertyHandle> Test = StructPropertyHandle;
     
@@ -58,7 +96,9 @@ void FPropertyCustomization_YapCharacterDefinition::CustomizeHeader(TSharedRef<I
             TagPropertyHandle->CreatePropertyValueWidgetWithCustomization(nullptr)
         ]
     ];
-    
+
+    TSoftObjectPtr<UObject> AssetPropertySoftPtr;
+
     HeaderRow.ValueContent()
     .HAlign(HAlign_Fill)
     .VAlign(VAlign_Fill)
@@ -85,7 +125,16 @@ void FPropertyCustomization_YapCharacterDefinition::CustomizeHeader(TSharedRef<I
             .HAlign(HAlign_Fill)
             [
                 // TODO: Difficult. I want the picker to be able to list ONLY blueprints and assets that implement the Yap Character Interface.
-                AssetPropertyHandle->CreatePropertyValueWidgetWithCustomization(nullptr)
+                SNew(SObjectPropertyEntryBox)
+                .OnObjectChanged(this, &FPropertyCustomization_YapCharacterDefinition::OnSetNewCharacterAsset_New2, AssetPropertyHandle, ClassPropertyHandle)
+                .ObjectPath(this, &FPropertyCustomization_YapCharacterDefinition::ObjectPath_CharacterAsset, AssetPropertyHandle, ClassPropertyHandle)
+				.ThumbnailPool(UThumbnailManager::Get().GetSharedThumbnailPool())
+                .EnableContentPicker(true)
+                .DisplayUseSelected(true)
+                .DisplayBrowse(true)
+                .DisplayThumbnail(true)
+                //.ThumbnailSizeOverride(48)
+                //AssetPropertyHandle->CreatePropertyValueWidgetWithCustomization(nullptr)
             ]
         ]
         + SHorizontalBox::Slot()
@@ -133,7 +182,8 @@ void FPropertyCustomization_YapCharacterDefinition::CustomizeHeader(TSharedRef<I
         ]
     ];
     
-    AssetPropertyHandle->SetOnPropertyValueChanged(FSimpleDelegate::CreateSP(this, &FPropertyCustomization_YapCharacterDefinition::OnSetNewCharacterAsset, AssetPropertyHandle));
+    //AssetPropertyHandle->SetOnPropertyValueChangedWithData(TDelegate<void(const FPropertyChangedEvent&)>::CreateSP(this, &FPropertyCustomization_YapCharacterDefinition::OnSetNewCharacterAsset_New, AssetPropertyHandle));
+    //AssetPropertyHandle->SetOnPropertyValuePreChange(FSimpleDelegate::CreateSP(this, &FPropertyCustomization_YapCharacterDefinition::OnSetNewCharacterAsset, AssetPropertyHandle));
 }
 
 void FPropertyCustomization_YapCharacterDefinition::CustomizeChildren(TSharedRef<IPropertyHandle> StructPropertyHandle, IDetailChildrenBuilder& StructBuilder, IPropertyTypeCustomizationUtils& StructCustomizationUtils)
@@ -143,19 +193,34 @@ void FPropertyCustomization_YapCharacterDefinition::CustomizeChildren(TSharedRef
 
 FText FPropertyCustomization_YapCharacterDefinition::ToolTipText_AssetStatus(FYapCharacterDefinition* CharacterDefinition) const
 {
+    if (!CharacterDefinition->CharacterAsset.IsNull() && !CharacterDefinition->CharacterClass.IsNull())
+    {
+        return LOCTEXT("CharacterTagUnset_ToolTip", "Warning: Serialization error, please re-assign this character.");
+    }
+    
     if ((CharacterDefinition->ErrorState & EYapCharacterDefinitionErrorState::AssetConflict) != EYapCharacterDefinitionErrorState::OK)
     {
         return LOCTEXT("CharacterAssetConflict_ToolTip", "Error: Asset conflicts with another character.");
     }
 
-    if (CharacterDefinition->CharacterAsset.IsNull())
+    if (CharacterDefinition->CharacterAsset.IsNull() && CharacterDefinition->CharacterClass.IsNull())
     {
-        return LOCTEXT("CharacterTagUnset_ToolTip", "Warning: Asset is unset.");
+        return LOCTEXT("CharacterTagUnset_ToolTip", "Warning: Character is unset.");
     }
 
-    if (!IYapCharacterInterface::IsAsset_YapCharacter(CharacterDefinition->CharacterAsset))
+    if (!CharacterDefinition->CharacterAsset.IsNull())
     {
-        return LOCTEXT("CharacterTagNotUnderRoot_ToolTip", "Error: Asset does not implement Yap Character Interface.");
+        if (!IYapCharacterInterface::IsAsset_YapCharacter(CharacterDefinition->CharacterAsset))
+        {
+            return LOCTEXT("CharacterTagNotUnderRoot_ToolTip", "Error: Asset does not implement Yap Character Interface.");
+        }
+    }
+    else if (!CharacterDefinition->CharacterClass.IsNull())
+    {
+        if (!IYapCharacterInterface::IsAsset_YapCharacter(CharacterDefinition->CharacterClass))
+        {
+            return LOCTEXT("CharacterTagNotUnderRoot_ToolTip", "Error: Asset does not implement Yap Character Interface.");
+        }
     }
 
     return FText::GetEmpty();
@@ -163,21 +228,36 @@ FText FPropertyCustomization_YapCharacterDefinition::ToolTipText_AssetStatus(FYa
 
 FLinearColor FPropertyCustomization_YapCharacterDefinition::AssetStatusColor(FYapCharacterDefinition* CharacterDefinition) const
 {
+    if (!CharacterDefinition->CharacterAsset.IsNull() && !CharacterDefinition->CharacterClass.IsNull())
+    {
+        return ErrorColor();
+    }
+    
     if ((CharacterDefinition->ErrorState & EYapCharacterDefinitionErrorState::AssetConflict) != EYapCharacterDefinitionErrorState::OK)
     {
         return ErrorColor();
     }
 
-    if (CharacterDefinition->CharacterAsset.IsNull())
+    if (CharacterDefinition->CharacterAsset.IsNull() && CharacterDefinition->CharacterClass.IsNull())
     {
         return WarningColor();
     }
 
-    if (!IYapCharacterInterface::IsAsset_YapCharacter(CharacterDefinition->CharacterAsset))
+    if (!CharacterDefinition->CharacterAsset.IsNull())
     {
-        return InvalidCharacterColor();
+        if (!IYapCharacterInterface::IsAsset_YapCharacter(CharacterDefinition->CharacterAsset))
+        {
+            return InvalidCharacterColor();
+        }
     }
-
+    else if (!CharacterDefinition->CharacterClass.IsNull())
+    {
+        if (!IYapCharacterInterface::IsAsset_YapCharacter(CharacterDefinition->CharacterClass))
+        {
+            return InvalidCharacterColor();
+        }
+    }
+    
     return OKColor();
 }
 
@@ -225,10 +305,67 @@ FLinearColor FPropertyCustomization_YapCharacterDefinition::Color_TagStatus(FYap
     return OKColor();
 }
 
+FString FPropertyCustomization_YapCharacterDefinition::ObjectPath_CharacterAsset(TSharedPtr<IPropertyHandle> AssetPropertyHandle, TSharedPtr<IPropertyHandle> ClassPropertyHandle) const
+{
+    TSoftObjectPtr<UObject> AssetPropertySoftPtr;
+    TSoftClassPtr<UObject> ClassPropertySoftPtr;
+    
+    if (AssetPropertyHandle.IsValid())
+    {
+        void* AssetPropertySoftPtrAddress;
+        AssetPropertyHandle->GetValueData(AssetPropertySoftPtrAddress);
+
+        AssetPropertySoftPtr = *static_cast<TSoftObjectPtr<UObject>*>(AssetPropertySoftPtrAddress);
+
+    }
+
+    if (ClassPropertyHandle.IsValid())
+    {
+        void* ClassPropertySoftPtrAddress;
+        ClassPropertyHandle->GetValueData(ClassPropertySoftPtrAddress);
+
+        ClassPropertySoftPtr = *static_cast<TSoftClassPtr<UObject>*>(ClassPropertySoftPtrAddress);
+
+    }
+
+    if (!AssetPropertySoftPtr.IsNull() && !ClassPropertySoftPtr.IsNull())
+    {
+        return "";
+    }
+
+    if (!AssetPropertySoftPtr.IsNull())
+    {
+        return AssetPropertySoftPtr->GetPathName();        
+    }
+
+    if (!ClassPropertySoftPtr.IsNull())
+    {
+        return ClassPropertySoftPtr->GetPathName();        
+    }
+
+    return "";
+}
+
 void FPropertyCustomization_YapCharacterDefinition::OnSetNewCharacterAsset(TSharedPtr<IPropertyHandle> AssetPropertyHandle) const
 {
     UObject* Object;
+
+    if (AssetPropertyHandle->GetValue(Object) == FPropertyAccess::Success && Object)
+    {
+        if (UBlueprint* Blueprint = Cast<UBlueprint>(Object))
+        {
+            Object = Blueprint->GeneratedClass;
+
+            
+        }
+    }
+
+    if (!Object->Implements<UYapCharacterInterface>())
+    {
+        Yap::Editor::PostNotificationInfo_Warning(LOCTEXT("CharacterAsset_ErrorTitle", "Error"), LOCTEXT("CharacterAsset_ErrorDescription", "The selected asset is not a valid Yap character! Please select a valid character asset."));
+    }
     
+    /*
     if (AssetPropertyHandle->GetValue(Object) == FPropertyAccess::Success)
     {
         if (Object)
@@ -261,6 +398,35 @@ void FPropertyCustomization_YapCharacterDefinition::OnSetNewCharacterAsset(TShar
     {
         Yap::Editor::PostNotificationInfo_Warning(LOCTEXT("CharacterAsset_ErrorTitle", "Error"), LOCTEXT("CharacterAsset_ErrorDescription", "The selected asset is not a valid Yap character! Please select a valid character asset."));
     }
+    */
+}
+
+void FPropertyCustomization_YapCharacterDefinition::OnSetNewCharacterAsset_New(const FPropertyChangedEvent& PropertyChangedEvent, TSharedPtr<IPropertyHandle> AssetPropertyHandle) const
+{
+    UObject* Object;
+
+    check(PropertyChangedEvent.GetNumObjectsBeingEdited() == 1);
+    
+    if (AssetPropertyHandle->GetValue(Object) == FPropertyAccess::Success && Object)
+    {
+        if (UBlueprint* Blueprint = Cast<UBlueprint>(Object))
+        {
+            Object = Blueprint->GeneratedClass;
+
+            const UObject* ObjectBeingEdited = PropertyChangedEvent.GetObjectBeingEdited(0);
+
+            PropertyChangedEvent.Property->SetValue_InContainer((void*)ObjectBeingEdited, Object);
+
+            UE_LOG(LogTemp, Display, TEXT("Found: %s"), *Object->GetName());
+        }
+    }
+
+    /*
+    if (!Object->Implements<UYapCharacterInterface>())
+    {
+        Yap::Editor::PostNotificationInfo_Warning(LOCTEXT("CharacterAsset_ErrorTitle", "Error"), LOCTEXT("CharacterAsset_ErrorDescription", "The selected asset is not a valid Yap character! Please select a valid character asset."));
+    }
+    */
 }
 
 FReply FPropertyCustomization_YapCharacterDefinition::OnOpenCharacterAsset(TSharedPtr<IPropertyHandle> PropertyHandle) const

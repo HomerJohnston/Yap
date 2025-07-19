@@ -105,7 +105,7 @@ protected:
 	TArray<FYapCharacterDefinition> CharacterArray;
 
 	// Not exposed for editing, this is updated automatically whenever the character array is edited. Game code actually uses this as the character source. 
-	TMap<FGameplayTag, TSoftObjectPtr<UObject>> CharacterMap;
+	TMap<FGameplayTag, FYapCharacterDefinition> CharacterMap;
 
 	// TODO: SAssetView doesn't support blueprint classes, so we can't use this yet.
 	/** By default, Yap will discover all native C++ classes that inherit the Yap Character interface. You can add blueprint classes which inherit it here. This avoids forcefully loading all assets to discover them. */
@@ -169,17 +169,17 @@ public:
 	
 	static const TSoftObjectPtr<UTexture2D> GetDefaultPortraitTextureAsset() { return Get().DefaultPortraitTexture; };
 
-	static const TSoftObjectPtr<UObject>* FindCharacter(FGameplayTag Character) { return Get().CharacterMap.Find(Character); }
-	
-	static const TMap<FGameplayTag, TSoftObjectPtr<UObject>>& GetCharacters() { return Get().CharacterMap; }
+	static const UObject* FindCharacter(FGameplayTag CharacterTag, TSharedPtr<FStreamableHandle>& Handle, EYapLoadContext LoadContext);
+
+	static const TMap<FGameplayTag, FYapCharacterDefinition>& GetCharacters() { return Get().CharacterMap; }
 
 	static const FGameplayTag& GetCharacterRootTag() { return Get().CharacterTagRoot; }
 
 	static const FGameplayTag& FindCharacterTag(const TSoftObjectPtr<UObject>& Character);
 	
 #if WITH_EDITOR
-	// TODO this is kind of ugly
-	static TMap<TSoftObjectPtr<UObject>, FGameplayTag> ReversedCharacterMap;
+	// TODO this is kind of ugly. Can I get rid of it.
+	static TMap<FYapCharacterDefinition, FGameplayTag> ReversedCharacterMap;
 	static void UpdateReversedCharacterMap();
 #endif
 	

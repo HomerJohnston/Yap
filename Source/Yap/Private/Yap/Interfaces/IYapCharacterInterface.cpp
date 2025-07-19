@@ -38,16 +38,19 @@ bool IYapCharacterInterface::IsAsset_YapCharacter(const TSoftObjectPtr<UObject> 
     {
         return true;
     }
-
-    if (const UBlueprint* AssetBlueprint = Cast<UBlueprint>(Asset))
-    {
-        // If the blueprint's generated class implements the interface, return true
-        if (AssetBlueprint->GeneratedClass && AssetBlueprint->GeneratedClass->ImplementsInterface(UYapCharacterInterface::StaticClass()))
-        {
-            return true;
-        }
-    }
     
+    return false;
+}
+
+bool IYapCharacterInterface::IsAsset_YapCharacter(const TSoftClassPtr<UObject> Class)
+{
+    TSubclassOf<UObject> AssetClass = Class.LoadSynchronous();
+
+    if (AssetClass->ImplementsInterface(UYapCharacterInterface::StaticClass()))
+    {
+        return true;
+    }
+
     return false;
 }
 #endif
@@ -155,21 +158,14 @@ const UTexture2D* IYapCharacterInterface::GetPortrait(const UObject* CharacterAs
     const UTexture2D* Texture = nullptr;
     
     if (IsValid(CharacterAsset))
-    {
-        const UObject* TargetObject = CharacterAsset;
-        
-        if (const UBlueprint* Blueprint = Cast<UBlueprint>(TargetObject))
-        {
-            TargetObject = Blueprint->GeneratedClass.GetDefaultObject();
-        }
-        
-        if (const IYapCharacterInterface* Speaker = Cast<IYapCharacterInterface>(TargetObject))
+    {        
+        if (const IYapCharacterInterface* Speaker = Cast<IYapCharacterInterface>(CharacterAsset))
         {
             Texture = Speaker->GetCharacterPortrait(MoodTag);
         }
-        else if (TargetObject->Implements<UYapCharacterInterface>())
+        else if (CharacterAsset->Implements<UYapCharacterInterface>())
         {
-            Texture = IYapCharacterInterface::Execute_K2_GetYapCharacterPortrait(TargetObject, MoodTag);
+            Texture = IYapCharacterInterface::Execute_K2_GetYapCharacterPortrait(CharacterAsset, MoodTag);
         }
         else
         {

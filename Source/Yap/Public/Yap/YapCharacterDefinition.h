@@ -7,6 +7,9 @@
 
 #include "YapCharacterDefinition.generated.h"
 
+struct FStreamableHandle;
+enum class EYapLoadContext : uint8;
+
 UENUM()
 enum class EYapCharacterDefinitionErrorState : uint8
 {
@@ -18,10 +21,17 @@ enum class EYapCharacterDefinitionErrorState : uint8
 ENUM_CLASS_FLAGS(EYapCharacterDefinitionErrorState);
 
 USTRUCT()
-struct FYapCharacterDefinition
+struct YAP_API FYapCharacterDefinition
 {
     GENERATED_BODY()
 
+    friend class UYapProjectSettings;
+
+#if WITH_EDITOR
+    friend class FPropertyCustomization_YapCharacterDefinition;
+    friend class FDetailCustomization_YapProjectSettings;
+#endif
+    
     FYapCharacterDefinition()
     {
     }
@@ -34,14 +44,35 @@ struct FYapCharacterDefinition
     UPROPERTY(EditAnywhere)
     FGameplayTag CharacterTag;
 
+protected:
+    // If an asset is selected, this will store it
     UPROPERTY(EditAnywhere)
     TSoftObjectPtr<UObject> CharacterAsset;
+
+    // If a blueprint is selected, this will store it
+    UPROPERTY(EditAnywhere)
+    TSoftClassPtr<UObject> CharacterClass;
+
+public:
+    UObject* GetCharacter(TSharedPtr<FStreamableHandle>& Handle, EYapLoadContext LoadContext) const;
 
     UPROPERTY(Transient)
     EYapCharacterDefinitionErrorState ErrorState = EYapCharacterDefinitionErrorState::OK;
 
+    bool HasValidCharacterData() const;
+    
     bool operator< (const FYapCharacterDefinition& OtherCharacter) const
     {
         return CharacterTag < OtherCharacter.CharacterTag;
+    }
+    
+    friend uint32 GetTypeHash(const FYapCharacterDefinition& This)
+    {
+        return GetTypeHash(This.CharacterTag);
+    }
+
+    friend bool operator==(const FYapCharacterDefinition& This, const FYapCharacterDefinition& Other)
+    {
+        return This.CharacterTag == Other.CharacterTag;
     }
 };

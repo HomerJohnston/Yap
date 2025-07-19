@@ -225,7 +225,7 @@ public:
 	
 	bool HasSpeakerAssigned();
 
-	TSoftObjectPtr<UObject> GetCharacterAsset(const FGameplayTag& CharacterTag) const;
+	TSoftObjectPtr<UObject> GetCharacterAsset(const FGameplayTag& CharacterTag, TSharedPtr<FStreamableHandle>& Handle, EYapLoadContext LoadContext) const;
 	
 	const UObject* GetDirectedAt(EYapLoadContext LoadContext); // Non-const because of async loading handle
 	

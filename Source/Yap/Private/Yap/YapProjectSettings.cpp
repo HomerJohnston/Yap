@@ -8,13 +8,15 @@
 #endif
 #include "Engine/AssetManager.h"
 #include "Yap/YapCharacterAsset.h"
+#include "Yap/Enums/YapLoadContext.h"
 #include "Yap/Globals/YapFileUtilities.h"
+#include "Yap/YapCharacterDefinition.h"
 
 #define LOCTEXT_NAMESPACE "Yap"
 
 #if WITH_EDITOR
 FName UYapProjectSettings::CategoryName = FName("Yap");
-TMap<TSoftObjectPtr<UObject>, FGameplayTag> UYapProjectSettings::ReversedCharacterMap;
+TMap<FYapCharacterDefinition, FGameplayTag> UYapProjectSettings::ReversedCharacterMap;
 #endif
 
 UYapProjectSettings::UYapProjectSettings()
@@ -102,17 +104,35 @@ void UYapProjectSettings::AddAdditionalCharacterClass(TSoftClassPtr<UObject> Cla
 }
 #endif
 
+const UObject* UYapProjectSettings::FindCharacter(FGameplayTag CharacterTag, TSharedPtr<FStreamableHandle>& Handle, EYapLoadContext LoadContext)
+{
+	FYapCharacterDefinition* CharacterDefinition = Get().CharacterMap.Find(CharacterTag);
+
+	if (CharacterDefinition)
+	{
+		return CharacterDefinition->GetCharacter(Handle, LoadContext);
+	}
+
+	return nullptr;
+}
+
+#if WITH_EDITOR
+// TODO delete this in 2026. It's only for migrating fragments from old data to new data.
 const FGameplayTag& UYapProjectSettings::FindCharacterTag(const TSoftObjectPtr<UObject>& Character)
 {
-	for (const auto& Pair : Get().CharacterMap)
+	for (const TTuple<FGameplayTag, FYapCharacterDefinition>& Pair : Get().CharacterMap)
 	{
-		if (Pair.Value == Character)
+		TSharedPtr<FStreamableHandle> TempHandle;
+		
+		if (Pair.Value.GetCharacter(TempHandle, EYapLoadContext::Sync) == Character)
 		{
 			return Pair.Key;
 		}
 	}
+	
 	return FGameplayTag::EmptyTag;
 }
+#endif
 
 #if WITH_EDITOR
 void UYapProjectSettings::UpdateReversedCharacterMap()
@@ -122,7 +142,7 @@ void UYapProjectSettings::UpdateReversedCharacterMap()
 	
 	Get().ReversedCharacterMap.Empty(Get().CharacterMap.Num());
 	
-	for (const TTuple<FGameplayTag, TSoftObjectPtr<>>& Pair : Get().CharacterMap)
+	for (const TPair<FGameplayTag, FYapCharacterDefinition>& Pair : Get().CharacterMap)
 	{
 		Get().ReversedCharacterMap.Add(Pair.Value, Pair.Key);
 	}
@@ -222,7 +242,7 @@ void UYapProjectSettings::ProcessCharacterArray(bool bUpdateMap)
 			bAddToMap = false;
 		}
 
-		if (CharacterDefinition.CharacterAsset.IsNull())
+		if (!CharacterDefinition.HasValidCharacterData())
 		{
 			bAddToMap = false;
 		}
@@ -236,7 +256,7 @@ void UYapProjectSettings::ProcessCharacterArray(bool bUpdateMap)
 
 		if (bAddToMap && bUpdateMap)
 		{
-			CharacterMap.Add(CharacterDefinition.CharacterTag, CharacterDefinition.CharacterAsset);
+			CharacterMap.Add(CharacterDefinition.CharacterTag, CharacterDefinition);
 		}
 	}
 }

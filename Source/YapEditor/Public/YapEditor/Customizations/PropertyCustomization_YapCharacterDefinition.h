@@ -21,12 +21,15 @@ public:
     // STATE --------------------------------------------------------------------------------------
     
 protected:
-    
+    FYapCharacterDefinition* CharacterDefinitionBeingEdited = nullptr;
+
     //TSharedPtr<IPropertyHandle> AssetPropertyHandle;
     
     // OVERRIDES ----------------------------------------------------------------------------------
 
 protected:
+    void OnSetNewCharacterAsset_New2(const FAssetData& AssetData, TSharedPtr<IPropertyHandle> PropertyHandle, TSharedPtr<IPropertyHandle> ClassPropertyHandle);
+
     void CustomizeHeader(TSharedRef<IPropertyHandle> StructPropertyHandle, FDetailWidgetRow& HeaderRow, IPropertyTypeCustomizationUtils& StructCustomizationUtils) override;
 
     void CustomizeChildren(TSharedRef<IPropertyHandle> StructPropertyHandle, IDetailChildrenBuilder& StructBuilder, IPropertyTypeCustomizationUtils& StructCustomizationUtils) override;
@@ -41,7 +44,11 @@ protected:
     
     FLinearColor Color_TagStatus(FYapCharacterDefinition* CharacterDefinition) const;
     
+    FString ObjectPath_CharacterAsset(TSharedPtr<IPropertyHandle> PropertyHandle, TSharedPtr<IPropertyHandle> ClassPropertyHandle) const;
+    
     void OnSetNewCharacterAsset(TSharedPtr<IPropertyHandle> AssetPropertyHandle) const;
+
+    void OnSetNewCharacterAsset_New(const FPropertyChangedEvent& PropertyChangedEvent, TSharedPtr<IPropertyHandle> AssetPropertyHandle) const;
 
     FReply OnOpenCharacterAsset(TSharedPtr<IPropertyHandle> PropertyHandle) const;
 

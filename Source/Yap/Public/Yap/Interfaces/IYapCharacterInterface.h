@@ -73,6 +73,8 @@ protected:
 public:
     static bool IsAsset_YapCharacter(const TSoftObjectPtr<UObject> Asset);
     
+    static bool IsAsset_YapCharacter(const TSoftClassPtr<UObject> Class);
+    
     static bool IsAsset_YapCharacter(const FAssetData& AssetData);
 #endif
 };

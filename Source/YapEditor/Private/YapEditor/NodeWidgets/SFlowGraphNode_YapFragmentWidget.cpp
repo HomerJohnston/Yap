@@ -1212,11 +1212,11 @@ void SFlowGraphNode_YapFragmentWidget::OnSetNewSpeakerAsset(const FAssetData& As
 	
 	FYapTransactions::BeginModify(LOCTEXT("SetSpeakerCharacter", "Set speaker character"), GetDialogueNodeMutable());
 
-	FGameplayTag* CharacterTag = UYapProjectSettings::ReversedCharacterMap.Find(AssetData.GetAsset());
+	const FGameplayTag CharacterTag = UYapProjectSettings::FindCharacterTag(AssetData.GetAsset());
 
-	if (CharacterTag)
+	if (CharacterTag.IsValid())
 	{
-		GetFragmentMutable().SetSpeaker(*CharacterTag);
+		GetFragmentMutable().SetSpeaker(CharacterTag);
 	}
 	else
 	{
@@ -1280,6 +1280,10 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateSpeakerWidget()
 	
 	if (Speaker.IsValid())
 	{
+		TSharedPtr<FStreamableHandle> Temp;
+		
+		SpeakerAsset = UYapProjectSettings::FindCharacter(Speaker, Temp, EYapLoadContext::Sync);
+		/*
 		const TSoftObjectPtr<UObject>* CharacterAssetPtr = UYapProjectSettings::GetCharacters().Find(Speaker);
 
 		if (CharacterAssetPtr)
@@ -1293,6 +1297,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateSpeakerWidget()
 				SpeakerAsset = CharacterAssetPtr->Get();
 			}
 		}
+		*/
 	}
 	
 	return SNew(SLevelOfDetailBranchNode)
@@ -1457,6 +1462,10 @@ const FSlateBrush* SFlowGraphNode_YapFragmentWidget::Image_SpeakerImage() const
 
 	if (Speaker.IsValid())
 	{
+		TSharedPtr<FStreamableHandle> Temp;
+
+		SpeakerAsset = UYapProjectSettings::FindCharacter(Speaker, Temp, EYapLoadContext::AsyncEditorOnly);
+		/*
 		const TSoftObjectPtr<UObject>* CharacterAssetPtr = UYapProjectSettings::GetCharacters().Find(Speaker);
 
 		if (CharacterAssetPtr)
@@ -1470,6 +1479,7 @@ const FSlateBrush* SFlowGraphNode_YapFragmentWidget::Image_SpeakerImage() const
 				SpeakerAsset = CharacterAssetPtr->Get();
 			}
 		}
+		*/
 	}
 	
 	const FGameplayTag& MoodTag = GetFragment().GetMoodTag();
@@ -2301,11 +2311,17 @@ bool SFlowGraphNode_YapFragmentWidget::IsDroppedAsset_YapSpeaker(TArrayView<FAss
 
 bool SFlowGraphNode_YapFragmentWidget::IsAsset_YapSpeaker(const FAssetData& AssetData) const
 {
+	return IYapCharacterInterface::IsAsset_YapCharacter(AssetData);
+
+	/*
 	auto& Map = UYapProjectSettings::ReversedCharacterMap;
 
 	UE_LOG(LogTemp, Display, TEXT("::: %s"), *AssetData.GetFullName());
 	
 	return Map.Contains(AssetData.GetAsset());
+	*/
+	
+	
 	/*
 	const UClass* Class = AssetData.GetClass();
 

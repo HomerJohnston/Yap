@@ -246,7 +246,7 @@ private:
 	
 	TArray<UYapCondition*>& GetConditionsMutable() { return MutableView(Conditions); }
 
-	void ToggleNodeType();
+	bool ToggleNodeType(bool bHasOutputConnections);
 #endif
 	
 	// ============================================================================================

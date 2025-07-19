@@ -166,25 +166,28 @@ int32 SYapTimeProgressionWidget::OnPaint(const FPaintArgs& Args, const FGeometry
 			FYapEditorStyle::GetImageBrush(YapBrushes.Icon_PlaybackTimeHandle)
 		);
 	}
-	
-	if (!GEditor->IsPlaySessionInProgress() && SpeechTimeAtt.IsSet())
+
+	if (AllowPaddingEditing())
 	{
-		float Normalized = DownScaling * (PaddingEndTime / MaxTime);
+		if (!GEditor->IsPlaySessionInProgress() && SpeechTimeAtt.IsSet())
+		{
+			float Normalized = DownScaling * (PaddingEndTime / MaxTime);
 
-		FLinearColor HandleColor = (PaddingIsSetAtt.Get() ? YapColor::LightGray : BarColor);
+			FLinearColor HandleColor = (PaddingIsSetAtt.Get() ? YapColor::LightGray : BarColor);
 
-		FVector2D Size = FVector2D(7.0f, 7.0f);
-		FVector2D Trans = FVector2D((GeoWidth - 5.0f) * Normalized, 0.0f);
+			FVector2D Size = FVector2D(7.0f, 7.0f);
+			FVector2D Trans = FVector2D((GeoWidth - 5.0f) * Normalized, 0.0f);
 		
-		FSlateDrawElement::MakeBox
-		(
-			OutDrawElements,
-			RetLayerId++,
-			AllottedGeometry.ToPaintGeometry(Size, FSlateLayoutTransform(Trans)),
-			FYapEditorStyle::GetImageBrush(YapBrushes.Icon_FilledCircle),
-			ESlateDrawEffect::None,
-			HandleColor
-		);
+			FSlateDrawElement::MakeBox
+			(
+				OutDrawElements,
+				RetLayerId++,
+				AllottedGeometry.ToPaintGeometry(Size, FSlateLayoutTransform(Trans)),
+				FYapEditorStyle::GetImageBrush(YapBrushes.Icon_FilledCircle),
+				ESlateDrawEffect::None,
+				HandleColor
+			);
+		}
 	}
 	
 	return RetLayerId;
@@ -197,6 +200,11 @@ bool SYapTimeProgressionWidget::IsValid() const
 
 FReply SYapTimeProgressionWidget::OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
 {
+	if (!AllowPaddingEditing())
+	{
+		return FReply::Unhandled();
+	}
+	
 	if ((MouseEvent.GetEffectingButton() == EKeys::LeftMouseButton) && DialogueNode.IsValid() && GetCursorOnHandle())// && !IsLocked())
 	{
 		bIsAdjusting = true;
@@ -299,7 +307,7 @@ TOptional<EMouseCursor::Type> SYapTimeProgressionWidget::GetCursor() const
 		return NullOpt;
 	}
 	
-	if (GetCursorOnHandle())
+	if (GetCursorOnHandle() && AllowPaddingEditing())
 	{
 		return EMouseCursor::ResizeLeftRight;
 	}
@@ -420,6 +428,11 @@ void SYapTimeProgressionWidget::ShowTimeDisplayBox()
 void SYapTimeProgressionWidget::HideTimeDisplayBox()
 {
 	TimeDisplayBox->ClearChildren();
+}
+
+bool SYapTimeProgressionWidget::AllowPaddingEditing() const
+{
+	return DialogueNode->GetNodeType() != EYapDialogueNodeType::TalkAndAdvance;
 }
 
 #undef LOCTEXT_NAMESPACE

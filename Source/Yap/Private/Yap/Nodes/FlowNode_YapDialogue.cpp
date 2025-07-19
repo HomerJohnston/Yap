@@ -169,11 +169,11 @@ void UFlowNode_YapDialogue::FinishNode(FName OutputPinToTrigger)
 	UYapSubsystem::Get(this)->OnAdvanceConversationDelegate.RemoveDynamic(this, &ThisClass::OnAdvanceConversation);
 	UYapSubsystem::Get(this)->OnCancelDelegate.RemoveDynamic(this, &ThisClass::OnCancel);
 		
-	TriggerOutput(OutputPinToTrigger, true, EFlowPinActivationType::Default);
-
+	bNodeActive = false;
 	FocusedFragmentIndex.Reset();
 	FocusedSpeechHandle.Invalidate();
-	bNodeActive = false;
+	
+	TriggerOutput(OutputPinToTrigger, true, EFlowPinActivationType::Default);
 }
 
 void UFlowNode_YapDialogue::SetActive()
@@ -1461,14 +1461,35 @@ bool UFlowNode_YapDialogue::CheckActivationLimits() const
 
 // ------------------------------------------------------------------------------------------------
 #if WITH_EDITOR
-void UFlowNode_YapDialogue::ToggleNodeType()
+bool UFlowNode_YapDialogue::ToggleNodeType(bool bHasOutputConnections)
 {
 	// If the node config isn't valid, do nothing
 	if (GetNodeConfig().General.AllowableNodeTypes == 0)
 	{
-		return;
+		UE_LOG(LogYap, Error, TEXT("%s: Cannot toggle node type - node config is invalid!"), *GetName());
+		return false;
 	}
 
+	// Perform fixed changes when there's existing output connections
+	if (bHasOutputConnections)
+	{
+		if (GetNodeType() == EYapDialogueNodeType::PlayerPrompt)
+		{
+			// Do nothing
+		}
+		else if (GetNodeType() == EYapDialogueNodeType::TalkAndAdvance)
+		{
+			DialogueNodeType = EYapDialogueNodeType::Talk;
+		}
+		else if (GetNodeType() == EYapDialogueNodeType::Talk)
+		{
+			DialogueNodeType = EYapDialogueNodeType::TalkAndAdvance;
+		}
+		
+		return false;
+	}
+	
+	// Cycle through allowable node types
 	uint8 AsInt = static_cast<uint8>(DialogueNodeType);
 
 	do
@@ -1499,6 +1520,8 @@ void UFlowNode_YapDialogue::ToggleNodeType()
 			TalkSequencing = OldTalkSequencing;
 		}
 	}
+
+	return true;
 }
 
 FString UFlowNode_YapDialogue::GetStatusString() const
@@ -1605,7 +1628,7 @@ void UFlowNode_YapDialogue::PreSave(FObjectPreSaveContext SaveContext)
 
 				if (LoadedDirectedAtAsset->Implements<UYapCharacterInterface>())
 				{
-					FGameplayTag AssetTag = UYapProjectSettings::FindCharacterTag(Fragment.SpeakerAsset);
+					FGameplayTag AssetTag = UYapProjectSettings::FindCharacterTag(Fragment.DirectedAtAsset);
 				
 					if (AssetTag.IsValid())
 					{

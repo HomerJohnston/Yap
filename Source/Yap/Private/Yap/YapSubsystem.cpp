@@ -710,16 +710,16 @@ void UYapSubsystem::AdvanceConversation(UObject* Instigator, const FYapConversat
 	}
 	TArray<FYapSpeechHandle> RunningFragments = ConversationPtr->GetRunningFragments();
 
+	UE_LOG(LogYap, VeryVerbose, TEXT("Subsystem: AdvanceConversation CALLING ONADVANCECONVERSATIONDELEGATE [%s]"), *ConversationHandle.ToString());
+	// Broadcast to Yap systems; in dialogue nodes, this will kill any running paddings
+	Subsystem->OnAdvanceConversationDelegate.Broadcast(Instigator, ConversationHandle);
+
 	// Finish all running speeches
 	for (const FYapSpeechHandle& SpeechHandle : RunningFragments)
 	{
 		UE_LOG(LogYap, VeryVerbose, TEXT("Subsystem: AdvanceConversation CALLING ONSPEECHCOMPLETE [%s]"), *ConversationHandle.ToString());
 		Subsystem->OnSpeechComplete(SpeechHandle);
 	}
-	
-	UE_LOG(LogYap, VeryVerbose, TEXT("Subsystem: AdvanceConversation CALLING ONADVANCECONVERSATIONDELEGATE [%s]"), *ConversationHandle.ToString());
-	// Broadcast to Yap systems; in dialogue nodes, this will kill any running paddings
-	Subsystem->OnAdvanceConversationDelegate.Broadcast(Instigator, ConversationHandle);
 	UE_LOG(LogYap, VeryVerbose, TEXT("Subsystem: AdvanceConversation FINISH [%s]"), *ConversationHandle.ToString());
 }
 

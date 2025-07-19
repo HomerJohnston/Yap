@@ -105,6 +105,8 @@ public:
 	void ShowTimeDisplayBox();
 
 	void HideTimeDisplayBox();
+
+	bool AllowPaddingEditing() const;
 };
 
 

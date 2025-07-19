@@ -637,8 +637,21 @@ FReply SFlowGraphNode_YapDialogueWidget::OnClicked_TogglePlayerPrompt()
 	{
 		FYapScopedTransaction T("TODO", LOCTEXT("TransactionText_TogglePlayerPrompt", "Toggle Player Prompt"), GetFlowYapDialogueNodeMutable());
 
-		GetFlowYapDialogueNodeMutable()->ToggleNodeType();
-		GetFlowYapDialogueNodeMutable()->ForceReconstruction();
+		bool bHasOutputConnections = false;
+		// Get all output pins of this node and iterate them
+		for (UEdGraphPin* Pin : FlowGraphNode_YapDialogue->OutputPins)
+		{
+			if (Pin->HasAnyConnections())
+			{
+				bHasOutputConnections = true;
+				break;
+			}
+		}
+		
+		if (GetFlowYapDialogueNodeMutable()->ToggleNodeType(bHasOutputConnections))
+		{
+			GetFlowYapDialogueNodeMutable()->ForceReconstruction();
+		}
 
 		NodeHeaderButtonToolTip->SetText(Text_NodeHeader());
 	}

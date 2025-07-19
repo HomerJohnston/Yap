@@ -133,8 +133,12 @@ TOptional<float> FYapBit::GetAudioTime(UObject* WorldContext, EYapLoadContext Lo
 		return NullOpt;
 	}
 
+#if WITH_EDITOR
 	const UYapBroker& Broker = UYapSubsystem::GetBroker_Editor(); 
-
+#else
+	const UYapBroker& Broker = UYapSubsystem::GetBroker(WorldContext); 
+#endif
+	
 	return Broker.GetAudioAssetDuration(GetAudioAsset<UObject>());
 }
 

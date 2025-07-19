@@ -129,6 +129,7 @@ void UYapProjectSettings::UpdateReversedCharacterMap()
 }
 #endif
 
+#if WITH_EDITOR
 void UYapProjectSettings::PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent)
 {
 	static FName CharacterArrayName = GET_MEMBER_NAME_CHECKED(ThisClass, CharacterArray);
@@ -148,13 +149,7 @@ void UYapProjectSettings::PostEditChangeProperty(struct FPropertyChangedEvent& P
 	
 	Super::PostEditChangeProperty(PropertyChangedEvent);
 }
-
-void UYapProjectSettings::PostLoad()
-{
-	Super::PostLoad();
-	
-	//UYapProjectSettings::RegisterTagFilter(this, GET_MEMBER_NAME_CHECKED(ThisClass, CharacterTagRoot), EYap_TagFilter::Characters);
-}
+#endif
 
 void UYapProjectSettings::PostInitProperties()
 {
@@ -246,15 +241,15 @@ void UYapProjectSettings::ProcessCharacterArray(bool bUpdateMap)
 	}
 }
 
-#if WITH_EDITOR
 void UYapProjectSettings::RebuildCharacterMap()
 {
 	Modify();
 
 	ProcessCharacterArray(true);
-	
+
+#if WITH_EDITOR
 	TryUpdateDefaultConfigFile();
-}
 #endif
+}
 
 #undef LOCTEXT_NAMESPACE

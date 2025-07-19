@@ -208,7 +208,7 @@ TSharedRef<SWidget> SYapDialogueEditor::BuildDialogueEditor_SingleSide(const FTe
 		.Padding(0, 12, 0, 0)
 		[
 			SNew(SVerticalBox)
-			.Visibility(DialogueNode->UsesTitleText() ? EVisibility::Visible : EVisibility::Collapsed)
+			.Visibility(DialogueNode->GetNodeConfig().GetUsesTitleText(DialogueNode->GetNodeType()) ? EVisibility::Visible : EVisibility::Collapsed)
 			+ SVerticalBox::Slot()
 			[
 				SAssignNew(TitleTextWidget, SYapTextPropertyEditableTextBox, TitleTextProperty)

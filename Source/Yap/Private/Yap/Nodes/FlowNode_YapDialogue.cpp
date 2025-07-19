@@ -440,16 +440,6 @@ const UYapNodeConfig& UFlowNode_YapDialogue::GetNodeConfig() const
 	return *ConfigAsset.LoadSynchronous();
 }
 
-bool UFlowNode_YapDialogue::UsesTitleText() const
-{
-	if (IsPlayerPrompt())
-	{
-		return !GetNodeConfig().GetHideTitleTextOnPromptNodes();
-	}
-
-	return GetNodeConfig().GetShowTitleTextOnTalkNodes();
-}
-
 const FYapFragment& UFlowNode_YapDialogue::GetFragment(uint8 FragmentIndex) const
 {
 	check(Fragments.IsValidIndex(FragmentIndex));
@@ -559,7 +549,7 @@ bool UFlowNode_YapDialogue::TryBroadcastPrompts()
  		Data.MoodTag = Fragment.GetMoodTag();
  		Data.DialogueText = Bit.GetDialogueText();
 
- 		if (!GetNodeConfig().GetHideTitleTextOnPromptNodes())
+ 		if (!GetNodeConfig().GetUsesTitleText(GetNodeType()))
  		{
  			Data.TitleText = Bit.GetTitleText();
  		}
@@ -718,7 +708,7 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 	Data.bSkippable = Fragment.GetSkippable(GetSkippable());
 
 	// It's possible that a fragment has titletext data but the project settings are to ignore it; avoid copying the data if the game settings don't want it
-	if (!NodeConfig.GetShowTitleTextOnTalkNodes())
+	if (!NodeConfig.GetUsesTitleText(GetNodeType()))
 	{
 		Data.TitleText = Bit.GetTitleText();
 	}
@@ -1140,12 +1130,14 @@ const FYapFragment& UFlowNode_YapDialogue::GetFragmentByIndex(uint8 Index) const
 	return Fragments[Index];
 }
 
+#if WITH_EDITOR
 FYapFragment& UFlowNode_YapDialogue::GetFragmentMutableByIndex(uint8 Index)
 {
 	check(Fragments.IsValidIndex(Index));
 
 	return Fragments[Index];
 }
+#endif
 
 void UFlowNode_YapDialogue::OnPromptChosen(UObject* Instigator, FYapPromptHandle Handle)
 {
@@ -1238,12 +1230,10 @@ bool UFlowNode_YapDialogue::GetUsesMultipleOutputs()
 
 // ------------------------------------------------------------------------------------------------
 
-#if WITH_EDITOR
 EYapDialogueTalkSequencing UFlowNode_YapDialogue::GetMultipleFragmentSequencing() const
 {
 	return TalkSequencing;
 }
-#endif
 
 // ------------------------------------------------------------------------------------------------
 

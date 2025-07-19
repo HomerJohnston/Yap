@@ -1804,7 +1804,11 @@ EVisibility SFlowGraphNode_YapFragmentWidget::Visibility_TitleTextErrorState() c
 
 EVisibility SFlowGraphNode_YapFragmentWidget::Visibility_TitleTextWidgets() const
 {
-	return GetDialogueNode()->UsesTitleText() ? EVisibility::Visible : EVisibility::Collapsed;
+	const UYapNodeConfig& NodeConfig = GetDialogueNode()->GetNodeConfig();
+
+	EYapDialogueNodeType NodeType = GetDialogueNode()->GetNodeType();
+	
+	return NodeConfig.GetUsesTitleText(NodeType) ? EVisibility::Visible : EVisibility::Collapsed;
 }
 
 // ================================================================================================

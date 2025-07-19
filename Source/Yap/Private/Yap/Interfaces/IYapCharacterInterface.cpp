@@ -29,6 +29,7 @@ const UTexture2D* IYapCharacterInterface::GetCharacterPortrait(const FGameplayTa
     return K2_GetYapCharacterPortrait(MoodTag);
 }
 
+#if WITH_EDITOR
 bool IYapCharacterInterface::IsAsset_YapCharacter(const TSoftObjectPtr<UObject> AssetSoftPtr)
 {
     const UObject* Asset = AssetSoftPtr.LoadSynchronous();
@@ -49,7 +50,9 @@ bool IYapCharacterInterface::IsAsset_YapCharacter(const TSoftObjectPtr<UObject> 
     
     return false;
 }
+#endif
 
+#if WITH_EDITOR
 bool IYapCharacterInterface::IsAsset_YapCharacter(const FAssetData& AssetData)
 {
     const UClass* Class = AssetData.GetClass();
@@ -92,6 +95,7 @@ bool IYapCharacterInterface::IsAsset_YapCharacter(const FAssetData& AssetData)
 	
     return false;
 }
+#endif
 
 // ================================================================================================
 // Public API for C++ usage

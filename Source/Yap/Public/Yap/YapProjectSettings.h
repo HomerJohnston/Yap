@@ -190,15 +190,13 @@ protected:
 	void OnGetCategoriesMetaFromPropertyHandle(TSharedPtr<IPropertyHandle> PropertyHandle, FString& MetaString) const;
 
 	void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
-
-	void PostLoad() override;
-
+#endif
+	
 	void PostInitProperties() override;
 	
 	void ProcessCharacterArray(bool bUpdateMap);
 	
 	void RebuildCharacterMap();
-#endif
 };
 
 #undef LOCTEXT_NAMESPACE

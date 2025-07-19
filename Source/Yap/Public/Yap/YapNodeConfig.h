@@ -13,6 +13,8 @@
 
 // ================================================================================================
 
+enum class EYapDialogueNodeType : uint8;
+
 USTRUCT()
 struct FYapNodeConfigGroup_General
 {
@@ -202,7 +204,8 @@ struct FYapNodeConfigGroup_FlowGraphSettings
 	/** If set, dialogue in the nodes will cut off to the right. This may help if you intend to use lots of multi-line dialogue text. */
 	UPROPERTY(EditAnywhere)
 	bool bPreventDialogueTextWrapping = true;
-
+#endif
+	
 	/** If enabled, will show title text on normal talk nodes. Title text is not commonly used on automatically progressing dialogue, so it is hidden by default. */
 	UPROPERTY(EditAnywhere)
 	bool bShowTitleTextOnTalkNodes = false;
@@ -210,7 +213,8 @@ struct FYapNodeConfigGroup_FlowGraphSettings
 	/** If enabled, will hide the title text field on prompt nodes. */
 	UPROPERTY(EditAnywhere)
 	bool bHideTitleTextOnPromptNodes = false;
-	
+
+#if WITH_EDITORONLY_DATA
 	/** Set the default font for dialogue. */
 	UPROPERTY(EditAnywhere)
 	FSlateFontInfo DialogueFont;
@@ -252,11 +256,13 @@ struct FYapNodeConfigGroup_MoodTags
 	/** Optional default mood tag to use, for fragments which do not have a mood tag set. */
 	UPROPERTY(EditAnywhere, meta = (EditCondition = "!bDisableMoodTags", EditConditionHides))
 	FGameplayTag DefaultMoodTag;
-	
+
+#if WITH_EDITORONLY_DATA
 	/** Where to look for mood icons. If unspecified, will use the default "Plugins/FlowYap/Resources/MoodTags" folder. */
 	UPROPERTY(EditAnywhere, meta = (EditCondition = "!bDisableMoodTags", EditConditionHides))
 	FDirectoryPath EditorIconsPath;
-
+#endif
+	
 	FGameplayTagContainer GetAllMoodTags();
 };
 
@@ -313,8 +319,10 @@ private:
 	// PROPERTY GETTERS
 public:
 
+#if WITH_EDITORONLY_DATA
 	FLinearColor GetGroupColor() const { return Graph.GroupColor; }
-
+#endif
+	
 #ifdef RETURN
 	
 #endif
@@ -368,6 +376,7 @@ public:
 
     FText GetPromptModeTitle() const;
 
+#if WITH_EDITORONLY_DATA
     int32 GetDialogueWidthAdjustment() const { return Graph.DialogueWidthAdjustment; }
 	
 	const FSlateFontInfo& GetGraphDialogueFont() const { return Graph.DialogueFont; }
@@ -385,6 +394,8 @@ public:
 	bool GetShowTitleTextOnTalkNodes() const { return Graph.bShowTitleTextOnTalkNodes; }
 	
 	bool GetHideTitleTextOnPromptNodes() const { return Graph.bHideTitleTextOnPromptNodes; }
+#endif
+	bool GetUsesTitleText(EYapDialogueNodeType NodeType) const;
 	
 	bool GetDisableSpeaker() const { return General.bDisableSpeaker; }
 	
@@ -423,10 +434,10 @@ public:
 	bool CanEditChange(const FProperty* InProperty) const override;
 
 	bool CanEditChange(const FEditPropertyChain& PropertyChain) const override;
-
+#endif
+	
 	const FGameplayTag& GetMoodTagsRoot() const;
 	
-#endif
 
 	TMap<FGameplayTag, TSharedPtr<FSlateImageBrush>> MoodTagIconBrushes;
 	

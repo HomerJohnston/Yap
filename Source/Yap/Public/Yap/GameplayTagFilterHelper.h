@@ -4,8 +4,10 @@
 #pragma once
 
 #include "GameplayTagsManager.h"
+
+#if WITH_EDITOR
 #include "PackageTools.h"
-#include <type_traits>
+#endif
 
 typedef TDelegate<const FGameplayTag&()> FGameplayTagFilterDelegate;
 

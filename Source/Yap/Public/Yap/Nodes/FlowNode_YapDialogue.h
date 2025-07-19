@@ -197,9 +197,6 @@ public:
 
 	const UYapNodeConfig& GetNodeConfig() const;
 	
-	/** Does this node use title text? */
-	bool UsesTitleText() const;
-
 	/** How many times has this dialogue node successfully ran? */
 	int32 GetNodeActivationCount() const { return NodeActivationCount; }
 
@@ -375,9 +372,11 @@ private:
 	bool GetUsesMultipleInputs();
 	
 	bool GetUsesMultipleOutputs();
-
+#endif
+	
 	EYapDialogueTalkSequencing GetMultipleFragmentSequencing() const;
 	
+#if WITH_EDITOR
 	TArray<FFlowPin> GetContextOutputs() const override;
 
 	void SetNodeActivationLimit(int32 NewValue);

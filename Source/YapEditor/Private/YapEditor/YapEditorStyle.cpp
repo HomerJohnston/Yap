@@ -164,7 +164,10 @@ const ISlateStyle* FYapEditorStyle::GetParentStyle()
 
 void FYapEditorStyle::Initialize_Internal()
 {
-	FSlateApplication::Get().GetRenderer()->ReloadTextureResources();
+	if (!IsRunningCommandlet())
+	{
+		FSlateApplication::Get().GetRenderer()->ReloadTextureResources();
+	}
 	
 	YAP_REDEFINE_UE_BRUSH(FSlateImageBrush,			None,							FAppStyle,	"NoBorder",					FVector2f(16, 16), YapColor::Transparent);
 	YAP_REDEFINE_UE_BRUSH(FSlateVectorImageBrush,	Icon_FilledCircle,				FAppStyle,	"Icons.FilledCircle",		FVector2f(16, 16));

@@ -159,6 +159,16 @@ bool UYapNodeConfig::CanEditChange(const FEditPropertyChain& PropertyChain) cons
 }
 #endif
 
+bool UYapNodeConfig::GetUsesTitleText(EYapDialogueNodeType NodeType) const
+{
+    if (NodeType == EYapDialogueNodeType::PlayerPrompt)
+    {
+        return Graph.bHideTitleTextOnPromptNodes;
+    }
+
+    return Graph.bShowTitleTextOnTalkNodes;
+}
+
 TArray<FString>& UYapNodeConfig::GetDefaultMoodTags()
 {
     static TArray<FString> Tags
@@ -183,12 +193,10 @@ TArray<FString>& UYapNodeConfig::GetDefaultMoodTags()
     return Tags;
 }
 
-#if WITH_EDITOR
 const FGameplayTag& UYapNodeConfig::GetMoodTagsRoot() const
 {
     return MoodTags.MoodTagsRoot; 
 }
-#endif
 
 #if WITH_EDITOR
 FText UYapNodeConfig::GetTalkModeTitle() const

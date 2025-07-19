@@ -46,7 +46,7 @@ UYapSubsystem::UYapSubsystem()
 
 // ------------------------------------------------------------------------------------------------
 
-void UYapSubsystem::RegisterConversationHandler(UObject* NewHandler, FYapDialogueNodeType NodeType)
+void UYapSubsystem::RegisterConversationHandler(UObject* NewHandler, FYapDialogueNodeClassType NodeType)
 {
 	if (!IsValid(NewHandler))
 	{
@@ -66,7 +66,7 @@ void UYapSubsystem::RegisterConversationHandler(UObject* NewHandler, FYapDialogu
 
 // ------------------------------------------------------------------------------------------------
 
-void UYapSubsystem::UnregisterConversationHandler(UObject* HandlerToRemove, FYapDialogueNodeType NodeType)
+void UYapSubsystem::UnregisterConversationHandler(UObject* HandlerToRemove, FYapDialogueNodeClassType NodeType)
 {	
 	if (!IsValid(HandlerToRemove))
 	{
@@ -92,7 +92,7 @@ void UYapSubsystem::UnregisterConversationHandler(UObject* HandlerToRemove, FYap
 
 // ------------------------------------------------------------------------------------------------
 
-void UYapSubsystem::RegisterFreeSpeechHandler(UObject* NewHandler, FYapDialogueNodeType NodeType)
+void UYapSubsystem::RegisterFreeSpeechHandler(UObject* NewHandler, FYapDialogueNodeClassType NodeType)
 {
 	if (!IsValid(NewHandler))
 	{
@@ -112,7 +112,7 @@ void UYapSubsystem::RegisterFreeSpeechHandler(UObject* NewHandler, FYapDialogueN
 
 // ------------------------------------------------------------------------------------------------
 
-void UYapSubsystem::UnregisterFreeSpeechHandler(UObject* HandlerToRemove, FYapDialogueNodeType NodeType)
+void UYapSubsystem::UnregisterFreeSpeechHandler(UObject* HandlerToRemove, FYapDialogueNodeClassType NodeType)
 {
 	if (!IsValid(HandlerToRemove))
 	{
@@ -446,7 +446,7 @@ void UYapSubsystem::OnActiveConversationClosed(UObject* Instigator, FYapConversa
 
 // ------------------------------------------------------------------------------------------------
 
-FYapPromptHandle UYapSubsystem::BroadcastPrompt(const FYapData_PlayerPromptCreated& Data, FYapDialogueNodeType NodeType)
+FYapPromptHandle UYapSubsystem::BroadcastPrompt(const FYapData_PlayerPromptCreated& Data, FYapDialogueNodeClassType NodeType)
 {
 	FYapPromptHandle Handle(NodeType);
 
@@ -472,7 +472,7 @@ FYapPromptHandle UYapSubsystem::BroadcastPrompt(const FYapData_PlayerPromptCreat
 
 // ------------------------------------------------------------------------------------------------
 
-void UYapSubsystem::OnFinishedBroadcastingPrompts(const FYapData_PlayerPromptsReady& Data, FYapDialogueNodeType NodeType)
+void UYapSubsystem::OnFinishedBroadcastingPrompts(const FYapData_PlayerPromptsReady& Data, FYapDialogueNodeClassType NodeType)
 {
 	auto* HandlerArray = FindConversationHandlerArray(NodeType);
 
@@ -481,7 +481,7 @@ void UYapSubsystem::OnFinishedBroadcastingPrompts(const FYapData_PlayerPromptsRe
 
 // ------------------------------------------------------------------------------------------------
 
-void UYapSubsystem::RunSpeech(const FYapData_SpeechBegins& SpeechData, FYapDialogueNodeType NodeType, FYapSpeechHandle& Handle)
+void UYapSubsystem::RunSpeech(const FYapData_SpeechBegins& SpeechData, FYapDialogueNodeClassType NodeType, FYapSpeechHandle& Handle)
 {
 	// TODO should SpeechData contain the conversation handle instead of the name?
 	if (SpeechData.Conversation.IsValid())
@@ -752,14 +752,14 @@ void UYapSubsystem::UnregisterCharacterComponent(UYapCharacterComponent* YapChar
 
 // ------------------------------------------------------------------------------------------------
 
-TArray<TObjectPtr<UObject>>& UYapSubsystem::FindOrAddConversationHandlerArray(FYapDialogueNodeType NodeType)
+TArray<TObjectPtr<UObject>>& UYapSubsystem::FindOrAddConversationHandlerArray(FYapDialogueNodeClassType NodeType)
 {	
 	return ConversationHandlers.FindOrAdd(NodeType).Array;
 }
 
 // ------------------------------------------------------------------------------------------------
 
-TArray<TObjectPtr<UObject>>* UYapSubsystem::FindConversationHandlerArray(FYapDialogueNodeType NodeType)
+TArray<TObjectPtr<UObject>>* UYapSubsystem::FindConversationHandlerArray(FYapDialogueNodeClassType NodeType)
 {
 	FYapHandlersArray* Handlers = ConversationHandlers.Find(NodeType.Get());
 
@@ -773,14 +773,14 @@ TArray<TObjectPtr<UObject>>* UYapSubsystem::FindConversationHandlerArray(FYapDia
 
 // ------------------------------------------------------------------------------------------------
 
-TArray<TObjectPtr<UObject>>& UYapSubsystem::FindOrAddFreeSpeechHandlerArray(FYapDialogueNodeType NodeType)
+TArray<TObjectPtr<UObject>>& UYapSubsystem::FindOrAddFreeSpeechHandlerArray(FYapDialogueNodeClassType NodeType)
 {
 	return FreeSpeechHandlers.FindOrAdd(NodeType).Array;
 }
 
 // ------------------------------------------------------------------------------------------------
 
-TArray<TObjectPtr<UObject>>* UYapSubsystem::FindFreeSpeechHandlerArray(FYapDialogueNodeType NodeType)
+TArray<TObjectPtr<UObject>>* UYapSubsystem::FindFreeSpeechHandlerArray(FYapDialogueNodeClassType NodeType)
 {
 	FYapHandlersArray* Handlers = FreeSpeechHandlers.Find(NodeType.Get());
 

@@ -53,16 +53,16 @@ struct FYapHandlersArray
 // Alias for TSubclassOf<UFlowNode_YapDialogue>.
 // This is a wrapper to auto-convert a null type to the default Yap dialogue node type.
 USTRUCT(BlueprintType)
-struct FYapDialogueNodeType
+struct FYapDialogueNodeClassType
 {
 	GENERATED_BODY()
 
-	FYapDialogueNodeType()
+	FYapDialogueNodeClassType()
 	{
 		NodeType = UFlowNode_YapDialogue::StaticClass();
 	}
 	
-	FYapDialogueNodeType(UClass* InNodeType)
+	FYapDialogueNodeClassType(UClass* InNodeType)
 	{
 		if (InNodeType && InNodeType->IsChildOf(UFlowNode_YapDialogue::StaticClass()))
 		{
@@ -74,7 +74,7 @@ struct FYapDialogueNodeType
 		}
 	}
 
-	FYapDialogueNodeType(TSubclassOf<UFlowNode_YapDialogue> InNodeType)
+	FYapDialogueNodeClassType(TSubclassOf<UFlowNode_YapDialogue> InNodeType)
 	{
 		if (InNodeType && InNodeType->IsChildOf(UFlowNode_YapDialogue::StaticClass()))
 		{
@@ -204,19 +204,19 @@ public:
 public:
 	
 	/** Register a conversation handler for a node type. Nullptr will use the default yap node. */
-	static void RegisterConversationHandler(UObject* NewHandler, FYapDialogueNodeType NodeType);
+	static void RegisterConversationHandler(UObject* NewHandler, FYapDialogueNodeClassType NodeType);
 
 	/** Unregister a conversation handler for a node type. Nullptr will use the default yap node. */
-	static void UnregisterConversationHandler(UObject* HandlerToRemove, FYapDialogueNodeType NodeType);
+	static void UnregisterConversationHandler(UObject* HandlerToRemove, FYapDialogueNodeClassType NodeType);
 	
 	/**  */
 	//static void UnregisterConversationHandlerAllTypes(UObject* HandlerToRemove);
 	
 	/** Register a free speech handler for a node type. Nullptr will use the default yap node. */
-	static void RegisterFreeSpeechHandler(UObject* NewHandler, FYapDialogueNodeType NodeType);
+	static void RegisterFreeSpeechHandler(UObject* NewHandler, FYapDialogueNodeClassType NodeType);
 
 	/** Unregister a free speech handler for a node type. Nullptr will use the default yap node.*/
-	static void UnregisterFreeSpeechHandler(UObject* HandlerToRemove, FYapDialogueNodeType NodeType);
+	static void UnregisterFreeSpeechHandler(UObject* HandlerToRemove, FYapDialogueNodeClassType NodeType);
 
 	/**  */
 	//static void UnregisterFreeSpeechHandlerAllTypes(UObject* HandlerToRemove);
@@ -307,13 +307,13 @@ protected:
 	void OnActiveConversationClosed(UObject* Instigator, FYapConversationHandle Handle);
 	
 	/**  */
-	FYapPromptHandle BroadcastPrompt(const FYapData_PlayerPromptCreated& Data, FYapDialogueNodeType NodeType);
+	FYapPromptHandle BroadcastPrompt(const FYapData_PlayerPromptCreated& Data, FYapDialogueNodeClassType NodeType);
 
 	/**  */
-	void OnFinishedBroadcastingPrompts(const FYapData_PlayerPromptsReady& Data, FYapDialogueNodeType NodeType);
+	void OnFinishedBroadcastingPrompts(const FYapData_PlayerPromptsReady& Data, FYapDialogueNodeClassType NodeType);
 
 public:
-	void RunSpeech(const FYapData_SpeechBegins& SpeechData, FYapDialogueNodeType NodeType, FYapSpeechHandle& Handle);
+	void RunSpeech(const FYapData_SpeechBegins& SpeechData, FYapDialogueNodeClassType NodeType, FYapSpeechHandle& Handle);
 
 	// TODO I hate this thing
 	static FYapConversation NullConversation;
@@ -352,13 +352,13 @@ public:
 	/**  */
 	void UnregisterCharacterComponent(UYapCharacterComponent* YapCharacterComponent);
 
-	TArray<TObjectPtr<UObject>>& FindOrAddConversationHandlerArray(FYapDialogueNodeType NodeType);
+	TArray<TObjectPtr<UObject>>& FindOrAddConversationHandlerArray(FYapDialogueNodeClassType NodeType);
 
-	TArray<TObjectPtr<UObject>>* FindConversationHandlerArray(FYapDialogueNodeType NodeType);
+	TArray<TObjectPtr<UObject>>* FindConversationHandlerArray(FYapDialogueNodeClassType NodeType);
 	
-	TArray<TObjectPtr<UObject>>& FindOrAddFreeSpeechHandlerArray(FYapDialogueNodeType NodeType);
+	TArray<TObjectPtr<UObject>>& FindOrAddFreeSpeechHandlerArray(FYapDialogueNodeClassType NodeType);
 	
-	TArray<TObjectPtr<UObject>>* FindFreeSpeechHandlerArray(FYapDialogueNodeType NodeType);
+	TArray<TObjectPtr<UObject>>* FindFreeSpeechHandlerArray(FYapDialogueNodeClassType NodeType);
 
 	FYapSpeechHandle GetNewSpeechHandle(FGuid Guid);
 	

@@ -4,6 +4,7 @@
 #pragma once
 
 #include "GameplayTagContainer.h"
+#include "InstancedStruct.h"
 #include "Interfaces/IYapCharacterInterface.h"
 
 #include "YapCharacterAsset.generated.h"

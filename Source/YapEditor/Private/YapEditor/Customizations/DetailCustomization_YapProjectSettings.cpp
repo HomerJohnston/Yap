@@ -131,7 +131,7 @@ void FDetailCustomization_YapProjectSettings::ProcessCategory(IDetailCategoryBui
 				SNew(SButton)
 				.IsEnabled_Lambda([this] () { return ProjectSettings.Get()->CharacterTagRoot.IsValid() ? true : false; })
 				.HAlign(HAlign_Center)
-				.Text(LOCTEXT("PopulateCharactersFromParentButton_ToolTip", "Populate from Parent"))
+				.Text(LOCTEXT("PopulateCharactersFromParentButton_ToolTip", "Populate from Root Tag"))
 				.ToolTipText(LOCTEXT("PopulateCharactersFromParentButton_ToolTip", "Finds all child (leaf) tags under the set character tag parent above and adds rows into the map for them."))
 				.OnClicked(this, &FDetailCustomization_YapProjectSettings::OnClicked_PopulateFromParent)	
 			]

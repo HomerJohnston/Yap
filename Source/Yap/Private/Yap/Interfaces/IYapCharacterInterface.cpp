@@ -24,13 +24,6 @@ FLinearColor IYapCharacterInterface::GetCharacterColor() const
 
 // ----------------------------------------------
 
-FGameplayTag IYapCharacterInterface::GetYapCharacterTag() const
-{
-    return K2_GetYapCharacterTag();
-}
-
-// ----------------------------------------------
-
 const UTexture2D* IYapCharacterInterface::GetCharacterPortrait(const FGameplayTag& MoodTag) const
 {
     return K2_GetYapCharacterPortrait(MoodTag);
@@ -153,31 +146,6 @@ FLinearColor IYapCharacterInterface::GetColor(const UObject* Character)
 
 // ----------------------------------------------
 
-FGameplayTag IYapCharacterInterface::GetTag(const UObject* Character)
-{
-    FGameplayTag Tag = FGameplayTag::EmptyTag;
-
-    if (IsValid(Character))
-    {
-        if (const IYapCharacterInterface* Speaker = Cast<IYapCharacterInterface>(Character))
-        {
-            Tag = Speaker->GetYapCharacterTag();
-        }
-        else if (Character->Implements<UYapCharacterInterface>())
-        {
-            Tag = IYapCharacterInterface::Execute_K2_GetYapCharacterTag(Character);
-        }
-        else
-        {
-            UE_LOG(LogYap, Error, TEXT("IYapCharacterInterface::GetTag failure - Object [%s] did not implement IYapCharacterInterface in C++ or blueprint!"), *Character->GetName());
-        }
-    }
-
-    return Tag;
-}
-
-// ----------------------------------------------
-
 const UTexture2D* IYapCharacterInterface::GetPortrait(const UObject* CharacterAsset, FGameplayTag MoodTag)
 {
     const UTexture2D* Texture = nullptr;
@@ -199,7 +167,7 @@ const UTexture2D* IYapCharacterInterface::GetPortrait(const UObject* CharacterAs
         {
             Texture = IYapCharacterInterface::Execute_K2_GetYapCharacterPortrait(TargetObject, MoodTag);
         }
-        else if (const UBlueprint* Blueprint = Cast<UBlueprint>(TargetObject))
+        else
         {
             UE_LOG(LogYap, Error, TEXT("IYapCharacterInterface::GetPortrait failure - Object [%s] did not implement IYapCharacterInterface in C++ or blueprint!"), *CharacterAsset->GetName());
         }

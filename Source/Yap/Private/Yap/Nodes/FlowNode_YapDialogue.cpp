@@ -8,7 +8,6 @@
 #include "Nodes/Route/FlowNode_Reroute.h"
 #include "UObject/ObjectSaveContext.h"
 #include "Yap/YapBit.h"
-#include "Yap/YapCharacterAsset.h"
 #include "Yap/YapCondition.h"
 #include "Yap/YapFragment.h"
 #include "Yap/YapProjectSettings.h"
@@ -556,6 +555,7 @@ bool UFlowNode_YapDialogue::TryBroadcastPrompts()
  		Data.Conversation = Conversation.GetHandle();
  		Data.DirectedAt = TScriptInterface<IYapCharacterInterface>(const_cast<UObject*>(Fragment.GetDirectedAt(EYapLoadContext::Sync)));
  		Data.Speaker = TScriptInterface<IYapCharacterInterface>(const_cast<UObject*>(Fragment.GetSpeakerCharacter(EYapLoadContext::Sync)));
+ 		Data.SpeakerName = Fragment.GetSpeakerTag().GetTagName();
  		Data.MoodTag = Fragment.GetMoodTag();
  		Data.DialogueText = Bit.GetDialogueText();
 
@@ -710,6 +710,7 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 	Data.Conversation = Subsystem->GetConversationByOwner(GetWorld(), GetFlowAsset()).GetConversationName();
 	Data.DirectedAt = TScriptInterface<IYapCharacterInterface>(const_cast<UObject*>(Fragment.GetDirectedAt(EYapLoadContext::Sync)));
 	Data.Speaker = TScriptInterface<IYapCharacterInterface>(const_cast<UObject*>(Fragment.GetSpeakerCharacter(EYapLoadContext::Sync)));
+	Data.SpeakerName = Fragment.GetSpeakerTag().GetTagName();
 	Data.MoodTag = Fragment.GetMoodTag();
 	Data.DialogueText = Bit.GetDialogueText();
 	Data.SpeechTime = EffectiveTime;
@@ -1502,7 +1503,7 @@ void UFlowNode_YapDialogue::ToggleNodeType()
 
 FString UFlowNode_YapDialogue::GetStatusString() const
 {
-	return "Hello World";
+	return {};
 }
 #endif
 
@@ -1570,16 +1571,7 @@ void UFlowNode_YapDialogue::PreSave(FObjectPreSaveContext SaveContext)
 
 				if (LoadedSpeakerAsset->Implements<UYapCharacterInterface>())
 				{
-					FGameplayTag AssetTag;
-					
-					if (IYapCharacterInterface* I = Cast<IYapCharacterInterface>(LoadedSpeakerAsset))
-					{
-						AssetTag = I->GetYapCharacterTag();
-					}
-					else
-					{
-						AssetTag = IYapCharacterInterface::Execute_K2_GetYapCharacterTag(LoadedSpeakerAsset);
-					}
+					FGameplayTag AssetTag = UYapProjectSettings::FindCharacterTag(Fragment.SpeakerAsset);
 				
 					if (AssetTag.IsValid())
 					{
@@ -1613,8 +1605,8 @@ void UFlowNode_YapDialogue::PreSave(FObjectPreSaveContext SaveContext)
 
 				if (LoadedDirectedAtAsset->Implements<UYapCharacterInterface>())
 				{
-					FGameplayTag AssetTag = IYapCharacterInterface::Execute_K2_GetYapCharacterTag(LoadedDirectedAtAsset);
-
+					FGameplayTag AssetTag = UYapProjectSettings::FindCharacterTag(Fragment.SpeakerAsset);
+				
 					if (AssetTag.IsValid())
 					{
 						Fragment.DirectedAt = AssetTag;

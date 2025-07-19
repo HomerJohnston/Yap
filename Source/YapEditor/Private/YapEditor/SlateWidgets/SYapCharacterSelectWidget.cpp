@@ -137,7 +137,8 @@ void SYapCharacterSelectWidget::Construct(const FArguments& InArgs)
 		[
 			SNew(SBox)
 			.MinDesiredWidth(300)
-			.MaxDesiredHeight(600)
+			.MaxDesiredWidth(400)
+			.MaxDesiredHeight(500)
 			[
 				CharacterList.ToSharedRef()
 			]
@@ -281,7 +282,7 @@ void SYapCharacterSelectWidget::UpdateCharacterSelector(const FText& FilterText)
 		};
 		
 		CharacterList->AddSlot()
-		.Padding(0, 2, 0, 4)
+		.Padding(0, 0, 0, 2)
 		[
 			SNew(SButton)
 			.ButtonStyle(FYapEditorStyle::Get(), YapStyles.ButtonStyle_CharacterSelect)
@@ -376,7 +377,7 @@ void SYapCharacterSelectWidget::UpdateCharacterSelector(const FText& FilterText)
 			.HeadingText(LOCTEXT("CharacterSelector_ListStartHeading", "All Characters"))
 		];
 	}
-	
+
 	for (const FYapCharacterDefinition& CharacterDefinition : UYapProjectSettings::GetCharacterDefinitions())
 	{
 		if (!RecentlySelectedCharacterTags.Contains(CharacterDefinition.CharacterTag.GetTagName()))

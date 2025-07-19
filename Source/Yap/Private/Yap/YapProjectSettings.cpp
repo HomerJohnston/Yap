@@ -102,6 +102,18 @@ void UYapProjectSettings::AddAdditionalCharacterClass(TSoftClassPtr<UObject> Cla
 }
 #endif
 
+const FGameplayTag& UYapProjectSettings::FindCharacterTag(const TSoftObjectPtr<UObject>& Character)
+{
+	for (const auto& Pair : Get().CharacterMap)
+	{
+		if (Pair.Value == Character)
+		{
+			return Pair.Key;
+		}
+	}
+	return FGameplayTag::EmptyTag;
+}
+
 #if WITH_EDITOR
 void UYapProjectSettings::UpdateReversedCharacterMap()
 {

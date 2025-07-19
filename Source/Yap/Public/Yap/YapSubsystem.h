@@ -159,7 +159,7 @@ protected:
 
 	/** All registered character components. */
 	UPROPERTY(Transient)
-	TMap<FGameplayTag, TWeakObjectPtr<UYapCharacterComponent>> YapCharacterComponents;
+	TMap<FName, TWeakObjectPtr<UYapCharacterComponent>> YapCharacterComponents;
 
 	/** Helper to ensure that multiple character components are never registered for the same actor. */
 	UPROPERTY(Transient)
@@ -222,7 +222,7 @@ public:
 	//static void UnregisterFreeSpeechHandlerAllTypes(UObject* HandlerToRemove);
 
 	/** Given a character identity tag, attempt to find the character component in the world. */
-	static UYapCharacterComponent* FindCharacterComponent(UWorld* World, FGameplayTag CharacterTag);
+	static UYapCharacterComponent* FindCharacterComponent(UWorld* World, FName CharacterName);
 
 	// =========================================
 	// YAP API - These are called by Yap classes
@@ -340,7 +340,7 @@ public:
 	static bool CancelSpeech(UObject* WorldContext, const FYapSpeechHandle& Handle);
 
 	/** Used to complete all running speech within a given conversation; supposed to be used for "skip" or "continue/advance" type buttons */
-	static void AdvanceConversation(UObject* Instigator, const FYapConversationHandle& Handle);
+	static void AdvanceConversation(UObject* Instigator, const FYapConversationHandle& ConversationHandle);
 	
 	// TODO: ability to instantly playback/skip through multiple nodes until some sort of target point is hit, maybe a custom node? (imagine skipping an entire cutscene)
 	// static bool SkipConversationTo(???);

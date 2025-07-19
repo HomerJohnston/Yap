@@ -138,9 +138,9 @@ void UYapSubsystem::UnregisterFreeSpeechHandler(UObject* HandlerToRemove, FYapDi
 
 // ------------------------------------------------------------------------------------------------
 
-UYapCharacterComponent* UYapSubsystem::FindCharacterComponent(UWorld* World, FGameplayTag CharacterTag)
+UYapCharacterComponent* UYapSubsystem::FindCharacterComponent(UWorld* World, FName CharacterName)
 {
-	TWeakObjectPtr<UYapCharacterComponent>* CharacterComponentPtr = Get(World)->YapCharacterComponents.Find(CharacterTag);
+	TWeakObjectPtr<UYapCharacterComponent>* CharacterComponentPtr = Get(World)->YapCharacterComponents.Find(CharacterName);
 
 	if (CharacterComponentPtr && CharacterComponentPtr->IsValid())
 	{
@@ -690,22 +690,22 @@ bool UYapSubsystem::CancelSpeech(UObject* WorldContext, const FYapSpeechHandle& 
 
 // ------------------------------------------------------------------------------------------------
 
-void UYapSubsystem::AdvanceConversation(UObject* Instigator, const FYapConversationHandle& Handle)
+void UYapSubsystem::AdvanceConversation(UObject* Instigator, const FYapConversationHandle& ConversationHandle)
 {
-	UE_LOG(LogYap, VeryVerbose, TEXT("Subsystem: AdvanceConversation [%s]"), *Handle.ToString());
+	UE_LOG(LogYap, VeryVerbose, TEXT("Subsystem: AdvanceConversation START [%s]"), *ConversationHandle.ToString());
 
-	if (!Handle.IsValid())
+	if (!ConversationHandle.IsValid())
 	{
-		UE_LOG(LogYap, VeryVerbose, TEXT("Subsystem: AdvanceConversation {%s} ignored - handle was invalid"), *Handle.ToString());
+		UE_LOG(LogYap, VeryVerbose, TEXT("Subsystem: AdvanceConversation {%s} ignored - handle was invalid"), *ConversationHandle.ToString());
 	}
 	
 	UYapSubsystem* Subsystem = Get(Instigator);
 
-	FYapConversation* ConversationPtr = Subsystem->Conversations.Find(Handle);
+	FYapConversation* ConversationPtr = Subsystem->Conversations.Find(ConversationHandle);
 
 	if (!ConversationPtr)
 	{
-		UE_LOG(LogYap, Warning, TEXT("UYapSubsystem::AdvanceConversation - could not find conversation for handle {%s}"), *Handle.ToString());
+		UE_LOG(LogYap, Warning, TEXT("UYapSubsystem::AdvanceConversation - could not find conversation for handle {%s}"), *ConversationHandle.ToString());
 		return;
 	}
 	TArray<FYapSpeechHandle> RunningFragments = ConversationPtr->GetRunningFragments();
@@ -713,11 +713,14 @@ void UYapSubsystem::AdvanceConversation(UObject* Instigator, const FYapConversat
 	// Finish all running speeches
 	for (const FYapSpeechHandle& SpeechHandle : RunningFragments)
 	{
+		UE_LOG(LogYap, VeryVerbose, TEXT("Subsystem: AdvanceConversation CALLING ONSPEECHCOMPLETE [%s]"), *ConversationHandle.ToString());
 		Subsystem->OnSpeechComplete(SpeechHandle);
 	}
 	
+	UE_LOG(LogYap, VeryVerbose, TEXT("Subsystem: AdvanceConversation CALLING ONADVANCECONVERSATIONDELEGATE [%s]"), *ConversationHandle.ToString());
 	// Broadcast to Yap systems; in dialogue nodes, this will kill any running paddings
-	Subsystem->OnAdvanceConversationDelegate.Broadcast(Instigator, Handle);
+	Subsystem->OnAdvanceConversationDelegate.Broadcast(Instigator, ConversationHandle);
+	UE_LOG(LogYap, VeryVerbose, TEXT("Subsystem: AdvanceConversation FINISH [%s]"), *ConversationHandle.ToString());
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -732,7 +735,7 @@ void UYapSubsystem::RegisterCharacterComponent(UYapCharacterComponent* YapCharac
 		return;
 	}
 
-	YapCharacterComponents.Add(YapCharacterComponent->GetCharacterTag(), YapCharacterComponent);
+	YapCharacterComponents.Add(YapCharacterComponent->GetCharacterTag().GetTagName(), YapCharacterComponent);
 	
 	RegisteredYapCharacterActors.Add(Actor);
 }
@@ -743,7 +746,7 @@ void UYapSubsystem::UnregisterCharacterComponent(UYapCharacterComponent* YapChar
 {
 	AActor* Actor = YapCharacterComponent->GetOwner();
 
-	YapCharacterComponents.Remove(YapCharacterComponent->GetCharacterTag());
+	YapCharacterComponents.Remove(YapCharacterComponent->GetCharacterTag().GetTagName());
 	RegisteredYapCharacterActors.Remove(Actor);
 }
 

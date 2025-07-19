@@ -175,6 +175,8 @@ public:
 
 	static const FGameplayTag& GetCharacterRootTag() { return Get().CharacterTagRoot; }
 
+	static const FGameplayTag& FindCharacterTag(const TSoftObjectPtr<UObject>& Character);
+	
 #if WITH_EDITOR
 	// TODO this is kind of ugly
 	static TMap<TSoftObjectPtr<UObject>, FGameplayTag> ReversedCharacterMap;

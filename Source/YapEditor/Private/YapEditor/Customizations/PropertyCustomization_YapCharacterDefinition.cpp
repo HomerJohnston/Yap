@@ -115,8 +115,8 @@ void FPropertyCustomization_YapCharacterDefinition::CustomizeHeader(TSharedRef<I
                 + SOverlay::Slot()
                 [
                     SNew(SButton)
-                    .Text(INVTEXT("Open"))
-                    .ToolTipText(LOCTEXT("OpenCharacterAsset_ToolTip", "Open this asset."))
+                    .Text(LOCTEXT("EditCharacterAsset_ButtonLabel", "Edit"))
+                    .ToolTipText(LOCTEXT("EditCharacterAsset_ToolTip", "Open this character asset/blueprint to edit it."))
                     .VAlign(VAlign_Center)
                     .OnClicked(this, &FPropertyCustomization_YapCharacterDefinition::OnOpenCharacterAsset, AssetPropertyHandle)
                     .ButtonColorAndOpacity(this, &FPropertyCustomization_YapCharacterDefinition::ButtonColorAndOpacity_OpenCharacterAsset, AssetPropertyHandle)   

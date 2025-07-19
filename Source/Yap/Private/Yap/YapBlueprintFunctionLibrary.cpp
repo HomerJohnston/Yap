@@ -69,21 +69,14 @@ void UYapBlueprintFunctionLibrary::UnregisterFreeSpeechHandler(UObject* HandlerT
 
 // ------------------------------------------------------------------------------------------------
 
-AActor* UYapBlueprintFunctionLibrary::FindYapCharacterActor(UObject* WorldContext, TScriptInterface<IYapCharacterInterface> Speaker)
+AActor* UYapBlueprintFunctionLibrary::FindYapCharacterActor(UObject* WorldContext, FName Speaker)
 {
-	if (!IsValid(Speaker.GetObject()))
-	{
-		return nullptr;
-	}
-
-	FGameplayTag Tag = IYapCharacterInterface::GetTag(Speaker.GetObject());
-	
-	if (!Tag.IsValid())
+	if (Speaker == NAME_None)
 	{
 		return nullptr;
 	}
 	
-	UYapCharacterComponent* Comp = UYapSubsystem::FindCharacterComponent(WorldContext->GetWorld(), Tag);
+	UYapCharacterComponent* Comp = UYapSubsystem::FindCharacterComponent(WorldContext->GetWorld(), Speaker);
 
 	if (!IsValid(Comp))
 	{
@@ -95,6 +88,7 @@ AActor* UYapBlueprintFunctionLibrary::FindYapCharacterActor(UObject* WorldContex
 
 FYapSpeechHandle UYapBlueprintFunctionLibrary::K2_RunSpeech(
 	TScriptInterface<IYapCharacterInterface> Speaker,
+	FName SpeakerName,
 	FText DialogueText,
 	UObject* DialogueAudioAsset,
 	FGameplayTag MoodTag,
@@ -138,6 +132,7 @@ FYapSpeechHandle UYapBlueprintFunctionLibrary::K2_RunSpeech(
 	
 	FYapData_SpeechBegins SpeechData;
 	SpeechData.Speaker = Speaker;
+	SpeechData.SpeakerName = SpeakerName;
 	SpeechData.DirectedAt = DirectedAt;
 	SpeechData.DialogueText = DialogueText;
 	SpeechData.SpeechTime = SpeechTime;

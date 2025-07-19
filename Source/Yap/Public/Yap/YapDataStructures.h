@@ -53,6 +53,10 @@ struct FYapData_SpeechBegins
 	UPROPERTY(BlueprintReadWrite)
 	TScriptInterface<IYapCharacterInterface> Speaker;
 
+	/** Who is speaking. This is a Name. It will match the Gameplay Tag in project settings for predefined speakers. */
+	UPROPERTY(BlueprintReadWrite)
+	FName SpeakerName;
+
 	/** Mood of the speaker. */
 	UPROPERTY(BlueprintReadWrite)
 	FGameplayTag MoodTag;
@@ -103,6 +107,10 @@ struct FYapData_PlayerPromptCreated
 	/** Who is going to speak. */
 	UPROPERTY(BlueprintReadOnly)
 	TScriptInterface<IYapCharacterInterface> Speaker;
+
+	/** Who is going to speak. This is a Name. It will match the Gameplay Tag in project settings for predefined speakers. */
+	UPROPERTY(BlueprintReadWrite)
+	FName SpeakerName;
 
 	/** Mood of the speaker. */
 	UPROPERTY(BlueprintReadOnly)

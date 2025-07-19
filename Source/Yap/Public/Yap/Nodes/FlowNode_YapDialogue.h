@@ -5,7 +5,6 @@
 
 #include "Nodes/FlowNode.h"
 #include "Yap/YapNodeConfig.h"
-#include "Yap/YapRunningFragment.h" 
 #include "Yap/YapFragment.h"
 #include "Yap/Handles/YapConversationHandle.h"
 #include "Yap/Handles/YapPromptHandle.h"

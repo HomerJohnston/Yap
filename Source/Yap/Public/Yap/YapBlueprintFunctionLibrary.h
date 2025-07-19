@@ -55,12 +55,13 @@ public:
 
 	/**  */
 	UFUNCTION(BlueprintCallable, Category = "Yap|Character", meta = (WorldContext = "WorldContext"))
-	static AActor* FindYapCharacterActor(UObject* WorldContext, TScriptInterface<IYapCharacterInterface> Speaker);
+	static AActor* FindYapCharacterActor(UObject* WorldContext, FName Speaker);
 
 	/**  */
 	UFUNCTION(BlueprintCallable, DisplayName = "Run Speech", Category = "Yap|Global", meta = (DefaultToSelf = "Speaker", AdvancedDisplay = 4))
 	static UPARAM(DisplayName = "Handle") FYapSpeechHandle K2_RunSpeech(
 		TScriptInterface<IYapCharacterInterface> Speaker,
+		FName SpeakerName,
 		FText DialogueText,
 		UObject* DialogueAudioAsset,
 		FGameplayTag MoodTag,

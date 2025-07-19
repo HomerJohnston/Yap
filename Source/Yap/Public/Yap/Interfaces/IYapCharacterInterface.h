@@ -35,9 +35,6 @@ public:
     /** Try to get the supplied character's color. Will log an error if the character does not implement the interface. */
     static FLinearColor GetColor(const UObject* Character);
 
-    /** Try to get the supplied character's ID tag. Will log an error if the character does not implement the interface. */
-    static FGameplayTag GetTag(const UObject* Character);
-    
     /** Try to get the supplied character's portrait. Will log an error if the character does not implement the interface. */
     static const UTexture2D* GetPortrait(const UObject* CharacterAsset, FGameplayTag MoodTag = FGameplayTag::EmptyTag);
 
@@ -52,9 +49,6 @@ public:
     /** Override this on a C++ class. */
     virtual FLinearColor GetCharacterColor() const;
 
-    /** Override this on a C++ class. */
-    virtual FGameplayTag GetYapCharacterTag() const;
-    
     /** Override this on a C++ class. Pass in nullptr for the dialogue node type to use the default Yap Node type. */
     virtual const UTexture2D* GetCharacterPortrait(const FGameplayTag& MoodTag) const;
 
@@ -70,10 +64,6 @@ protected:
     /** Implement this on a blueprint. */
     UFUNCTION(BlueprintImplementableEvent, Category = "Yap|Character", DisplayName = "Get Color")
     FLinearColor K2_GetYapCharacterColor() const;
-
-    /** Implement this on a blueprint. The tag can be used by Yap to look for actors in the world that have a Yap Character Component added to them. */
-    UFUNCTION(BlueprintImplementableEvent, Category = "Yap|Character", DisplayName = "Get Tag")
-    FGameplayTag K2_GetYapCharacterTag() const;
 
     /** Implement this on a blueprint. */
     UFUNCTION(BlueprintImplementableEvent, Category = "Yap|Character", DisplayName = "Get Portrait")
@@ -107,13 +97,6 @@ class UYapCharacterBFL : public UBlueprintFunctionLibrary
     static FLinearColor GetColor(const TScriptInterface<IYapCharacterInterface> Character)
     {
         return IYapCharacterInterface::GetColor(Character.GetObject());
-    }
-    
-    /** Get the supplied character's ID tag. */
-    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Yap|Character")
-    static FGameplayTag GetTag(const TScriptInterface<IYapCharacterInterface> Character)
-    {
-        return IYapCharacterInterface::GetTag(Character.GetObject());
     }
     
     /** Get the supplied character's portrait. */

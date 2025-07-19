@@ -397,21 +397,24 @@ public:
 #endif
 	bool GetUsesTitleText(EYapDialogueNodeType NodeType) const;
 	
-	bool GetDisableSpeaker() const { return General.bDisableSpeaker; }
-	
-	bool GetDisableDirectedAt() const { return General.bDisableDirectedAt; }
+	bool GetUsesSpeaker() const { return !General.bDisableSpeaker; }
 
-	bool GetDisableMoodTags() const { return MoodTags.bDisableMoodTags; }
+	bool GetUsesDirectedAt() const { return General.bDisableDirectedAt; }
+
 	
 	bool GetDisableChildSafe() const { return General.bDisableChildSafe; }
 
-	bool GetHideAudioID() const { return Audio.bHideAudioID; }
+	bool GetUsesAudioAsset() const { return !Audio.bDisableAudio; }
+
+	bool GetHideAudioID() const { return !Audio.bDisableAudio && Audio.bHideAudioID; }
 
 	int32 GetTextWordsPerMinute() { return DialoguePlayback.TimeSettings.TextWordsPerMinute; }
 
-	const FGameplayTag& GetMoodTagsParent() const { return MoodTags.MoodTagsRoot; };
+	bool GetUsesMoodTags() const { return MoodTags.bDisableMoodTags; }
 
-	const FGameplayTag& GetDefaultMoodTag() const { return MoodTags.DefaultMoodTag; };
+	const FGameplayTag& GetMoodTagsParent() const { return MoodTags.MoodTagsRoot; }
+
+	const FGameplayTag& GetDefaultMoodTag() const { return MoodTags.DefaultMoodTag; }
 
 	FGameplayTagContainer GetMoodTags() const;
 

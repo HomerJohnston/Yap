@@ -673,7 +673,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateFragmentWidget()
 
 	TSharedRef<SHorizontalBox> MiddleBox = SNew(SHorizontalBox);
 
-	if (!GetNodeConfig().GetDisableSpeaker())
+	if (GetNodeConfig().GetUsesSpeaker())
 	{
 		MiddleBox->AddSlot()
 		.HAlign(HAlign_Center)
@@ -740,7 +740,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateFragmentWidget()
 		];
 	}
 
-	if (!GetNodeConfig().GetDisableMoodTags())
+	if (GetNodeConfig().GetUsesMoodTags())
 	{
 		LeftFragmentBox->AddSlot()
 		.AutoHeight()
@@ -748,7 +748,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateFragmentWidget()
 		.Padding(0, 2, 0, 0)
 		[
 			SNew(SBox)
-			.Visibility_Lambda( [this] () { return GetNodeConfig().GetDisableMoodTags() ? EVisibility::Collapsed : EVisibility::Visible; } )
+			.Visibility_Lambda( [this] () { return GetNodeConfig().GetUsesMoodTags() ? EVisibility::Visible : EVisibility::Collapsed; } )
 			.WidthOverride(22)
 			.HeightOverride(22)
 			[
@@ -1050,7 +1050,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateDialogueDisplayWidge
 		]
 	];
 
-	if (!GetNodeConfig().GetDisableDirectedAt())
+	if (GetNodeConfig().GetUsesDirectedAt())
 	{
 		Overlay->AddSlot()	.VAlign(VAlign_Top)
 		.HAlign(HAlign_Right)

@@ -540,16 +540,30 @@ bool UFlowNode_YapDialogue::TryBroadcastPrompts()
 		}
 
  		const FYapBit& Bit = Fragment.GetBit(GetWorld());
+ 		const UYapNodeConfig& ActiveConfig = GetNodeConfig();
  		
  		FYapData_PlayerPromptCreated Data;
  		Data.Conversation = Conversation.GetHandle();
- 		Data.DirectedAt = TScriptInterface<IYapCharacterInterface>(const_cast<UObject*>(Fragment.GetDirectedAt(EYapLoadContext::Sync)));
- 		Data.Speaker = TScriptInterface<IYapCharacterInterface>(const_cast<UObject*>(Fragment.GetSpeakerCharacter(EYapLoadContext::Sync)));
- 		Data.SpeakerName = Fragment.GetSpeakerTag().GetTagName();
- 		Data.MoodTag = Fragment.GetMoodTag();
+
+ 		if (ActiveConfig.GetUsesDirectedAt())
+ 		{
+ 			Data.DirectedAt = TScriptInterface<IYapCharacterInterface>(const_cast<UObject*>(Fragment.GetDirectedAt(EYapLoadContext::Sync)));
+ 		}
+
+ 		if (ActiveConfig.GetUsesSpeaker())
+ 		{
+ 			Data.Speaker = TScriptInterface<IYapCharacterInterface>(const_cast<UObject*>(Fragment.GetSpeakerCharacter(EYapLoadContext::Sync)));
+	 		Data.SpeakerName = Fragment.GetSpeakerTag().GetTagName();	
+ 		}
+
+ 		if (ActiveConfig.GetUsesMoodTags())
+ 		{
+ 			Data.MoodTag = Fragment.GetMoodTag();
+ 		}
+ 		
  		Data.DialogueText = Bit.GetDialogueText();
 
- 		if (!GetNodeConfig().GetUsesTitleText(GetNodeType()))
+ 		if (ActiveConfig.GetUsesTitleText(GetNodeType()))
  		{
  			Data.TitleText = Bit.GetTitleText();
  		}
@@ -679,9 +693,9 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 	Fragment.ClearAwaitingManualAdvance();
 	
 	const FYapBit& Bit = Fragment.GetBit(GetWorld());
-	const UYapNodeConfig& NodeConfig = GetNodeConfig();
-	
-	TOptional<float> Time = Fragment.GetSpeechTime(GetWorld(), NodeConfig);
+	const UYapNodeConfig& ActiveConfig = GetNodeConfig();
+
+	TOptional<float> Time = Fragment.GetSpeechTime(GetWorld(), ActiveConfig);
 
 	float EffectiveTime;
 	
@@ -691,24 +705,41 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 	}
 	else
 	{
-		EffectiveTime = NodeConfig.GetMinimumSpeakingTime();
+		EffectiveTime = ActiveConfig.GetMinimumSpeakingTime();
 	}
 
 	UYapSubsystem* Subsystem = GetWorld()->GetSubsystem<UYapSubsystem>();
-
+	
 	FYapData_SpeechBegins Data;
 	Data.Conversation = Subsystem->GetConversationByOwner(GetWorld(), GetFlowAsset()).GetConversationName();
-	Data.DirectedAt = TScriptInterface<IYapCharacterInterface>(const_cast<UObject*>(Fragment.GetDirectedAt(EYapLoadContext::Sync)));
-	Data.Speaker = TScriptInterface<IYapCharacterInterface>(const_cast<UObject*>(Fragment.GetSpeakerCharacter(EYapLoadContext::Sync)));
-	Data.SpeakerName = Fragment.GetSpeakerTag().GetTagName();
-	Data.MoodTag = Fragment.GetMoodTag();
+
+	if (ActiveConfig.GetUsesDirectedAt())
+	{
+		Data.DirectedAt = TScriptInterface<IYapCharacterInterface>(const_cast<UObject*>(Fragment.GetDirectedAt(EYapLoadContext::Sync)));
+	}
+
+	if (ActiveConfig.GetUsesSpeaker())
+	{
+		Data.Speaker = TScriptInterface<IYapCharacterInterface>(const_cast<UObject*>(Fragment.GetSpeakerCharacter(EYapLoadContext::Sync)));
+		Data.SpeakerName = Fragment.GetSpeakerTag().GetTagName();
+	}
+
+	if (ActiveConfig.GetUsesMoodTags())
+	{
+		Data.MoodTag = Fragment.GetMoodTag();
+	}
+	
 	Data.DialogueText = Bit.GetDialogueText();
 	Data.SpeechTime = EffectiveTime;
-	Data.DialogueAudioAsset = Bit.GetAudioAsset<UObject>();
+
+	if (ActiveConfig.GetUsesAudioAsset())
+	{
+		Data.DialogueAudioAsset = Bit.GetAudioAsset<UObject>();		
+	}
+	
 	Data.bSkippable = Fragment.GetSkippable(GetSkippable());
 
-	// It's possible that a fragment has titletext data but the project settings are to ignore it; avoid copying the data if the game settings don't want it
-	if (!NodeConfig.GetUsesTitleText(GetNodeType()))
+	if (!ActiveConfig.GetUsesTitleText(GetNodeType()))
 	{
 		Data.TitleText = Bit.GetTitleText();
 	}
@@ -746,9 +777,9 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 	{
 		OnPaddingComplete(FocusedSpeechHandle);
 	}
-	else if (Fragment.GetUsesPadding(GetWorld(), NodeConfig))
+	else if (Fragment.GetUsesPadding(GetWorld(), ActiveConfig))
 	{
-		float PaddingCompletionTime = Fragment.GetProgressionTime(GetWorld(), NodeConfig);
+		float PaddingCompletionTime = Fragment.GetProgressionTime(GetWorld(), ActiveConfig);
 
 		if (PaddingCompletionTime > 0)
 		{

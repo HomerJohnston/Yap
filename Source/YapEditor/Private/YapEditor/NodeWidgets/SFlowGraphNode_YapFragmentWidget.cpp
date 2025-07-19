@@ -44,7 +44,7 @@ FSlateFontInfo SFlowGraphNode_YapFragmentWidget::DialogueTextFont;
 TMap<EYapTimeMode, FLinearColor> SFlowGraphNode_YapFragmentWidget::TimeModeButtonColors =
 	{
 	{ EYapTimeMode::None, YapColor::Red },
-	{ EYapTimeMode::Default, YapColor::Green },
+	{ EYapTimeMode::Default, YapColor::LightGray },
 	{ EYapTimeMode::AudioTime, YapColor::Cyan },
 	{ EYapTimeMode::TextTime, YapColor::LightBlue },
 	{ EYapTimeMode::ManualTime, YapColor::Orange },

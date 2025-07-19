@@ -5,10 +5,12 @@
 
 #include "DetailWidgetRow.h"
 #include "Widgets/Colors/SColorBlock.h"
+#include "Yap/YapCharacterAsset.h"
 #include "Yap/YapCharacterDefinition.h"
 #include "Yap/YapProjectSettings.h"
 #include "Yap/Interfaces/IYapCharacterInterface.h"
 #include "YapEditor/YapEditorColor.h"
+#include "YapEditor/YapEditorStyle.h"
 #include "YapEditor/SlateWidgets/SYapPropertyMenuAssetPicker.h"
 
 #define LOCTEXT_NAMESPACE "YapEditor"
@@ -99,6 +101,34 @@ void FPropertyCustomization_YapCharacterDefinition::CustomizeHeader(TSharedRef<I
                 .IsEnabled(false)
                 .ToolTipText(INVTEXT("Placeholder button."))
                 .VAlign(VAlign_Center)
+            ]
+        ]
+        + SHorizontalBox::Slot()
+        .AutoWidth()
+        .Padding(8, 4, 0, 4)
+        .VAlign(VAlign_Center)
+        [
+            SNew(SBox)
+            .HeightOverride(32)
+            [
+                SNew(SOverlay)
+                + SOverlay::Slot()
+                [
+                    SNew(SButton)
+                    .Text(INVTEXT("Open"))
+                    .ToolTipText(LOCTEXT("OpenCharacterAsset_ToolTip", "Open this asset."))
+                    .VAlign(VAlign_Center)
+                    .OnClicked(this, &FPropertyCustomization_YapCharacterDefinition::OnOpenCharacterAsset, AssetPropertyHandle)
+                    .ButtonColorAndOpacity(this, &FPropertyCustomization_YapCharacterDefinition::ButtonColorAndOpacity_OpenCharacterAsset, AssetPropertyHandle)   
+                ]
+                + SOverlay::Slot()
+                .Padding(-4)
+                [
+                    SNew(SBorder)
+                    .Visibility(this, &FPropertyCustomization_YapCharacterDefinition::Visibility_CharacterErrorsButtonBorder, AssetPropertyHandle)
+                    .BorderImage(FYapEditorStyle::GetImageBrush(YapBrushes.Border_Thick_RoundedSquare))
+                    .BorderBackgroundColor(YapColor::Orange)
+                ]
             ]
         ]
     ];
@@ -232,6 +262,62 @@ void FPropertyCustomization_YapCharacterDefinition::OnSetNewCharacterAsset(TShar
         Yap::Editor::PostNotificationInfo_Warning(LOCTEXT("CharacterAsset_ErrorTitle", "Error"), LOCTEXT("CharacterAsset_ErrorDescription", "The selected asset is not a valid Yap character! Please select a valid character asset."));
     }
 }
+
+FReply FPropertyCustomization_YapCharacterDefinition::OnOpenCharacterAsset(TSharedPtr<IPropertyHandle> PropertyHandle) const
+{
+    UAssetEditorSubsystem* Subsystem = GEditor->GetEditorSubsystem<UAssetEditorSubsystem>();
+
+    UObject* Asset = nullptr;
+
+    PropertyHandle->GetValue(Asset);
+    
+    if (IsValid(Subsystem))
+    {
+        if (IsValid(Asset))
+        {
+            Subsystem->OpenEditorForAsset(Asset);
+        }
+    }
+    
+    return FReply::Handled();
+}
+
+bool FPropertyCustomization_YapCharacterDefinition::GetCharacterHasErrors(TSharedPtr<IPropertyHandle> PropertyHandle) const
+{
+    UObject* Asset = nullptr;
+
+    PropertyHandle->GetValue(Asset);
+
+    UYapCharacterAsset* CharacterAsset = Cast<UYapCharacterAsset>(Asset);
+
+    if (CharacterAsset)
+    {
+        return CharacterAsset->GetHasWarnings();
+    }
+
+    return false;
+}
+
+EVisibility FPropertyCustomization_YapCharacterDefinition::Visibility_CharacterErrorsButtonBorder(TSharedPtr<IPropertyHandle> PropertyHandle) const
+{
+    if (GetCharacterHasErrors(PropertyHandle))
+    {
+        return EVisibility::HitTestInvisible;
+    }
+
+    return EVisibility::Collapsed;
+}
+
+FSlateColor FPropertyCustomization_YapCharacterDefinition::ButtonColorAndOpacity_OpenCharacterAsset(TSharedPtr<IPropertyHandle> PropertyHandle) const
+{
+    if (GetCharacterHasErrors(PropertyHandle))
+    {
+        return YapColor::Orange;
+    }
+
+    return YapColor::White;
+}
+
 
 FLinearColor FPropertyCustomization_YapCharacterDefinition::InvalidCharacterColor()
 {

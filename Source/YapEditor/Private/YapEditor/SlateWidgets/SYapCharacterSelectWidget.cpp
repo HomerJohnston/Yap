@@ -221,7 +221,7 @@ void SYapCharacterSelectWidget::UpdateCharacterSelector(const FText& FilterText)
 			}
 		}
 		
-		auto CharacterImage = [MoodTag, Character] () -> const FSlateBrush*
+		auto CharacterImage = [this, MoodTag, Character] () -> const FSlateBrush*
 		{
 			TSharedPtr<FSlateImageBrush> PortraitBrush = UYapEditorSubsystem::GetCharacterPortraitBrush(Character, MoodTag);
 

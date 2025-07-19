@@ -10,14 +10,14 @@
 // ================================================================================================
 // Default C++ implementations, can be overridden by C++ classes
 
-FText IYapCharacterInterface::GetYapCharacterName() const
+FText IYapCharacterInterface::GetCharacterName() const
 {
     return K2_GetYapCharacterName();
 }
 
 // ----------------------------------------------
 
-FLinearColor IYapCharacterInterface::GetYapCharacterColor() const
+FLinearColor IYapCharacterInterface::GetCharacterColor() const
 {
     return K2_GetYapCharacterColor();
 }
@@ -31,7 +31,7 @@ FGameplayTag IYapCharacterInterface::GetYapCharacterTag() const
 
 // ----------------------------------------------
 
-const UTexture2D* IYapCharacterInterface::GetYapCharacterPortrait(const FGameplayTag& MoodTag) const
+const UTexture2D* IYapCharacterInterface::GetCharacterPortrait(const FGameplayTag& MoodTag) const
 {
     return K2_GetYapCharacterPortrait(MoodTag);
 }
@@ -111,7 +111,7 @@ FText IYapCharacterInterface::GetName(const UObject* Character)
     {
         if (const IYapCharacterInterface* Speaker = Cast<IYapCharacterInterface>(Character))
         {
-            Name = Speaker->GetYapCharacterName();
+            Name = Speaker->GetCharacterName();
         }
         else if (Character->Implements<UYapCharacterInterface>())
         {
@@ -136,7 +136,7 @@ FLinearColor IYapCharacterInterface::GetColor(const UObject* Character)
     {
         if (const IYapCharacterInterface* Speaker = Cast<IYapCharacterInterface>(Character))
         {
-            Color = Speaker->GetYapCharacterColor();
+            Color = Speaker->GetCharacterColor();
         }
         else if (Character->Implements<UYapCharacterInterface>())
         {
@@ -193,7 +193,7 @@ const UTexture2D* IYapCharacterInterface::GetPortrait(const UObject* CharacterAs
         
         if (const IYapCharacterInterface* Speaker = Cast<IYapCharacterInterface>(TargetObject))
         {
-            Texture = Speaker->GetYapCharacterPortrait(MoodTag);
+            Texture = Speaker->GetCharacterPortrait(MoodTag);
         }
         else if (TargetObject->Implements<UYapCharacterInterface>())
         {

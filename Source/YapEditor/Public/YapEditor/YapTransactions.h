@@ -8,9 +8,12 @@ class UFlowGraphNode_YapBase;
 #define LOCTEXT_NAMESPACE "YapEditor"
 
 #define YAP_DECLARE_TRANSACTION(NAME) static FName NAME = "NAME"
+
 namespace YapTransactions
 {
 	YAP_DECLARE_TRANSACTION(RefreshCharacterPortraitList);
+	YAP_DECLARE_TRANSACTION(AddMoodTagPortrait);
+	YAP_DECLARE_TRANSACTION(FixupOldPortraitsMap);
 }
 
 /** Helper class. I ran into a few odd issues using FScopedTransaction so I made this, seems to work more reliably. */
@@ -37,7 +40,15 @@ class FYapScopedTransaction
 public:
 	FYapScopedTransaction(FName InEvent, const FText& TransactionText, UObject* Object);
 
+	void AbortAndUndo();
+	
+	void Cancel();
+	
+	bool IsOutstanding() const;
+	
 	~FYapScopedTransaction();
+	
+	int32 Index = -1;
 };
 
 #undef LOCTEXT_NAMESPACE

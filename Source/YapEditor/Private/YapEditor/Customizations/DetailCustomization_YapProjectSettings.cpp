@@ -86,28 +86,6 @@ void FDetailCustomization_YapProjectSettings::ProcessCategory(IDetailCategoryBui
 	
 	for (TSharedPtr<IPropertyHandle> PropertyHandle : Properties)
 	{
-		static FName CharacterArrayPropertyName = GET_MEMBER_NAME_CHECKED(UYapProjectSettings, CharacterArray);
-		static FName CharacterTagRootPropertyName = GET_MEMBER_NAME_CHECKED(UYapProjectSettings, CharacterTagRoot);
-
-		if (PropertyHandle->GetProperty()->GetFName() == CharacterTagRootPropertyName)
-		{
-			PropertyHandle->SetOnPropertyValueChanged(FSimpleDelegate::CreateLambda([this]()
-			{
-				//CachedCharacterArrayPropertyHandle->RequestRebuildChildren();
-				/*
-				if (CachedDetailBuilder)
-				{
-					CachedDetailBuilder->ForceRefreshDetails();
-				}
-				*/
-			}));
-		};
-
-		if (PropertyHandle->GetProperty()->GetFName() == CharacterArrayPropertyName)
-		{
-			//CachedCharacterArrayPropertyHandle = PropertyHandle;
-		}
-		
 		Category.AddProperty(PropertyHandle);
 	}
 

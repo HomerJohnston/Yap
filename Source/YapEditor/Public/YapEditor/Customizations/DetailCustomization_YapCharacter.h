@@ -3,8 +3,10 @@
 
 #pragma once
 
+#include "GameplayTagContainer.h"
 #include "IDetailCustomization.h"
 
+class UFlowNode_YapDialogue;
 class UYapCharacterAsset;
 struct FGameplayTag;
 class IDetailCategoryBuilder;
@@ -13,16 +15,18 @@ class IDetailCategoryBuilder;
 
 class FDetailCustomization_YapCharacter : public IDetailCustomization
 {
+public:
+	FDetailCustomization_YapCharacter();
+
 private:
 	TWeakObjectPtr<UYapCharacterAsset> CharacterBeingCustomized;
-	
+
 public:
 	static TSharedRef<IDetailCustomization> MakeInstance()
 	{
 		return MakeShareable(new FDetailCustomization_YapCharacter());
 	}
-
-
+	
 	void CustomizeDetails(IDetailLayoutBuilder& DetailBuilder) override;
 
 	
@@ -32,11 +36,29 @@ public:
 
 	void OnClicked_RefreshMoodTagsButton() const;
 
-	TSharedPtr<IPropertyHandle> bUseSinglePortraitProperty;
-	TSharedPtr<IPropertyHandle> PortraitProperty;
-	TSharedPtr<IPropertyHandle> PortraitsProperty;
+	float ButtonWidth;
+	
+	TSharedPtr<IPropertyHandle> DefaultPortraitProperty;
+	TSharedPtr<IPropertyHandle> PortraitsProperty_OBSOLETE;
+	TSharedPtr<IPropertyHandle> PortraitsMapProperty;
 
 	const TMap<FName, TObjectPtr<UTexture2D>>& GetPortraitsMap() const;
+
+	bool CacheEditedCharacterAsset(IDetailLayoutBuilder& DetailBuilder);
+
+	void CachePropertyHandles(IDetailLayoutBuilder& DetailBuilder);
+	
+	void SortCategories(IDetailLayoutBuilder& DetailBuilder) const;
+	
+	void DrawObsoleteDataWarning(IDetailLayoutBuilder& DetailBuilder);
+
+	bool GetHasPortraitData() const;
+	
+	bool GetHasObsoleteData() const;
+
+	void OnClicked_FixupOldPortraitsMap();
+
+	bool FixupOldPortraitsMap();
 };
 
 #undef LOCTEXT_NAMESPACE

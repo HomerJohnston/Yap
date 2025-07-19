@@ -2,9 +2,12 @@
 // This work is MIT-licensed. Feel free to use it however you wish, within the confines of the MIT license. 
 
 #pragma once
+
 #include "GameplayTagContainer.h"
 
 #include "IYapCharacterInterface.generated.h"
+
+class UFlowNode_YapDialogue;
 
 UINTERFACE(MinimalAPI, Blueprintable, BlueprintType)
 class UYapCharacterInterface : public UInterface
@@ -14,8 +17,8 @@ class UYapCharacterInterface : public UInterface
 
 /**
  * Apply this interface to any class or blueprint which you want to make usable as a speaker in Yap.
- * The NAME, COLOR, and PORTRAIT are arbitrary pieces of data you can use however you want in your game (or ignore).
- * The TAG property is special; Yap can use it to try and find the character's Actor in the world (see UYapCharacterComponent).
+ * The NAME, COLOR, and PORTRAIT are arbitrary pieces of data you can use however you want in your game (or ignore). // TODO - change name to a FName
+ * The TAG property is special; Yap can use it to try and find the character's Actor in the world (see UYapCharacterComponent). // TODO - consider removing tag?
  */
 class YAP_API IYapCharacterInterface
 {
@@ -40,20 +43,20 @@ public:
 
 public:
     // -----------------------------------------------------
-    // Protected C++ Interface - Override these in a C++ class which inherits this interface
+    // Public C++ Interface - Override these in a C++ class which inherits this interface, and use if you implement the interface solely in C++ in your game.
     // -----------------------------------------------------
     
     /** Override this on a C++ class. */
-    virtual FText GetYapCharacterName() const;
+    virtual FText GetCharacterName() const;
 
     /** Override this on a C++ class. */
-    virtual FLinearColor GetYapCharacterColor() const;
+    virtual FLinearColor GetCharacterColor() const;
 
     /** Override this on a C++ class. */
     virtual FGameplayTag GetYapCharacterTag() const;
     
-    /** Override this on a C++ class. */
-    virtual const UTexture2D* GetYapCharacterPortrait(const FGameplayTag& MoodTag) const;
+    /** Override this on a C++ class. Pass in nullptr for the dialogue node type to use the default Yap Node type. */
+    virtual const UTexture2D* GetCharacterPortrait(const FGameplayTag& MoodTag) const;
 
 protected:
     // -----------------------------------------------------
@@ -63,7 +66,6 @@ protected:
     /** Implement this on a blueprint. */
     UFUNCTION(BlueprintImplementableEvent, Category = "Yap|Character", DisplayName = "Get Name")
     FText K2_GetYapCharacterName() const;
-    //virtual FText K2_GetYapCharacterName_Implementation() const;
 
     /** Implement this on a blueprint. */
     UFUNCTION(BlueprintImplementableEvent, Category = "Yap|Character", DisplayName = "Get Color")
@@ -106,7 +108,7 @@ class UYapCharacterBFL : public UBlueprintFunctionLibrary
     {
         return IYapCharacterInterface::GetColor(Character.GetObject());
     }
-
+    
     /** Get the supplied character's ID tag. */
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Yap|Character")
     static FGameplayTag GetTag(const TScriptInterface<IYapCharacterInterface> Character)

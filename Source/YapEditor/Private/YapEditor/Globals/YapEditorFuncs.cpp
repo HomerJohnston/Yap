@@ -6,11 +6,11 @@
 #include "FileHelpers.h"
 #include "YapEditor/YapDeveloperSettings.h"
 #include "ISettingsModule.h"
-#include "AssetRegistry/AssetRegistryModule.h"
-#include "Framework/Notifications/NotificationManager.h"
+#include "SGameplayTagPicker.h"
 #include "UObject/SavePackage.h"
-#include "Widgets/Notifications/SNotificationList.h"
 #include "Yap/YapProjectSettings.h"
+
+#define LOCTEXT_NAMESPACE "YapEditor"
 
 void Yap::EditorFuncs::OpenDeveloperSettings()
 {
@@ -18,6 +18,33 @@ void Yap::EditorFuncs::OpenDeveloperSettings()
 	{
 		SettingsModule->ShowViewer("Project", "Yap", FName(UYapDeveloperSettings::StaticClass()->GetName()));
 	}
+}
+
+void Yap::EditorFuncs::OpenGameplayTagsEditor()
+{
+	OpenGameplayTagsEditor({});
+}
+
+void Yap::EditorFuncs::OpenGameplayTagsEditor(const FGameplayTagContainer& Roots)
+{
+	FGameplayTagManagerWindowArgs Args;
+
+	Args.bRestrictedTags = false;
+
+	if (Roots.Num() > 0)
+	{
+		FString RootsTitle = FString::JoinBy(Roots, TEXT(", "), [] (const FGameplayTag& Tag) { return Tag.ToString(); });
+		
+		Args.Title = FText::Format(LOCTEXT("GameplayTags_WindowTitle_Filtered", "Tags ({0})"), FText::FromString(RootsTitle));
+		
+		Args.Filter = FString::JoinBy(Roots, TEXT(","), [] (const FGameplayTag& Tag) { return Tag.ToString(); });
+	}
+	else
+	{
+		Args.Title = LOCTEXT("GameplayTags_WindowTitle", "Gameplay Tags");
+	}
+
+	UE::GameplayTags::Editor::OpenGameplayTagManager(Args);
 }
 
 void Yap::EditorFuncs::OpenProjectSettings()
@@ -57,3 +84,5 @@ bool Yap::EditorFuncs::SaveAsset(UObject* Asset)
 
 	return true;
 }
+
+#undef LOCTEXT_NAMESPACE

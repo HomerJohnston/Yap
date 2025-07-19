@@ -3,10 +3,16 @@
 
 #pragma once
 
+struct FGameplayTagContainer;
+
 namespace Yap::EditorFuncs
 {
 	static void OpenDeveloperSettings();
 
+	void OpenGameplayTagsEditor();
+	
+	void OpenGameplayTagsEditor(const FGameplayTagContainer& Roots);
+	
 	void OpenProjectSettings();
 
 	void PostNotificationInfo_Warning(FText Title, FText Description, float Duration = 6.0f);

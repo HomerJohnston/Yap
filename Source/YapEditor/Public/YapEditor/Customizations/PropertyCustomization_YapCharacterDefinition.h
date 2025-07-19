@@ -22,10 +22,11 @@ public:
     
 protected:
     
+    //TSharedPtr<IPropertyHandle> AssetPropertyHandle;
+    
     // OVERRIDES ----------------------------------------------------------------------------------
 
 protected:
-    
     void CustomizeHeader(TSharedRef<IPropertyHandle> StructPropertyHandle, FDetailWidgetRow& HeaderRow, IPropertyTypeCustomizationUtils& StructCustomizationUtils) override;
 
     void CustomizeChildren(TSharedRef<IPropertyHandle> StructPropertyHandle, IDetailChildrenBuilder& StructBuilder, IPropertyTypeCustomizationUtils& StructCustomizationUtils) override;
@@ -41,6 +42,14 @@ protected:
     FLinearColor Color_TagStatus(FYapCharacterDefinition* CharacterDefinition) const;
     
     void OnSetNewCharacterAsset(TSharedPtr<IPropertyHandle> AssetPropertyHandle) const;
+
+    FReply OnOpenCharacterAsset(TSharedPtr<IPropertyHandle> PropertyHandle) const;
+
+    bool GetCharacterHasErrors(TSharedPtr<IPropertyHandle> PropertyHandle) const;
+
+    EVisibility Visibility_CharacterErrorsButtonBorder(TSharedPtr<IPropertyHandle> PropertyHandle) const;
+
+    FSlateColor ButtonColorAndOpacity_OpenCharacterAsset(TSharedPtr<IPropertyHandle> PropertyHandle) const;
 
 protected:
 

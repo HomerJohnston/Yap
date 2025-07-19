@@ -610,23 +610,23 @@ FText SFlowGraphNode_YapDialogueWidget::Text_FragmentSequencingButton() const
 	{
 		case EYapDialogueTalkSequencing::RunAll:
 		{
-			return LOCTEXT("RunAll", "Run All");
+			return LOCTEXT("DialogueFragmentSequencingButtonText_RunAll", "Run All");
 		}
 		case EYapDialogueTalkSequencing::RunUntilFailure:
 		{
-			return LOCTEXT("RunTilFailure", "Run til Failure");
+			return LOCTEXT("DialogueFragmentSequencingButtonText_RunTilFailure", "Run til Failure");
 		}
 		case EYapDialogueTalkSequencing::SelectOne:
 		{
-			return LOCTEXT("SelectOne", "Select One");
+			return LOCTEXT("DialogueFragmentSequencingButtonText_SelectOne", "Select One");
 		}
 		case EYapDialogueTalkSequencing::SelectRandom:
 		{
-			return LOCTEXT("SelectRandom", "Select Random");
+			return LOCTEXT("DialogueFragmentSequencingButtonText_SelectRandom", "Select Random");
 		}
 		default:
 		{
-			return LOCTEXT("Error", "Error");
+			return LOCTEXT("DialogueFragmentSequencingButtonText_Error", "*** ERROR ***");
 		}
 	}
 }
@@ -635,7 +635,7 @@ FText SFlowGraphNode_YapDialogueWidget::Text_FragmentSequencingButton() const
 FReply SFlowGraphNode_YapDialogueWidget::OnClicked_TogglePlayerPrompt()
 {
 	{
-		FYapScopedTransaction T("TODO", LOCTEXT("TogglePlayerPrompt", "Toggle Player Prompt"), GetFlowYapDialogueNodeMutable());
+		FYapScopedTransaction T("TODO", LOCTEXT("TransactionText_TogglePlayerPrompt", "Toggle Player Prompt"), GetFlowYapDialogueNodeMutable());
 
 		GetFlowYapDialogueNodeMutable()->ToggleNodeType();
 		GetFlowYapDialogueNodeMutable()->ForceReconstruction();
@@ -837,7 +837,7 @@ FText SFlowGraphNode_YapDialogueWidget::Text_NodeHeader() const
 		}
 		default:
 		{
-			return INVTEXT("ERROR");
+			return LOCTEXT("DialogueNodeHeaderButtonText_Error", "*** ERROR ***");
 		}
 	}
 }
@@ -859,6 +859,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapDialogueWidget::CreateFragmentSeparatorWid
 		.ContentPadding(2)
 		.ButtonStyle(FYapEditorStyle::Get(), YapStyles.ButtonStyle_HoverHintOnly)
 		.ButtonColorAndOpacity(YapColor::White)
+		.ToolTipText(LOCTEXT("InsertFragment_Tooltip", "Insert Fragment"))
 		.OnClicked(this, &SFlowGraphNode_YapDialogueWidget::OnClicked_FragmentSeparator, FragmentIndex)
 		[
 			SNew(SSeparator)
@@ -1147,7 +1148,7 @@ FText SFlowGraphNode_YapDialogueWidget::ToolTipText_FragmentSequencingButton() c
 		}
 		default:
 		{
-			return LOCTEXT("DialogueNodeSequence", "ERROR");
+			return LOCTEXT("DialogueNodeSequence_Error", "ERROR");
 		}
 	}
 }

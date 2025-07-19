@@ -26,36 +26,5 @@ UObject* UAssetFactory_YapCharacter::FactoryCreateNew(UClass* Class, UObject* In
 	//return FKismetEditorUtilities::CreateBlueprint(Class, InParent, Name, BPTYPE_Normal, UBlueprint::StaticClass(), UBlueprintGeneratedClass::StaticClass());
 }
 
-uint32 UAssetFactory_YapCharacter::GetMenuCategories() const
-{
-	return FYapEditorModule::GetAssetCategory();
-}
-
-FText UAssetFactory_YapCharacter::GetDisplayName() const
-{
-	return LOCTEXT("FlowYapCharacter", "FlowYap Character");
-}
-
-// ================================================================================================
-FText FAssetTypeActions_FlowYapCharacter::GetName() const
-{
-	return LOCTEXT("FlowYapCharacter", "FlowYap Character");
-}
-
-FColor FAssetTypeActions_FlowYapCharacter::GetTypeColor() const
-{
-	return FColor(255, 255, 255);
-}
-
-UClass* FAssetTypeActions_FlowYapCharacter::GetSupportedClass() const
-{
-	return UYapCharacterAsset::StaticClass();
-}
-
-uint32 FAssetTypeActions_FlowYapCharacter::GetCategories()
-{
-	return FYapEditorModule::GetAssetCategory();
-}
-
 #undef LOCTEXT_NAMESPACE
 

@@ -173,11 +173,8 @@ int32 SYapTimeProgressionWidget::OnPaint(const FPaintArgs& Args, const FGeometry
 
 		FLinearColor HandleColor = (PaddingIsSetAtt.Get() ? YapColor::LightGray : BarColor);
 
-		bool bIsCursorOnHandle = GetCursorOnHandle();
-		bool bEnlargeHandle = bIsCursorOnHandle && !HasMouseCapture();
-		
-		FVector2D Size = bEnlargeHandle ? FVector2D(11.0f, 11.0f) : FVector2D(7.0f, 7.0f);
-		FVector2D Trans = bEnlargeHandle ? FVector2D((GeoWidth - 12.0f) * Normalized, -2.0f) : FVector2D((GeoWidth - 5.0f) * Normalized, 0.0f);
+		FVector2D Size = FVector2D(7.0f, 7.0f);
+		FVector2D Trans = FVector2D((GeoWidth - 5.0f) * Normalized, 0.0f);
 		
 		FSlateDrawElement::MakeBox
 		(

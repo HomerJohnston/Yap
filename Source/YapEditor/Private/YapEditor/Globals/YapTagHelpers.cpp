@@ -34,7 +34,7 @@ FString Yap::Tags::GetFilteredSubTag(const FGameplayTag& ParentContainer, const 
 
 // ------------------------------------------------------------------------------------------------
 
-FName Yap::Tags::GetLeafTag(const FGameplayTag& Tag)
+FName Yap::Tags::GetLeafOfTag(const FGameplayTag& Tag)
 {
 	UGameplayTagsManager& GameplayTagsManager = UGameplayTagsManager::Get();
 	

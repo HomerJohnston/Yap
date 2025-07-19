@@ -42,7 +42,7 @@ void FYapTransactions::EndModify()
 
 FYapScopedTransaction::FYapScopedTransaction(FName InEvent, const FText& TransactionText, UObject* Object)
 {
-	GEngine->BeginTransaction(TEXT("Yap"), TransactionText, Object);
+	Index = GEngine->BeginTransaction(TEXT("Yap"), TransactionText, Object);
 
 	if (UFlowGraphNode_YapDialogue* FGN_YD = Cast<UFlowGraphNode_YapDialogue>(Object))
 	{
@@ -55,9 +55,34 @@ FYapScopedTransaction::FYapScopedTransaction(FName InEvent, const FText& Transac
 	}
 }
 
-FYapScopedTransaction::~FYapScopedTransaction()
+void FYapScopedTransaction::AbortAndUndo()
 {
 	GEngine->EndTransaction();
+	GEditor->UndoTransaction();
+	Index = -1;
+}
+
+void FYapScopedTransaction::Cancel()
+{
+	if ( IsOutstanding() )
+	{
+		GEditor->CancelTransaction( Index );
+		Index = -1;
+	}
+}
+
+bool FYapScopedTransaction::IsOutstanding() const
+{
+	return Index >= 0;
+}
+
+FYapScopedTransaction::~FYapScopedTransaction()
+{
+	if (IsOutstanding())
+	{
+		GEngine->EndTransaction();
+		Index = -1;
+	}
 }
 
 #undef LOCTEXT_NAMESPACE

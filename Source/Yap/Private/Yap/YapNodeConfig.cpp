@@ -163,10 +163,10 @@ bool UYapNodeConfig::GetUsesTitleText(EYapDialogueNodeType NodeType) const
 {
     if (NodeType == EYapDialogueNodeType::PlayerPrompt)
     {
-        return Graph.bHideTitleTextOnPromptNodes;
+        return !Graph.bHideTitleTextOnPromptNodes;
     }
 
-    return Graph.bShowTitleTextOnTalkNodes;
+    return !Graph.bShowTitleTextOnTalkNodes;
 }
 
 TArray<FString>& UYapNodeConfig::GetDefaultMoodTags()

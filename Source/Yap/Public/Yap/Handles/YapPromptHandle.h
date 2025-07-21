@@ -5,6 +5,7 @@
 
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
+#include "Kismet/BlueprintFunctionLibrary.h"
 
 #include "YapPromptHandle.generated.h"
 
@@ -23,10 +24,10 @@ struct YAP_API FYapPromptHandle
 	// ------------------------------------------
 
 protected:
-	UPROPERTY(Transient, BlueprintReadOnly, meta = (AllowPrivateAccess, IgnoreForMemberInitializationTest))
+    UPROPERTY(Transient, BlueprintReadOnly, meta = (AllowPrivateAccess, IgnoreForMemberInitializationTest), Category = "Default")
 	FGuid Guid;
 
-	UPROPERTY(Transient, BlueprintReadOnly, meta = (AllowPrivateAccess))
+	UPROPERTY(Transient, BlueprintReadOnly, meta = (AllowPrivateAccess), Category = "Default")
 	TSubclassOf<UFlowNode_YapDialogue> NodeType;
 
 	// ------------------------------------------

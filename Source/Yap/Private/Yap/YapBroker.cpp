@@ -10,6 +10,7 @@
 #include "Yap/YapProjectSettings.h"
 #include "Yap/Handles/YapPromptHandle.h"
 #include "Yap/Enums/YapMaturitySetting.h"
+#include "Sound/SoundBase.h"
 
 #define LOCTEXT_NAMESPACE "Yap"
 

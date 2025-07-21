@@ -4,6 +4,8 @@
 #pragma once
 #include "YapBit.h"
 #include "GameplayTagContainer.h"
+#include "Engine/TimerHandle.h"
+#include "Runtime/Launch/Resources/Version.h"
 
 #if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION < 5
 #include "InstancedStruct.h"
@@ -131,7 +133,7 @@ protected:
 	UPROPERTY()
 	FGameplayTag MoodTag;
 
-	UPROPERTY(EditAnywhere)
+    UPROPERTY(EditAnywhere, Category = "Default")
 	TArray<FInstancedStruct> Data;
 	
 	/**  */
@@ -141,8 +143,7 @@ protected:
 	// ==========================================
 	// STATE
 protected:
-
-	UPROPERTY(VisibleAnywhere, meta=(IgnoreForMemberInitializationTest))
+    UPROPERTY(VisibleAnywhere, meta=(IgnoreForMemberInitializationTest), Category = "Default")
 	FGuid Guid;
 	
 	// TODO should this be serialized or transient

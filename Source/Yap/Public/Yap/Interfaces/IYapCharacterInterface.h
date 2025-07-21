@@ -4,6 +4,8 @@
 #pragma once
 
 #include "GameplayTagContainer.h"
+#include "UObject/Interface.h"
+#include "Kismet/BlueprintFunctionLibrary.h"
 
 #include "IYapCharacterInterface.generated.h"
 

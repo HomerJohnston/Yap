@@ -29,7 +29,7 @@ struct FYapData_ConversationOpened
 	GENERATED_BODY()
 
 	/** Conversation name. */
-	UPROPERTY(BlueprintReadOnly)
+    UPROPERTY(BlueprintReadOnly, Category = "Default")
 	FGameplayTag Conversation;
 };
 
@@ -42,15 +42,15 @@ struct FYapData_SpeechBegins
 	GENERATED_BODY()
 
 	/** Conversation name. This will be empty for speech occurring outside of a conversation. */
-	UPROPERTY(BlueprintReadOnly)
+    UPROPERTY(BlueprintReadOnly, Category = "Default")
 	FGameplayTag Conversation;
 	
 	/** Who is being speaked towards. */
-	UPROPERTY(BlueprintReadWrite)
+    UPROPERTY(BlueprintReadOnly, Category = "Default")
 	TScriptInterface<IYapCharacterInterface> DirectedAt = nullptr;
 
 	/** Who is speaking. */
-	UPROPERTY(BlueprintReadWrite)
+    UPROPERTY(BlueprintReadOnly, Category = "Default")
 	TScriptInterface<IYapCharacterInterface> Speaker;
 
 	/** Who is speaking. This is a Name. It will match the Gameplay Tag in project settings for predefined speakers. */
@@ -58,33 +58,33 @@ struct FYapData_SpeechBegins
 	FName SpeakerName;
 
 	/** Mood of the speaker. */
-	UPROPERTY(BlueprintReadWrite)
+    UPROPERTY(BlueprintReadOnly, Category = "Default")
 	FGameplayTag MoodTag;
 
 	/** Text being spoken. */
-	UPROPERTY(BlueprintReadWrite)
+    UPROPERTY(BlueprintReadOnly, Category = "Default")
 	FText DialogueText;
 
 	/** Optional title text representing the dialogue. */
-	UPROPERTY(BlueprintReadWrite)
+    UPROPERTY(BlueprintReadOnly, Category = "Default")
 	FText TitleText;
 	
 	/** How long this dialogue is expected to play for. */
-	UPROPERTY(BlueprintReadWrite)
+    UPROPERTY(BlueprintReadOnly, Category = "Default")
 	float SpeechTime = 0;
 
 	// TODO: I'm not sure if this data belongs in here. It's here because it might be useful for UI to have... but it's irrelevant to the subsystem and actual dialogue engine, only the flow graph.
 	// I'm going to try taking it out for now and I can put it back in later if it seems necessary for any real purpose.
 	/** Delay after this dialogue completes before carrying on. */
-	//UPROPERTY(BlueprintReadOnly)
+    //UPROPERTY(BlueprintReadOnly, Category = "Default")
 	//float FragmentTime = 0;
 
 	/** Audio asset, you are responsible to cast to your proper type to use. */
-	UPROPERTY(BlueprintReadWrite)
+    UPROPERTY(BlueprintReadOnly, Category = "Default")
 	TObjectPtr<const UObject> DialogueAudioAsset;
 
 	/** Can this dialogue be skipped? */
-	UPROPERTY(BlueprintReadWrite)
+    UPROPERTY(BlueprintReadOnly, Category = "Default")
 	bool bSkippable = false;
 };
 
@@ -97,15 +97,15 @@ struct FYapData_PlayerPromptCreated
 	GENERATED_BODY()
 
 	/** Conversation name. */
-	UPROPERTY(BlueprintReadOnly)
+    UPROPERTY(BlueprintReadOnly, Category = "Default")
 	FYapConversationHandle Conversation;
 	
 	/** Who will be spoken to. */
-	UPROPERTY(BlueprintReadOnly)
+    UPROPERTY(BlueprintReadOnly, Category = "Default")
 	TScriptInterface<IYapCharacterInterface> DirectedAt;
 
 	/** Who is going to speak. */
-	UPROPERTY(BlueprintReadOnly)
+    UPROPERTY(BlueprintReadOnly, Category = "Default")
 	TScriptInterface<IYapCharacterInterface> Speaker;
 
 	/** Who is going to speak. This is a Name. It will match the Gameplay Tag in project settings for predefined speakers. */
@@ -113,15 +113,15 @@ struct FYapData_PlayerPromptCreated
 	FName SpeakerName;
 
 	/** Mood of the speaker. */
-	UPROPERTY(BlueprintReadOnly)
+    UPROPERTY(BlueprintReadOnly, Category = "Default")
 	FGameplayTag MoodTag;
 	 
 	/** Text that will be spoken. */
-	UPROPERTY(BlueprintReadOnly)
+    UPROPERTY(BlueprintReadOnly, Category = "Default")
 	FText DialogueText;
 
 	/** Optional title text representing the dialogue. */
-	UPROPERTY(BlueprintReadOnly)
+    UPROPERTY(BlueprintReadOnly, Category = "Default")
 	FText TitleText;
 };
 
@@ -134,7 +134,7 @@ struct FYapData_PlayerPromptsReady
 	GENERATED_BODY()
 
 	/** Conversation name. */
-	UPROPERTY(BlueprintReadOnly)
+    UPROPERTY(BlueprintReadOnly, Category = "Default")
 	FYapConversationHandle Conversation;
 };
 
@@ -147,7 +147,7 @@ struct FYapData_PlayerPromptChosen
 	GENERATED_BODY()
 
 	/** Conversation name. */
-	UPROPERTY(BlueprintReadOnly)
+    UPROPERTY(BlueprintReadOnly, Category = "Default")
 	FGameplayTag Conversation;
 };
 

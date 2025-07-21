@@ -14,6 +14,8 @@
 #include "Yap/YapSquirrelNoise.h"
 #include "Yap/YapSubsystem.h"
 #include "Yap/Enums/YapLoadContext.h"
+#include "Engine/World.h"
+#include "TimerManager.h"
 
 #define LOCTEXT_NAMESPACE "Yap"
 

@@ -4,7 +4,7 @@
 #pragma once
 #include "Yap/Handles/YapSpeechHandle.h"
 #include "Yap/YapDataStructures.h"
-
+#include "UObject/Interface.h"
 #include "IYapFreeSpeechHandler.generated.h"
 
 #define LOCTEXT_NAMESPACE "Yap"

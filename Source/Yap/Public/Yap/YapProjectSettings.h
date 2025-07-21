@@ -13,6 +13,7 @@
 #include "YapProjectSettings.generated.h"
 
 class UYapBroker;
+class UTexture2D;
 enum class EYapDialogueProgressionFlags : uint8;
 enum class EYapMaturitySetting : uint8;
 enum class EYapMissingAudioErrorLevel : uint8;

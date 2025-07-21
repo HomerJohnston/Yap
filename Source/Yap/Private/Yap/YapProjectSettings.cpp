@@ -19,6 +19,8 @@ FName UYapProjectSettings::CategoryName = FName("Yap");
 TMap<FYapCharacterDefinition, FGameplayTag> UYapProjectSettings::ReversedCharacterMap;
 #endif
 
+#include "Sound/SoundBase.h"
+
 UYapProjectSettings::UYapProjectSettings()
 {
 	DefaultAssetAudioClasses = { USoundBase::StaticClass() };

@@ -13,7 +13,7 @@ class YAP_API UFlowNode_YapConversation_Close : public UFlowNode
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Default")
 	FGameplayTag Conversation;
 	
 public:

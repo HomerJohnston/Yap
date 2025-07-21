@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "Components/ActorComponent.h"
 #include "GameplayTagContainer.h"
 
 #include "YapCharacterComponent.generated.h"
@@ -15,7 +16,7 @@ class YAP_API UYapCharacterComponent : public UActorComponent
 	GENERATED_BODY()
 
 protected:
-UPROPERTY(EditAnywhere)
+    UPROPERTY(EditAnywhere, Category = "Default")
 	FGameplayTag Identity;
 
 public:

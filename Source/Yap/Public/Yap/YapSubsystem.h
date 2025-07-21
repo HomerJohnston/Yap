@@ -12,7 +12,9 @@
 #include "Yap/YapRunningFragment.h"
 #include "Yap/YapBitReplacement.h"
 #include "Yap/YapDataStructures.h"
-
+#include "Subsystems/WorldSubsystem.h"
+#include "Engine/TimerHandle.h"
+#include "Engine/World.h"
 #include "YapSubsystem.generated.h"
 
 class UYapConversationHandler;

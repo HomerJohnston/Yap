@@ -13,6 +13,7 @@
 #include "Yap/Handles/YapPromptHandle.h"
 #include "Yap/YapSubsystem.h"
 #include "Yap/Nodes/FlowNode_YapDialogue.h"
+#include "Sound/SoundBase.h"
 
 #define LOCTEXT_NAMESPACE "Yap"
 

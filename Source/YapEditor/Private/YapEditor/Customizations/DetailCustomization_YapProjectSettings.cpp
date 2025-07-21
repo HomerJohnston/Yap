@@ -6,18 +6,10 @@
 #include "DetailCategoryBuilder.h"
 #include "DetailLayoutBuilder.h"
 #include "DetailWidgetRow.h"
-#include "GameplayTagsEditorModule.h"
-#include "SGameplayTagPicker.h"
-#include "SGameplayTagWidget.h"
 #include "YapEditor/YapTransactions.h"
 #include "Yap/YapProjectSettings.h"
-#include "Yap/Globals/YapFileUtilities.h"
-#include "YapEditor/YapEditorColor.h"
 #include "YapEditor/YapEditorLog.h"
-#include "YapEditor/YapEditorStyle.h"
 #include "YapEditor/YapEditorSubsystem.h"
-#include "YapEditor/Globals/YapEditorFuncs.h"
-#include "YapEditor/Globals/YapTagHelpers.h"
 
 #define LOCTEXT_NAMESPACE "YapEditor"
 

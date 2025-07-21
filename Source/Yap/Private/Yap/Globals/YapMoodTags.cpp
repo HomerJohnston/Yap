@@ -100,6 +100,24 @@ FGameplayTagContainer Yap::GetMoodTagRoots()
     return MoodTagsRoots;
 }
 
+const UYapNodeConfig& Yap::GetConfigUsingMoodRoot(const FGameplayTag& Root)
+{
+    TArray<UFlowNode_YapDialogue*> Nodes = GetYapNodeTypes();
+    
+    for (UFlowNode_YapDialogue* Type : Nodes)
+    {
+        const UYapNodeConfig& Config = Type->GetNodeConfig();
+
+        if (Config.MoodTags.MoodTagsRoot == Root)
+        {
+            return Config;
+        }
+    }
+
+    return *UYapNodeConfig::StaticClass()->GetDefaultObject<UYapNodeConfig>();
+}
+
+
 FGameplayTagContainer Yap::GetAllMoodTags()
 {
     FGameplayTagContainer Roots = GetMoodTagRoots();
@@ -113,4 +131,9 @@ FGameplayTagContainer Yap::GetAllMoodTags()
     }
 
     return AllMoodTags;
+}
+
+FGameplayTagContainer Yap::GetAllMoodTagsUnder(const FGameplayTag& Root)
+{
+    return UGameplayTagsManager::Get().RequestGameplayTagChildren(Root);
 }

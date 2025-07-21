@@ -38,41 +38,13 @@ UObject* FYapCharacterDefinition::GetCharacter(TSharedPtr<FStreamableHandle>& Ha
                 // Do not load
             }
         }
+
+        if (UClass* CharacterClass = Cast<UClass>(CharacterAsset.Get()))
+        {
+            return CharacterClass->GetDefaultObject();
+        }
         
         return CharacterAsset.Get();
-    }
-
-    if (!CharacterClass.IsNull())
-    {
-        switch (LoadContext)
-        {
-            case EYapLoadContext::Async:
-            {
-                Handle = FYapStreamableManager::Get().RequestAsyncLoad(CharacterClass.ToSoftObjectPath());
-                break;
-            }
-            case EYapLoadContext::AsyncEditorOnly:
-            {
-                FYapStreamableManager::Get().RequestAsyncLoad(CharacterClass.ToSoftObjectPath());
-                break;
-            }
-            case EYapLoadContext::Sync:
-            {
-                Handle = FYapStreamableManager::Get().RequestSyncLoad(CharacterClass.ToSoftObjectPath());
-                break;
-            }
-            default:
-            {
-                // Do not load
-            }
-        }
-
-        TSubclassOf<UObject> LoadedCharacterClass = CharacterClass.Get();
-
-        if (LoadedCharacterClass)
-        {
-            return LoadedCharacterClass->GetDefaultObject();
-        }
     }
 
     return nullptr;
@@ -80,12 +52,7 @@ UObject* FYapCharacterDefinition::GetCharacter(TSharedPtr<FStreamableHandle>& Ha
 
 bool FYapCharacterDefinition::HasValidCharacterData() const
 {
-    if (!CharacterAsset.IsNull() && !CharacterClass.IsNull())
-    {
-        return false;
-    }
-    
-    if (CharacterAsset.IsNull() && CharacterClass.IsNull())
+    if (CharacterAsset.IsNull())
     {
         return false;
     }

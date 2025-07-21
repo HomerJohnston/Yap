@@ -21,14 +21,14 @@ public:
     // STATE --------------------------------------------------------------------------------------
     
 protected:
-    FYapCharacterDefinition* CharacterDefinitionBeingEdited = nullptr;
+    FYapCharacterDefinition* CharacterDefinition = nullptr;
 
-    //TSharedPtr<IPropertyHandle> AssetPropertyHandle;
+    TSharedPtr<IPropertyHandle> AssetPropertyHandle;
     
     // OVERRIDES ----------------------------------------------------------------------------------
 
 protected:
-    void OnSetNewCharacterAsset_New2(const FAssetData& AssetData, TSharedPtr<IPropertyHandle> PropertyHandle, TSharedPtr<IPropertyHandle> ClassPropertyHandle);
+    void OnSetNewCharacterAsset(const FAssetData& AssetData);
 
     void CustomizeHeader(TSharedRef<IPropertyHandle> StructPropertyHandle, FDetailWidgetRow& HeaderRow, IPropertyTypeCustomizationUtils& StructCustomizationUtils) override;
 
@@ -36,27 +36,25 @@ protected:
 
     // METHODS ------------------------------------------------------------------------------------
 
-    FText ToolTipText_AssetStatus(FYapCharacterDefinition* CharacterDefinition) const;
+    FText ToolTipText_AssetStatus() const;
     
-    FLinearColor AssetStatusColor(FYapCharacterDefinition* CharacterDefinition) const;
+    FLinearColor AssetStatusColor() const;
     
-    FText ToolTipText_TagStatus(FYapCharacterDefinition* CharacterDefinition) const;
+    FText ToolTipText_TagStatus() const;
     
-    FLinearColor Color_TagStatus(FYapCharacterDefinition* CharacterDefinition) const;
+    FLinearColor Color_TagStatus() const;
     
-    FString ObjectPath_CharacterAsset(TSharedPtr<IPropertyHandle> PropertyHandle, TSharedPtr<IPropertyHandle> ClassPropertyHandle) const;
+    FString ObjectPath_CharacterAsset() const;
+
+    bool OnShouldFilterAsset_CharacterAsset(const FAssetData& AssetData) const; 
     
-    void OnSetNewCharacterAsset(TSharedPtr<IPropertyHandle> AssetPropertyHandle) const;
+    FReply OnOpenCharacterAsset() const;
 
-    void OnSetNewCharacterAsset_New(const FPropertyChangedEvent& PropertyChangedEvent, TSharedPtr<IPropertyHandle> AssetPropertyHandle) const;
+    bool GetCharacterHasErrors() const;
 
-    FReply OnOpenCharacterAsset(TSharedPtr<IPropertyHandle> PropertyHandle) const;
+    EVisibility Visibility_CharacterErrorsButtonBorder() const;
 
-    bool GetCharacterHasErrors(TSharedPtr<IPropertyHandle> PropertyHandle) const;
-
-    EVisibility Visibility_CharacterErrorsButtonBorder(TSharedPtr<IPropertyHandle> PropertyHandle) const;
-
-    FSlateColor ButtonColorAndOpacity_OpenCharacterAsset(TSharedPtr<IPropertyHandle> PropertyHandle) const;
+    FSlateColor ButtonColorAndOpacity_OpenCharacterAsset() const;
 
 protected:
 
@@ -69,5 +67,4 @@ protected:
     static FLinearColor OKColor();
 
     static FLinearColor TagNotInParentColor();
-
 };

@@ -53,5 +53,9 @@ private:
 
     FReply OnClicked_RefreshMoodTagIcons();
 	
+    EVisibility Visibility_BottomPanel(TSharedPtr<IPropertyHandle> MoodTagsDisabledProperty) const;
+
+    EVisibility Visibility_MoodTagsRootHint(TSharedPtr<IPropertyHandle> MoodTagsRootProperty) const;
+
     FText ToolTipText_DefaultMoodTags() const;
 };

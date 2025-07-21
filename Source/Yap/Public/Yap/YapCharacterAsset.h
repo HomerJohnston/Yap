@@ -58,12 +58,13 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Portraits", DisplayName = "Default Portrait")
 	TObjectPtr<UTexture2D> Portrait;
 
-	/** Portrait textures per mood. If you aren't using portrait images in your game you can ignore this map. */
-	UPROPERTY(EditAnywhere, Category = "Portraits", EditFixedSize, DisplayName = "Portraits Map", meta=(ReadOnlyKeys, ForceInlineRow, ShowOnlyInnerProperties))
-	TMap<FGameplayTag, FYapPortraitList> PortraitsMap;
+	// These use FNames instead of FGameplayTags to avoid interfering with the asset referencer (allowing me to automatically populate this list without preventing users from deleting gameplay tags)
+	/** Portrait textures, raw map access (this is normally the same as the customized view above, you do not normally need to edit this). If you edit this you will need to close and reopen the asset. */ 
+	UPROPERTY(EditAnywhere, Category = "Portraits", AdvancedDisplay, DisplayName = "Portraits Map (Raw Access)", meta = (ForceInlineRow))
+	TMap<FName, FYapPortraitList> PortraitsMap;
 	
 	/** OBSOLETE - This will be transferred automatically to the new PortraitsMap property upon saving. */
-	UPROPERTY(EditAnywhere, Category = "Portraits", DisplayName = "Portraits (Old Mappings)")
+	UPROPERTY()
 	TMap<FName, TObjectPtr<UTexture2D>> Portraits;
 	
 	// --------------------- //

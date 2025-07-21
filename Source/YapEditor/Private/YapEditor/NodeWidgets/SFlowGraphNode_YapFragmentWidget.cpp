@@ -88,10 +88,6 @@ bool CheckAudioAssetUsesAudioID(const UFlowNode_YapDialogue* Node, int32 Fragmen
 }
 
 SLATE_IMPLEMENT_WIDGET(SFlowGraphNode_YapFragmentWidget)
-void SFlowGraphNode_YapFragmentWidget::PrivateRegisterAttributes(struct FSlateAttributeDescriptor::FInitializer&)
-{
-	// TODO wtf does anything go in here?
-}
 
 void SFlowGraphNode_YapFragmentWidget::Construct(const FArguments& InArgs)
 {	
@@ -116,6 +112,11 @@ void SFlowGraphNode_YapFragmentWidget::Construct(const FArguments& InArgs)
 	[
 		CreateFragmentWidget()
 	];
+}
+
+void SFlowGraphNode_YapFragmentWidget::PrivateRegisterAttributes(struct FSlateAttributeDescriptor::FInitializer&)
+{
+	// TODO wtf does anything go in here?
 }
 
 TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateCentreTextDisplayWidget()
@@ -696,7 +697,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateFragmentWidget()
 
 	TSharedRef<SVerticalBox> LeftFragmentBox = SNew(SVerticalBox);
 
-	if (!GetNodeConfig().GetDisableChildSafe())
+	if (GetNodeConfig().GetUsesChildSafe())
 	{
 		LeftFragmentBox->AddSlot()
 		.AutoHeight()
@@ -704,7 +705,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateFragmentWidget()
 		.Padding(0, 0, 0, 2)
 		[
 			SNew(SBox)
-			.Visibility_Lambda( [this] () { return GetNodeConfig().GetDisableChildSafe() ? EVisibility::Collapsed : EVisibility::Visible; } )
+			.Visibility_Lambda( [this] () { return GetNodeConfig().GetUsesChildSafe() ? EVisibility::Visible : EVisibility::Collapsed; } )
 			.WidthOverride(22)
 			.HeightOverride(22)
 			[
@@ -2741,7 +2742,6 @@ FSlateColor SFlowGraphNode_YapFragmentWidget::ForegroundColor_MoodTagSelectorWid
 const FSlateBrush* SFlowGraphNode_YapFragmentWidget::Image_MoodTagSelector() const
 {
 	return GetDialogueNode()->GetNodeConfig().GetMoodTagBrush(GetCurrentMoodTag());
-	//return GEditor->GetEditorSubsystem<UYapEditorSubsystem>()->GetMoodTagBrush(GetCurrentMoodTag());
 }
 
 FGameplayTag SFlowGraphNode_YapFragmentWidget::GetCurrentMoodTag() const

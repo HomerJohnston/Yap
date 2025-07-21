@@ -49,10 +49,6 @@ protected:
     UPROPERTY(EditAnywhere)
     TSoftObjectPtr<UObject> CharacterAsset;
 
-    // If a blueprint is selected, this will store it
-    UPROPERTY(EditAnywhere)
-    TSoftClassPtr<UObject> CharacterClass;
-
 public:
     UObject* GetCharacter(TSharedPtr<FStreamableHandle>& Handle, EYapLoadContext LoadContext) const;
 

@@ -3,6 +3,7 @@
 
 #pragma once
 
+struct FGameplayTag;
 struct FGameplayTagContainer;
 
 namespace Yap::EditorFuncs
@@ -10,6 +11,8 @@ namespace Yap::EditorFuncs
 	static void OpenDeveloperSettings();
 
 	void OpenGameplayTagsEditor();
+	
+	void OpenGameplayTagsEditor(const FGameplayTag& Root);
 	
 	void OpenGameplayTagsEditor(const FGameplayTagContainer& Roots);
 	

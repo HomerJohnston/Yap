@@ -8,7 +8,11 @@
 #include "Yap/YapCharacterAsset.h"
 #include "YapEditor/YapEditorColor.h"
 #include "YapEditor/YapEditorStyle.h"
+
 #include "YapEditor/Globals/YapTagHelpers.h"
+#include "YapEditor/SlateWidgets/SYapHyperlink.h"
+
+#define LOCTEXT_NAMESPACE "YapEditor"
 
 void FPropertyCustomization_YapPortraitList::CustomizeHeader(TSharedRef<IPropertyHandle> StructPropertyHandle, FDetailWidgetRow& HeaderRow, IPropertyTypeCustomizationUtils& StructCustomizationUtils)
 {
@@ -19,6 +23,10 @@ void FPropertyCustomization_YapPortraitList::CustomizeChildren(TSharedRef<IPrope
 {
     TSharedPtr<IPropertyHandle> PortraitsMapProperty = StructPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FYapPortraitList, Map));
 
+//    StructBuilder.AddProperty(PortraitsMapProperty.ToSharedRef());
+    
+    PortraitsMapProperty->SetOnPropertyValueChanged(FSimpleDelegate::CreateSP(this, &FPropertyCustomization_YapPortraitList::OnPropertyValueChanged_PortraitsMap));
+    
     uint32 Elements;
     PortraitsMapProperty->GetNumChildren(Elements);
 
@@ -56,4 +64,41 @@ void FPropertyCustomization_YapPortraitList::CustomizeChildren(TSharedRef<IPrope
             ];
         }
     }
+
+    
+    /*
+    FDetailWidgetRow X = StructBuilder.AddCustomRow(LOCTEXT("MoodTags", "Mood Tags"))
+    [
+        SNew(SBox)
+        //.Visibility(this, &FDetailCustomization_YapCharacter::Visibility_MoodTagsOutOfDateWarning)
+        //.IsEnabled_Lambda( [this] () { return GetHasObsoleteData() ? false : true; } )
+        [
+            SNew(SHorizontalBox)
+            + SHorizontalBox::Slot()
+            .AutoWidth()
+            [
+                SNew(STextBlock)
+                .Font(YapFonts.Font_WarningText)
+                .SimpleTextMode(true)
+                .Text(LOCTEXT("CharacterPortraits_MoodTagsNeedRefresh", "Portraits list is out of date, "))
+                .ColorAndOpacity(YapColor::OrangeRed)
+            ]
+            + SHorizontalBox::Slot()
+            .AutoWidth()
+            [
+                SNew(SYapHyperlink)
+                .Text(LOCTEXT("CharacterPortraits_PerformMoodTagsRefresh", "click to refresh"))
+                //.OnNavigate(this, &FDetailCustomization_YapCharacter::OnClicked_RefreshMoodTagsButton)
+                .ToolTipText(LOCTEXT("RefreshMoodTags_ToolTIp", "Will process the portraits list, removing entries which are no longer present in project settings, and adding missing entries."))
+            ]
+        ]
+    ];
+    */
 }
+
+void FPropertyCustomization_YapPortraitList::OnPropertyValueChanged_PortraitsMap()
+{
+    UE_LOG(LogTemp, Display, TEXT("ASDASFASF"));
+}
+
+#undef LOCTEXT_NAMESPACE

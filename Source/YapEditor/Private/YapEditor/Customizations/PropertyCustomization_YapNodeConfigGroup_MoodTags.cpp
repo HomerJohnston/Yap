@@ -7,6 +7,10 @@
 #include "IDetailChildrenBuilder.h"
 #include "SGameplayTagPicker.h"
 #include "Yap/YapNodeConfig.h"
+#include "Yap/Globals/YapEditorWarning.h"
+#include "YapEditor/YapEditorColor.h"
+#include "YapEditor/YapEditorStyle.h"
+#include "YapEditor/Globals/YapTagHelpers.h"
 
 #define LOCTEXT_NAMESPACE "YapEditor"
 
@@ -39,50 +43,91 @@ void FPropertyCustomization_YapNodeConfigGroup_MoodTags::CustomizeChildren(TShar
 	float VerticalPadding = 3.0;
 
 	static const FName MoodTagRoot = GET_MEMBER_NAME_CHECKED(FYapNodeConfigGroup_MoodTags, MoodTagsRoot);
+	static const FName DisableMoodTags = GET_MEMBER_NAME_CHECKED(FYapNodeConfigGroup_MoodTags, bDisableMoodTags);
 	
 	TSharedPtr<IPropertyHandle> MoodTagsRootProperty = StructPropertyHandle->GetChildHandle(MoodTagRoot);
+	TSharedPtr<IPropertyHandle> DisableMoodTagsProperty = StructPropertyHandle->GetChildHandle(DisableMoodTags);
 	
-	StructBuilder.AddCustomRow(INVTEXT("TODO"))
+	FDetailWidgetRow& ButtonsRow = StructBuilder.AddCustomRow(INVTEXT("TODO"))
+	.Visibility(TAttribute<EVisibility>::CreateRaw(this, &FPropertyCustomization_YapNodeConfigGroup_MoodTags::Visibility_BottomPanel, DisableMoodTagsProperty))
 	[
-		SNew(SVerticalBox)
-		+ SVerticalBox::Slot()
-		.AutoHeight()
-		.Padding(0, VerticalPadding)
+		SNew(SBox)
+		.HAlign(HAlign_Center)
 		[
-			SNew(SButton)
-			.IsEnabled(this, &FPropertyCustomization_YapNodeConfigGroup_MoodTags::IsTagPropertySet, MoodTagsRootProperty)
-			.OnClicked(this, &FPropertyCustomization_YapNodeConfigGroup_MoodTags::OnClicked_OpenMoodTagsManager, MoodTagsRootProperty)
-			.VAlign(VAlign_Center)
-			.HAlign(HAlign_Center)
-			.Text(LOCTEXT("EditMoodTags", "Edit mood tags"))
-			.ToolTipText(LOCTEXT("OpenTagsManager_ToolTip", "Open tags manager"))
-		]
-		+ SVerticalBox::Slot()
-		.AutoHeight()
-		.Padding(0, VerticalPadding)
-		[
-			SNew(SButton)
-			.IsEnabled(this, &FPropertyCustomization_YapNodeConfigGroup_MoodTags::IsTagPropertySet, MoodTagsRootProperty)
-			.OnClicked(this, &FPropertyCustomization_YapNodeConfigGroup_MoodTags::OnClicked_ResetDefaultMoodTags, MoodTagsRootProperty)
-			.VAlign(VAlign_Center)
-			.HAlign(HAlign_Center)
-			.Text(LOCTEXT("ResetMoodTags_Button", "Reset to defaults..."))
-			.ToolTipText(this, &FPropertyCustomization_YapNodeConfigGroup_MoodTags::ToolTipText_DefaultMoodTags)
-		]
-		+ SVerticalBox::Slot()
-		.AutoHeight()
-		.Padding(0, VerticalPadding)
-		[
-			SNew(SButton)
-			.IsEnabled(this, &FPropertyCustomization_YapNodeConfigGroup_MoodTags::IsTagPropertySet, MoodTagsRootProperty)
-			.OnClicked(this, &FPropertyCustomization_YapNodeConfigGroup_MoodTags::OnClicked_DeleteAllMoodTags, MoodTagsRootProperty)
-			.VAlign(VAlign_Center)
-			.HAlign(HAlign_Center)
-			.Text(LOCTEXT("DeleteMoodTags_Button", "Delete all..."))
-			.ToolTipText(LOCTEXT("DeleteMoodTags_ToolTip", "Attempts to delete all tags"))
+			SNew(SVerticalBox)
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			.Padding(0, VerticalPadding)
+			[
+				SNew(SButton)
+				//.IsEnabled(this, &FPropertyCustomization_YapNodeConfigGroup_MoodTags::IsTagPropertySet, MoodTagsRootProperty)
+				.OnClicked(this, &FPropertyCustomization_YapNodeConfigGroup_MoodTags::OnClicked_OpenMoodTagsManager, MoodTagsRootProperty)
+				.VAlign(VAlign_Center)
+				.HAlign(HAlign_Center)
+				.Text(LOCTEXT("EditMoodTags", "Edit mood tags"))
+				.ToolTipText(LOCTEXT("OpenTagsManager_ToolTip", "Open tags manager"))
+			]
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			.Padding(0, VerticalPadding)
+			[
+				SNew(SButton)
+				.IsEnabled(this, &FPropertyCustomization_YapNodeConfigGroup_MoodTags::IsTagPropertySet, MoodTagsRootProperty)
+				.OnClicked(this, &FPropertyCustomization_YapNodeConfigGroup_MoodTags::OnClicked_ResetDefaultMoodTags, MoodTagsRootProperty)
+				.VAlign(VAlign_Center)
+				.HAlign(HAlign_Center)
+				.Text(LOCTEXT("ResetMoodTags_Button", "Reset to defaults..."))
+				.ToolTipText(this, &FPropertyCustomization_YapNodeConfigGroup_MoodTags::ToolTipText_DefaultMoodTags)
+			]
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			.Padding(0, VerticalPadding)
+			[
+				SNew(SButton)
+				.IsEnabled(this, &FPropertyCustomization_YapNodeConfigGroup_MoodTags::IsTagPropertySet, MoodTagsRootProperty)
+				.OnClicked(this, &FPropertyCustomization_YapNodeConfigGroup_MoodTags::OnClicked_DeleteAllMoodTags, MoodTagsRootProperty)
+				.VAlign(VAlign_Center)
+				.HAlign(HAlign_Center)
+				.Text(LOCTEXT("DeleteMoodTags_Button", "Delete all..."))
+				.ToolTipText(LOCTEXT("DeleteMoodTags_ToolTip", "Attempts to delete all tags"))
+			]
 		]
 	];
-	
+
+	FDetailWidgetRow& BottomRow = StructBuilder.AddCustomRow(INVTEXT("TODO"))
+	.Visibility(TAttribute<EVisibility>::CreateRaw(this, &FPropertyCustomization_YapNodeConfigGroup_MoodTags::Visibility_MoodTagsRootHint, MoodTagsRootProperty))
+	[
+		SNew(SBox)
+		.HAlign(HAlign_Center)
+		.Padding(8)
+		[
+			SNew(SBorder)
+			.BorderImage(FYapEditorStyle::GetImageBrush(YapBrushes.Border_RoundedSquare))
+			.BorderBackgroundColor(YapColor::DarkGray)
+			.Padding(16, 8)
+			[
+				SNew(SVerticalBox)
+				+ SVerticalBox::Slot()
+				.HAlign(HAlign_Center)
+				.AutoHeight()
+				.Padding(0, 4, 0, 16)
+				[
+					SNew(STextBlock)
+					.Font(YapFonts.Font_TitleText)
+					.Text(LOCTEXT("YapNodeConfig_MoodTagsRootHintText_1", "It's recommended (not required) to put all node moods under a common parent, e.g."))
+				]
+				+ SVerticalBox::Slot()
+				.HAlign(HAlign_Center)
+				.AutoHeight()
+				[
+					SNew(STextBlock)
+					.LineHeightPercentage(1.5)
+					.Font(YapFonts.Font_CharacterTag)
+					.Text(LOCTEXT("YapNodeConfig_MoodTagsRootHintText_2", "Yap.Mood.<Root>.<MoodTag>\nYap.Mood.Dialogue.<MoodTag>\nYap.Mood.Tutorial.<MoodTag>\nYap.Mood.InternalMonologue.<MoodTag>"))		
+				]
+			]
+		]
+	];
 	
 	/*
 	HeaderColorPropertyHolder->SetContent(StructBuilder.GenerateStructValueWidget(GroupColorPropertyHandle.ToSharedRef()));
@@ -309,7 +354,7 @@ FReply FPropertyCustomization_YapNodeConfigGroup_MoodTags::OnClicked_DeleteAllMo
 	
 	return FReply::Handled();
 }
-
+#include "YapEditor/Globals/YapEditorFuncs.h"
 FReply FPropertyCustomization_YapNodeConfigGroup_MoodTags::OnClicked_OpenMoodTagsManager(TSharedPtr<IPropertyHandle> MoodTagsRootProperty)
 {
 	void* Data;
@@ -322,9 +367,23 @@ FReply FPropertyCustomization_YapNodeConfigGroup_MoodTags::OnClicked_OpenMoodTag
 	Args.bRestrictedTags = false;
 	Args.Filter = MoodTagsRoot.ToString();
 
-	UE::GameplayTags::Editor::OpenGameplayTagManager(Args);
+	Yap::EditorFuncs::OpenGameplayTagsEditor(MoodTagsRoot);
 	
 	return FReply::Handled();
+}
+
+EVisibility FPropertyCustomization_YapNodeConfigGroup_MoodTags::Visibility_BottomPanel(TSharedPtr<IPropertyHandle> MoodTagsDisabledProperty) const
+{
+	bool bMoodTagsDisabled;
+
+	MoodTagsDisabledProperty->GetValue(bMoodTagsDisabled);
+
+	return bMoodTagsDisabled ? EVisibility::Collapsed : EVisibility::Visible;
+}
+
+EVisibility FPropertyCustomization_YapNodeConfigGroup_MoodTags::Visibility_MoodTagsRootHint(TSharedPtr<IPropertyHandle> MoodTagsRootProperty) const
+{
+	return IsTagPropertySet(MoodTagsRootProperty) ? EVisibility::Collapsed : EVisibility::Visible;
 }
 
 FText FPropertyCustomization_YapNodeConfigGroup_MoodTags::ToolTipText_DefaultMoodTags() const

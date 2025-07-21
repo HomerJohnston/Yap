@@ -23,7 +23,7 @@ const UTexture2D* UYapCharacterAsset::GetCharacterPortrait(const FGameplayTag& M
 {
 	if (MoodTag.IsValid())
 	{
-		const FYapPortraitList* PortraitList = PortraitsMap.Find(MoodTag.RequestDirectParent());
+		const FYapPortraitList* PortraitList = PortraitsMap.Find(MoodTag.RequestDirectParent().GetTagName());
 
 		if (PortraitList)
 		{
@@ -62,11 +62,12 @@ void UYapCharacterAsset::PostEditChangeProperty(FPropertyChangedEvent& PropertyC
 #if WITH_EDITOR
 void UYapCharacterAsset::RefreshPortraitList()
 {
+	/*
 	FGameplayTagContainer MoodRoots = Yap::GetMoodTagRoots();
 
 	for (auto It = PortraitsMap.CreateIterator(); It; ++It)
 	{
-		TPair<FGameplayTag, FYapPortraitList>& KVPair = *It;
+		TPair<FName, FYapPortraitList>& KVPair = *It;
 
 		if (!KVPair.Key.IsValid())
 		{
@@ -74,7 +75,9 @@ void UYapCharacterAsset::RefreshPortraitList()
 			continue;
 		}
 
-		if (!MoodRoots.HasTagExact(KVPair.Key))
+		FGameplayTag Tag = FGameplayTag::RequestGameplayTag(KVPair.Key);
+		
+		if (!MoodRoots.HasTagExact(Tag))
 		{
 			It.RemoveCurrent();
 			continue;
@@ -100,7 +103,7 @@ void UYapCharacterAsset::RefreshPortraitList()
 	{
 		return A.GetTagName().LexicalLess(B.GetTagName());
 	});
-	
+*/	
 
 	/*
 	FGameplayTagContainer AllMoodTags = GetAllMoodTags();
@@ -167,7 +170,7 @@ bool UYapCharacterAsset::GetPortraitsOutOfDate() const
 	// Check if one of the root mood tags has a different number of children
 	for (const FGameplayTag& Tag : MoodTagRoots)
 	{
-		if (!PortraitsMap.Contains(Tag))
+		if (!PortraitsMap.Contains(Tag.GetTagName()))
 		{
 			return true;
 		}
@@ -176,7 +179,7 @@ bool UYapCharacterAsset::GetPortraitsOutOfDate() const
 	// Check if all of the children match for each root mood tag
 	for (const FGameplayTag& RootTag : MoodTagRoots)
 	{
-		const FYapPortraitList& PortraitsList = PortraitsMap[RootTag];
+		const FYapPortraitList& PortraitsList = PortraitsMap[RootTag.GetTagName()];
 
 		FGameplayTagContainer MoodTags = UGameplayTagsManager::Get().RequestGameplayTagChildren(RootTag);
 

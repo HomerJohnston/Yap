@@ -22,7 +22,19 @@ void Yap::EditorFuncs::OpenDeveloperSettings()
 
 void Yap::EditorFuncs::OpenGameplayTagsEditor()
 {
-	OpenGameplayTagsEditor({});
+	OpenGameplayTagsEditor(FGameplayTag::EmptyTag);
+}
+
+void Yap::EditorFuncs::OpenGameplayTagsEditor(const FGameplayTag& Root)
+{
+	FGameplayTagContainer Container;
+
+	if (Root.IsValid())
+	{
+		Container.AddTag(Root);
+	}
+
+	OpenGameplayTagsEditor(Container);
 }
 
 void Yap::EditorFuncs::OpenGameplayTagsEditor(const FGameplayTagContainer& Roots)

@@ -6,6 +6,7 @@
 #include "DetailCategoryBuilder.h"
 #include "DetailLayoutBuilder.h"
 #include "DetailWidgetRow.h"
+#include "IDetailGroup.h"
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Widgets/Colors/SColorBlock.h"
 #include "Yap/YapCharacterAsset.h"
@@ -13,6 +14,7 @@
 #include "Yap/YapProjectSettings.h"
 #include "Yap/Globals/YapMoodTags.h"
 #include "YapEditor/YapEditorColor.h"
+#include "YapEditor/YapEditorLog.h"
 #include "YapEditor/YapEditorStyle.h"
 #include "YapEditor/YapTransactions.h"
 #include "YapEditor/Globals/YapEditorFuncs.h"
@@ -24,139 +26,151 @@
 FDetailCustomization_YapCharacter::FDetailCustomization_YapCharacter()
 {
 	ButtonWidth = 300;
+
+	Handle = UGameplayTagsManager::OnEditorRefreshGameplayTagTree.AddRaw(this, &FDetailCustomization_YapCharacter::RefreshDetails);
+	
+	if (GEditor)
+	{
+		GEditor->RegisterForUndo(this);
+	}
 }
 
-void FDetailCustomization_YapCharacter::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
+FDetailCustomization_YapCharacter::~FDetailCustomization_YapCharacter()
 {
-	if (!CacheEditedCharacterAsset(DetailBuilder))
+	UGameplayTagsManager::OnEditorRefreshGameplayTagTree.Remove(Handle);
+
+	if (GEditor)
+	{
+		GEditor->UnregisterForUndo(this);
+	}
+}
+
+void FDetailCustomization_YapCharacter::CustomizeDetails(IDetailLayoutBuilder& InDetailBuilder)
+{
+	if (!CacheEditedCharacterAsset(InDetailBuilder))
 	{
 		return;
 	}
 
-	CachePropertyHandles(DetailBuilder);
+	CachePropertyHandles(InDetailBuilder);
 	
-	DrawObsoleteDataWarning(DetailBuilder);
+	DrawObsoleteDataWarning(InDetailBuilder);
 	
-	SortCategories(DetailBuilder);
+	SortCategories(InDetailBuilder);
 	
-	IDetailCategoryBuilder& Portraits = DetailBuilder.EditCategory("Portraits");
+	IDetailCategoryBuilder& CharacterCategory = InDetailBuilder.EditCategory("Character");
+	CharacterCategory.AddProperty(DefaultPortraitProperty);
 
-	Portraits.AddProperty(DefaultPortraitProperty);
-	
-	Portraits.AddProperty(PortraitsMapProperty)
-	.IsEnabled(TAttribute<bool>::CreateLambda([this] ()
+	IDetailCategoryBuilder& PortraitsCategory = InDetailBuilder.EditCategory("Portraits", LOCTEXT("PortraitsCategory_Title", "Portraits"));
+
+	TSharedPtr<IPropertyHandleMap> PortraitsMap = InDetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UYapCharacterAsset, PortraitsMap))->AsMap();
+
+	uint32 NumMoodRoots;
+	PortraitsMap->GetNumElements(NumMoodRoots);
+
+	for (uint32 i = 0; i < NumMoodRoots; ++i)
 	{
-		return !GetHasObsoleteData();
-	}))
-	
-	.ShouldAutoExpand(true);
-	
-	FDetailWidgetRow X = Portraits.AddCustomRow(LOCTEXT("MoodTags", "Mood Tags"))
-	[
-		SNew(SVerticalBox)
-		/*
-		+ SVerticalBox::Slot()
-		.AutoHeight()
-		.HAlign(HAlign_Center)
-		.Padding(0, 8)
-		[
-			SNew(SButton)
-			.IsEnabled_Lambda( [this] ()
-			{
-				// If we have obsolete data, we don't want to allow adding new data
-				return !GetHasObsoleteData();
-			})
-			.OnClicked_Lambda(
-			[this] () -> FReply
-			{
-				if (CharacterBeingCustomized.IsValid())
-				{
-					FYapScopedTransaction T(YapTransactions::AddMoodTagPortrait, LOCTEXT("AddMoodTagPortrait_Transaction", "Add mood tag portrait"), CharacterBeingCustomized.Get());
+		TSharedPtr<IPropertyHandle> ListElement = PortraitsMap->GetElement(i);
+		TSharedPtr<IPropertyHandle> ListKey = ListElement->GetKeyHandle();
+		TSharedPtr<IPropertyHandleMap> ListElementAsMap = ListElement->AsMap();
 
-					CharacterBeingCustomized->RefreshPortraitList();
-				}
-				
-				return FReply::Handled();
-			})
-			[
-				SNew(SBox)
-				.MinDesiredWidth(ButtonWidth)
-				[
-					SNew(STextBlock)
-					.Text(INVTEXT("Rebuild Portrait Map Keys"))	
-				]
-			]
-		]
-		*/
-		+ SVerticalBox::Slot()
-		.AutoHeight()
-		.HAlign(HAlign_Center)
-		.Padding(0, 12, 0, 8)
-		[
-			SNew(SBox)
-			.Visibility(this, &FDetailCustomization_YapCharacter::Visibility_MoodTagsOutOfDateWarning)
-			.IsEnabled_Lambda( [this] () { return GetHasObsoleteData() ? false : true; } )
-			[
-				SNew(SHorizontalBox)
+		FName ListKeyName;
+		ListKey->GetValue(ListKeyName);
+
+		FGameplayTag MoodRoot = FGameplayTag::RequestGameplayTag(ListKeyName, false);
+
+		FText ListHeading;
+
+		if (MoodRoot.IsValid())
+		{
+			ListHeading = FText::FromName(ListKeyName);
+		}
+		else
+		{
+			ListHeading = FText::Format(LOCTEXT("InvalidMoodTag", "INVALID: {0}"), FText::FromName(ListKeyName));
+		}
+		
+		IDetailGroup& Grp = PortraitsCategory.AddGroup(ListKeyName, ListHeading, false, true);
+		
+		TSharedPtr<IPropertyHandle> MoodMap = ListElement->GetChildHandle(0); // FYapPortraitList only has one property, a map
+		TSharedPtr<IPropertyHandleMap> MoodMapAsMap = MoodMap->AsMap();
+
+		const UYapNodeConfig& Config = Yap::GetConfigUsingMoodRoot(MoodRoot);
+		
+		uint32 NumMoods;
+		MoodMapAsMap->GetNumElements(NumMoods);
+
+		for (uint32 j = 0; j < NumMoods; ++j)
+		{
+			TSharedPtr<IPropertyHandle> MoodMapElement = MoodMapAsMap->GetElement(j);
+			TSharedPtr<IPropertyHandle> MoodNameProperty = MoodMapElement->GetKeyHandle();
+
+			void* TextureAddress;
+			MoodMapElement->GetValueData(TextureAddress);
+
+			FName MoodName;
+			MoodNameProperty->GetValue(MoodName);
+
+			FGameplayTag MoodTag = FGameplayTag::RequestGameplayTag(MoodName, false);
+
+			const FSlateBrush* Brush = Config.GetMoodTagBrush(MoodTag);
+
+			if (!Brush)
+			{
+				Brush = FAppStyle::GetBrush("Icons.WarningWithColor");
+			}
+			
+			TSharedPtr<SWidget> NameContentWidget = nullptr;
+
+			if (MoodTag.IsValid())
+			{
+				NameContentWidget =SNew(SHorizontalBox)
 				+ SHorizontalBox::Slot()
 				.AutoWidth()
+				.Padding(0, 0, 8, 0)
 				[
-					SNew(STextBlock)
-					.Font(YapFonts.Font_WarningText)
-					.SimpleTextMode(true)
-					.Text(LOCTEXT("CharacterPortraits_MoodTagsNeedRefresh", "Portraits list is out of date, "))
-					.ColorAndOpacity(YapColor::OrangeRed)
+					SNew(SImage)
+					.Image(Brush)
+					.DesiredSizeOverride(FVector2d(24, 24))
 				]
 				+ SHorizontalBox::Slot()
-				.AutoWidth()
-				[
-					SNew(SYapHyperlink)
-					.Text(LOCTEXT("CharacterPortraits_PerformMoodTagsRefresh", "click to refresh"))
-					.OnNavigate(this, &FDetailCustomization_YapCharacter::OnClicked_RefreshMoodTagsButton)
-					.ToolTipText(LOCTEXT("RefreshMoodTags_ToolTIp", "Will process the portraits list, removing entries which are no longer present in project settings, and adding missing entries."))
-				]
-			]
-		]
-		+ SVerticalBox::Slot()
-		.AutoHeight()
-		.HAlign(HAlign_Center)
-		.Padding(0, 8, 0, 12)
-		[
-			SNew(SBox)
-			[
-				SNew(SVerticalBox)
-				+ SVerticalBox::Slot()
-				.AutoHeight()
-				.HAlign(HAlign_Center)
-				.Padding(4)
+				.VAlign(VAlign_Center)
 				[
 					SNew(STextBlock)
-					.Font(YapFonts.Font_WarningText)
-					.SimpleTextMode(true)
-					.Text(this, &FDetailCustomization_YapCharacter::Text_PortraitsListHint)
-					.ColorAndOpacity(YapColor::LightYellow)
-				]
-				+ SVerticalBox::Slot()
-				.AutoHeight()
-				.HAlign(HAlign_Center)
-				.Padding(4)
-				[
-					SNew(SYapHyperlink)
-					.Text(LOCTEXT("CharacterPortraits_OpenProjectSettings", "Edit Mood Tags (Filtered)"))
-					.OnNavigate_Lambda( [] () {Yap::EditorFuncs::OpenGameplayTagsEditor(Yap::GetMoodTagRoots()); } )
-				]
-				+ SVerticalBox::Slot()
-				.AutoHeight()
-				.HAlign(HAlign_Center)
-				.Padding(4)
-				[
-					SNew(SYapHyperlink)
-					.Text(LOCTEXT("CharacterPortraits_OpenProjectSettings", "Edit Mood Tags (All)"))
-					.OnNavigate_Lambda( [] () {Yap::EditorFuncs::OpenGameplayTagsEditor(); } )
-				]
+					.Font(InDetailBuilder.GetDetailFont())
+					.Text(FText::FromName(Yap::Tags::GetLeafOfTag(MoodTag)))
+				];
+			}
+			else
+			{
+				NameContentWidget = SNew(STextBlock)
+				.Font(InDetailBuilder.GetDetailFont())
+				.Text(FText::Format(LOCTEXT("InvalidMoodTag", "INVALID: {0}"), FText::FromName(MoodName)))
+				.ColorAndOpacity(YapColor::OrangeRed);
+			}
+			
+			Grp.AddWidgetRow()
+			.NameContent()
+			[
+				NameContentWidget.ToSharedRef()
 			]
-		]
-	];
+			.ValueContent()
+			[
+				MoodMapElement->CreatePropertyValueWidget()	
+			];
+		}
+	}
+	
+	AddBottomControls(PortraitsCategory);
+	
+	// TEMP
+	PortraitsCategory.AddProperty(GET_MEMBER_NAME_CHECKED(UYapCharacterAsset, PortraitsMap));
+}
+
+void FDetailCustomization_YapCharacter::CustomizeDetails(const TSharedPtr<IDetailLayoutBuilder>& InDetailBuilder)
+{
+	CachedDetailBuilder = InDetailBuilder;
+	CustomizeDetails(*InDetailBuilder);
 }
 
 EVisibility FDetailCustomization_YapCharacter::Visibility_MoodTagsOutOfDateWarning() const
@@ -194,17 +208,114 @@ void FDetailCustomization_YapCharacter::OnClicked_RefreshMoodTagsButton() const
 	{
 		FYapScopedTransaction T(YapTransactions::RefreshCharacterPortraitList, LOCTEXT("RefreshCharacterPortraitList_Transaction", "Refresh character portrait list"), CharacterBeingCustomized.Get());
 
-		CharacterBeingCustomized->RefreshPortraitList();
+		TSharedPtr<IPropertyHandleMap> PortraitsPropertyAsMap = PortraitsProperty->AsMap();
+
+		FGameplayTagContainer MoodRoots = Yap::GetMoodTagRoots();
+
+		FGameplayTagContainer AlreadyExistingMoodRoots;
+
+		// First clear any NONE entries
+		//RemoveEntryFromMap(PortraitsPropertyAsMap, NAME_None);
+
+		// ====================================================================================
+		// EPISODE 1: The Phantom Tag - first step, iterate through the map and find invalid mood roots. Erase those entire lists.
+		{
+			bool bLoopAgain = true;
+
+			while (bLoopAgain)
+			{
+				bLoopAgain = false;
+			
+				uint32 NumLists;
+				PortraitsPropertyAsMap->GetNumElements(NumLists);
+			
+				// Iterate through the portraits map and remove any invalid mood tags
+				for (uint32 i = 0; i < NumLists; ++i)
+				{
+					TSharedPtr<IPropertyHandle> PortraitListElement = PortraitsPropertyAsMap->GetElement(i);
+
+					if (PortraitListElement.IsValid())
+					{
+						TSharedPtr<IPropertyHandle> KeyProperty = PortraitListElement->GetKeyHandle();
+
+						if (KeyProperty.IsValid())
+						{
+							FName PortraitListKey;
+							KeyProperty->GetValue(PortraitListKey);
+
+							FGameplayTag PortraitListKeyAsTag = FGameplayTag::RequestGameplayTag(PortraitListKey, false);
+
+							if (!PortraitListKeyAsTag.IsValid() || !MoodRoots.HasTagExact(PortraitListKeyAsTag))
+							{
+								PortraitsPropertyAsMap->DeleteItem(i);
+
+								// We will restart from the beginning any time we modify the map to be safe. I don't know if this is necessary but this process should be so small anyway.
+								bLoopAgain = true;
+								break;
+							}
+							else
+							{
+								AlreadyExistingMoodRoots.AddTag(PortraitListKeyAsTag);
+							}
+						}
+					}
+				}
+			}
+		}
+
+		// ====================================================================================
+		// EPISODE 2: Attack of The Tags - second step, iterate through the project's mood roots and add any which do not exist in the map yet 
+		{
+			for (const FGameplayTag& Root : MoodRoots)
+			{
+				if (!AlreadyExistingMoodRoots.HasTagExact(Root))
+				{
+					AddEntryToMap(PortraitsPropertyAsMap, Root);
+				}
+			}
+		}
+
+		// ====================================================================================
+		// EPISODE 3: Revenge of the Tags - third step, for each list, iterate through the project's mood roots and add any which do not exist in the map yet 
+		{
+			uint32 NumLists = 0;
+
+			using PropHandle = TSharedPtr<IPropertyHandle>;
+			
+			// Iterate through the map and find the "None" element and set its key
+			PortraitsPropertyAsMap->GetNumElements(NumLists);
+
+			for (uint32 i = 0; i < NumLists; ++i)
+			{
+				PropHandle PortraitListElement = PortraitsPropertyAsMap->GetElement(i);
+
+				if (PortraitListElement.IsValid())
+				{
+					PropHandle KeyProperty = PortraitListElement->GetKeyHandle();
+
+					FName KeyNameTest;
+					KeyProperty->GetValue(KeyNameTest);
+
+					if (KeyProperty.IsValid())
+					{
+						// WARNING: Right now the only property inside my list is the map. If I ever change the layout of FYapPortraitList, this code will break!
+						RefreshList(KeyProperty, PortraitListElement->GetChildHandle(0));
+					}
+				}
+			}
+		}
 	}
-}
 
-const TMap<FName, TObjectPtr<UTexture2D>>& FDetailCustomization_YapCharacter::GetPortraitsMap() const
-{
-	TArray<void*> RawData;
+	auto SortNames = [] (const FName& N1, const FName& N2) { return N1.Compare(N2) < 0; };
+	
+	CharacterBeingCustomized->PortraitsMap.KeySort( SortNames );
 
-	PortraitsProperty_OBSOLETE->AccessRawData(RawData);
-
-	return *reinterpret_cast<const TMap<FName, TObjectPtr<UTexture2D>>*>(RawData[0]);
+	for (TPair<FName, FYapPortraitList>& KVP : CharacterBeingCustomized->PortraitsMap)
+	{
+		KVP.Value.Map.KeySort( SortNames );
+	}
+	
+	RefreshDetails();
 }
 
 bool FDetailCustomization_YapCharacter::CacheEditedCharacterAsset(IDetailLayoutBuilder& DetailBuilder)
@@ -231,11 +342,11 @@ void FDetailCustomization_YapCharacter::CachePropertyHandles(IDetailLayoutBuilde
 	DefaultPortraitProperty = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UYapCharacterAsset, Portrait));
 	DefaultPortraitProperty->MarkHiddenByCustomization();
 
-	PortraitsProperty_OBSOLETE = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UYapCharacterAsset, Portraits));
-	PortraitsProperty_OBSOLETE->MarkHiddenByCustomization();
+	OBSOLETE_PortraitsProperty_OBSOLETE = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UYapCharacterAsset, Portraits));
+	OBSOLETE_PortraitsProperty_OBSOLETE->MarkHiddenByCustomization();
 
-	PortraitsMapProperty = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UYapCharacterAsset, PortraitsMap));
-	PortraitsMapProperty->MarkHiddenByCustomization();
+	PortraitsProperty = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UYapCharacterAsset, PortraitsMap));
+	PortraitsProperty->MarkHiddenByCustomization();
 }
 
 void FDetailCustomization_YapCharacter::SortCategories(IDetailLayoutBuilder& DetailBuilder) const
@@ -319,7 +430,7 @@ void FDetailCustomization_YapCharacter::DrawObsoleteDataWarning(IDetailLayoutBui
 		]
 	];
 
-	IDetailPropertyRow& Row = CategoryBuilder.AddProperty(PortraitsProperty_OBSOLETE);
+	IDetailPropertyRow& Row = CategoryBuilder.AddProperty(OBSOLETE_PortraitsProperty_OBSOLETE);
 
 	CategoryBuilder.AddCustomRow(INVTEXT("TODO"))
 	.Visibility(Vis)
@@ -333,7 +444,7 @@ bool FDetailCustomization_YapCharacter::GetHasPortraitData() const
 {
 	void* PortraitsMapDataPtr = nullptr;
 	
-	PortraitsMapProperty->GetValueData(PortraitsMapDataPtr);
+	PortraitsProperty->GetValueData(PortraitsMapDataPtr);
 
 	TMap<FGameplayTag, TObjectPtr<UTexture2D>>* PortraitsMapPtr = static_cast<TMap<FGameplayTag, TObjectPtr<UTexture2D>>*>(PortraitsMapDataPtr);
 
@@ -365,7 +476,7 @@ bool FDetailCustomization_YapCharacter::FixupOldPortraitsMap()
 	CharacterBeingCustomized->Modify();
 	
 	void* OldPortraitsMapDataPtr = nullptr;
-	PortraitsProperty_OBSOLETE->GetValueData(OldPortraitsMapDataPtr);
+	OBSOLETE_PortraitsProperty_OBSOLETE->GetValueData(OldPortraitsMapDataPtr);
 	TMap<FName, TObjectPtr<UTexture2D>>* OldPortraitsMapPtr = static_cast<TMap<FName, TObjectPtr<UTexture2D>>*>(OldPortraitsMapDataPtr);
 
 	bool bYesAllPressed = false;
@@ -429,7 +540,7 @@ bool FDetailCustomization_YapCharacter::FixupOldPortraitsMap()
 		}
 
 		void* NewPortraitsMapDataPtr = nullptr;
-		PortraitsMapProperty->GetValueData(NewPortraitsMapDataPtr);
+		PortraitsProperty->GetValueData(NewPortraitsMapDataPtr);
 		TMap<FGameplayTag, FYapPortraitList>* NewPortraitsMapPtr = static_cast<TMap<FGameplayTag, FYapPortraitList>*>(NewPortraitsMapDataPtr);
 		
 		FYapPortraitList& List = NewPortraitsMapPtr->FindOrAdd(ExistingMoodTag.RequestDirectParent());
@@ -468,6 +579,255 @@ bool FDetailCustomization_YapCharacter::FixupOldPortraitsMap()
 	OldPortraitsMapPtr->Empty();
 
 	return true;
+}
+
+void FDetailCustomization_YapCharacter::AddEntryToMap(TSharedPtr<IPropertyHandleMap> Map, const FGameplayTag& NewKey) const
+{
+	uint32 NumElements;
+	
+	// Add a new "None" element
+	Map->AddItem();
+
+	// Iterate through the map and find the "None" element and set its key
+	Map->GetNumElements(NumElements);
+
+	for (uint32 i = 0; i < NumElements; ++i)
+	{
+		TSharedPtr<IPropertyHandle> Element = Map->GetElement(i);
+
+		if (Element.IsValid())
+		{
+			TSharedPtr<IPropertyHandle> KeyProperty = Element->GetKeyHandle();
+
+			if (KeyProperty.IsValid())
+			{
+				FName KeyAsName;
+				KeyProperty->GetValue(KeyAsName);
+
+				FGameplayTag KeyAsTag = FGameplayTag::RequestGameplayTag(KeyAsName, false);
+
+				// We found the new "None" element
+				if (!KeyAsTag.IsValid())
+				{
+					KeyProperty->SetValueFromFormattedString(NewKey.GetTagName().ToString());
+					break;
+				}
+			}
+		}
+	}
+}
+
+void FDetailCustomization_YapCharacter::RefreshList(TSharedPtr<IPropertyHandle> MoodRootProperty, TSharedPtr<IPropertyHandle> ListProperty) const
+{
+	using PropHandle = TSharedPtr<IPropertyHandle>;
+	using MapHandle = TSharedPtr<IPropertyHandleMap>;
+
+	// WARNING: Right now the only property inside my list is the map. If I ever change the layout of FYapPortraitList, this code will break!
+	MapHandle Map = ListProperty->AsMap(); // FYapPortraitList.Map
+
+	FName MoodRootName;
+	MoodRootProperty->GetValue(MoodRootName); // UYapCharacterAsset.PortraitsMap.Key
+
+	FGameplayTag MoodRootTag = FGameplayTag::RequestGameplayTag(MoodRootName, false);
+
+	if (!MoodRootTag.IsValid())
+	{
+		UE_LOG(LogYapEditor, Error, TEXT("Failed to parse root mood tag of list! This should never happen."));
+		return;
+	}
+	
+	// Find all existing mood tags.
+	if (Map.IsValid())
+	{
+		TSet<FName> ExistingMoodTagNames;
+		FGameplayTagContainer RequiredMoodTags = Yap::GetAllMoodTagsUnder(MoodRootTag);
+
+		uint32 NumMoodEntries = 0;
+		Map->GetNumElements(NumMoodEntries);
+		
+		for (uint32 j = 0; j < NumMoodEntries; ++j)
+		{
+			PropHandle MoodEntryElement = Map->GetElement(j);
+
+			if (MoodEntryElement.IsValid())
+			{
+				PropHandle MoodEntryKey = MoodEntryElement->GetKeyHandle();
+
+				if (MoodEntryKey.IsValid())
+				{
+					FName MoodEntryName;
+					MoodEntryKey->GetValue(MoodEntryName);
+
+					//if (MoodEntryName != NAME_None)
+					//{
+						ExistingMoodTagNames.Add(MoodEntryName);
+					//}
+				}
+			}
+		}
+
+		// Ensure there are no "None" entries
+		//RemoveEntryFromMap(Map, FGameplayTag::EmptyTag.GetTagName());
+
+		// Ensure there are no invalid entries (e.g. developers removed mood tags)
+		for (const FName& ExistingTagName : ExistingMoodTagNames)
+		{
+			FGameplayTag ExistingTag = FGameplayTag::RequestGameplayTag(ExistingTagName, false);
+		
+			if (RequiredMoodTags.HasTagExact(ExistingTag))
+			{
+				continue;
+			}
+
+			RemoveEntryFromMap(Map, ExistingTagName);
+		}
+	
+		// Ensure all tags exist (e.g. developers added mood tags)
+		for (const FGameplayTag& RequiredTag : RequiredMoodTags)
+		{
+			if (ExistingMoodTagNames.Contains(RequiredTag.GetTagName()))
+			{
+				continue;
+			}
+
+			AddEntryToMap(Map, RequiredTag);
+		}
+	}
+}
+
+void FDetailCustomization_YapCharacter::RemoveEntryFromMap(TSharedPtr<IPropertyHandleMap> Map, const FName& DeadKey) const
+{
+	uint32 NumElements;
+	
+	// Iterate through the map and find the element
+	Map->GetNumElements(NumElements);
+
+	for (uint32 i = 0; i < NumElements; ++i)
+	{
+		TSharedPtr<IPropertyHandle> Element = Map->GetElement(i);
+
+		if (Element.IsValid())
+		{
+			TSharedPtr<IPropertyHandle> KeyProperty = Element->GetKeyHandle();
+
+			if (KeyProperty.IsValid())
+			{
+				FName KeyAsName;
+				KeyProperty->GetValue(KeyAsName);
+
+				// We found the new "None" element
+				if (KeyAsName == DeadKey)
+				{
+					Map->DeleteItem(i);
+					break;
+				}
+			}
+		}
+	}
+}
+
+void FDetailCustomization_YapCharacter::RefreshDetails() const
+{
+	if (CachedDetailBuilder.IsValid())
+	{
+		IDetailLayoutBuilder* Layout = nullptr;
+		if (auto LockedDetailBuilder = CachedDetailBuilder.Pin())
+		{
+			Layout = LockedDetailBuilder.Get();
+		}
+		if (LIKELY(Layout))
+		{
+			Layout->ForceRefreshDetails();
+		}
+	}
+}
+
+void FDetailCustomization_YapCharacter::AddBottomControls(IDetailCategoryBuilder& Category) const
+{
+	Category.AddCustomRow(LOCTEXT("MoodTags", "Mood Tags"))
+	[
+		SNew(SVerticalBox)
+		
+		+ SVerticalBox::Slot()
+		.AutoHeight()
+		.HAlign(HAlign_Center)
+		.Padding(0, 12, 0, 8)
+		[
+			SNew(SBox)
+			.IsEnabled_Lambda( [this] () { return GetHasObsoleteData() ? false : true; } )
+			[
+				SNew(SHorizontalBox)
+				+ SHorizontalBox::Slot()
+				.AutoWidth()
+				[
+					SNew(STextBlock)
+					.Font(YapFonts.Font_WarningText)
+					.Visibility(this, &FDetailCustomization_YapCharacter::Visibility_MoodTagsOutOfDateWarning)
+					.SimpleTextMode(true)
+					.Text(LOCTEXT("CharacterPortraits_MoodTagsNeedRefresh", "Portraits list is out of date. "))
+					.ColorAndOpacity(YapColor::OrangeRed)
+				]
+				+ SHorizontalBox::Slot()
+				.AutoWidth()
+				[
+					SNew(SYapHyperlink)
+					.Text(LOCTEXT("CharacterPortraits_PerformMoodTagsRefresh", "Click to refresh."))
+					.OnNavigate(this, &FDetailCustomization_YapCharacter::OnClicked_RefreshMoodTagsButton)
+					.ToolTipText(LOCTEXT("RefreshMoodTags_ToolTIp", "Will process the portraits list, removing entries which are no longer present in project settings, and adding missing entries. Also sorts the list."))
+				]
+			]
+		]
+		
+		+ SVerticalBox::Slot()
+		.AutoHeight()
+		.HAlign(HAlign_Center)
+		.Padding(0, 8, 0, 12)
+		[
+			SNew(SBox)
+			[
+				SNew(SVerticalBox)
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				.HAlign(HAlign_Center)
+				.Padding(4)
+				[
+					SNew(STextBlock)
+					.Font(YapFonts.Font_WarningText)
+					.SimpleTextMode(true)
+					.Text(this, &FDetailCustomization_YapCharacter::Text_PortraitsListHint)
+					.ColorAndOpacity(YapColor::LightYellow)
+				]
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				.HAlign(HAlign_Center)
+				.Padding(4)
+				[
+					SNew(SYapHyperlink)
+					.Text(LOCTEXT("CharacterPortraits_OpenProjectSettings", "Edit Mood Tags (Filtered)"))
+					.OnNavigate_Lambda( [] () {Yap::EditorFuncs::OpenGameplayTagsEditor(Yap::GetMoodTagRoots()); } )
+				]
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				.HAlign(HAlign_Center)
+				.Padding(4)
+				[
+					SNew(SYapHyperlink)
+					.Text(LOCTEXT("CharacterPortraits_OpenProjectSettings", "Edit Mood Tags (All)"))
+					.OnNavigate_Lambda( [] () {Yap::EditorFuncs::OpenGameplayTagsEditor(); } )
+				]
+			]
+		]
+	];
+}
+
+void FDetailCustomization_YapCharacter::PostUndo(bool bSuccess)
+{
+	RefreshDetails();
+}
+
+void FDetailCustomization_YapCharacter::PostRedo(bool bSuccess)
+{
+	RefreshDetails();
 }
 
 #undef LOCTEXT_NAMESPACE

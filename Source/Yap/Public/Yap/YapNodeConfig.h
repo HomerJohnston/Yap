@@ -399,10 +399,10 @@ public:
 	
 	bool GetUsesSpeaker() const { return !General.bDisableSpeaker; }
 
-	bool GetUsesDirectedAt() const { return General.bDisableDirectedAt; }
+	bool GetUsesDirectedAt() const { return !General.bDisableDirectedAt; }
 
 	
-	bool GetDisableChildSafe() const { return General.bDisableChildSafe; }
+	bool GetUsesChildSafe() const { return !General.bDisableChildSafe; }
 
 	bool GetUsesAudioAsset() const { return !Audio.bDisableAudio; }
 
@@ -410,7 +410,7 @@ public:
 
 	int32 GetTextWordsPerMinute() { return DialoguePlayback.TimeSettings.TextWordsPerMinute; }
 
-	bool GetUsesMoodTags() const { return MoodTags.bDisableMoodTags; }
+	bool GetUsesMoodTags() const { return !MoodTags.bDisableMoodTags; }
 
 	const FGameplayTag& GetMoodTagsParent() const { return MoodTags.MoodTagsRoot; }
 

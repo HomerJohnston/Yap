@@ -5,6 +5,7 @@
 
 #include "GameplayTagContainer.h"
 
+class UYapNodeConfig;
 class UFlowNode_YapDialogue;
 
 namespace Yap
@@ -13,5 +14,9 @@ namespace Yap
 
     YAP_API FGameplayTagContainer GetMoodTagRoots();
 
+    YAP_API const UYapNodeConfig& GetConfigUsingMoodRoot(const FGameplayTag& Root);
+    
     YAP_API FGameplayTagContainer GetAllMoodTags();
+
+    YAP_API FGameplayTagContainer GetAllMoodTagsUnder(const FGameplayTag& Root);
 }

@@ -34,12 +34,12 @@ bool IYapCharacterInterface::IsAsset_YapCharacter(const TSoftObjectPtr<UObject> 
 {
     const UObject* Asset = AssetSoftPtr.LoadSynchronous();
 
-    if (Asset->Implements<UYapCharacterInterface>())
+    if (const UClass* Class = Cast<UClass>(Asset))
     {
-        return true;
+        return Class->ImplementsInterface(UYapCharacterInterface::StaticClass());
     }
-    
-    return false;
+
+    return Asset->Implements<UYapCharacterInterface>();
 }
 
 bool IYapCharacterInterface::IsAsset_YapCharacter(const TSoftClassPtr<UObject> Class)

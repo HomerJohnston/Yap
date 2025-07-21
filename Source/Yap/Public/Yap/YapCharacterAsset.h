@@ -47,11 +47,11 @@ public:
 
 protected:
 	/** Human-readable name of this character or entity. */
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName = "Name", Category = "Default")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName = "Name", Category = "Character")
 	FText EntityName;
 
 	/** Color for display. */
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName = "Color", Category = "Default")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName = "Color", Category = "Character")
 	FLinearColor EntityColor;
 	
 	/** Default portrait texture. This is used when a fragment has "no" mood tag and is also used for the asset thumbnail. */

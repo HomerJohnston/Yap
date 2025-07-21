@@ -20,50 +20,50 @@ struct FYapBitReplacement
 	FYapBitReplacement();
 	
 	/**  */
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Default")
 	TOptional<TSoftObjectPtr<UYapCharacterAsset>> SpeakerAsset;
 
 	/**  */
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Default")
 	TOptional<TSoftObjectPtr<UYapCharacterAsset>> DirectedAtAsset;
 
 	/**  */
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Default")
 	TOptional<FYapText> MatureTitleText;
 	
 	/**  */
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Default")
 	TOptional<FYapText> SafeTitleText;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Default")
 	bool bOverrideMatureDialogueText = false;
 	
 	/**  */
-	UPROPERTY(EditAnywhere, meta = (EditCondition = "bOverrideMatureDialogueText", EditConditionHides))
+	UPROPERTY(EditAnywhere, Category = "Default", meta = (EditCondition = "bOverrideMatureDialogueText", EditConditionHides))
 	FYapText MatureDialogueText;
 	
 	/**  */
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Default")
 	TOptional<FYapText> SafeDialogueText;
 	
 	/**  */
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Default")
 	TOptional<TSoftObjectPtr<UObject>> MatureAudioAsset;
 	
 	/**  */
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Default")
 	TOptional<TSoftObjectPtr<UObject>> SafeAudioAsset;
 
 	/**  */
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Default")
 	TOptional<FGameplayTag> MoodTag = FGameplayTag::EmptyTag;
 
 	/**  */
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Default")
 	TOptional<EYapTimeMode> TimeMode = EYapTimeMode::AudioTime;
 
 	/**  */
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Default")
 	TOptional<float> ManualTime = 0;
 };
 

@@ -7,6 +7,7 @@
 #include "Yap/YapProjectSettings.h"
 #include "Yap/YapSubsystem.h"
 #include "Yap/YapUtil.h"
+#include "Engine/World.h"
 
 #define LOCTEXT_NAMESPACE "Yap"
 

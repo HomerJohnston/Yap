@@ -25,23 +25,23 @@ public:
 protected:
 
 #if WITH_EDITORONLY_DATA
-	UPROPERTY(EditDefaultsOnly)
-	FText DefaultTitle = LOCTEXT("UnnamedYapCondition", "Unnamed Condition");
+    UPROPERTY(EditDefaultsOnly, Category = "Default")
+    FText DefaultTitle = LOCTEXT("UnnamedYapCondition", "Unnamed Condition");
 
-	UPROPERTY(EditInstanceOnly)
+    UPROPERTY(EditInstanceOnly, Category = "Default")
 	TOptional<FString> TitleOverride;
-	
-	UPROPERTY(EditDefaultsOnly)
+
+    UPROPERTY(EditDefaultsOnly, Category = "Default")
 	FLinearColor Color = FLinearColor(0.080, 0.200, 0.100, 1.0);
 
 	/** This is OPTIONAL. If you set this, the details view widget will have this minimum height in the Flow Graph.
 	 *  Setting this large enough to contain the whole view will prevent the stupid view widget from bouncing all over the place on creation. */
-	UPROPERTY(EditDefaultsOnly)
+    UPROPERTY(EditDefaultsOnly, Category = "Default")
 	int32 DetailsViewHeight = 200;
 	
 	/** This is OPTIONAL. If you set this, the details view widget will have this minimum width in the Flow Graph.
 	 *  Setting this large enough to contain the whole view will prevent the stupid view widget from bouncing all over the place on creation. */
-	UPROPERTY(EditDefaultsOnly)
+    UPROPERTY(EditDefaultsOnly, Category = "Default")
 	int32 DetailsViewWidth = 400;
 #endif
 

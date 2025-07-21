@@ -12,6 +12,7 @@
 #include "Yap/Enums/YapMissingAudioErrorLevel.h"
 
 #include "Yap/Nodes/FlowNode_YapDialogue.h"
+#include "Engine/Blueprint.h"
 
 #define LOCTEXT_NAMESPACE "Yap"
 

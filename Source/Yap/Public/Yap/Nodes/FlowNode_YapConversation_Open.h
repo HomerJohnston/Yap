@@ -23,7 +23,7 @@ public:
 protected:
 
 	/** Optional name for this conversation. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Default")
 	FGameplayTag ConversationName;
 
 	// ==========================================

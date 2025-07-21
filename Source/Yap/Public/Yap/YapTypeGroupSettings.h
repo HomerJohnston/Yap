@@ -6,6 +6,7 @@
 #include "Yap/Enums/YapMissingAudioErrorLevel.h"
 #include "Yap/Enums/YapTimeMode.h"
 #include "GameplayTagContainer.h"
+#include "Fonts/SlateFontInfo.h"
 #include "YapTypeGroupSettings.generated.h"
 
 #define LOCTEXT_NAMESPACE "YapEditor"
@@ -33,10 +34,10 @@ public:
 	// - - - - - PRIVATE - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 private:
 	/** If true, this struct is the default settings. This is only set internally by UYapProjectSettings. */
-	UPROPERTY(Transient, EditAnywhere, meta = (DoNotDraw))
+    UPROPERTY(Transient, EditAnywhere, meta = (DoNotDraw), Category = "Default")
 	bool bDefault = false;
-	
-	UPROPERTY(Config, EditAnywhere, meta = (DoNotDraw))
+
+    UPROPERTY(Config, EditAnywhere, meta = (DoNotDraw), Category = "Default")
 	FLinearColor GroupColor = FLinearColor::White;
 
 	// - - - - - AUDIO - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -168,88 +169,88 @@ private:
 	
 	// ============================================================================================
 public:
-	UPROPERTY(EditAnywhere, meta = (DefaultOverride = MissingAudioErrorLevel))
+    UPROPERTY(EditAnywhere, meta = (DefaultOverride = MissingAudioErrorLevel), Category = "Default")
 	bool bMissingAudioErrorLevel_Override = false;
-	
-	UPROPERTY(EditAnywhere, meta = (DefaultOverride = DefaultTimeModeSetting))
+
+    UPROPERTY(EditAnywhere, meta = (DefaultOverride = DefaultTimeModeSetting), Category = "Default")
 	bool bDefaultTimeModeSetting_Override = false;
-	
-	UPROPERTY(EditAnywhere, meta = (DefaultOverride = DialogueTagsParent))
+
+    UPROPERTY(EditAnywhere, meta = (DefaultOverride = DialogueTagsParent), Category = "Default")
 	bool bDialogueTagsParent_Override = false;
-	
-	UPROPERTY(EditAnywhere, meta = (DefaultOverride = AudioAssetsRootFolder))
+
+    UPROPERTY(EditAnywhere, meta = (DefaultOverride = AudioAssetsRootFolder), Category = "Default")
 	bool bAudioAssetsRootFolder_Override = false;
-	
-	UPROPERTY(EditAnywhere, meta = (DefaultOverride = FlowAssetsRootFolder))
+
+    UPROPERTY(EditAnywhere, meta = (DefaultOverride = FlowAssetsRootFolder), Category = "Default")
 	bool bFlowAssetsRootFolder_Override = false;
 
-	UPROPERTY(EditAnywhere, meta = (DefaultOverride = bForcedDialogueDuration))
+    UPROPERTY(EditAnywhere, meta = (DefaultOverride = bForcedDialogueDuration), Category = "Default")
 	bool bForcedDialogueDuration_Override = false;
 
-	UPROPERTY(EditAnywhere, meta = (DefaultOverride = bManualAdvanceOnly))
+    UPROPERTY(EditAnywhere, meta = (DefaultOverride = bManualAdvanceOnly), Category = "Default")
 	bool bManualAdvanceOnly_Override = false;
 
-	UPROPERTY(EditAnywhere, meta = (DefaultOverride = bPromptAutoAdvance))
+    UPROPERTY(EditAnywhere, meta = (DefaultOverride = bPromptAutoAdvance), Category = "Default")
 	bool bPromptAutoAdvance_Override = false;
-	
-	UPROPERTY(EditAnywhere, meta = (DefaultOverride = bAutoAdvanceToPromptNodes))
+
+    UPROPERTY(EditAnywhere, meta = (DefaultOverride = bAutoAdvanceToPromptNodes), Category = "Default")
 	bool bAutoAdvanceToPromptNodes_Override = false;
-	
-	UPROPERTY(EditAnywhere, meta = (DefaultOverride = bPreventAutoSelectLastPrompt))
+
+    UPROPERTY(EditAnywhere, meta = (DefaultOverride = bPreventAutoSelectLastPrompt), Category = "Default")
 	bool bPreventAutoSelectLastPrompt_Override = false;
 
-	UPROPERTY(EditAnywhere, meta = (DefaultOverride = DefaultFragmentPaddingTime))
+    UPROPERTY(EditAnywhere, meta = (DefaultOverride = DefaultFragmentPaddingTime), Category = "Default")
 	bool bDefaultFragmentPaddingTime_Override = false;
 
-	UPROPERTY(EditAnywhere, meta = (DefaultOverride = MinimumAutoTextTimeLength))
+    UPROPERTY(EditAnywhere, meta = (DefaultOverride = MinimumAutoTextTimeLength), Category = "Default")
 	bool bMinimumAutoTextTimeLength_Override = false;
 
-	UPROPERTY(EditAnywhere, meta = (DefaultOverride = MinimumAutoAudioTimeLength))
+    UPROPERTY(EditAnywhere, meta = (DefaultOverride = MinimumAutoAudioTimeLength), Category = "Default")
 	bool bMinimumAutoAudioTimeLength_Override = false;
 
-	UPROPERTY(EditAnywhere, meta = (DefaultOverride = MinimumSpeakingTime))
+    UPROPERTY(EditAnywhere, meta = (DefaultOverride = MinimumSpeakingTime), Category = "Default")
 	bool bMinimumSpeakingTime_Override = false;
 
-	UPROPERTY(EditAnywhere, meta = (DefaultOverride = MinimumTimeRemainingToAllowSkip))
+    UPROPERTY(EditAnywhere, meta = (DefaultOverride = MinimumTimeRemainingToAllowSkip), Category = "Default")
 	bool bMinimumTimeRemainingToAllowSkip_Override = false;
 
-	UPROPERTY(EditAnywhere, meta = (DefaultOverride = MinimumTimeElapsedToAllowSkip))
+    UPROPERTY(EditAnywhere, meta = (DefaultOverride = MinimumTimeElapsedToAllowSkip), Category = "Default")
 	bool bMinimumTimeElapsedToAllowSkip_Override = false;
 
-	UPROPERTY(EditAnywhere, meta = (DefaultOverride = TextWordsPerMinute))
+    UPROPERTY(EditAnywhere, meta = (DefaultOverride = TextWordsPerMinute), Category = "Default")
 	bool bTextWordsPerMinute_Override = false;
-	
-	UPROPERTY(EditAnywhere, meta = (DefaultOverride = TalkModeTitle))
+
+    UPROPERTY(EditAnywhere, meta = (DefaultOverride = TalkModeTitle), Category = "Default")
 	bool bTalkModeTitle_Override = false;
 
-	UPROPERTY(EditAnywhere, meta = (DefaultOverride = PromptModeTitle))
+    UPROPERTY(EditAnywhere, meta = (DefaultOverride = PromptModeTitle), Category = "Default")
 	bool bPromptModeTitle_Override = false;
-	
-	UPROPERTY(EditAnywhere, meta = (DefaultOverride = DialogueWidthAdjustment))
+
+    UPROPERTY(EditAnywhere, meta = (DefaultOverride = DialogueWidthAdjustment), Category = "Default")
 	bool bDialogueWidthAdjustment_Override = false;
-	
-	UPROPERTY(EditAnywhere, meta = (DefaultOverride = GraphDialogueFont))
+
+    UPROPERTY(EditAnywhere, meta = (DefaultOverride = GraphDialogueFont), Category = "Default")
 	bool bGraphDialogueFont_Override = false;
-	
-	UPROPERTY(EditAnywhere, meta = (DefaultOverride = bPreventDialogueTextWrapping))
+
+    UPROPERTY(EditAnywhere, meta = (DefaultOverride = bPreventDialogueTextWrapping), Category = "Default")
 	bool bPreventDialogueTextWrapping_Override = false;
 
-	UPROPERTY(EditAnywhere, meta = (DefaultOverride = bShowTitleTextOnTalkNodes))
+    UPROPERTY(EditAnywhere, meta = (DefaultOverride = bShowTitleTextOnTalkNodes), Category = "Default")
 	bool bShowTitleTextOnTalkNodes_Override = false;
 
-	UPROPERTY(EditAnywhere, meta = (DefaultOverride = bHideTitleTextOnPromptNodes))
+    UPROPERTY(EditAnywhere, meta = (DefaultOverride = bHideTitleTextOnPromptNodes), Category = "Default")
 	bool bHideTitleTextOnPromptNodes_Override = false;
-	
-	UPROPERTY(EditAnywhere, meta = (DefaultOverride = bHideSpeakerSelector))
+
+    UPROPERTY(EditAnywhere, meta = (DefaultOverride = bHideSpeakerSelector), Category = "Default")
 	bool bHideSpeakerSelector_Override = false;
-	
-	UPROPERTY(EditAnywhere, meta = (DefaultOverride = bHideMoodSelector))
+
+    UPROPERTY(EditAnywhere, meta = (DefaultOverride = bHideMoodSelector), Category = "Default")
 	bool bHideMoodSelector_Override = false;
-	
-	UPROPERTY(EditAnywhere, meta = (DefaultOverride = bHideChildSafeButton))
+
+    UPROPERTY(EditAnywhere, meta = (DefaultOverride = bHideChildSafeButton), Category = "Default")
 	bool bHideChildSafeButton_Override = false;
-	
-	UPROPERTY(EditAnywhere, meta = (DefaultOverride = bHideAudioID))
+
+    UPROPERTY(EditAnywhere, meta = (DefaultOverride = bHideAudioID), Category = "Default")
 	bool bHideAudioID_Override = false;
 	
 	// PROPERTY GETTERS

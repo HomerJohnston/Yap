@@ -28,27 +28,27 @@ public:
 
 protected:
 	/** Human-readable name of this character or entity. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName = "Name")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName = "Name", Category = "Default")
 	FText EntityName;
 
 	/** Color for display. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName = "Color")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName = "Color", Category = "Default")
 	FLinearColor EntityColor;
 	
 	/** Used to find this actor in the world. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Default")
 	FGameplayTag IdentityTag;
 	
 	/** If set, the character will use a single portrait texture for all moods. */
-	UPROPERTY(EditAnywhere)
+    UPROPERTY(EditAnywhere, Category = "Default")
 	bool bUseSinglePortrait = false;
 
 	/** Portrait texture to use. */
-	UPROPERTY(EditAnywhere, EditFixedSize, meta=(ReadOnlyKeys, ForceInlineRow, EditCondition = "bUseSinglePortrait", EditConditionHides))
+    UPROPERTY(EditAnywhere, EditFixedSize, meta=(ReadOnlyKeys, ForceInlineRow, EditCondition = "bUseSinglePortrait", EditConditionHides), Category = "Default")
 	TObjectPtr<UTexture2D> Portrait;
 	
 	/** Avatar icons to use in dialogue UI */
-	UPROPERTY(EditAnywhere, EditFixedSize, meta=(ReadOnlyKeys, ForceInlineRow, EditCondition = "!bUseSinglePortrait", EditConditionHides))
+    UPROPERTY(EditAnywhere, EditFixedSize, meta=(ReadOnlyKeys, ForceInlineRow, EditCondition = "!bUseSinglePortrait", EditConditionHides), Category = "Default")
 	TMap<FName, TObjectPtr<UTexture2D>> Portraits;
 
 	// --------------------- //

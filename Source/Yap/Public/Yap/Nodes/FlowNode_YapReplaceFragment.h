@@ -16,10 +16,10 @@ class YAP_API UFlowNode_YapReplaceFragment : public UFlowNode
 	GENERATED_BODY()
 
 protected:
-	UPROPERTY(EditAnywhere)
+    UPROPERTY(EditAnywhere, Category = "Default")
 	FGameplayTag TargetFragmentTag;
-	
-	UPROPERTY(EditAnywhere)
+
+    UPROPERTY(EditAnywhere, Category = "Default")
 	FYapBitReplacement NewData;
 	
 public:

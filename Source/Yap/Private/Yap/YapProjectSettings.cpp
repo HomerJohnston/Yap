@@ -15,6 +15,8 @@
 FName UYapProjectSettings::CategoryName = FName("Yap");
 #endif
 
+#include "Sound/SoundBase.h"
+
 UYapProjectSettings::UYapProjectSettings()
 {
 #if WITH_EDITORONLY_DATA

@@ -14,7 +14,7 @@ class YAP_API UYapCondition_MaturitySetting : public UYapCondition
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Default")
 	EYapMaturitySetting RequiredSetting;
 
 public:

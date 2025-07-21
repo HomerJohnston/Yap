@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "Kismet/BlueprintFunctionLibrary.h"
 #include "YapSpeechHandle.generated.h"
 
 // ================================================================================================
@@ -35,8 +36,7 @@ public:
     // STATE
     // ------------------------------------------
 private:
-	
-    UPROPERTY(Transient, BlueprintReadOnly, meta = (IgnoreForMemberInitializationTest, AllowPrivateAccess))
+    UPROPERTY(Transient, BlueprintReadOnly, meta = (IgnoreForMemberInitializationTest, AllowPrivateAccess), Category = "Default")
     FGuid Guid;
 
     UPROPERTY(Transient)

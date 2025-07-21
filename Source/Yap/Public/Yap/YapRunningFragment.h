@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "Engine/TimerHandle.h"
 #include "YapRunningFragment.generated.h"
 
 struct FYapFragment;
@@ -42,8 +43,8 @@ private:
 	uint8 FragmentIndex = 0;
 	
 	static FYapRunningFragment _InvalidHandle;
-	
-	UPROPERTY(Transient, BlueprintReadOnly, meta = (AllowPrivateAccess, IgnoreForMemberInitializationTest))
+
+    UPROPERTY(Transient, BlueprintReadOnly, meta = (AllowPrivateAccess, IgnoreForMemberInitializationTest), Category = "Default")
 	FGuid Guid;
 
 	UPROPERTY(Transient)

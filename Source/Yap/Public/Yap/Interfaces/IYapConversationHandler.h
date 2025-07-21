@@ -5,6 +5,7 @@
 
 #include "Yap/Handles/YapConversationHandle.h"
 #include "Yap/Handles/YapSpeechHandle.h"
+#include "UObject/Interface.h"
 
 class UYapCharacterAsset;
 struct FYapPromptHandle;

@@ -2030,7 +2030,7 @@ EVisibility SFlowGraphNode_YapFragmentWidget::Visibility_AudioAssetErrorState(co
 
 FSlateColor SFlowGraphNode_YapFragmentWidget::ColorAndOpacity_AudioIDButton() const
 {
-	FLinearColor Color;
+	FLinearColor Color = YapColor::White;
 
 	switch (GetFragmentAudioErrorLevel())
 	{

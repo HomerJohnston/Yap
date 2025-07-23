@@ -57,8 +57,8 @@ void FYapFragment::PreloadContent(UWorld* World, EYapMaturitySetting MaturitySet
 	ResolveMaturitySetting(World, MaturitySetting);
 
 	// TODO after SpeakerAsset is removed, rename these
-	TSoftObjectPtr<UObject> SpeakerAsset__ = GetCharacterAsset(Speaker, SpeakerHandle, LoadContext);
-	TSoftObjectPtr<UObject> DirectedAtAsset__ = GetCharacterAsset(DirectedAt, DirectedAtHandle, LoadContext);
+	TSoftObjectPtr<const UObject> SpeakerAsset__ = GetCharacterAsset(Speaker, SpeakerHandle, LoadContext);
+	TSoftObjectPtr<const UObject> DirectedAtAsset__ = GetCharacterAsset(DirectedAt, DirectedAtHandle, LoadContext);
 	
 	// TODO I need some way for Yap to act upon the user changing their maturity setting. Broker needs an "OnMaturitySettingChanged" delegate?
 	
@@ -97,7 +97,7 @@ bool FYapFragment::HasSpeakerAssigned()
 	return Speaker.IsValid();
 }
 
-TSoftObjectPtr<UObject> FYapFragment::GetCharacterAsset(const FGameplayTag& CharacterTag, TSharedPtr<FStreamableHandle>& Handle, EYapLoadContext LoadContext) const
+const TSoftObjectPtr<const UObject> FYapFragment::GetCharacterAsset(const FGameplayTag& CharacterTag, TSharedPtr<FStreamableHandle>& Handle, EYapLoadContext LoadContext) const
 {
 	if (!CharacterTag.IsValid())
 	{

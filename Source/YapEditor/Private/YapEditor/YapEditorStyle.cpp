@@ -28,7 +28,9 @@ FYapStyles YapStyles;
 
 /** Loads a TTF from disk */
 #define YAP_LOAD_FONT(NAME, RESOURCE_PATH, SIZE)\
-	YapFonts.NAME = FSlateFontInfo(Yap::FileUtilities::GetResourcesFolder() / RESOURCE_PATH, SIZE);\
+	TSharedRef<FCompositeFont> SourceCompositeFont_##NAME = MakeShared<FStandaloneCompositeFont>();\
+	SourceCompositeFont_##NAME->DefaultTypeface.AppendFont(TEXT("Regular"), Yap::FileUtilities::GetResourcesFolder() / RESOURCE_PATH, EFontHinting::Default, EFontLoadingPolicy::LazyLoad);\
+	YapFonts.NAME = FSlateFontInfo(SourceCompositeFont_##NAME, SIZE);\
 	FSlateFontInfo& NAME = YapFonts.NAME
 
 /** Define a new brush */
@@ -187,7 +189,7 @@ void FYapEditorStyle::Initialize_Internal()
 	YAP_DEFINE_FONT(Font_WarningText,		"Italic",	10);
 	YAP_DEFINE_FONT(Font_CharacterName,		"Bold",		12);
 	YAP_DEFINE_FONT(Font_CharacterTag,		"Italic",	9);
-
+	
 	YAP_LOAD_FONT(Font_OpenSans_Regular, "Fonts/OpenSans-Regular.ttf", 10);
 	YAP_LOAD_FONT(Font_NotoSans_Regular, "Fonts/NotoSans-Regular.ttf", 10);
 	YAP_LOAD_FONT(Font_NotoSans_SemiBold, "Fonts/NotoSans-SemiBold.ttf", 10);

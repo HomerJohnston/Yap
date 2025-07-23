@@ -18,7 +18,7 @@ struct FYapPromptHandle;
 /** Required class for brokering Yap to your game. Create a child class of this and implement the functions as needed. Then set Yap's project settings to use your class.
  *
  * Do ***NOT*** call Super or Parent function implementations when overriding any functions in this class. */
-UCLASS(Abstract, Blueprintable)
+UCLASS(Blueprintable)
 class YAP_API UYapBroker : public UObject
 {
 	GENERATED_BODY()

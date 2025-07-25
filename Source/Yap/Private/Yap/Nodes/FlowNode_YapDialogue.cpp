@@ -1416,7 +1416,12 @@ FString UFlowNode_YapDialogue::GetNodeDescription() const
 
 	if (!HasValidConfig())
 	{
-		return "Invalid config!\nAssign a config in the Yap Node asset -OR- assign a default config in Yap project settings!";
+		if (GetClass() == UFlowNode_YapDialogue::StaticClass())
+		{
+			return "Invalid config!\nYou must assign a default config in Yap project settings.";
+		}
+
+		return "Invalid config!\nYou must assign a config for this node type in the Yap Node asset.";
 	}
 
 	return "";

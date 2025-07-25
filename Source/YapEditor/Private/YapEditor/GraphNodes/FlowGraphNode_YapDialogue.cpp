@@ -15,6 +15,7 @@
 #include "YapEditor/YapDialogueNodeCommands.h"
 #include "YapEditor/YapEditorEventBus.h"
 #include "YapEditor/YapEditorEvents.h"
+#include "YapEditor/YapEditorLog.h"
 #include "YapEditor/YapEditorSubsystem.h"
 #include "YapEditor/YapTransactions.h"
 #include "YapEditor/Globals/YapTagHelpers.h"
@@ -161,76 +162,59 @@ void UFlowGraphNode_YapDialogue::AutoAssignAudioOnAllNodes()
 
 void UFlowGraphNode_YapDialogue::AutoAssignAudioOnAllFragments()
 {
-	FYapTransactions::BeginModify(INVTEXT("TODO"), GetFlowAsset());
+	UFlowAsset* Asset = GetFlowAsset();
 
-	FAssetRegistryModule& AssetRegistryModule = FModuleManager::Get().LoadModuleChecked<FAssetRegistryModule>(TEXT("AssetRegistry"));
-	TArray<FAssetData> DependencyAssetData;
-	IAssetRegistry& AssetRegistry = AssetRegistryModule.Get();
+	FString FlowAssetPath;
+	UPackage* Package;
 	
-	FString RootFolder = "/Game" / GetYapDialogueNode()->GetNodeConfig().Audio.AudioAssetsRootFolder.Path;
-
-	if (RootFolder.IsEmpty())
+	if (Asset)
 	{
-		// TODO log warning
-		return;
-	}
-	
-	TArray<FAssetData> AssetDatas;
-	AssetRegistry.GetAssetsByPath(FName(RootFolder), AssetDatas, true);
+		Package = Asset->GetPackage();
 
-	int32 AudioIDLen = GetYapDialogueNode()->GetAudioID().Len();
-	int32 FragmentIDLen = 3; // TODO magic number move this to project settings or some other constant
-	
-	// Matches AAA-555 and allows for the start or end to be end of string or a non-alphanumeric
-	FRegexPattern Regex(FString::Format(TEXT("(^| |[^a-zA-Z\\d\\s:])[a-zA-Z]{{0}}-\\d{{1}}([^a-zA-Z\\d\\s:]| |$)"), {AudioIDLen, FragmentIDLen} ));
-	
-	// Matches AAA-555 specifically
-	FRegexPattern RegexActual(FString::Format(TEXT("[a-zA-Z]{{0}}-\\d{{1}}"), {AudioIDLen, FragmentIDLen}));
-	
-	TMap<FString, TArray<FAssetData>> AudioAssetData;
-	
-	for (const FAssetData& AssetData : AssetDatas)
-	{
-		FString ObjectPathString = AssetData.GetObjectPathString();
-		
-		FRegexMatcher Matcher(Regex, *ObjectPathString);
-		
-		if (Matcher.FindNext())
+		if (Package)
 		{
-			FRegexMatcher ID(RegexActual, Matcher.GetCaptureGroup(0));
-
-			if (ID.FindNext())
-			{
-				FString AudioID(ID.GetCaptureGroup(0));
-
-				TArray<FAssetData>& Datas = AudioAssetData.FindOrAdd(AudioID);
-				Datas.Add(AssetData);
-			}
+			FlowAssetPath = Package->GetName();
 		}
 	}
+
+	// Yap does not prevent conflicts between audio IDs across the whole project; only within a single Flow asset. Conflicts are segregated by folders for different Flow assets.
+	TMap<FString, TArray<FAssetData>> AudioAssetsByAudioTag;
+	GroupAudioAssetsByTags(AudioAssetsByAudioTag);
+
+	FYapTransactions::BeginModify(INVTEXT("TODO"), GetFlowAsset());
+
+	const FDirectoryPath& FlowAssetsRoot = GetYapDialogueNode()->GetNodeConfig().Audio.FlowAssetsRootFolder;
+
+	FString RootRoot = FlowAssetsRoot.Path;
+
+	UE_LOG(LogTemp, Display, TEXT("%s"), *RootRoot);
+	
+	return;
 	
 	for (uint8 FragmentIndex = 0; FragmentIndex < GetYapDialogueNode()->GetNumFragments(); ++FragmentIndex)
 	{
+		int32 AudioIDLen = GetYapDialogueNode()->GetAudioID().Len();
+		int32 FragmentIDLen = 3; // TODO magic number move this to project settings or some other constant
+	
 		FYapFragment& Fragment = GetYapDialogueNode()->Fragments[FragmentIndex];
 
 		FNumberFormattingOptions Args;
 		Args.UseGrouping = false;
 		Args.MinimumIntegralDigits = 3; // TODO magic number move this to project settings or some other constant
 		
-		FString AudioID = GetYapDialogueNode()->GetAudioID() + "-" + (FText::AsNumber(FragmentIndex, &Args)).ToString();
+		FString AudioID = GetYapDialogueNode()->GetAudioID() + "-" + (FText::AsNumber(FragmentIndex, &Args)).ToString(); // TODO build some way for users to define their own sequencing. Maybe move this to a default in the Broker?
 
-		TArray<FAssetData>* Datas = AudioAssetData.Find(AudioID);
+		TArray<FAssetData>* CandidateAudioAssets = AudioAssetsByAudioTag.Find(AudioID);
 
-		if (Datas)
+		if (CandidateAudioAssets)
 		{
-			UE_LOG(LogYap, Display, TEXT("Assigning X"));
-
 			bool bAssignedMature = false;
 			bool bAssignedChildSafe = false;
-			
-			for (const FAssetData& Data : *Datas)
+
+			// All of these assets have the correct audio ID. We need to find ones that are in the correct subfolder for this dialogue node.
+			for (const FAssetData& Data : *CandidateAudioAssets)
 			{
-				FRegexPattern ChildSafe(FString::Format(TEXT("[a-zA-Z]{{0}}-\\d{{1}}-PG"), {AudioIDLen, FragmentIDLen}));
+				FRegexPattern ChildSafe(FString::Format(TEXT("[a-zA-Z]{{0}}-\\d{{1}}-Safe"), {AudioIDLen, FragmentIDLen})); // TODO documentation and configurable suffixes for child safe stuff or for mature stuff
 				FRegexMatcher ChildSafeMatch(ChildSafe, Data.GetObjectPathString());
 
 				if (ChildSafeMatch.FindNext())
@@ -363,6 +347,64 @@ TArray<FGameplayTag> UFlowGraphNode_YapDialogue::GatherAllGameplayTags()
 	}
 
 	return GameplayTags;
+}
+
+void UFlowGraphNode_YapDialogue::GatherAllAudioAssets(TArray<FAssetData>& AllAudioAssets)
+{
+	FAssetRegistryModule& AssetRegistryModule = FModuleManager::Get().LoadModuleChecked<FAssetRegistryModule>(TEXT("AssetRegistry"));
+	IAssetRegistry& AssetRegistry = AssetRegistryModule.Get();
+
+	// Discover all audio assets 
+	const UYapNodeConfig& Config = GetYapDialogueNode()->GetNodeConfig();
+
+	const FDirectoryPath& FlowAssetsRoot = Config.GetFlowAssetsRootFolder();
+	
+	const TArray<TSoftClassPtr<UObject>>& AudioAssetClasses = UYapProjectSettings::GetAudioAssetClasses();
+	TArray<FTopLevelAssetPath> AudioAssetClassPaths;
+
+	auto AlgoTransform = [] (const TSoftClassPtr<UObject>& Obj) { return Obj->GetClassPathName(); };
+	Algo::Transform(AudioAssetClasses, AudioAssetClassPaths, AlgoTransform);
+	
+	FARFilter Filter;
+	Filter.ClassPaths = AudioAssetClassPaths;
+
+	AssetRegistry.GetAssets(Filter, AllAudioAssets, true);
+}
+
+void UFlowGraphNode_YapDialogue::GroupAudioAssetsByTags(TMap<FString, TArray<FAssetData>>& AudioAssetsByAudioTag)
+{
+	TArray<FAssetData> AllAudioAssets;
+	
+	GatherAllAudioAssets(AllAudioAssets);
+	
+	int32 AudioIDLen = GetYapDialogueNode()->GetAudioID().Len();
+	int32 FragmentIDLen = 3; // TODO magic number move this to project settings or some other constant
+	
+	// Matches AAA-555, and allows for the start or end to be 'end of string' or a 'non-alphanumeric' character
+	const FRegexPattern Regex(FString::Format(TEXT("(^| |[^a-zA-Z\\d\\s:])[a-zA-Z]{{0}}-\\d{{1}}([^a-zA-Z\\d\\s:]| |$)"), {AudioIDLen, FragmentIDLen} ));
+	
+	// Matches AAA-555 specifically
+	const FRegexPattern RegexActual(FString::Format(TEXT("[a-zA-Z]{{0}}-\\d{{1}}"), {AudioIDLen, FragmentIDLen}));
+	
+	for (const FAssetData& AssetData : AllAudioAssets)
+	{
+		FString ObjectPathString = AssetData.GetObjectPathString();
+		
+		FRegexMatcher Matcher(Regex, *ObjectPathString);
+		
+		if (Matcher.FindNext())
+		{
+			FRegexMatcher ID(RegexActual, Matcher.GetCaptureGroup(0));
+
+			if (ID.FindNext())
+			{
+				FString AudioID(ID.GetCaptureGroup(0));
+
+				TArray<FAssetData>& AudioAssetsWithTag = AudioAssetsByAudioTag.FindOrAdd(AudioID);
+				AudioAssetsWithTag.Add(AssetData);
+			}
+		}
+	}
 }
 
 #undef LOCTEXT_NAMESPACE

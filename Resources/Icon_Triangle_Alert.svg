@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   id="glyphicons-halflings"
+   viewBox="0 0 20 20"
+   version="1.1"
+   sodipodi:docname="Icon_Triangle_Alert.svg"
+   inkscape:version="1.4 (86a8ad7, 2024-10-11)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1" />
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#505050"
+     bordercolor="#eeeeee"
+     borderopacity="1"
+     inkscape:showpageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#505050"
+     inkscape:zoom="33.481506"
+     inkscape:cx="15.665365"
+     inkscape:cy="18.398217"
+     inkscape:window-width="5120"
+     inkscape:window-height="2089"
+     inkscape:window-x="1192"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="glyphicons-halflings" />
+  <path
+     id="triangle-alert"
+     d="M 19.756715,16.216191 11.423578,1.9806776 a 1.6669608,1.7335216 0 0 0 -2.8471556,0 L 0.2432852,16.216191 a 1.6665608,1.7331056 0 0 0 1.4235776,2.634737 H 18.333137 a 1.6665608,1.7331056 0 0 0 1.423578,-2.634737 z m -8.64563,-0.326103 a 0.55554248,0.57772496 0 0 1 -0.555543,0.577725 H 9.4444575 A 0.55554248,0.57772496 0 0 1 8.888915,15.890088 v -1.15545 a 0.55554248,0.57772496 0 0 1 0.5555425,-0.577725 h 1.1110845 a 0.55554248,0.57772496 0 0 1 0.555543,0.577725 z m 0,-5.199525 -0.29296,1.828245 a 0.55564248,0.57782896 0 0 1 -0.54802,0.482655 H 9.7298952 A 0.55564248,0.57782896 0 0 1 9.1818748,12.518808 L 8.888915,10.690563 V 6.6464884 a 0.55554248,0.57772496 0 0 1 0.5555425,-0.577725 h 1.1110845 a 0.55554248,0.57772496 0 0 1 0.555543,0.577725 z"
+     style="stroke-width:1.13305;fill:#ffffff;fill-opacity:1" />
+</svg>

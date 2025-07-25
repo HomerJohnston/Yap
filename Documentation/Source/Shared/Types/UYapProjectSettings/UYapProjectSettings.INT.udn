@@ -1,11 +1,4 @@
 Availability:NoPublish
 Title:UYapProjectSettings
 Crumbs:
-Description: Enum describing the type of blending curve to use for an FAlphaBlend
-
-[EXCERPT:BrokerClass]
-
-Blend using a linear curve.
-
-![](Cubic_Ease_In_Out.png)
-[/EXCERPT:BrokerClass]
+Description: 

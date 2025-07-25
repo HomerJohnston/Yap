@@ -59,6 +59,11 @@ public:
 	void DestroyNode() override;
 
 	TArray<FGameplayTag> GatherAllGameplayTags();
+
+protected:
+	void GatherAllAudioAssets(TArray<FAssetData>& AllAudioAssets);
+
+	void GroupAudioAssetsByTags(TMap<FString, TArray<FAssetData>>& AudioAssetsByAudioTag);
 };
 
 #undef LOCTEXT_NAMESPACE

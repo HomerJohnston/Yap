@@ -72,11 +72,12 @@ void FPropertyCustomization_YapNodeConfigGroup_MoodTags::CustomizeChildren(TShar
 			.Padding(0, VerticalPadding)
 			[
 				SNew(SButton)
+				.Visibility(EVisibility::Collapsed)
 				.IsEnabled(this, &FPropertyCustomization_YapNodeConfigGroup_MoodTags::IsTagPropertySet, MoodTagsRootProperty)
 				.OnClicked(this, &FPropertyCustomization_YapNodeConfigGroup_MoodTags::OnClicked_ResetDefaultMoodTags, MoodTagsRootProperty)
 				.VAlign(VAlign_Center)
 				.HAlign(HAlign_Center)
-				.Text(LOCTEXT("ResetMoodTags_Button", "Reset to defaults..."))
+				.Text(LOCTEXT("ResetMoodTags_Button", "Add default moods..."))
 				.ToolTipText(this, &FPropertyCustomization_YapNodeConfigGroup_MoodTags::ToolTipText_DefaultMoodTags)
 			]
 			+ SVerticalBox::Slot()

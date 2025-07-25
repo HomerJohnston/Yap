@@ -120,7 +120,11 @@ const UYapNodeConfig& Yap::GetConfigUsingMoodRoot(const FGameplayTag& Root)
 
 FGameplayTagContainer Yap::GetAllMoodTags()
 {
-    FGameplayTagContainer Roots = GetMoodTagRoots();
+    return GetAllMoodTagsUnder(GetMoodTagRoots());
+}
+
+FGameplayTagContainer Yap::GetAllMoodTagsUnder(const FGameplayTagContainer& Roots)
+{
 
     FGameplayTagContainer AllMoodTags;
 	

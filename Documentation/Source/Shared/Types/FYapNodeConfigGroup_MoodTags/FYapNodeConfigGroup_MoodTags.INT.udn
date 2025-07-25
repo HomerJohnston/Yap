@@ -1,0 +1,30 @@
+Availability:NoPublish
+Title:FYapNodeConfigGroup_MoodTags
+Crumbs:
+Description: Settings for a node type
+
+[EXCERPT:EditorIconsPath]
+Supports .svg or .png image types. Yap displays these at 16x16 and 24x24 px.
+
+Filenames should exactly match full gameplay tag names.
+
+The path starts from the project root (the folder containing your .uproject file).
+---
+
+**Example**
+
+**If you would like your mood icons to be organized like this:**
+
+- X:/Project/ProjectName.uproject
+- X:/Project/Resources/Yap/MoodIcons/Common/Yap.Mood.Common.Calm.svg
+- X:/Project/Resources/Yap/MoodIcons/Common/Yap.Mood.Common.Angry.svg
+
+**Then you would want to change this setting to this:**
+
+- Resources/Yap/MoodIcons/Common
+
+---
+
+**By default, Yap will search here for mood icons:**
+- Resources/DefaultMoodIcons
+[/EXCERPT:EditorIconsPath]

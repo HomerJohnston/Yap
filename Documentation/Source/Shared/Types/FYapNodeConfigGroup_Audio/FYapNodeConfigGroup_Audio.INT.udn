@@ -1,0 +1,39 @@
+Availability:NoPublish
+Title:FYapNodeConfigGroup_Audio
+Crumbs:
+Description: Settings for a node type
+
+[EXCERPT:FlowAssetsRootFolder]
+The Flow Root Folder is used for path matching of audio assets to flow assets.
+
+Asset paths must contain the flow asset path, everything after the Flow Root Folder.
+
+Asset filenames must contain the audio tag shown in the flow graph.
+---
+
+**Example**
+
+**If your Flows Root Folder is set to:**
+- Content/Flows/
+
+**And you have a flow asset containing dialogue like this:**
+- Content/Flows/E1L1/WallyStore.uasset
+
+**Then the difference between the above is:**
+- E1L1/WallyStore
+
+**With an audio ID 'ABC-001' any of the following would match:**
+
+- Content/DialogueAudio/E1L1/WallyStore/Wally_ABC-001_WhatsYourName.uasset
+- Content/Audio/Dialogue/E1L1/WallyStore/ABC-001_Wally_WhatsYourName.uasset
+- Content/Audio/Dialogue/E1L1/WallyStore/Wally/ABC-001.uasset
+
+**Because they all contain E1L1/WallyStore and they all contain ABC-001.**
+
+---
+
+Yap will discover that this asset matches the audio tag 'ABC-001' and it contains 'E1L1\WallyStore' in the path. It will apply it and stop searching for any other matches.
+
+If the Flow Root is unset, it will start from the project 'Content' folder.
+
+[/EXCERPT:FlowAssetsRootFolder]

@@ -84,6 +84,7 @@ ISlateStyle& FYapEditorStyle::Get()
 
 FYapEditorStyle::FYapEditorStyle()
 {
+	
 }
 
 FYapEditorStyle::~FYapEditorStyle()
@@ -189,6 +190,7 @@ void FYapEditorStyle::Initialize_Internal()
 	YAP_DEFINE_FONT(Font_WarningText,		"Italic",	10);
 	YAP_DEFINE_FONT(Font_CharacterName,		"Bold",		12);
 	YAP_DEFINE_FONT(Font_CharacterTag,		"Italic",	9);
+	YAP_DEFINE_FONT(Font_CharacterMoodRootHeading,		"Bold",	10);
 	
 	YAP_LOAD_FONT(Font_OpenSans_Regular, "Fonts/OpenSans-Regular.ttf", 10);
 	YAP_LOAD_FONT(Font_NotoSans_Regular, "Fonts/NotoSans-Regular.ttf", 10);
@@ -201,7 +203,7 @@ void FYapEditorStyle::Initialize_Internal()
 	// BRUSHES
 	// ============================================================================================
 	YAP_DEFINE_BRUSH(FSlateImageBrush,			Icon_AudioTime,					"DialogueNodeIcons/AudioTime", ".png",	FVector2f(16, 16));
-	YAP_DEFINE_BRUSH(FSlateImageBrush,			Icon_PlaybackTimeHandle,		"Icon_PlaybackTimeHandle", ".png",	FVector2f(3, 5));
+	YAP_DEFINE_BRUSH(FSlateImageBrush,			Icon_PlaybackTimeHandle,		"Icon_PlaybackTimeHandle", ".png",	FVector2f(5, 7));
 	YAP_DEFINE_BRUSH(FSlateVectorImageBrush,	Icon_Baby,						"Icon_Baby", ".svg",					FVector2f(16, 16));
 	YAP_DEFINE_BRUSH(FSlateVectorImageBrush,	Icon_MoodTag_Missing,			"Icon_MoodTag_Missing", ".svg",			FVector2f(16, 16));
 	YAP_DEFINE_BRUSH(FSlateImageBrush,			Icon_Delete,					"Icon_Delete", ".png",					FVector2f(16, 16));
@@ -234,6 +236,7 @@ void FYapEditorStyle::Initialize_Internal()
 	YAP_DEFINE_BRUSH(FSlateBoxBrush,			Icon_IDTag,						"Icon_IDTag", ".png",					FMargin(0.5, 0.5, 0.0, 0.0));
 	
 	YAP_DEFINE_BRUSH(FSlateVectorImageBrush,	Icon_Random,					"Icon_Random", ".svg",					FVector2f(32, 32));
+	YAP_DEFINE_BRUSH(FSlateVectorImageBrush,	Icon_Circle_Alert,				"Icon_Circle_Alert", ".svg",			FVector2f(16, 16));
 
 	YAP_DEFINE_BRUSH(FSlateImageBrush,			Bar_NormalPadding,				"Bar_NormalPadding", ".png",			FVector2f(5, 5), FLinearColor::White, ESlateBrushTileType::Horizontal);
 	YAP_DEFINE_BRUSH(FSlateImageBrush,			Bar_NegativePadding,			"Bar_NegativePadding", ".png",			FVector2f(5, 5), FLinearColor::White, ESlateBrushTileType::Horizontal);

@@ -45,6 +45,24 @@ FDetailCustomization_YapCharacter::~FDetailCustomization_YapCharacter()
 	}
 }
 
+FText FDetailCustomization_YapCharacter::Text_MoodTag(FGameplayTag MoodRoot, FGameplayTag MoodTag) const
+{
+	const TWeakObjectPtr<const UYapNodeConfig>* Config = NodeConfigs.Find(MoodRoot);
+	
+	if (!Config)
+	{
+		return LOCTEXT("MoodTagIcon_MissingConfigError", "Error: Missing config");
+	}
+
+	if (MissingMoodTagIcons.Contains(MoodTag))
+	{
+		return FText::Format(LOCTEXT("MoodTagIcon_MissingIconResource", "Could not find icon: {0}"), FText::FromString((*Config)->GetMoodTagIconPath(MoodTag, "png (or svg)")));
+	}
+
+	
+	return FText::GetEmpty();	
+}
+
 void FDetailCustomization_YapCharacter::CustomizeDetails(IDetailLayoutBuilder& InDetailBuilder)
 {
 	if (!CacheEditedCharacterAsset(InDetailBuilder))
@@ -83,7 +101,7 @@ void FDetailCustomization_YapCharacter::CustomizeDetails(IDetailLayoutBuilder& I
 
 		if (MoodRoot.IsValid())
 		{
-			ListHeading = FText::FromName(ListKeyName);
+			ListHeading = FText::Format(LOCTEXT("MoodTagCategory_Header", "{0}"), FText::FromName(ListKeyName));// FText::FromName(ListKeyName);
 		}
 		else
 		{
@@ -91,11 +109,31 @@ void FDetailCustomization_YapCharacter::CustomizeDetails(IDetailLayoutBuilder& I
 		}
 		
 		IDetailGroup& Grp = PortraitsCategory.AddGroup(ListKeyName, ListHeading, false, true);
-		
+
+		FDetailWidgetRow& GrpHeader = Grp.HeaderRow()
+		[
+			SNew(SOverlay)
+			+ SOverlay::Slot()
+			[
+				SNew(SColorBlock)
+				.Color(YapColor::Noir_Trans)
+			]
+			+ SOverlay::Slot()
+			.VAlign(EVerticalAlignment::VAlign_Center)
+			.Padding(8)
+			[
+				SNew(STextBlock)
+				.Text(ListHeading)
+				.Font(YapFonts.Font_CharacterMoodRootHeading)
+			]
+		];
+				
 		TSharedPtr<IPropertyHandle> MoodMap = ListElement->GetChildHandle(0); // FYapPortraitList only has one property, a map
 		TSharedPtr<IPropertyHandleMap> MoodMapAsMap = MoodMap->AsMap();
 
 		const UYapNodeConfig& Config = Yap::GetConfigUsingMoodRoot(MoodRoot);
+
+		NodeConfigs.Add(MoodRoot, &Config);
 		
 		uint32 NumMoods;
 		MoodMapAsMap->GetNumElements(NumMoods);
@@ -113,32 +151,27 @@ void FDetailCustomization_YapCharacter::CustomizeDetails(IDetailLayoutBuilder& I
 
 			FGameplayTag MoodTag = FGameplayTag::RequestGameplayTag(MoodName, false);
 
-			const FSlateBrush* Brush = Config.GetMoodTagBrush(MoodTag);
-
-			if (!Brush)
-			{
-				Brush = FAppStyle::GetBrush("Icons.WarningWithColor");
-			}
-			
 			TSharedPtr<SWidget> NameContentWidget = nullptr;
 
 			if (MoodTag.IsValid())
 			{
-				NameContentWidget =SNew(SHorizontalBox)
+				NameContentWidget = SNew(SHorizontalBox)
 				+ SHorizontalBox::Slot()
 				.AutoWidth()
 				.Padding(0, 0, 8, 0)
 				[
 					SNew(SImage)
-					.Image(Brush)
+					.Image(this, &FDetailCustomization_YapCharacter::Image_MoodTag, MoodRoot, MoodTag)
+					.ToolTipText(this, &FDetailCustomization_YapCharacter::Text_MoodTag, MoodRoot, MoodTag)
+					.ColorAndOpacity(YapColor::White)
 					.DesiredSizeOverride(FVector2d(24, 24))
 				]
 				+ SHorizontalBox::Slot()
 				.VAlign(VAlign_Center)
 				[
 					SNew(STextBlock)
-					.Font(InDetailBuilder.GetDetailFont())
 					.Text(FText::FromName(Yap::Tags::GetLeafOfTag(MoodTag)))
+					.Font(YapFonts.Font_CharacterMoodRootHeading)
 				];
 			}
 			else
@@ -146,7 +179,7 @@ void FDetailCustomization_YapCharacter::CustomizeDetails(IDetailLayoutBuilder& I
 				NameContentWidget = SNew(STextBlock)
 				.Font(InDetailBuilder.GetDetailFont())
 				.Text(FText::Format(LOCTEXT("InvalidMoodTag", "INVALID: {0}"), FText::FromName(MoodName)))
-				.ColorAndOpacity(YapColor::OrangeRed);
+				.ColorAndOpacity(YapColor::Orange);
 			}
 			
 			Grp.AddWidgetRow()
@@ -164,7 +197,7 @@ void FDetailCustomization_YapCharacter::CustomizeDetails(IDetailLayoutBuilder& I
 	AddBottomControls(PortraitsCategory);
 	
 	// TEMP
-	PortraitsCategory.AddProperty(GET_MEMBER_NAME_CHECKED(UYapCharacterAsset, PortraitsMap));
+	//PortraitsCategory.AddProperty(GET_MEMBER_NAME_CHECKED(UYapCharacterAsset, PortraitsMap));
 }
 
 void FDetailCustomization_YapCharacter::CustomizeDetails(const TSharedPtr<IDetailLayoutBuilder>& InDetailBuilder)
@@ -187,7 +220,14 @@ FText FDetailCustomization_YapCharacter::Text_PortraitsListHint() const
 {
 	if (CharacterBeingCustomized.IsValid())
 	{
-		FGameplayTagContainer MoodTags = Yap::GetAllMoodTags();
+		FGameplayTagContainer MoodTagRoots = Yap::GetMoodTagRoots();
+
+		if (MoodTagRoots.Num() == 0)
+		{
+			return LOCTEXT("CharacterPortraits_MoodTagRootsEmpty_Info_1", "To enable mood portraits, create a Yap Node Config asset and set a root mood tag in it.");
+		}
+		
+		FGameplayTagContainer MoodTags = Yap::GetAllMoodTagsUnder(MoodTagRoots);
 		
 		if (MoodTags.Num() == 0)
 		{
@@ -195,7 +235,7 @@ FText FDetailCustomization_YapCharacter::Text_PortraitsListHint() const
 		}
 		else
 		{
-			return FText::Format(LOCTEXT("CharacterPortraits_MoodTags_Info_1", "Project has {0} mood tags. "), MoodTags.Num());
+			return FText::GetEmpty();
 		}
 	}
 
@@ -755,6 +795,7 @@ void FDetailCustomization_YapCharacter::AddBottomControls(IDetailCategoryBuilder
 		[
 			SNew(SBox)
 			.IsEnabled_Lambda( [this] () { return GetHasObsoleteData() ? false : true; } )
+			.Visibility_Lambda( [this] () { return Yap::GetMoodTagRoots().Num() > 0 ? EVisibility::Visible : EVisibility::Collapsed; })
 			[
 				SNew(SHorizontalBox)
 				+ SHorizontalBox::Slot()
@@ -803,17 +844,9 @@ void FDetailCustomization_YapCharacter::AddBottomControls(IDetailCategoryBuilder
 				.Padding(4)
 				[
 					SNew(SYapHyperlink)
-					.Text(LOCTEXT("CharacterPortraits_OpenProjectSettings", "Edit Mood Tags (Filtered)"))
+					.Visibility_Lambda( [this] () { return Yap::GetMoodTagRoots().Num() > 0 ? EVisibility::Visible : EVisibility::Collapsed; })
+					.Text(LOCTEXT("CharacterPortraits_OpenProjectSettings", "Edit Mood Tags"))
 					.OnNavigate_Lambda( [] () {Yap::EditorFuncs::OpenGameplayTagsEditor(Yap::GetMoodTagRoots()); } )
-				]
-				+ SVerticalBox::Slot()
-				.AutoHeight()
-				.HAlign(HAlign_Center)
-				.Padding(4)
-				[
-					SNew(SYapHyperlink)
-					.Text(LOCTEXT("CharacterPortraits_OpenProjectSettings", "Edit Mood Tags (All)"))
-					.OnNavigate_Lambda( [] () {Yap::EditorFuncs::OpenGameplayTagsEditor(); } )
 				]
 			]
 		]
@@ -828,6 +861,26 @@ void FDetailCustomization_YapCharacter::PostUndo(bool bSuccess)
 void FDetailCustomization_YapCharacter::PostRedo(bool bSuccess)
 {
 	RefreshDetails();
+}
+
+const FSlateBrush* FDetailCustomization_YapCharacter::Image_MoodTag(FGameplayTag MoodRoot, FGameplayTag MoodTag) const
+{
+	const TWeakObjectPtr<const UYapNodeConfig>* Config = NodeConfigs.Find(MoodRoot);
+
+	if (Config)
+	{
+		const FSlateBrush* Brush = (*Config)->GetMoodTagBrush(MoodTag);
+
+		if (Brush)
+		{
+			return Brush;
+		}
+	}
+
+	FDetailCustomization_YapCharacter* MutableThis = const_cast<FDetailCustomization_YapCharacter*>(this);
+	MutableThis->MissingMoodTagIcons.Add(MoodTag);
+	
+	return FYapEditorStyle::GetImageBrush(YapBrushes.Icon_Circle_Alert);
 }
 
 #undef LOCTEXT_NAMESPACE

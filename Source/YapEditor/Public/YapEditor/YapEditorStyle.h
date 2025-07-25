@@ -58,6 +58,7 @@ struct FYapBrushes
 	FName Icon_PlaybackTimeHandle;
 	
 	FName Icon_Random;
+	FName Icon_Circle_Alert;
 
 	FName Bar_NormalPadding;
 	FName Bar_NegativePadding;
@@ -159,6 +160,7 @@ struct FYapFonts
 	FSlateFontInfo Font_WarningText;
 	FSlateFontInfo Font_CharacterName;
 	FSlateFontInfo Font_CharacterTag;
+	FSlateFontInfo Font_CharacterMoodRootHeading;
 
 	FSlateFontInfo Font_OpenSans_Regular;
 	FSlateFontInfo Font_NotoSans_Regular;

@@ -9,6 +9,11 @@
 
 #define LOCTEXT_NAMESPACE "YapEditor"
 
+#if WITH_EDITOR
+TMap<FGameplayTag, TUniquePtr<FSlateImageBrush>> UYapNodeConfig::MoodTagIconBrushes;
+TUniquePtr<FSlateImageBrush> UYapNodeConfig::NullMoodTagIconBrush;
+#endif
+
 FYapNodeConfigGroup_FlowGraphSettings::FYapNodeConfigGroup_FlowGraphSettings()
 {
 }
@@ -25,6 +30,17 @@ UYapNodeConfig::UYapNodeConfig()
     General.AllowableNodeTypes = static_cast<int32>(EYapDialogueNodeType::COUNT) - 1;
 
     AddGameplayTagFilter(GET_MEMBER_NAME_CHECKED(ThisClass, MoodTags.DefaultMoodTag), FGameplayTagFilterDelegate::CreateUObject(this, &ThisClass::GetMoodTagsRoot));
+
+#if WITH_EDITOR
+    if (IsTemplate())
+    {
+        const static FString ResourcesFolder = Yap::FileUtilities::GetResourcesFolder();
+
+        const FString Result = ResourcesFolder / "DefaultMoodIcons/NullMoodIcon.svg";
+
+        NullMoodTagIconBrush = MakeUnique<FSlateVectorImageBrush>(Result, FVector2f(16, 16), FLinearColor::White);
+    }
+#endif
 }
 
 #if WITH_EDITOR
@@ -55,75 +71,83 @@ void UYapNodeConfig::RebuildMoodTagIcons()
 void UYapNodeConfig::BuildIcon(const FGameplayTag& MoodTag)
 {
     TSharedPtr<FSlateImageBrush> ImageBrush = nullptr;
-	
-    // Attempt to load SVG
-    FString IconPath = GetMoodTagIconPath(MoodTag, "svg");
-    ImageBrush = MakeShared<FSlateVectorImageBrush>(IconPath, FVector2f(16, 16), FLinearColor::White);
 
-    // Attempt to load PNG
-    if (!ImageBrush)
     {
-        IconPath = GetMoodTagIconPath(MoodTag, "png");
-        ImageBrush = MakeShared<FSlateImageBrush>(IconPath, FVector2f(16, 16), FLinearColor::White);
+        FString IconPath = GetMoodTagIconPath(MoodTag, "svg");
+    
+        if (FPaths::FileExists(IconPath))
+        {
+            UE_LOG(LogYap, Display, TEXT("Loading Mood Tag Icon: %s"), *IconPath);
+
+            MoodTagIconBrushes.Add(MoodTag, MakeUnique<FSlateVectorImageBrush>(IconPath, FVector2f(16, 16), FLinearColor::White));
+            return;
+        }
     }
-	
-    // Found nothing
-    if (!ImageBrush)
+    
     {
-        return;
+        FString IconPath = GetMoodTagIconPath(MoodTag, "png");
+        
+        if (FPaths::FileExists(IconPath))
+        {
+            UE_LOG(LogYap, Display, TEXT("Loading Mood Tag Icon: %s"), *IconPath);
+
+            MoodTagIconBrushes.Add(MoodTag, MakeUnique<FSlateImageBrush>(IconPath, FVector2f(16, 16), FLinearColor::White));
+            return;
+        }
     }
 
-    MoodTagIconBrushes.Add(MoodTag, ImageBrush);
+    UE_LOG(LogYap, Warning, TEXT("Could not find image file for mood icon: %s"), *MoodTag.ToString());
 }
 #endif
 
 #if WITH_EDITOR
-FString UYapNodeConfig::GetMoodTagIconPath(FGameplayTag Key, FString FileExtension)
+FString UYapNodeConfig::GetMoodTagIconPath(FGameplayTag Key, FString FileExtension) const
 {
-    /*
-    FString KeyString = (Key.IsValid()) ?  Key.ToString() : "None";
-    
-    int32 Index;
-
-    if (KeyString.FindLastChar('.', Index))
-    {
-        KeyString = KeyString.RightChop(Index + 1);
-    }
-    */
-
     FString KeyString = (Key.IsValid()) ?  Key.ToString() : "None";
     
     if (MoodTags.EditorIconsPath.Path == "")
     {
-        static FString ResourcesDir = Yap::FileUtilities::GetPluginFolder();
-		
-        return Yap::FileUtilities::GetResourcesFolder() / FString::Format(TEXT("DefaultMoodIcons/{0}.{1}"), { KeyString, FileExtension });
+        const static FString ResourcesDir = Yap::FileUtilities::GetPluginFolder();
+
+        const static FString ResourcesFolder = Yap::FileUtilities::GetResourcesFolder();
+
+        const FString Result = ResourcesFolder / FString::Format(TEXT("DefaultMoodIcons/{0}.{1}"), { KeyString, FileExtension });
+
+        return Result;
     }
 
-    return FPaths::ProjectDir() / FString::Format(TEXT("{0}/{1}.{2}}"), { MoodTags.EditorIconsPath.Path, KeyString, FileExtension });
+    const static FString ProjectDir = FPaths::ProjectDir();
+
+    const FString Result = ProjectDir / FString::Format(TEXT("{0}/{1}.{2}"), { MoodTags.EditorIconsPath.Path, KeyString, FileExtension }); 
+
+    bool bExists = FPaths::FileExists(Result);
+    
+    return Result;
 }
 #endif
 
 #if WITH_EDITOR
-TSharedPtr<FSlateImageBrush> UYapNodeConfig::GetMoodTagIcon(FGameplayTag MoodTag) const
+FSlateImageBrush* UYapNodeConfig::GetMoodTagIcon(FGameplayTag MoodTag) const
 {
-    const TSharedPtr<FSlateImageBrush>* Brush = MoodTagIconBrushes.Find(MoodTag);
+    
 
-    if (Brush)
+    if (const TUniquePtr<FSlateImageBrush>* Brush = MoodTagIconBrushes.Find(MoodTag))
     {
-        return *Brush;
+        FSlateImageBrush* Ptr = Brush->Get();
+        
+        return Ptr;
     }
 
-    return nullptr;
+    return NullMoodTagIconBrush.Get();
 }
 #endif
 
 #if WITH_EDITOR
 const FSlateBrush* UYapNodeConfig::GetMoodTagBrush(FGameplayTag Name) const
 {
-    const TSharedPtr<FSlateImageBrush>* Brush = MoodTagIconBrushes.Find(Name);
+    const TUniquePtr<FSlateImageBrush>* Brush = MoodTagIconBrushes.Find(Name);
 
-    return Brush ? Brush->Get() : nullptr; //FYapEditorStyle::GetImageBrush(YapBrushes.Icon_MoodTag_Missing);
+    return Brush ? Brush->Get() : NullMoodTagIconBrush.Get();
 }
 #endif
 

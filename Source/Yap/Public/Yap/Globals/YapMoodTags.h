@@ -17,6 +17,8 @@ namespace Yap
     YAP_API const UYapNodeConfig& GetConfigUsingMoodRoot(const FGameplayTag& Root);
     
     YAP_API FGameplayTagContainer GetAllMoodTags();
+    
+    YAP_API FGameplayTagContainer GetAllMoodTagsUnder(const FGameplayTagContainer& Roots);
 
     YAP_API FGameplayTagContainer GetAllMoodTagsUnder(const FGameplayTag& Root);
 }

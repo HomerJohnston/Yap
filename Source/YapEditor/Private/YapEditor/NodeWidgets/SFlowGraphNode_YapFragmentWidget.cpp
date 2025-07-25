@@ -2760,7 +2760,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateMoodTagMenuEntryWidg
 	TSharedPtr<SImage> PortraitIconImage;
 		
 	//TSharedPtr<FSlateImageBrush> MoodTagBrush = GEditor->GetEditorSubsystem<UYapEditorSubsystem>()->GetMoodTagIcon(MoodTag);
-	TSharedPtr<FSlateImageBrush> MoodTagBrush = GetDialogueNode()->GetNodeConfig().GetMoodTagIcon(MoodTag);
+	FSlateImageBrush* MoodTagBrush = GetDialogueNode()->GetNodeConfig().GetMoodTagIcon(MoodTag);
 	
 	if (MoodTag.IsValid())
 	{
@@ -2772,7 +2772,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateMoodTagMenuEntryWidg
 		[
 			SAssignNew(PortraitIconImage, SImage)
 			.ColorAndOpacity(FSlateColor::UseForeground())
-			.Image(MoodTagBrush.Get())
+			.Image(MoodTagBrush)
 		];
 	}
 
@@ -2817,7 +2817,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateMoodTagMenuEntryWidg
 		[
 			SAssignNew(PortraitIconImage, SImage)
 			.ColorAndOpacity(FSlateColor::UseForeground())
-			.Image(MoodTagBrush.Get())
+			.Image(MoodTagBrush)
 		]
 	];
 }

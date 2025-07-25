@@ -6,6 +6,7 @@
 #include "GameplayTagContainer.h"
 #include "IDetailCustomization.h"
 
+class UYapNodeConfig;
 class UFlowNode_YapDialogue;
 class UYapCharacterAsset;
 struct FGameplayTag;
@@ -25,12 +26,17 @@ public:
 private:
 	TWeakObjectPtr<UYapCharacterAsset> CharacterBeingCustomized;
 
+	TMap<FGameplayTag, TWeakObjectPtr<const UYapNodeConfig>> NodeConfigs;
+
+	TSet<FGameplayTag> MissingMoodTagIcons;
+	
 public:
 	static TSharedRef<IDetailCustomization> MakeInstance()
 	{
 		return MakeShareable(new FDetailCustomization_YapCharacter());
 	}
-	
+
+	FText Text_MoodTag(FGameplayTag MoodRoot, FGameplayTag MoodTag) const;
 	virtual void CustomizeDetails(IDetailLayoutBuilder& InDetailBuilder) override;
 	void CustomizeDetails(const TSharedPtr<IDetailLayoutBuilder>& InDetailBuilder) override;
 	
@@ -77,6 +83,8 @@ public:
 	void PostUndo(bool bSuccess) override;
 
 	void PostRedo(bool bSuccess) override;
+
+	const FSlateBrush* Image_MoodTag(FGameplayTag MoodRoot, FGameplayTag MoodTag) const;
 };
 
 #undef LOCTEXT_NAMESPACE

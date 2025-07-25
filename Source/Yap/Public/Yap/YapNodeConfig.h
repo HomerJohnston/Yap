@@ -80,12 +80,8 @@ struct FYapNodeConfigGroup_Audio
 	bool bDisableAudio = false;
 	
 #if WITH_EDITORONLY_DATA
-	/** Where to look for audio assets when auto-assigning audio to dialogue. */
-	UPROPERTY(EditAnywhere, meta = (EditCondition = "!bDisableAudio", EditConditionHides))
-	FDirectoryPath AudioAssetsRootFolder;
-	
-	/** Where to look for flow assets when auto-assigning audio to dialogue. */
-	UPROPERTY(EditAnywhere, meta = (EditCondition = "!bDisableAudio", EditConditionHides))
+	/** Highest folder containing flow assets when auto-assigning audio to dialogue. Expand for more info...*/
+	UPROPERTY(EditAnywhere, DisplayName = "Flows Root Folder",  meta = (EditCondition = "!bDisableAudio", EditConditionHides))
 	FDirectoryPath FlowAssetsRootFolder;
 #endif
 
@@ -258,7 +254,7 @@ struct FYapNodeConfigGroup_MoodTags
 	FGameplayTag DefaultMoodTag;
 
 #if WITH_EDITORONLY_DATA
-	/** Where to look for mood icons. If unspecified, will use the default "Plugins/FlowYap/Resources/MoodTags" folder. */
+	/** Where to look for editor-only mood tag icons. Expand for more info... */
 	UPROPERTY(EditAnywhere, meta = (EditCondition = "!bDisableMoodTags", EditConditionHides))
 	FDirectoryPath EditorIconsPath;
 #endif
@@ -327,8 +323,6 @@ public:
 	
 #endif
 #if WITH_EDITORONLY_DATA
-	const FDirectoryPath& GetAudioAssetsRootFolder() const { return Audio.AudioAssetsRootFolder; }
-
 	const FDirectoryPath& GetFlowAssetsRootFolder() const { return Audio.FlowAssetsRootFolder; }
 #endif
 
@@ -400,7 +394,6 @@ public:
 	bool GetUsesSpeaker() const { return !General.bDisableSpeaker; }
 
 	bool GetUsesDirectedAt() const { return !General.bDisableDirectedAt; }
-
 	
 	bool GetUsesChildSafe() const { return !General.bDisableChildSafe; }
 
@@ -419,6 +412,11 @@ public:
 	FGameplayTagContainer GetMoodTags() const;
 
 #if WITH_EDITOR
+protected:
+	static TMap<FGameplayTag, TUniquePtr<FSlateImageBrush>> MoodTagIconBrushes;
+	
+	static TUniquePtr<FSlateImageBrush> NullMoodTagIconBrush;
+	
 public:
 	const FDirectoryPath& GetMoodTagEditorIconsPath() const { return MoodTags.EditorIconsPath; };
 	
@@ -428,9 +426,9 @@ public:
 
 	void BuildIcon(const FGameplayTag& MoodTag);
 	
-    FString GetMoodTagIconPath(FGameplayTag Key, FString FileExtension);
+    FString GetMoodTagIconPath(FGameplayTag Key, FString FileExtension) const;
 
-    TSharedPtr<FSlateImageBrush> GetMoodTagIcon(FGameplayTag MoodTag) const;
+    FSlateImageBrush* GetMoodTagIcon(FGameplayTag MoodTag) const;
 
 	const FSlateBrush* GetMoodTagBrush(FGameplayTag Name) const;
 
@@ -441,8 +439,6 @@ public:
 	
 	const FGameplayTag& GetMoodTagsRoot() const;
 	
-
-	TMap<FGameplayTag, TSharedPtr<FSlateImageBrush>> MoodTagIconBrushes;
 	
 	// OTHER HELPERS
 	// ============================================================================================

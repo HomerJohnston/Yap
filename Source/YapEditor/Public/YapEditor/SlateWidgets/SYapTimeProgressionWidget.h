@@ -60,7 +60,8 @@ public:
 	TAttribute<TOptional<float>> PlaybackTimeAtt;
 
 	bool bIsAdjusting = false;
-
+	bool bTimeDisplayBoxActive = false;
+	
 	TSharedPtr<SOverlay> TimeDisplayBox;
 	
 	virtual void Construct(const FArguments& InArgs);
@@ -68,6 +69,8 @@ public:
 	FText GetTimeText() const;
 
 	int32 OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const override;
+
+	void DrawBar(float Left, float Right, float MaxTime, float DownScaling, float GeoWidth, FSlateWindowElementList& OutDrawElements, int32& RetLayerId, const FGeometry& AllottedGeometry, FName BrushName, FLinearColor Color) const;
 
 	bool IsValid() const;
 
@@ -92,13 +95,13 @@ public:
 
 	void OnFocusLost(const FFocusEvent& InFocusEvent) override;
 
-	FReply OnMouseMove( const FGeometry& MyGeometry, const FPointerEvent& MouseEvent ) override;
+	FReply OnMouseMove(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;
 
-	float PositionToValue( const FGeometry& MyGeometry, const UE::Slate::FDeprecateVector2DParameter& AbsolutePosition );
+	float PositionToValue(const FGeometry& MyGeometry, const FSlateImageBrush* HandleImage, const UE::Slate::FDeprecateVector2DParameter& AbsolutePosition);
 
 	TOptional<EMouseCursor::Type> GetCursor() const override;
 
-	bool GetCursorOnHandle() const;
+	bool IsCursorOnHandle() const;
 	
 	FVector2D GetHandlePos() const;
 
@@ -107,6 +110,14 @@ public:
 	void HideTimeDisplayBox();
 
 	bool AllowPaddingEditing() const;
+
+	void Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime) override;
+
+	float GetPaddingHandleSize() const;
+	
+	const FSlateBrush* GetPaddingHandleImage() const;
+	
+	const FSlateBrush* GetPlaybackHandleImage() const;
 };
 
 

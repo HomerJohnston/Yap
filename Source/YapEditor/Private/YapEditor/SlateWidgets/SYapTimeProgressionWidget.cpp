@@ -65,7 +65,7 @@ FText SYapTimeProgressionWidget::GetTimeText() const
 	return FText::Format(LOCTEXT("TimeProgressionText", "Speech: {0} s\n{1} {2} s"), FText::AsNumber(SpeechDuration, &FormattingOptions), PaddingDuration > 0 ? Plus : Minus, FText::AsNumber(FMath::Abs(PaddingDuration), &FormattingOptions));
 }
 
-void DrawBar(float Left, float Right, float MaxTime, float DownScaling, float GeoWidth, FSlateWindowElementList& OutDrawElements, int32& RetLayerId, const FGeometry& AllottedGeometry, FName BrushName, FLinearColor Color)
+void SYapTimeProgressionWidget::DrawBar(float Left, float Right, float MaxTime, float DownScaling, float GeoWidth, FSlateWindowElementList& OutDrawElements, int32& RetLayerId, const FGeometry& AllottedGeometry, FName BrushName, FLinearColor Color) const
 {
 	Left = Left / MaxTime;
 	Left = DownScaling * Left;
@@ -75,12 +75,15 @@ void DrawBar(float Left, float Right, float MaxTime, float DownScaling, float Ge
 
 	float LeftPos = Left * GeoWidth;
 	float Width = (Right - Left) * GeoWidth;
+
+	float WidgetHeight = GetTickSpaceGeometry().GetLocalSize().Y; 
+	float BarHeight = 5;
 	
 	FSlateDrawElement::MakeBox
 	(
 		OutDrawElements,
 		RetLayerId++,
-		AllottedGeometry.ToPaintGeometry(FVector2D(Width, 5), FSlateLayoutTransform(FVector2D(LeftPos, 1))),
+		AllottedGeometry.ToPaintGeometry(FVector2D(Width, BarHeight), FSlateLayoutTransform(FVector2D(LeftPos, 0.5 * (WidgetHeight - BarHeight)))),
 		FYapEditorStyle::GetImageBrush(BrushName),
 		ESlateDrawEffect::None,
 		Color
@@ -127,6 +130,7 @@ int32 SYapTimeProgressionWidget::OnPaint(const FPaintArgs& Args, const FGeometry
 	};
 
 	float GeoWidth = AllottedGeometry.GetLocalSize().X;
+	float GeoHeight = AllottedGeometry.GetLocalSize().Y;
 
 	if (BarTimes[0].SizeSquared() > 0.0f)
 	{
@@ -175,8 +179,10 @@ int32 SYapTimeProgressionWidget::OnPaint(const FPaintArgs& Args, const FGeometry
 
 			FLinearColor HandleColor = (PaddingIsSetAtt.Get() ? YapColor::LightGray : BarColor);
 
-			FVector2D Size = FVector2D(7.0f, 7.0f);
-			FVector2D Trans = FVector2D((GeoWidth - 5.0f) * Normalized, 0.0f);
+			float HandleSize = GetPaddingHandleSize();
+			
+			FVector2D Size = FVector2D(HandleSize);
+			FVector2D Trans = FVector2D(GeoWidth * Normalized - 0.5 * HandleSize, 0.5 * GeoHeight - 0.5 * HandleSize);
 		
 			FSlateDrawElement::MakeBox
 			(
@@ -205,7 +211,7 @@ FReply SYapTimeProgressionWidget::OnMouseButtonDown(const FGeometry& MyGeometry,
 		return FReply::Unhandled();
 	}
 	
-	if ((MouseEvent.GetEffectingButton() == EKeys::LeftMouseButton) && DialogueNode.IsValid() && GetCursorOnHandle())// && !IsLocked())
+	if ((MouseEvent.GetEffectingButton() == EKeys::LeftMouseButton) && DialogueNode.IsValid() && IsCursorOnHandle())// && !IsLocked())
 	{
 		bIsAdjusting = true;
 		
@@ -277,14 +283,15 @@ FReply SYapTimeProgressionWidget::OnMouseMove(const FGeometry& MyGeometry, const
 	return SCompoundWidget::OnMouseMove(MyGeometry, MouseEvent);
 }
 
-float SYapTimeProgressionWidget::PositionToValue(const FGeometry& MyGeometry, const UE::Slate::FDeprecateVector2DParameter& AbsolutePosition)
+float SYapTimeProgressionWidget::PositionToValue(const FGeometry& MyGeometry, const FSlateImageBrush* HandleImage, const UE::Slate::FDeprecateVector2DParameter& AbsolutePosition)
 {	
 	const FVector2f LocalPosition = MyGeometry.AbsoluteToLocal(AbsolutePosition);
 
 	float RelativeValue;
 	float Denominator;
+	
 	// Only need X as we rotate the thumb image when rendering vertically
-	const float Indentation = 2;//GetThumbImage()->ImageSize.X * (IndentHandleSlateAttribute.Get() ? 2.f : 1.f);
+	const float Indentation = 0; // HandleImage->ImageSize.X;// * (IndentHandleSlateAttribute.Get() ? 2.f : 1.f);
 	const float HalfIndentation = 0.5f * Indentation;
 
 	Denominator = MyGeometry.Size.X - Indentation;
@@ -307,7 +314,7 @@ TOptional<EMouseCursor::Type> SYapTimeProgressionWidget::GetCursor() const
 		return NullOpt;
 	}
 	
-	if (GetCursorOnHandle() && AllowPaddingEditing())
+	if (IsCursorOnHandle() && AllowPaddingEditing())
 	{
 		return EMouseCursor::ResizeLeftRight;
 	}
@@ -315,7 +322,7 @@ TOptional<EMouseCursor::Type> SYapTimeProgressionWidget::GetCursor() const
 	return SCompoundWidget::GetCursor();
 }
 
-bool SYapTimeProgressionWidget::GetCursorOnHandle() const
+bool SYapTimeProgressionWidget::IsCursorOnHandle() const
 {
 	if (!IsHovered())
 	{
@@ -352,9 +359,12 @@ bool SYapTimeProgressionWidget::GetCursorOnHandle() const
 		if (Window.IsValid())
 		{
 			float xPos = Pos.X + (Size.X * Normalized);
-			float yPos = Pos.Y + Size.Y;
+			float yPos = Pos.Y + Size.Y * 0.5;
 
-			if (FVector2D::Distance(FSlateApplication::Get().GetCursorPos(), FVector2D(xPos, yPos)) < 6)
+			const float Dist = 1.0 * GetPaddingHandleSize(); // This will effectively make the handle grabbable at 2x its visible width. It won't be grabbable outside the widget bounds though. 
+			const float DistSqrd = Dist * Dist;
+			
+			if (FVector2D::DistSquared(FSlateApplication::Get().GetCursorPos(), FVector2D(xPos, yPos)) < DistSqrd)
 			{
 				return true;
 			}
@@ -407,6 +417,11 @@ FVector2D SYapTimeProgressionWidget::GetHandlePos() const
 
 void SYapTimeProgressionWidget::ShowTimeDisplayBox()
 {
+	if (bTimeDisplayBoxActive)
+	{
+		return;
+	}
+	
 	TimeDisplayBox->AddSlot()
 	[
 		SNew(SBorder)
@@ -423,16 +438,55 @@ void SYapTimeProgressionWidget::ShowTimeDisplayBox()
 			]
 		]
 	];
+
+	bTimeDisplayBoxActive = true;
 }
 
 void SYapTimeProgressionWidget::HideTimeDisplayBox()
 {
+	if (!bTimeDisplayBoxActive || bIsAdjusting)
+	{
+		return;
+	}
+	
 	TimeDisplayBox->ClearChildren();
+
+	bTimeDisplayBoxActive = false;
 }
 
 bool SYapTimeProgressionWidget::AllowPaddingEditing() const
 {
 	return DialogueNode->GetNodeType() != EYapDialogueNodeType::TalkAndAdvance;
+}
+
+void SYapTimeProgressionWidget::Tick(const FGeometry& AllottedGeometry, const double InCurrentTime,
+	const float InDeltaTime)
+{
+	SCompoundWidget::Tick(AllottedGeometry, InCurrentTime, InDeltaTime);
+
+	if (IsCursorOnHandle())
+	{
+		ShowTimeDisplayBox();
+	}
+	else
+	{
+		HideTimeDisplayBox();
+	}
+}
+
+float SYapTimeProgressionWidget::GetPaddingHandleSize() const
+{
+	return GetTickSpaceGeometry().GetLocalSize().Y - 2;
+}
+
+const FSlateBrush* SYapTimeProgressionWidget::GetPaddingHandleImage() const
+{
+	return FYapEditorStyle::GetImageBrush(YapBrushes.Icon_FilledCircle);
+}
+
+const FSlateBrush* SYapTimeProgressionWidget::GetPlaybackHandleImage() const
+{
+	return FYapEditorStyle::GetImageBrush(YapBrushes.Icon_PlaybackTimeHandle);
 }
 
 #undef LOCTEXT_NAMESPACE

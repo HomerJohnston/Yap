@@ -39,7 +39,12 @@ template<typename T>
 class FGameplayTagFilterHelper
 {
 public:
-    /** Use this function to register filters */
+    /** Use this function to register filters.
+     *
+     * PropertyPath: a path to the FGameplayTag property that we want to filter. Use dots to drive down one level, e.g. ArrayPropertyOfStructs.TagPropertyInsideStruct
+     *
+     * Func: a function to return an FGameplayTag to use as a parent in the selector widget, e.g. `const FGameplayTag&() const { return GetSomeParentTag(); }`
+     */
     void AddGameplayTagFilter(FName PropertyPath, FGameplayTagFilterDelegate Func)
     {
         #if WITH_EDITOR

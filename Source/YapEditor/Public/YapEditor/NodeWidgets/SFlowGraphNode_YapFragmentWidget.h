@@ -175,7 +175,7 @@ protected:
 	void					OnTextCommitted_FragmentActivationLimit(const FText& Text, ETextCommit::Type Arg);
 
 	TSharedRef<SWidget> 	CreateUpperFragmentBar();
-	EVisibility				Visibility_FragmentTagWidget() const;
+	EVisibility				Visibility_FragmentIDWidget() const;
 		
 	ECheckBoxState			IsChecked_ChildSafeSettings() const;
 	void					OnCheckStateChanged_MaturitySettings(ECheckBoxState CheckBoxState);
@@ -275,10 +275,10 @@ protected:
 	EVisibility				Visibility_TitleTextErrorState() const;
 
 	// ------------------------------------------
-	TSharedRef<SWidget>		CreateFragmentTagWidget();
+	TSharedRef<SWidget>		CreateFragmentIDWidget();
 	
-	FGameplayTag			Value_FragmentTag() const;
-	void					OnTagChanged_FragmentTag(FGameplayTag GameplayTag);
+	FText					Value_FragmentID() const;
+	void					OnTextChanged_FragmentID(const FText& NewTagValue, ETextCommit::Type CommitType);
 
 	// ------------------------------------------
 

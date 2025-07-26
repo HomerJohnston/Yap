@@ -261,7 +261,7 @@ void UFlowGraphNode_YapDialogue::PostPasteNode()
 {
 	Super::PostPasteNode();
 
-	GetYapDialogueNode()->DialogueTag = FGameplayTag::EmptyTag;
+	GetYapDialogueNode()->DialogueID = NAME_None;
 	GetYapDialogueNode()->InvalidateFragmentTags();
 	
 	RandomizeAudioID();
@@ -274,7 +274,7 @@ void UFlowGraphNode_YapDialogue::RandomizeAudioID()
 		return;
 	}
 	
-	if (!GetYapDialogueNode()->GetDialogueTag().IsValid() && true /* // TODO UYapProjectSettings::GetGenerateDialogueNodeTags()*/)
+	if (!GetYapDialogueNode()->GetDialogueID().IsValid() && true /* // TODO UYapProjectSettings::GetGenerateDialogueNodeTags()*/)
 	{
 		const UYapBroker& Broker = UYapSubsystem::GetBroker_Editor();
 
@@ -311,42 +311,7 @@ void UFlowGraphNode_YapDialogue::AddFragment(int32 InsertionIndex)
 
 	GetYapDialogueNode()->UpdateFragmentIndices();
 
-	//GetGraphNode()->ReconstructNode(); // TODO This works nicer but crashes because of pin connections. I might not need full reconstruction if I change how my multi-fragment nodes work.
 	(void)GetYapDialogueNode()->OnReconstructionRequested.ExecuteIfBound();
-}
-
-inline void UFlowGraphNode_YapDialogue::DestroyNode()
-{
-	TArray<FGameplayTag> GameplayTags = GatherAllGameplayTags();
-
-	for (FGameplayTag& Tag : GameplayTags)
-	{
-		UYapEditorSubsystem::AddTagPendingDeletion(Tag);
-	}
-	
-	Super::DestroyNode();
-}
-
-TArray<FGameplayTag> UFlowGraphNode_YapDialogue::GatherAllGameplayTags()
-{
-	TArray<FGameplayTag> GameplayTags;
-
-	const UFlowNode_YapDialogue* Node = GetYapDialogueNode();
-	
-	if (Node->GetDialogueTag().IsValid())
-	{
-		GameplayTags.Add(GetYapDialogueNode()->GetDialogueTag());
-	}
-
-	for (const FYapFragment& Fragment : Node->GetFragments())
-	{
-		if (Fragment.GetFragmentTag().IsValid())
-		{
-			GameplayTags.Add(Fragment.GetFragmentTag());
-		}
-	}
-
-	return GameplayTags;
 }
 
 void UFlowGraphNode_YapDialogue::GatherAllAudioAssets(TArray<FAssetData>& AllAudioAssets)

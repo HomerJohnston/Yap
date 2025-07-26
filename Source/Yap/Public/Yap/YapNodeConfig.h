@@ -51,10 +51,6 @@ struct FYapNodeConfigGroup_General
 	UPROPERTY(EditAnywhere)
 	FGameplayTag CharacterTagBase;
 	
-	/** TODO - this may become deprecated. */
-	UPROPERTY(EditAnywhere)
-	FGameplayTag DialogueTagsParent;
-
 	/** If this node type doesn't require any speaker info (such as for generic tutorial popups or simple player prompts), you can enable this. Requires graph refresh. */
 	UPROPERTY(EditAnywhere)
 	bool bDisableSpeaker = false;
@@ -326,8 +322,6 @@ public:
 	const FDirectoryPath& GetFlowAssetsRootFolder() const { return Audio.FlowAssetsRootFolder; }
 #endif
 
-	const FGameplayTag& GetDialogueTagsParent() const { return General.DialogueTagsParent; }
-	
 	EYapTimeMode GetDefaultTimeModeSetting() const { return DialoguePlayback.TimeSettings.DefaultTimeModeSetting; }
 
 	EYapMissingAudioErrorLevel GetMissingAudioErrorLevel() const { return Audio.MissingAudioErrorLevel; }

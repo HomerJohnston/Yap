@@ -26,8 +26,6 @@ FYapCharacterDefinition* FPropertyCustomization_YapCharacterDefinition::GetChara
 
     TSharedPtr<IPropertyHandle> CharacterDefinitionProperty = CharacterDefinitionProperty_Weak.Pin();
 
-    
-
     void* CharacterDefinitionAddress;
     
     if (CharacterDefinitionProperty->GetValueData(CharacterDefinitionAddress) != FPropertyAccess::Success)

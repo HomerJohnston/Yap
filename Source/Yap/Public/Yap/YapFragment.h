@@ -103,9 +103,10 @@ protected:
 	/** How many times is this fragment allowed to broadcast? This count persists only within this flow asset's lifespan (resets every Start). */
 	UPROPERTY()
 	int32 ActivationLimit = 0;
-	
+
+	/**  */
 	UPROPERTY()
-	FGameplayTag FragmentTag;
+	FName FragmentID;
 
 	/** Padding is idle time to wait after the fragment finishes running. An unset value will use project defaults. */
 	UPROPERTY()
@@ -300,7 +301,7 @@ public:
 	
 	void IncrementActivations();
 
-	const FGameplayTag& GetFragmentTag() const { return FragmentTag; } 
+	const FName& GetFragmentID() const { return FragmentID; } 
 
 	// TODO - want to design a better system for this.
 	//void ReplaceBit(EYapMaturitySetting MaturitySetting, const FYapBitReplacement& ReplacementBit);

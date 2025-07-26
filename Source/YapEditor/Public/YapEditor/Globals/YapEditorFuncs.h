@@ -21,4 +21,8 @@ namespace Yap::EditorFuncs
 	void PostNotificationInfo_Warning(FText Title, FText Description, float Duration = 6.0f);
 
 	bool SaveAsset(UObject* Asset);
+	
+	bool IsValidEntryName(const FName InName, FText& OutErrorText);
+
+	bool IsValidEntryNameString(const FString& InStringView, FText& OutErrorText);
 }

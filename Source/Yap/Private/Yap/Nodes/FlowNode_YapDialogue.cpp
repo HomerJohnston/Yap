@@ -74,6 +74,8 @@ int16 UFlowNode_YapDialogue::FindFragmentIndex(const FGuid& InFragmentGuid) cons
 
 FYapFragment* UFlowNode_YapDialogue::FindTaggedFragment(const FGameplayTag& Tag)
 {
+	// TODO replace with new logic using FNames
+	/*
 	for (FYapFragment& Fragment : Fragments)
 	{
 		if (Fragment.GetFragmentTag() == Tag)
@@ -81,7 +83,7 @@ FYapFragment* UFlowNode_YapDialogue::FindTaggedFragment(const FGameplayTag& Tag)
 			return &Fragment;
 		}
 	}
-
+*/
 	return nullptr;
 }
 
@@ -310,10 +312,10 @@ void UFlowNode_YapDialogue::InitializeInstance()
 
 	for (FYapFragment& Fragment : Fragments)
 	{
-		if (Fragment.GetFragmentTag().IsValid())
+		if (Fragment.GetFragmentID().IsValid())
 		{
 			UYapSubsystem* Subsystem = GetWorld()->GetSubsystem<UYapSubsystem>();
-			Subsystem->RegisterTaggedFragment(Fragment.GetFragmentTag(), this);
+			//Subsystem->RegisterTaggedFragment(Fragment.GetFragmentTag(), this);
 		}
 	}
 	

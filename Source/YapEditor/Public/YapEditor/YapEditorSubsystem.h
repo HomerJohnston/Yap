@@ -37,8 +37,6 @@ protected:
 	// STATE
 	TSharedPtr<FYapInputTracker> InputTracker;
 
-	FDelegateHandle FragmentTagFilterDelegateHandle;
-
 	TMap<TObjectKey<UTexture2D>, TSharedPtr<FSlateImageBrush>> CharacterPortraitBrushes;
 
 	FGameplayTagContainer CachedMoodTags;
@@ -48,17 +46,8 @@ protected:
 
 	TWeakObjectPtr<UAudioComponent> PreviewSoundComponent;
 
-	/** Some functions of Yap will remove tags from use. In such cases, I can't delete the tags until assets are saved. I will merely place the tags here and then attempt to delete them after assets are saved. */
 	TArray<FGameplayTag> TagsPendingDeletion;
 	
-public:
-	//void UpdateMoodTagBrushes();
-
-	//void UpdateMoodTagBrushes(const FGameplayTagContainer& ProjectMoodTags);
-	
-protected:
-	//void BuildIcon(const FGameplayTag& MoodTag);
-
 public:
 	static TSharedPtr<FSlateImageBrush> GetCharacterPortraitBrush(const UObject* Character, const FGameplayTag& MoodTag);
 
@@ -76,8 +65,6 @@ public:
 
 	TMap<TWeakPtr<FYapFragment>, TArray<FName>> FragmentPins;
 	
-	void SetupGameplayTagFiltering();
-
 	void OnGetCategoriesMetaFromPropertyHandle(TSharedPtr<IPropertyHandle> PropertyHandle, FString& String) const;
 
 	bool IsMoodTagProperty(TSharedPtr<IPropertyHandle> PropertyHandle) const;

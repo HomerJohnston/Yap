@@ -56,10 +56,6 @@ public:
 	
 	void AddFragment(int32 InsertionIndex = INDEX_NONE);
 
-	void DestroyNode() override;
-
-	TArray<FGameplayTag> GatherAllGameplayTags();
-
 protected:
 	void GatherAllAudioAssets(TArray<FAssetData>& AllAudioAssets);
 

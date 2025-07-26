@@ -85,8 +85,6 @@ void UYapEditorSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 		SlateApp.RegisterInputPreProcessor(InputTracker);
 	}
 
-	SetupGameplayTagFiltering();
-	
 #if WITH_LIVE_CODING
 	if (ILiveCodingModule* LiveCoding = FModuleManager::LoadModulePtr<ILiveCodingModule>(LIVE_CODING_MODULE_NAME))
 	{
@@ -132,11 +130,6 @@ void UYapEditorSubsystem::CleanupDialogueTags()
 FYapInputTracker* UYapEditorSubsystem::GetInputTracker()
 {
 	return InputTracker.Get();
-}
-
-void UYapEditorSubsystem::SetupGameplayTagFiltering()
-{
-	FragmentTagFilterDelegateHandle = UGameplayTagsManager::Get().OnGetCategoriesMetaFromPropertyHandle.AddUObject(this, &ThisClass::OnGetCategoriesMetaFromPropertyHandle);
 }
 
 void UYapEditorSubsystem::OnGetCategoriesMetaFromPropertyHandle(TSharedPtr<IPropertyHandle> PropertyHandle, FString& MetaString) const

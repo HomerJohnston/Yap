@@ -391,7 +391,8 @@ FYapBit& FYapFragment::GetBitMutable(EYapMaturitySetting MaturitySetting)
 #if WITH_EDITOR
 void FYapFragment::InvalidateFragmentTag(UFlowNode_YapDialogue* OwnerNode)
 {
-	FragmentTag = FGameplayTag::EmptyTag;
+	// TODO can this function be removed?
+	FragmentID = NAME_None;
 }
 #endif
 

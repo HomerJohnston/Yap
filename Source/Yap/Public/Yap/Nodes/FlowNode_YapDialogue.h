@@ -97,17 +97,14 @@ public:
 	// ============================================================================================
 	
 protected:
+	/**  */
 	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<UYapNodeConfig> Config;
 	
-	/** What type of node we are. */
+	/** What type of node we are (talk, prompt). */
     UPROPERTY(BlueprintReadOnly, Category = "Default")
 	EYapDialogueNodeType DialogueNodeType;
 
-	/** What is this dialogue's type-group? Leave unset to use the default type-group. */
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Default")
-	FGameplayTag TypeGroup;
-	
 	/** Maximum number of times we can successfully enter & exit this node. Any further attempts will trigger the Bypass output. */
     UPROPERTY(BlueprintReadOnly, Category = "Default")
 	int32 NodeActivationLimit;
@@ -119,17 +116,17 @@ protected:
 	// This is used to update the fragment sequencing mode when the talk mode is changed
 	EYapDialogueTalkSequencing OldTalkSequencing;
 
-	/** Controls if dialogue can be interrupted. */
+	/** Controls if dialogue can be interrupted. Overrides Config settings. */
     UPROPERTY(BlueprintReadOnly, Category = "Default")
 	TOptional<bool> Skippable;
 
-	/** Controls if dialogue automatically advances (only applicable if it has a time duration set). */
+	/** Controls if dialogue automatically advances (only applicable if it has a time duration set). Overrides Config settings. */
     UPROPERTY(BlueprintReadOnly, Category = "Default")
 	TOptional<bool> AutoAdvance;
 
-	/** Tags can be used to interact with this dialogue node during the game. Dialogue nodes can be looked up and/or modified by UYapSubsystem by their tag. */
+	/** IDs can be used to interact with this dialogue node during the game. */
     UPROPERTY(BlueprintReadOnly, Category = "Default")
-	FGameplayTag DialogueTag;
+	FName DialogueID;
 
 	/** Conditions which must be met for this dialogue to run. All conditions must pass (AND, not OR evaluation). If any conditions fail, Bypass output is triggered. */
     UPROPERTY(Instanced, BlueprintReadOnly, Category = "Default")
@@ -394,7 +391,7 @@ private:
 	void SwapFragments(uint8 IndexA, uint8 IndexB);
 	
 public:
-	const FGameplayTag& GetDialogueTag() const { return DialogueTag; }
+	const FName& GetDialogueID() const { return DialogueID; }
 	
 	void OnFilterGameplayTagChildren(const FString& String, TSharedPtr<FGameplayTagNode>& GameplayTagNode, bool& bArg) const;
 	

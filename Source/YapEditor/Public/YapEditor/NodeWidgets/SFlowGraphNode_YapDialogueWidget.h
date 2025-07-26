@@ -111,8 +111,8 @@ protected:
 
 	int32 GetDialogueActivationLimit() const;
 	void OnTextCommitted_DialogueActivationLimit(const FText& Text, ETextCommit::Type Arg);
-	FGameplayTag Value_DialogueTag() const;
-	void OnTagChanged_DialogueTag(FGameplayTag NewDialogueTag);
+	FText Text_DialogueID() const;
+	void OnTextChanged_DialogueID(const FText& NewText, ETextCommit::Type CommitType);
 
 public:
 	void OnTagChanged_DialogueTag_PostEdit(TArray<TPair<FString, FString>>);

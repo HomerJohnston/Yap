@@ -520,19 +520,13 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateUpperFragmentBar()
 			.HAlign(HAlign_Right)
 			.AutoWidth()
 			.VAlign(VAlign_Fill)
-			.Padding(4, 0, 1, 0)
+			.Padding(4, 0, 5, 0)
 			[
 				SNew(SLevelOfDetailBranchNode)
-				.Visibility(this, &ThisClass::Visibility_FragmentTagWidget)
 				.UseLowDetailSlot(Owner, &SFlowGraphNode_YapDialogueWidget::UseLowDetail, EGraphRenderingLOD::DefaultDetail)
 				.HighDetail()
 				[
-					SNew(SBox)
-					.HAlign(HAlign_Fill)
-					.VAlign(VAlign_Fill)
-					[
-						CreateFragmentTagWidget()
-					]
+					CreateFragmentIDWidget()
 				]
 			]
 			+ SHorizontalBox::Slot()
@@ -541,7 +535,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateUpperFragmentBar()
 			.Padding(6, -2, -27, -2)
 			[
 				SNew(SBox)
-				.WidthOverride(20)
+				//.WidthOverride(20)
 				.Visibility_Lambda( [this] () { return GetDialogueNode()->GetNodeType() == EYapDialogueNodeType::TalkAndAdvance ? EVisibility::Collapsed : EVisibility::Visible; } )
 				[
 					ProgressionPopupButton
@@ -556,9 +550,9 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateUpperFragmentBar()
 	];
 }
 
-EVisibility SFlowGraphNode_YapFragmentWidget::Visibility_FragmentTagWidget() const
+EVisibility SFlowGraphNode_YapFragmentWidget::Visibility_FragmentIDWidget() const
 {
-	return GetDialogueNode()->GetDialogueTag().IsValid() ? EVisibility::Visible : EVisibility::Collapsed;
+	return GetDialogueNode()->GetDialogueID().IsValid() ? EVisibility::Visible : EVisibility::Collapsed;
 }
 
 // ================================================================================================
@@ -757,6 +751,9 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateFragmentWidget()
 			]
 		];
 	}
+
+	const float TimeProgressionWidgetGapBelowFragment = 3;
+	const float TimeProgressionWidgetHeight = 9;
 	
 	return SAssignNew(FragmentWidgetOverlay, SOverlay)
 	.ToolTip(nullptr)
@@ -829,16 +826,16 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateFragmentWidget()
 				]
 			]
 			+ SOverlay::Slot()
-			.Padding(32, 2, 32, -11)
+			.Padding(32, 0, 32, -(TimeProgressionWidgetHeight + TimeProgressionWidgetGapBelowFragment))
 			.VAlign(EVerticalAlignment::VAlign_Bottom)
 			[
-				SNew(SLevelOfDetailBranchNode)
-				.UseLowDetailSlot(Owner, &SFlowGraphNode_YapDialogueWidget::UseLowDetail, EGraphRenderingLOD::DefaultDetail)
-				.HighDetail() 
+				SNew(SBox)
+				.HeightOverride(TimeProgressionWidgetHeight)
+				.Visibility(this, &ThisClass::Visibility_TimeProgressionWidget)
 				[
-					SNew(SBox)
-					.HeightOverride(7)
-					.Visibility(this, &ThisClass::Visibility_TimeProgressionWidget)
+					SNew(SLevelOfDetailBranchNode)
+					.UseLowDetailSlot(Owner, &SFlowGraphNode_YapDialogueWidget::UseLowDetail, EGraphRenderingLOD::DefaultDetail)
+					.HighDetail()
 					[
 						SNew(SYapTimeProgressionWidget)
 						.DialogueNode(GetDialogueNodeMutable())
@@ -850,11 +847,6 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateFragmentWidget()
 						.MaxDisplayTime_Lambda( [this] () { return GetNodeConfig().GetDialogueTimeSliderMax(); } )
 						.PlaybackTime_Lambda( [this] () { return Percent_FragmentTime(); } )
 					]
-				]
-				.LowDetail()
-				[
-					SNew(SBox)
-					.HeightOverride(3)
 				]
 			]
 		]
@@ -1098,7 +1090,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateDialogueDisplayWidge
 			.Visibility_Lambda( [this] () { return GetNodeConfig().GetHideAudioID() ? EVisibility::Collapsed : EVisibility::Visible; } )
 			.BorderImage(FYapEditorStyle::GetImageBrush(YapBrushes.Icon_IDTag))
 			.BorderBackgroundColor(this, &ThisClass::ColorAndOpacity_AudioIDButton)
-			.Padding(4)
+			.Padding(4, 2, 4, 2)
 			[
 				SNew(STextBlock)
 				.ColorAndOpacity(this, &ThisClass::ColorAndOpacity_AudioIDText)
@@ -1826,30 +1818,45 @@ EVisibility SFlowGraphNode_YapFragmentWidget::Visibility_TitleTextWidgets() cons
 // FRAGMENT TAG WIDGET
 // ------------------------------------------------------------------------------------------------
 
-TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateFragmentTagWidget()
+TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateFragmentIDWidget()
 {
-	auto TagAttribute = TAttribute<FGameplayTag>::CreateSP(this, &ThisClass::Value_FragmentTag);
-	FString FilterString = GetDialogueNodeMutable()->GetDialogueTag().ToString();
-	auto OnTagChanged = TDelegate<void(const FGameplayTag)>::CreateSP(this, &ThisClass::OnTagChanged_FragmentTag);
-
-	return SNew(SYapGameplayTagTypedPicker)
-		.Tag(TagAttribute)
-		.Filter(FilterString)
-		.OnTagChanged(OnTagChanged)
-		.ToolTipText(LOCTEXT("FragmentTag_ToolTip", "Fragment tag"))
-		.Asset(GetDialogueNodeMutable()->GetFlowAsset());
+	return SNew(SBox)
+	.Padding(0, 2, 2, -2)
+	[
+		SNew(SEditableText)
+		.HintText(LOCTEXT("FragmentID_HintText", "ID"))
+		.Text(this, &ThisClass::Value_FragmentID)
+		.OnTextCommitted(this, &ThisClass::OnTextChanged_FragmentID)
+		.SelectAllTextWhenFocused(true)
+		.SelectAllTextOnCommit(true)
+	];
 }
 
-FGameplayTag SFlowGraphNode_YapFragmentWidget::Value_FragmentTag() const
+FText SFlowGraphNode_YapFragmentWidget::Value_FragmentID() const
 {
-	return GetFragment().FragmentTag;
+	if (GetFragment().GetFragmentID() == NAME_None)
+	{
+		return FText::GetEmpty();
+	}
+	
+	return FText::FromName(GetFragment().FragmentID);
 }
 
-void SFlowGraphNode_YapFragmentWidget::OnTagChanged_FragmentTag(FGameplayTag GameplayTag)
+void SFlowGraphNode_YapFragmentWidget::OnTextChanged_FragmentID(const FText& NewTagValue, ETextCommit::Type CommitType)
 {
-	FYapTransactions::BeginModify(LOCTEXT("ChangeFragmentTag", "Change fragment tag"), GetDialogueNodeMutable());
+	FString NewValueString = NewTagValue.ToString();
+	FText ErrorText;
+	if (!Yap::EditorFuncs::IsValidEntryNameString(NewValueString, ErrorText))
+	{
+		Yap::EditorFuncs::PostNotificationInfo_Warning(LOCTEXT("Error_Title", "Error"), ErrorText);
+		return;
+	}
 
-	GetFragmentMutable().FragmentTag = GameplayTag;
+	FName NewName(NewValueString);
+	
+	FYapTransactions::BeginModify(LOCTEXT("ChangeFragmentID", "Change fragment ID"), GetDialogueNodeMutable());
+
+	GetFragmentMutable().FragmentID = NewName;
 
 	FYapTransactions::EndModify();
 

@@ -27,7 +27,6 @@
 #include "YapEditor/SlateWidgets/SYapConditionDetailsViewWidget.h"
 #include "YapEditor/SlateWidgets/SYapConditionsScrollBox.h"
 #include "YapEditor/SlateWidgets/SYapGraphPinExec.h"
-#include "YapEditor/SlateWidgets/SYapGameplayTagTypedPicker.h"
 #include "YapEditor/SlateWidgets/SYapProgressionSettingsWidget.h"
 
 #define LOCTEXT_NAMESPACE "YapEditor"
@@ -137,152 +136,37 @@ void SFlowGraphNode_YapDialogueWidget::OnTextCommitted_DialogueActivationLimit(c
 }
 
 // ------------------------------------------------------------------------------------------------
-FGameplayTag SFlowGraphNode_YapDialogueWidget::Value_DialogueTag() const
+FText SFlowGraphNode_YapDialogueWidget::Text_DialogueID() const
 {
-	return GetFlowYapDialogueNode()->GetDialogueTag();
+	FName IDName = GetFlowYapDialogueNode()->GetDialogueID();
+
+	if (IDName == NAME_None)
+	{
+		return FText::GetEmpty();
+	}
+	
+	return FText::FromName(IDName);
 }
 
 // ------------------------------------------------------------------------------------------------
-void SFlowGraphNode_YapDialogueWidget::OnTagChanged_DialogueTag(FGameplayTag NewDialogueTag)
+void SFlowGraphNode_YapDialogueWidget::OnTextChanged_DialogueID(const FText& NewText, ETextCommit::Type CommitType)
 {
-	if (GetFlowYapDialogueNodeMutable()->DialogueTag == NewDialogueTag)
+	FString NewValueString = NewText.ToString();
+	
+	FText ErrorText;
+	if (!Yap::EditorFuncs::IsValidEntryNameString(NewValueString, ErrorText))
 	{
+		Yap::EditorFuncs::PostNotificationInfo_Warning(LOCTEXT("Error_Title", "Error"), ErrorText);
 		return;
 	}
 
-	{
-		FYapTransactions::BeginModify(LOCTEXT("ChangeFragmentTag", "Change fragment tag"), GetFlowYapDialogueNodeMutable());
-
-		UFlowNode_YapDialogue* DialogueNode = GetFlowYapDialogueNodeMutable();
-
-		// Assign the parent tag
-		DialogueNode->DialogueTag = NewDialogueTag;
-		
-		// Make new child tags and assign them
-		TArray<TPair<FString, FString>> OldChildTag_NewChildTag;
-		
-		for (FYapFragment& Fragment : DialogueNode->GetFragmentsMutable())
-		{
-			FGameplayTag FragmentTag = Fragment.FragmentTag;
-
-			if (!FragmentTag.IsValid())
-			{
-				continue;
-			}
-
-			FString NewChildTagString = NewDialogueTag.ToString() + FragmentTag.ToString().RightChop(DialogueNode->DialogueTag.ToString().Len());
-			
-			OldChildTag_NewChildTag.Add({FragmentTag.ToString(), NewChildTagString});
-			
-			FGameplayTag NewChildTag = UGameplayTagsManager::Get().RequestGameplayTag(FName(NewChildTagString), false);
-
-			if (!NewChildTag.IsValid())
-			{
-				IGameplayTagsEditorModule::Get().AddNewGameplayTagToINI(NewChildTagString, "", Yap::FileUtilities::GetTagConfigFileName());
-			}
-
-			TSharedPtr<FGameplayTagNode> Node = UGameplayTagsManager::Get().FindTagNode(*NewChildTagString);
-
-			Fragment.FragmentTag = Node->GetCompleteTag();
-
-		}
-
-		Yap::EditorFuncs::SaveAsset(FlowGraphNode_YapDialogue->GetFlowAsset());
-		// Now that all of the tags have been changed, for some reason we have to 
-		
-		FTimerHandle DummyHandle;
-		FTimerDelegate Delegate = FTimerDelegate::CreateRaw(this, &SFlowGraphNode_YapDialogueWidget::OnTagChanged_DialogueTag_PostEdit, OldChildTag_NewChildTag);
-		GEditor->GetTimerManager()->SetTimer(DummyHandle, Delegate, 0.1f, false);
-
-		FYapTransactions::EndModify();
-	}
+	FName NewName(NewValueString);
 	
-	UpdateGraphNode();
-}
+	FYapTransactions::BeginModify(LOCTEXT("ChangeFragmentID", "Change fragment ID"), GetFlowYapDialogueNodeMutable());
 
-// TODO violating DRY with the SYapGameplayTagTypedPicker class here. Extract common func out to my globals funcs?
-void SFlowGraphNode_YapDialogueWidget::OnTagChanged_DialogueTag_PostEdit(TArray<TPair<FString, FString>> TagReplacements)
-{
-	for (const auto& [OldTagString, NewTagString] : TagReplacements)
-	{
-		if (OldTagString.IsEmpty())
-		{
-			continue;
-		}
-		
-		TArray<FAssetIdentifier> References = Yap::Tags::FindTagReferences(FName(OldTagString));
+	GetFlowYapDialogueNodeMutable()->DialogueID = NewName;
 
-		if (References.Num() == 0)
-		{
-			FText EmptyTagText = LOCTEXT("Tag_None", "<None>");
-			FText NewTagText = NewTagString.IsEmpty() ? EmptyTagText : FText::FromString(NewTagString);
-			FText RedirectText = FText::Format(LOCTEXT("DeleteOldTag_Prompt", "{0}\nThis tag isn't referenced anywhere anymore. Would you like to delete it?"), FText::FromString(OldTagString));
-			FText TitleText = LOCTEXT("DeleteTagPrompt_Title", "Delete Old Gameplay Tag?");
-
-			EAppReturnType::Type RequestRedirectResponse = FMessageDialog::Open(EAppMsgType::YesNo, RedirectText);
-	
-			switch (RequestRedirectResponse)
-			{
-				case EAppReturnType::Yes:
-				{
-					FGameplayTag OldTag = UGameplayTagsManager::Get().RequestGameplayTag(FName(OldTagString), false);
-					TSharedPtr<FGameplayTagNode> OldTagNode = UGameplayTagsManager::Get().FindTagNode(OldTag);
-
-					if (!OldTagNode.IsValid())
-					{
-						Yap::EditorFuncs::PostNotificationInfo_Warning(LOCTEXT("GameplayTagDeleteFailure_InvalidNode_Title", "Failed to Delete Tag"), LOCTEXT("GameplayTagDeleteFailure_InvalidNode_Description", "Old tag node was not found"));
-						return;
-					}
-
-					if (!IGameplayTagsEditorModule::Get().DeleteTagFromINI(OldTagNode))
-					{
-						Yap::EditorFuncs::PostNotificationInfo_Warning(LOCTEXT("GameplayTagDeleteFailure_Title", "Failed to Delete Tag"), LOCTEXT("GameplayTagDeleteFailure_Description", "Unknown error"));
-					}
-			
-					return;
-				}
-				default:
-				{
-					return;
-				}
-			}
-		}
-		else
-		{
-			// We can't redirect to an empty tag!
-			if (NewTagString.IsEmpty())
-			{
-				return;
-			}
-	
-			FText EmptyTagText = LOCTEXT("Tag_None", "<None>");
-			FText NewTagText = NewTagString.IsEmpty() ? EmptyTagText : FText::FromString(NewTagString);
-			FText OldTagText = OldTagString.IsEmpty() ? EmptyTagText : FText::FromString(OldTagString);
-
-			FText RedirectText = FText::Format(LOCTEXT("DeleteOldTag_Prompt", "{0}\n\nWould you like to add a redirect from this old tag to the new one?\n\n*** This will require an editor restart! ***"), OldTagText);
-			FText TitleText = LOCTEXT("RedirectTagPrompt_Title", "Redirect Old Gameplay Tag?");
-			EAppReturnType::Type RequestRedirectResponse = FMessageDialog::Open(EAppMsgType::YesNo, RedirectText, TitleText);
-
-			switch (RequestRedirectResponse)
-			{
-				case EAppReturnType::Yes:
-				{			
-					IGameplayTagsEditorModule& Module = IGameplayTagsEditorModule::Get();
-
-					if (!Module.RenameTagInINI(OldTagString, NewTagString))
-					{
-						Yap::EditorFuncs::PostNotificationInfo_Warning(LOCTEXT("GameplayTagRedirectFailure_Title", "Failed to Redirect Tag"), LOCTEXT("GameplayTagRedirectFailure_Description", "Unknown error"));
-					}
-
-					return;
-				}
-				default:
-				{
-					return;
-				}
-			}
-		}
-	}
+	FYapTransactions::EndModify();
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -361,10 +245,6 @@ TSharedRef<SWidget> SFlowGraphNode_YapDialogueWidget::CreateTitleWidget(TSharedP
 	
 	FString AssetName = FlowAsset->GetName();
 			
-	FString ProjectParentTag = GetNodeConfig().GetDialogueTagsParent().ToString();
-			
-	FString GameplayTagFilter = ProjectParentTag + "." + Path + "." + AssetName;
-	
 	TOptional<bool>* SkippableSettingRaw = &GetFlowYapDialogueNodeMutable()->Skippable;
 	const TAttribute<bool> SkippableEvaluatedAttr = TAttribute<bool>::CreateLambda( [this] ()
 	{
@@ -422,27 +302,24 @@ TSharedRef<SWidget> SFlowGraphNode_YapDialogueWidget::CreateTitleWidget(TSharedP
 		]
 	];
 
-	if (GetNodeConfig().General.DialogueTagsParent.IsValid())
-	{
-		Row->AddSlot()
-		.HAlign(HAlign_Right)
-		.Padding(2,0,5,0)
-		.AutoWidth()
-		.VAlign(VAlign_Fill)
+	Row->AddSlot()
+	.HAlign(HAlign_Right)
+	.Padding(2,0,7,0)
+	.AutoWidth()
+	.VAlign(VAlign_Fill)
+	[
+		SNew(SLevelOfDetailBranchNode)
+		//.UseLowDetailSlot(this, &SFlowGraphNode_YapDialogueWidget::UseLowDetail, EGraphRenderingLOD::DefaultDetail)
+		.HighDetail()
 		[
-			SNew(SLevelOfDetailBranchNode)
-			//.UseLowDetailSlot(this, &SFlowGraphNode_YapDialogueWidget::UseLowDetail, EGraphRenderingLOD::DefaultDetail)
-			.HighDetail()
-			[
-				SNew(SYapGameplayTagTypedPicker)
-				.Tag(TAttribute<FGameplayTag>::CreateSP(this, &SFlowGraphNode_YapDialogueWidget::Value_DialogueTag))
-				.Filter(GameplayTagFilter) // TODO extra safety if things are unset
-				.OnTagChanged(this, &SFlowGraphNode_YapDialogueWidget::OnTagChanged_DialogueTag)
-				.ToolTipText(LOCTEXT("DialogueTag", "Dialogue tag"))
-				.Asset(GetFlowYapDialogueNodeMutable()->GetFlowAsset())
-			]
-		];
-	}
+			SNew(SEditableText)
+			.HintText(LOCTEXT("FragmentID_HintText", "ID"))
+			.Text(this, &SFlowGraphNode_YapDialogueWidget::Text_DialogueID)
+			.OnTextCommitted(this, &SFlowGraphNode_YapDialogueWidget::OnTextChanged_DialogueID)
+			.SelectAllTextWhenFocused(true)
+			.SelectAllTextOnCommit(true)
+		]
+	];
 	
 	Row->AddSlot()
 	.HAlign(HAlign_Right)

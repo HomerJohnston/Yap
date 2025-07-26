@@ -150,7 +150,9 @@ protected:
 	/** Stores which conversation a given prompt is a part of */
 	UPROPERTY(Transient)
 	TMap<FYapPromptHandle, FYapConversationHandle> PromptHandleConversationTags;
-	
+
+	// TODO dialogue node FName map?
+	// TODO change this up, should instead use Flow asset instance + flow node instance + fragment FName 
 	/** Stores the tag of a fragment and the owning dialogue node where that fragment can be found */
 	UPROPERTY(Transient)
 	TMap<FGameplayTag, UFlowNode_YapDialogue*> TaggedFragments;

@@ -4,6 +4,7 @@
 #include "YapEditor/YapEditorModule.h"
 
 #include "Yap/YapCharacterAsset.h"
+#include "Yap/YapCharacterComponent.h"
 #include "Yap/YapProjectSettings.h"
 #include "YapEditor/YapButtonCommands.h"
 #include "YapEditor/AssetThumbnailRenderers/YapCharacterThumbnailRenderer.h"
@@ -13,6 +14,7 @@
 #include "YapEditor/Customizations/PropertyCustomization_YapCharacterDefinition.h"
 #include "YapEditor/Customizations/PropertyCustomization_YapNodeConfigGroup_MoodTags.h"
 #include "YapEditor/Customizations/PropertyCustomization_YapPortraitList.h"
+#include "YapEditor/Customizations/PropertyCustomization_YapCharacterIdentity.h"
 #include "YapEditor/Globals/YapEditorFuncs.h"
 
 #define LOCTEXT_NAMESPACE "YapEditor"
@@ -31,6 +33,7 @@ void FYapEditorModule::StartupModule()
 	REGISTER_PROPERTY_CUSTOMIZATION(FYapCharacterDefinition, FPropertyCustomization_YapCharacterDefinition);
 	REGISTER_PROPERTY_CUSTOMIZATION(FYapNodeConfigGroup_MoodTags, FPropertyCustomization_YapNodeConfigGroup_MoodTags);
 	REGISTER_PROPERTY_CUSTOMIZATION(FYapPortraitList, FPropertyCustomization_YapPortraitList);
+	REGISTER_PROPERTY_CUSTOMIZATION(FYapCharacterIdentity, FPropertyCustomization_YapCharacterIdentity);
 
 	REGISTER_THUMBNAIL_RENDERER(UYapCharacterAsset, UYapCharacterThumbnailRenderer);
 	

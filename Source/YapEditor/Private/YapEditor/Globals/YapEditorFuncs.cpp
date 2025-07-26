@@ -97,4 +97,52 @@ bool Yap::EditorFuncs::SaveAsset(UObject* Asset)
 	return true;
 }
 
+bool Yap::EditorFuncs::IsValidEntryName(const FName InName, FText& OutErrorText)
+{
+	const FString NewString = InName.ToString();
+
+	if(NewString.Len() == 0)
+	{
+		OutErrorText = LOCTEXT("Error_EmptyName", "Empty names are not allowed");
+		return false;
+	}
+
+	// Check start
+	if (NewString[0] == TEXT('.') ||
+		FChar::IsUnderscore(NewString[0]) ||
+		FChar::IsDigit(NewString[0]))
+	{
+		OutErrorText = LOCTEXT("Error_Start", "Name cannot start with an underscore, period or digit");
+		return false;
+	}
+
+	bool bAllowed = true;
+	for (int32 CharIndex = 0; bAllowed && CharIndex < NewString.Len(); ++CharIndex)
+	{
+		bAllowed &= FChar::IsAlnum(NewString[CharIndex]) ||
+			FChar::IsUnderscore(NewString[CharIndex]) ||
+			NewString[CharIndex] == TEXT('.');
+	}
+
+	// Make sure the new name only contains valid characters
+	if (!bAllowed)
+	{
+		OutErrorText = LOCTEXT("Error_CharacterNotAllowed", "Only alpha-numerical, underscore or period characters are allowed");
+		return false;
+	}
+
+	return true;
+}
+
+bool Yap::EditorFuncs::IsValidEntryNameString(const FString& InStringView, FText& OutErrorText)
+{
+	// See if this can be represented as an FName
+	if(!FName::IsValidXName(InStringView, INVALID_NAME_CHARACTERS, &OutErrorText))
+	{
+		return false;
+	}
+
+	return IsValidEntryName(FName(InStringView), OutErrorText);
+}
+
 #undef LOCTEXT_NAMESPACE

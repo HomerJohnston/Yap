@@ -3,9 +3,16 @@
 
 #include "Yap/YapCharacterComponent.h"
 
+#include "UObject/PropertyAccessUtil.h"
+#include "Yap/YapProjectSettings.h"
 #include "Yap/YapSubsystem.h"
 
 #define LOCTEXT_NAMESPACE "Yap"
+
+UYapCharacterComponent::UYapCharacterComponent()
+{
+	AddGameplayTagFilter(GET_MEMBER_NAME_CHECKED(ThisClass, Identity), FGameplayTagFilterDelegate::CreateStatic(&GetIdentityRootTag));
+}
 
 void UYapCharacterComponent::BeginPlay()
 {
@@ -19,6 +26,11 @@ void UYapCharacterComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	GetWorld()->GetSubsystem<UYapSubsystem>()->UnregisterCharacterComponent(this);
 	
 	Super::EndPlay(EndPlayReason);
+}
+
+const FGameplayTag& UYapCharacterComponent::GetIdentityRootTag()
+{
+	return UYapProjectSettings::GetCharacterRootTag();
 }
 
 #undef LOCTEXT_NAMESPACE

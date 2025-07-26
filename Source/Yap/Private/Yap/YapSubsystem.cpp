@@ -736,7 +736,7 @@ void UYapSubsystem::RegisterCharacterComponent(UYapCharacterComponent* YapCharac
 		return;
 	}
 
-	YapCharacterComponents.Add(YapCharacterComponent->GetCharacterTag().GetTagName(), YapCharacterComponent);
+	YapCharacterComponents.Add(YapCharacterComponent->GetCharacterIdentity(), YapCharacterComponent);
 	
 	RegisteredYapCharacterActors.Add(Actor);
 }
@@ -747,7 +747,7 @@ void UYapSubsystem::UnregisterCharacterComponent(UYapCharacterComponent* YapChar
 {
 	AActor* Actor = YapCharacterComponent->GetOwner();
 
-	YapCharacterComponents.Remove(YapCharacterComponent->GetCharacterTag().GetTagName());
+	YapCharacterComponents.Remove(YapCharacterComponent->GetCharacterIdentity());
 	RegisteredYapCharacterActors.Remove(Actor);
 }
 

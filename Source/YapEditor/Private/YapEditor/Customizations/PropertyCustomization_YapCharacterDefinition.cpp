@@ -17,25 +17,98 @@
 
 #define LOCTEXT_NAMESPACE "YapEditor"
 
+FYapCharacterDefinition* FPropertyCustomization_YapCharacterDefinition::GetCharacterDefinition() const
+{
+    if (!CharacterDefinitionProperty_Weak.IsValid())
+    {
+        return nullptr;
+    }
+
+    TSharedPtr<IPropertyHandle> CharacterDefinitionProperty = CharacterDefinitionProperty_Weak.Pin();
+
+    
+
+    void* CharacterDefinitionAddress;
+    
+    if (CharacterDefinitionProperty->GetValueData(CharacterDefinitionAddress) != FPropertyAccess::Success)
+    {
+        return nullptr;
+    }
+
+    return static_cast<FYapCharacterDefinition*>(CharacterDefinitionAddress);
+}
+
+TSharedPtr<IPropertyHandle> FPropertyCustomization_YapCharacterDefinition::GetTagPropertyHandle() const
+{
+    if (!CharacterDefinitionProperty_Weak.IsValid())
+    {
+        return nullptr;
+    }
+
+    TSharedPtr<IPropertyHandle> CharacterDefinitionProperty = CharacterDefinitionProperty_Weak.Pin();
+
+    static const FName TagPropertyName = GET_MEMBER_NAME_CHECKED(FYapCharacterDefinition, CharacterTag);
+
+    return CharacterDefinitionProperty->GetChildHandle(TagPropertyName);
+}
+
+FGameplayTag FPropertyCustomization_YapCharacterDefinition::GetCharacterTag() const
+{
+    if (!CharacterDefinitionProperty_Weak.IsValid())
+    {
+        return FGameplayTag::EmptyTag;
+    }
+
+    TSharedPtr<IPropertyHandle> CharacterDefinitionProperty = CharacterDefinitionProperty_Weak.Pin();
+
+    static const FName TagPropertyName = GET_MEMBER_NAME_CHECKED(FYapCharacterDefinition, CharacterTag);
+
+    TSharedPtr<IPropertyHandle> TagPropertyHandle = CharacterDefinitionProperty->GetChildHandle(TagPropertyName);
+
+    if (TagPropertyHandle.IsValid())
+    {
+        FName TagAsName;
+        TagPropertyHandle->GetValue(TagAsName);
+        return FGameplayTag::RequestGameplayTag(TagAsName);
+    }
+    
+    return FGameplayTag::EmptyTag;
+}
+
+TSharedPtr<IPropertyHandle> FPropertyCustomization_YapCharacterDefinition::GetAssetPropertyHandle() const
+{
+    if (!CharacterDefinitionProperty_Weak.IsValid())
+    {
+        return nullptr;
+    }
+
+    TSharedPtr<IPropertyHandle> CharacterDefinitionProperty = CharacterDefinitionProperty_Weak.Pin();
+
+    static const FName AssetPropertyName = GET_MEMBER_NAME_CHECKED(FYapCharacterDefinition, CharacterAsset);
+    
+    return CharacterDefinitionProperty->GetChildHandle(AssetPropertyName);
+}
+
 void FPropertyCustomization_YapCharacterDefinition::OnSetNewCharacterAsset(const FAssetData& AssetData)
 {
-    UObject* Object = AssetData.GetAsset();
+    TSharedPtr<IPropertyHandle> AssetPropertyHandle = GetAssetPropertyHandle();
 
     if (!AssetPropertyHandle.IsValid())
     {
         return;
     }
     
+    UObject* Object = AssetData.GetAsset();
+
     if (Object)
     {
-        
         if (UBlueprint* Blueprint = Cast<UBlueprint>(Object))
         {
             UClass* ObjectClass = Blueprint->GeneratedClass;
 
             if (ObjectClass)
             {
-                AssetPropertyHandle->SetValue(static_cast<UObject*>(ObjectClass));
+               AssetPropertyHandle->SetValue(static_cast<UObject*>(ObjectClass));
             }
         }
         else
@@ -57,11 +130,16 @@ void FPropertyCustomization_YapCharacterDefinition::OnSetNewCharacterAsset(const
 
 void FPropertyCustomization_YapCharacterDefinition::CustomizeHeader(TSharedRef<IPropertyHandle> StructPropertyHandle, FDetailWidgetRow& HeaderRow, IPropertyTypeCustomizationUtils& StructCustomizationUtils)
 {
-    static const FName TagPropertyName = GET_MEMBER_NAME_CHECKED(FYapCharacterDefinition, CharacterTag);
-    static const FName AssetPropertyName = GET_MEMBER_NAME_CHECKED(FYapCharacterDefinition, CharacterAsset);
+    CharacterDefinitionProperty_Weak = StructPropertyHandle;
+    
+    TSharedPtr<IPropertyHandle> AssetPropertyHandle = GetAssetPropertyHandle();
 
-    TSharedPtr<IPropertyHandle> TagPropertyHandle = StructPropertyHandle->GetChildHandle(TagPropertyName);
-    AssetPropertyHandle = StructPropertyHandle->GetChildHandle(AssetPropertyName);
+    if (!AssetPropertyHandle.IsValid())
+    {
+        return;
+    }
+    
+    TSharedPtr<IPropertyHandle> TagPropertyHandle = GetTagPropertyHandle();
 
     void* CharacterDefinitionAddress;
     
@@ -70,8 +148,6 @@ void FPropertyCustomization_YapCharacterDefinition::CustomizeHeader(TSharedRef<I
         return;
     }
 
-    CharacterDefinition = static_cast<FYapCharacterDefinition*>(CharacterDefinitionAddress);
-    
     HeaderRow.NameContent()
     .HAlign(HAlign_Fill)
     .VAlign(VAlign_Fill)
@@ -128,7 +204,7 @@ void FPropertyCustomization_YapCharacterDefinition::CustomizeHeader(TSharedRef<I
                 SNew(SObjectPropertyEntryBox)
                 .OnObjectChanged(this, &FPropertyCustomization_YapCharacterDefinition::OnSetNewCharacterAsset)
                 .ObjectPath(this, &FPropertyCustomization_YapCharacterDefinition::ObjectPath_CharacterAsset)
-                .OnShouldFilterAsset(this, &FPropertyCustomization_YapCharacterDefinition::OnShouldFilterAsset_CharacterAsset)
+                .OnShouldFilterAsset_Static(&FPropertyCustomization_YapCharacterDefinition::OnShouldFilterAsset_CharacterAsset)
 				.ThumbnailPool(UThumbnailManager::Get().GetSharedThumbnailPool())
                 .EnableContentPicker(true)
                 .DisplayUseSelected(true)
@@ -193,6 +269,13 @@ void FPropertyCustomization_YapCharacterDefinition::CustomizeChildren(TSharedRef
 
 FText FPropertyCustomization_YapCharacterDefinition::ToolTipText_AssetStatus() const
 {
+    FYapCharacterDefinition* CharacterDefinition = GetCharacterDefinition();
+
+    if (!CharacterDefinition)
+    {
+        return FText::GetEmpty();
+    }
+    
     if (CharacterDefinition->CharacterAsset.IsNull())
     {
         return LOCTEXT("CharacterTagUnset_ToolTip", "Warning: Character is unset.");
@@ -216,6 +299,13 @@ FText FPropertyCustomization_YapCharacterDefinition::ToolTipText_AssetStatus() c
 
 FLinearColor FPropertyCustomization_YapCharacterDefinition::AssetStatusColor() const
 {
+    FYapCharacterDefinition* CharacterDefinition = GetCharacterDefinition();
+
+    if (!CharacterDefinition)
+    {
+        return ErrorColor();
+    }
+    
     if ((CharacterDefinition->ErrorState & EYapCharacterDefinitionErrorState::AssetConflict) != EYapCharacterDefinitionErrorState::OK)
     {
         return ErrorColor();
@@ -236,6 +326,13 @@ FLinearColor FPropertyCustomization_YapCharacterDefinition::AssetStatusColor() c
 
 FText FPropertyCustomization_YapCharacterDefinition::ToolTipText_TagStatus() const
 {
+    FYapCharacterDefinition* CharacterDefinition = GetCharacterDefinition();
+
+    if (!CharacterDefinition)
+    {
+        return FText::GetEmpty();
+    }
+    
     if ((CharacterDefinition->ErrorState & EYapCharacterDefinitionErrorState::TagConflict) != EYapCharacterDefinitionErrorState::OK)
     {
         return LOCTEXT("CharacterTagConflict_ToolTip", "Error: Tag conflicts with another character.");
@@ -258,6 +355,13 @@ FText FPropertyCustomization_YapCharacterDefinition::ToolTipText_TagStatus() con
 
 FLinearColor FPropertyCustomization_YapCharacterDefinition::Color_TagStatus() const
 {
+    FYapCharacterDefinition* CharacterDefinition = GetCharacterDefinition();
+
+    if (!CharacterDefinition)
+    {
+        return ErrorColor();
+    }
+    
     if ((CharacterDefinition->ErrorState & EYapCharacterDefinitionErrorState::TagConflict) != EYapCharacterDefinitionErrorState::OK)
     {
         return ErrorColor();
@@ -270,16 +374,28 @@ FLinearColor FPropertyCustomization_YapCharacterDefinition::Color_TagStatus() co
         return WarningColor();
     }
 
-    if (!Tag.MatchesTag(UYapProjectSettings::GetCharacterRootTag()))
+    const FGameplayTag& CharacterRootTag = UYapProjectSettings::GetCharacterRootTag();
+    
+    if (CharacterRootTag.IsValid())
     {
-        return TagNotInParentColor();
+        if (!Tag.MatchesTag(UYapProjectSettings::GetCharacterRootTag()))
+        {
+            return TagNotInParentColor();
+        }
     }
-
+    
     return OKColor();
 }
 
 FString FPropertyCustomization_YapCharacterDefinition::ObjectPath_CharacterAsset() const
 {
+    FYapCharacterDefinition* CharacterDefinition = GetCharacterDefinition();
+
+    if (!CharacterDefinition)
+    {
+        return "";    
+    }
+    
     if (CharacterDefinition->HasValidCharacterData())
     {
         if (!CharacterDefinition->CharacterAsset.IsNull())
@@ -291,7 +407,7 @@ FString FPropertyCustomization_YapCharacterDefinition::ObjectPath_CharacterAsset
     return "";
 }
 
-bool FPropertyCustomization_YapCharacterDefinition::OnShouldFilterAsset_CharacterAsset(const FAssetData& AssetData) const
+bool FPropertyCustomization_YapCharacterDefinition::OnShouldFilterAsset_CharacterAsset(const FAssetData& AssetData)
 {
     // Check if blueprint implements interface
     FString YapCharacterInterfacePath = UYapCharacterInterface::StaticClass()->GetPathName();
@@ -325,6 +441,13 @@ bool FPropertyCustomization_YapCharacterDefinition::OnShouldFilterAsset_Characte
 
 FReply FPropertyCustomization_YapCharacterDefinition::OnOpenCharacterAsset() const
 {
+    FYapCharacterDefinition* CharacterDefinition = GetCharacterDefinition();
+
+    if (!CharacterDefinition)
+    {
+        return FReply::Handled();
+    }
+    
     UAssetEditorSubsystem* Subsystem = GEditor->GetEditorSubsystem<UAssetEditorSubsystem>();
 
     if (!CharacterDefinition->CharacterAsset.IsNull())
@@ -337,7 +460,9 @@ FReply FPropertyCustomization_YapCharacterDefinition::OnOpenCharacterAsset() con
 
 bool FPropertyCustomization_YapCharacterDefinition::GetCharacterHasErrors() const
 {
-    if (CharacterDefinition->CharacterAsset.IsNull())
+    FYapCharacterDefinition* CharacterDefinition = GetCharacterDefinition();
+
+    if (!CharacterDefinition || CharacterDefinition->CharacterAsset.IsNull())
     {
         return false;
     }

@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "GameplayTagContainer.h"
 #include "IPropertyTypeCustomization.h"
 #include "PropertyHandle.h"
 
@@ -21,10 +22,14 @@ public:
     // STATE --------------------------------------------------------------------------------------
     
 protected:
-    FYapCharacterDefinition* CharacterDefinition = nullptr;
+    TWeakPtr<IPropertyHandle> CharacterDefinitionProperty_Weak;
 
-    TSharedPtr<IPropertyHandle> AssetPropertyHandle;
+    FYapCharacterDefinition* GetCharacterDefinition() const;
+    TSharedPtr<IPropertyHandle> GetTagPropertyHandle() const;
+    TSharedPtr<IPropertyHandle> GetAssetPropertyHandle() const;
     
+    FGameplayTag GetCharacterTag() const;
+
     // OVERRIDES ----------------------------------------------------------------------------------
 
 protected:
@@ -46,7 +51,7 @@ protected:
     
     FString ObjectPath_CharacterAsset() const;
 
-    bool OnShouldFilterAsset_CharacterAsset(const FAssetData& AssetData) const; 
+    static bool OnShouldFilterAsset_CharacterAsset(const FAssetData& AssetData); 
     
     FReply OnOpenCharacterAsset() const;
 

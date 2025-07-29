@@ -36,7 +36,7 @@ public:
     // STATE
     // ------------------------------------------
 private:
-    UPROPERTY(Transient, BlueprintReadOnly, meta = (IgnoreForMemberInitializationTest, AllowPrivateAccess), Category = "Default")
+    UPROPERTY(Transient, meta = (IgnoreForMemberInitializationTest))
     FGuid Guid;
 
     UPROPERTY(Transient)
@@ -90,6 +90,9 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Yap|Speech Handle", meta = (WorldContext = "WorldContext"))
     static void BindToOnSpeechComplete(UObject* WorldContext, FYapSpeechHandle Handle, FYapSpeechEventDelegate Delegate);
 
+    UFUNCTION(BlueprintCallable, Category = "Yap|Speech Handle", meta = (WorldContext = "WorldContext"))
+    static void BindToOnSpeechCancelled(UObject* WorldContext, FYapSpeechHandle Handle, FYapSpeechEventDelegate Delegate);
+    
     /** Unind a delegate for when speech completes (i.e. if you no longer want a delegate to run). */
     UFUNCTION(BlueprintCallable, Category = "Yap|Speech Handle", meta = (WorldContext = "WorldContext"))
     static void UnbindToOnSpeechComplete(UObject* WorldContext, FYapSpeechHandle Handle, FYapSpeechEventDelegate Delegate);
@@ -102,10 +105,6 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Yap|Speech Handle", meta = (WorldContext = "WorldContext"))
     static bool CanSkip(UObject* WorldContext, const FYapSpeechHandle& Handle);
 
-    /** Checks if this speech is actually running. */
-    UFUNCTION(BlueprintCallable, Category = "Yap|Speech Handle", meta = (WorldContext = "WorldContext"))
-    static bool IsRunning(UObject* WorldContext, const FYapSpeechHandle& Handle);
-    
     /*
      * TODO URGENT
     UFUNCTION(BlueprintCallable, Category = "Yap")

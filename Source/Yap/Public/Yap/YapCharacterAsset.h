@@ -5,6 +5,7 @@
 
 #include "GameplayTagContainer.h"
 #include "InstancedStruct.h"
+#include "YapCharacterManager.h"
 #include "Interfaces/IYapCharacterInterface.h"
 
 #include "YapCharacterAsset.generated.h"
@@ -18,6 +19,8 @@ enum class EFlowYapCharacterMood : uint8;
 // TODO add validation warning to the details customization
 // TODO add a "skip warning" bool to portrait entries, to make it allowable for them to be unset (on packaging, any unset textures should, by default, log a warning message)
 
+// ================================================================================================
+
 USTRUCT()
 struct YAP_API FYapPortraitList
 {
@@ -26,9 +29,9 @@ struct YAP_API FYapPortraitList
 	/** Texture for each mood. Moods are stored as FNames instead of Gameplay Tags for easier handling. */
 	UPROPERTY(EditAnywhere, EditFixedSize, meta=(ReadOnlyKeys, ForceInlineRow))
 	TMap<FName, TObjectPtr<UTexture2D>> Map;
-
-	
 };
+
+// ================================================================================================
 
 /**
  * This is an OPTIONAL asset to create characters for your game. Yap can use any blueprint or asset which implements the IYapCharacterInterface.
@@ -70,8 +73,7 @@ protected:
 	// --------------------- //
 	/* IYapSpeaker Interface */
 public:
-
-	FText GetCharacterName() const override { return EntityName; };
+	FText GetCharacterName() const override { return EntityName; }
 
 	FLinearColor GetCharacterColor() const override { return EntityColor; };
 	
@@ -80,20 +82,17 @@ public:
 	/* IYapSpeaker Interface */
 	// --------------------- //
 
+public:
+	void SetName(const FText& InName) { EntityName = InName; }
+
+	void SetColor(const FLinearColor& InColor) { EntityColor = InColor; }
+
+	void SetPortrait(UTexture2D* InTexture) { Portrait = InTexture; }
+	
 	#if WITH_EDITOR
 public:
-	void PostLoad() override;
-
-	void PreSave(FObjectPreSaveContext SaveContext) override;
-	
-	void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
-
-	void RefreshPortraitList();
-
 	bool HasAnyMoodTags() const;
 	
-	FGameplayTagContainer GetAllMoodTags() const;
-
 	bool GetHasWarnings() const;
 	
 	bool GetHasObsoletePortraitData() const;
@@ -102,5 +101,7 @@ public:
 #endif
 
 };
+
+// ================================================================================================
 
 #undef LOCTEXT_NAMESPACE

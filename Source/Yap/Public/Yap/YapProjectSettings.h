@@ -5,7 +5,7 @@
 
 #include "Engine/DeveloperSettings.h"
 #include "GameplayTagContainer.h"
-#include "YapCharacterDefinition.h"
+#include "YapCharacterStaticDefinition.h"
 #include "YapNodeConfig.h"
 #include "Yap/YapBroker.h"
 #include "Yap/GameplayTagFilterHelper.h"
@@ -24,7 +24,7 @@ UCLASS(Config = Game, DefaultConfig, DisplayName = "Yap")
 class YAP_API UYapProjectSettings : public UDeveloperSettings, public FGameplayTagFilterHelper<UYapProjectSettings>
 {
 	GENERATED_BODY()
-
+	
 #if WITH_EDITOR
 	friend class FDetailCustomization_YapProjectSettings;
 #endif
@@ -103,10 +103,10 @@ protected:
 	
 	/** Map gameplay tags to your game's characters here. Any blueprints or assets which implement the Yap Character interface can be used. */
 	UPROPERTY(Config, EditAnywhere, Category = "Characters", DisplayName = "Characters")
-	TArray<FYapCharacterDefinition> CharacterArray;
+	TArray<FYapCharacterStaticDefinition> CharacterArray;
 
 	// Not exposed for editing, this is updated automatically whenever the character array is edited. Game code actually uses this as the character source. 
-	TMap<FGameplayTag, FYapCharacterDefinition> CharacterMap;
+	TMap<FGameplayTag, FYapCharacterStaticDefinition> CharacterMap;
 
 	// TODO: SAssetView doesn't support blueprint classes, so we can't use this yet.
 	/** By default, Yap will discover all native C++ classes that inherit the Yap Character interface. You can add blueprint classes which inherit it here. This avoids forcefully loading all assets to discover them. */
@@ -158,7 +158,7 @@ public:
 	
 	static const TArray<const UClass*> GetAllowableCharacterClasses();
 
-	static const TArray<FYapCharacterDefinition>& GetCharacterDefinitions() { return Get().CharacterArray; }
+	static const TArray<FYapCharacterStaticDefinition>& GetCharacterDefinitions() { return Get().CharacterArray; }
 	
 	static void AddAdditionalCharacterClass(TSoftClassPtr<UObject> Class);
 	
@@ -170,9 +170,11 @@ public:
 	
 	static const TSoftObjectPtr<UTexture2D> GetDefaultPortraitTextureAsset() { return Get().DefaultPortraitTexture; };
 
+#if WITH_EDITOR
 	static const UObject* FindCharacter(FGameplayTag CharacterTag, TSharedPtr<FStreamableHandle>& Handle, EYapLoadContext LoadContext);
-
-	static const TMap<FGameplayTag, FYapCharacterDefinition>& GetCharacters() { return Get().CharacterMap; }
+#endif
+	
+	static const TMap<FGameplayTag, FYapCharacterStaticDefinition>& GetCharacters() { return Get().CharacterMap; }
 
 	static const FGameplayTag& GetCharacterRootTag() { return Get().CharacterTagRoot; }
 
@@ -180,7 +182,7 @@ public:
 	
 #if WITH_EDITOR
 	// TODO this is kind of ugly. Can I get rid of it.
-	static TMap<FYapCharacterDefinition, FGameplayTag> ReversedCharacterMap;
+	static TMap<FYapCharacterStaticDefinition, FGameplayTag> ReversedCharacterMap;
 	static void UpdateReversedCharacterMap();
 #endif
 	

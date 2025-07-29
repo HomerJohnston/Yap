@@ -15,8 +15,11 @@
 #include "Subsystems/WorldSubsystem.h"
 #include "Engine/TimerHandle.h"
 #include "Engine/World.h"
+#include "UObject/ObjectKey.h"
+
 #include "YapSubsystem.generated.h"
 
+class UYapCharacterManager;
 class UYapConversationHandler;
 class UYapBroker;
 struct FYapPromptHandle;
@@ -47,7 +50,19 @@ struct FYapHandlersArray
 {
 	GENERATED_BODY()
 
+	UPROPERTY(Transient)
 	TArray<TObjectPtr<UObject>> Array;
+};
+
+// ================================================================================================
+
+USTRUCT()
+struct FYapSpeechHandlesArray
+{
+	GENERATED_BODY()
+
+	UPROPERTY(Transient)
+	TArray<FYapSpeechHandle> Handles;
 };
 
 // ================================================================================================
@@ -122,7 +137,6 @@ public:
 	// STATE
 	// -----------------------------------------
 protected:
-
 	/** All registered conversation handlers. It is assumed developers will only have one or two of these at a time, no need for fast lookup. Calling order will be preserved in order of registration. */
 	UPROPERTY(Transient)
 	TMap<TSubclassOf<UFlowNode_YapDialogue>, FYapHandlersArray> ConversationHandlers;
@@ -171,12 +185,15 @@ protected:
 
 	static bool bGetGameMaturitySettingWarningIssued;
 
-	UPROPERTY(Transient)
-	TSet<FYapSpeechHandle> RunningSpeech;
-	
 public:
 	UPROPERTY(Transient)
 	TMap<FYapSpeechHandle, FYapSpeechEvent> SpeechCompleteEvents;
+	
+	UPROPERTY(Transient)
+	TMap<FYapSpeechHandle, FYapSpeechEvent> SpeechCancelledEvents;
+	
+	UPROPERTY(Transient)
+	TMap<TObjectPtr<UObject>, FYapSpeechHandlesArray> ObjectSpeechHandles; // Warning: not TObjectKey? doesn't support UPROPERTY
 	
 	UPROPERTY(Transient)
 	TMap<FYapSpeechHandle, FTimerHandle> SpeechTimers;
@@ -195,8 +212,13 @@ public:
 	UPROPERTY(Transient, Instanced)
 	TObjectPtr<UYapSquirrel> NoiseGenerator;
 
+	UPROPERTY(Transient, Instanced)
+	TObjectPtr<UYapCharacterManager> CharacterManager;
+	
 public:
 	UYapSquirrel& GetNoiseGenerator() { return *NoiseGenerator; }
+
+	static UYapCharacterManager& GetCharacterManager(UObject* WorldContextObject);
 	
 	/*
 	UPROPERTY(BlueprintAssignable, Transient)
@@ -251,11 +273,6 @@ public:
 		}
 
 		return nullptr;
-	}
-
-	static bool IsSpeechRunning(UWorld* World, const FYapSpeechHandle& Handle)
-	{
-		return Get(World)->RunningSpeech.Contains(Handle);
 	}
 
 	static bool IsSpeechInConversation(UObject* WorldContext, const FYapSpeechHandle& Handle)
@@ -364,11 +381,9 @@ public:
 	
 	TArray<TObjectPtr<UObject>>* FindFreeSpeechHandlerArray(FYapDialogueNodeClassType NodeType);
 
+	FYapSpeechHandle GetNewSpeechHandle(UObject* Owner);
+	
 	FYapSpeechHandle GetNewSpeechHandle(FGuid Guid);
-	
-	void RegisterSpeechHandle(FYapSpeechHandle& Handle);
-	
-	void UnregisterSpeechHandle(FYapSpeechHandle& Handle);
 	
 public:
 	/**  */
@@ -381,7 +396,7 @@ public:
 	void OnWorldBeginPlay(UWorld& InWorld) override;
 	
 protected:
-	void OnSpeechComplete(FYapSpeechHandle Handle);
+	void OnSpeechComplete(FYapSpeechHandle Handle, bool bBroadcast);
 
 	/**  */
 	bool DoesSupportWorldType(const EWorldType::Type WorldType) const override;

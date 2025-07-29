@@ -8,6 +8,7 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "YapBlueprintFunctionLibrary.generated.h"
 
+class UYapCharacterManager;
 class UYapCharacterAsset;
 struct FInstancedStruct;
 struct FYapSpeechHandle;
@@ -55,13 +56,12 @@ public:
 
 	/**  */
 	UFUNCTION(BlueprintCallable, Category = "Yap|Character", meta = (WorldContext = "WorldContext"))
-	static AActor* FindYapCharacterActor(UObject* WorldContext, FName Speaker);
-
+	static AActor* FindYapCharacterActor(UObject* WorldContext, FName CharacterID);
+	
 	/**  */
-	UFUNCTION(BlueprintCallable, DisplayName = "Run Speech", Category = "Yap|Global", meta = (DefaultToSelf = "Speaker", AdvancedDisplay = 4))
+	UFUNCTION(BlueprintCallable, DisplayName = "Run Speech", Category = "Yap|Global", meta = (DefaultToSelf = "WorldContext", AdvancedDisplay = 4))
 	static UPARAM(DisplayName = "Handle") FYapSpeechHandle K2_RunSpeech(
-		TScriptInterface<IYapCharacterInterface> Speaker,
-		FName SpeakerName,
+		FName CharacterID,
 		FText DialogueText,
 		UObject* DialogueAudioAsset,
 		FGameplayTag MoodTag,

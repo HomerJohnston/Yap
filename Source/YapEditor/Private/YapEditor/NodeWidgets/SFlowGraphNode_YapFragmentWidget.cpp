@@ -952,6 +952,13 @@ FSlateColor SFlowGraphNode_YapFragmentWidget::ColorAndOpacity_AudioIDText() cons
 	return Color;
 }
 
+FText SFlowGraphNode_YapFragmentWidget::Text_AudioIDLabel() const
+{
+	//GetFragment().GetAudioID();
+
+	return FText::GetEmpty();
+}
+
 EVisibility SFlowGraphNode_YapFragmentWidget::Visibility_TimeProgressionWidget() const
 {
 	UWorld* World = GetDialogueNode()->GetWorld();
@@ -1095,7 +1102,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateDialogueDisplayWidge
 				SNew(STextBlock)
 				.ColorAndOpacity(this, &ThisClass::ColorAndOpacity_AudioIDText)
 				.SimpleTextMode(true)
-				.Text_Lambda( [FragmentIndexText, DialogueNode] ()
+				.Text(this, &ThisClass::Text_AudioIDLabel)/* [FragmentIndexText, DialogueNode] ()
 				{
 					if (DialogueNode.IsValid())
 					{
@@ -1103,7 +1110,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateDialogueDisplayWidge
 					}
 
 					return INVTEXT("");
-				} )
+				} )*/
 			]
 		]
 	];
@@ -1425,7 +1432,9 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateSpeakerImageWidget(i
 
 FSlateColor SFlowGraphNode_YapFragmentWidget::BorderBackgroundColor_SpeakerImage() const
 {
-	const UObject* Speaker = GetFragmentMutable().GetSpeakerCharacter(EYapLoadContext::DoNotLoad);
+	TSharedPtr<FStreamableHandle> DummyHandle;
+	
+	const UObject* Speaker = UYapProjectSettings::FindCharacter(GetFragment().GetSpeakerTag(), DummyHandle, EYapLoadContext::AsyncEditorOnly);
 	
 	FLinearColor Color = IYapCharacterInterface::GetColor(Speaker);
 	
@@ -1510,7 +1519,8 @@ FText SFlowGraphNode_YapFragmentWidget::ToolTipText_SpeakerWidget() const
 	}
 	*/
 	
-	const UObject* Speaker = GetFragmentMutable().GetSpeakerCharacter(EYapLoadContext::DoNotLoad);	
+	TSharedPtr<FStreamableHandle> DummyHandle;
+	const UObject* Speaker = UYapProjectSettings::FindCharacter(GetFragment().GetSpeakerTag(), DummyHandle, EYapLoadContext::DoNotLoad);
 
 	if (!IsValid(Speaker))
 	{
@@ -1549,7 +1559,8 @@ FText SFlowGraphNode_YapFragmentWidget::Text_SpeakerWidget() const
 	}
 	*/
 	
-	const UObject* Speaker = Fragment.GetSpeakerCharacter(EYapLoadContext::DoNotLoad);
+	TSharedPtr<FStreamableHandle> DummyHandle;
+	const UObject* Speaker = UYapProjectSettings::FindCharacter(GetFragment().GetSpeakerTag(), DummyHandle, EYapLoadContext::DoNotLoad);
 
 	// TODO I hate reading this twice although it probably isn't that expensive. Maybe I can toggle this on/off by events somehow later.		
 	if (Image_SpeakerImage() == nullptr)
@@ -1609,7 +1620,11 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateDirectedAtWidget()
 	.BorderBackgroundColor(this, &ThisClass::BorderBackgroundColor_DirectedAtImage)
 	.Visibility_Lambda( [this] ()
 	{
-		return (FragmentTextOverlay.IsValid() && FragmentTextOverlay->IsHovered()) || IsValid(GetFragmentMutable().GetDirectedAt(EYapLoadContext::DoNotLoad)) ? EVisibility::Visible : EVisibility::Collapsed;
+		TSharedPtr<FStreamableHandle> DummyHandle;
+		
+		return (FragmentTextOverlay.IsValid() && FragmentTextOverlay->IsHovered()) || IsValid(
+			UYapProjectSettings::FindCharacter(GetFragment().GetDirectedAtTag(), DummyHandle, EYapLoadContext::AsyncEditorOnly)
+			) ? EVisibility::Visible : EVisibility::Collapsed;
 	} )
 	.Padding(3)
 	[
@@ -1652,7 +1667,8 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateDirectedAtWidget()
 
 FSlateColor SFlowGraphNode_YapFragmentWidget::BorderBackgroundColor_DirectedAtImage() const
 {
-	const UObject* DirectedAt = GetFragmentMutable().GetDirectedAt(EYapLoadContext::DoNotLoad);
+	TSharedPtr<FStreamableHandle> DummyHandle;
+	const UObject* DirectedAt = UYapProjectSettings::FindCharacter(GetFragment().GetSpeakerTag(), DummyHandle, EYapLoadContext::DoNotLoad);
 	
 	FLinearColor Color = IYapCharacterInterface::GetColor(DirectedAt);
 
@@ -1712,8 +1728,8 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::PopupContentGetter_Directe
 
 const FSlateBrush* SFlowGraphNode_YapFragmentWidget::Image_DirectedAtWidget() const
 {
-	//const UYapCharacter* Character = GetFragmentMutable().GetDirectedAt(EYapLoadContext::AsyncEditorOnly);
-	const UObject* SpeakerAsset = GetFragmentMutable().GetDirectedAt(EYapLoadContext::AsyncEditorOnly);
+	TSharedPtr<FStreamableHandle> DummyHandle;
+	const UObject* SpeakerAsset = UYapProjectSettings::FindCharacter(GetFragment().GetSpeakerTag(), DummyHandle, EYapLoadContext::AsyncEditorOnly);
 
 	TSharedPtr<FSlateImageBrush> PortraitBrush = UYapEditorSubsystem::GetCharacterPortraitBrush(SpeakerAsset, FGameplayTag::EmptyTag);
 

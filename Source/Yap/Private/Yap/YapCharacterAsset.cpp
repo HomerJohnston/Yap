@@ -14,10 +14,14 @@
 
 #define LOCTEXT_NAMESPACE "Yap"
 
+// ------------------------------------------------------------------------------------------------
+
 UYapCharacterAsset::UYapCharacterAsset() :
 	EntityColor(0.5, 0.5, 0.5, 1.0)
 {
 }
+
+// ------------------------------------------------------------------------------------------------
 
 const UTexture2D* UYapCharacterAsset::GetCharacterPortrait(const FGameplayTag& MoodTag) const
 {
@@ -34,106 +38,14 @@ const UTexture2D* UYapCharacterAsset::GetCharacterPortrait(const FGameplayTag& M
 				return *TexturePtr;
 			}
 		}
-	
 	}
 	
 	return Portrait;
 }
 
-#if WITH_EDITOR
-void UYapCharacterAsset::PostLoad()
-{
-	Super::PostLoad();
-}
-
-void UYapCharacterAsset::PreSave(FObjectPreSaveContext SaveContext)
-{
-	UObject::PreSave(SaveContext);
-}
-#endif
+// ------------------------------------------------------------------------------------------------
 
 #if WITH_EDITOR
-void UYapCharacterAsset::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
-{
-	Super::PostEditChangeProperty(PropertyChangedEvent);
-}
-#endif
-
-#if WITH_EDITOR
-void UYapCharacterAsset::RefreshPortraitList()
-{
-	/*
-	FGameplayTagContainer MoodRoots = Yap::GetMoodTagRoots();
-
-	for (auto It = PortraitsMap.CreateIterator(); It; ++It)
-	{
-		TPair<FName, FYapPortraitList>& KVPair = *It;
-
-		if (!KVPair.Key.IsValid())
-		{
-			It.RemoveCurrent();
-			continue;
-		}
-
-		FGameplayTag Tag = FGameplayTag::RequestGameplayTag(KVPair.Key);
-		
-		if (!MoodRoots.HasTagExact(Tag))
-		{
-			It.RemoveCurrent();
-			continue;
-		}
-	}
-	
-	for (const FGameplayTag& MoodRoot : MoodRoots)
-	{
-		FYapPortraitList& List = PortraitsMap.FindOrAdd(MoodRoot);
-
-		FGameplayTagContainer Moods = UGameplayTagsManager::Get().RequestGameplayTagChildren(MoodRoot);
-
-		for (const FGameplayTag& MoodTag : Moods)
-		{
-			if (!List.Map.Contains(MoodTag.GetTagName()))
-			{
-				List.Map.Add(MoodTag.GetTagName(), nullptr);
-			}
-		}
-	}
-
-	PortraitsMap.KeySort( [] (const FGameplayTag& A, const FGameplayTag& B)
-	{
-		return A.GetTagName().LexicalLess(B.GetTagName());
-	});
-*/	
-
-	/*
-	FGameplayTagContainer AllMoodTags = GetAllMoodTags();
-
-	for (auto It = Portraits.CreateIterator(); It; ++It)
-	{
-		TPair<FGameplayTag, UTexture2D*> KVPair = *It;
-
-		if (!KVPair.Key.IsValid())
-		{
-			It.RemoveCurrent();
-		}
-	}
-	
-	for (const FGameplayTag& MoodTag : AllMoodTags)
-	{
-		if (!Portraits.Contains(MoodTag))
-		{
-			Portraits.Add(MoodTag, nullptr);
-		}
-	}
-*/
-	/*
-	Portraits.KeySort( [] (const FName& A, const FName& B)
-	{
-		return A.LexicalLess(B);
-	});
-	*/
-}
-
 bool UYapCharacterAsset::HasAnyMoodTags() const
 {
 	for (const auto& KVP : PortraitsMap)
@@ -146,17 +58,29 @@ bool UYapCharacterAsset::HasAnyMoodTags() const
 
 	return false;
 }
+#endif
 
+// ------------------------------------------------------------------------------------------------
+
+#if WITH_EDITOR
 bool UYapCharacterAsset::GetHasWarnings() const
 {
-	return GetHasObsoletePortraitData(); // || other conditions
+	return GetHasObsoletePortraitData(); // || other future conditions?
 }
+#endif
 
+// ------------------------------------------------------------------------------------------------
+
+#if WITH_EDITOR
 bool UYapCharacterAsset::GetHasObsoletePortraitData() const
 {
 	return Portraits.Num() > 0;
 }
+#endif
 
+// ------------------------------------------------------------------------------------------------
+
+#if WITH_EDITOR
 bool UYapCharacterAsset::GetPortraitsOutOfDate() const
 {
 	FGameplayTagContainer MoodTagRoots = Yap::GetMoodTagRoots();
@@ -201,7 +125,8 @@ bool UYapCharacterAsset::GetPortraitsOutOfDate() const
 
 	return false;
 }
-
 #endif
+
+// ------------------------------------------------------------------------------------------------
 
 #undef LOCTEXT_NAMESPACE

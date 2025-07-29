@@ -408,7 +408,7 @@ public:
 	void PostLoad() override;
 
 	void PreSave(FObjectPreSaveContext SaveContext) override;
+#endif // WITH_EDITOR
 	
 	void PreloadContent() override;
-#endif // WITH_EDITOR
 };

@@ -19,6 +19,7 @@
 #include "TimerManager.h"
 
 #include "GameFramework/Character.h"
+#include "Yap/YapCharacterManager.h"
 
 #define LOCTEXT_NAMESPACE "Yap"
 
@@ -46,6 +47,19 @@ UYapSubsystem::UYapSubsystem()
 }
 
 // ------------------------------------------------------------------------------------------------
+
+UYapCharacterManager& UYapSubsystem::GetCharacterManager(UObject* WorldContextObject)
+{
+	UYapSubsystem& Subsystem = *Get(WorldContextObject);
+
+	if (!IsValid(Subsystem.CharacterManager))
+	{
+		Subsystem.CharacterManager = NewObject<UYapCharacterManager>(&Subsystem);
+		Subsystem.CharacterManager->Initialize();
+	}
+
+	return *Subsystem.CharacterManager;
+}
 
 void UYapSubsystem::RegisterConversationHandler(UObject* NewHandler, FYapDialogueNodeClassType NodeType)
 {
@@ -510,14 +524,14 @@ void UYapSubsystem::RunSpeech(const FYapData_SpeechBegins& SpeechData, FYapDialo
 	if (SpeechData.SpeechTime > 0)
 	{
 		FTimerHandle SpeechTimerHandle;
-		FTimerDelegate Delegate = FTimerDelegate::CreateUObject(this, &ThisClass::OnSpeechComplete, Handle);
+		FTimerDelegate Delegate = FTimerDelegate::CreateUObject(this, &ThisClass::OnSpeechComplete, Handle, true);
 		GetWorld()->GetTimerManager().SetTimer(SpeechTimerHandle, Delegate, SpeechData.SpeechTime, false);
 
 		SpeechTimers.Add(Handle, SpeechTimerHandle);
 	}
 	else
 	{
-		OnSpeechComplete(Handle);
+		OnSpeechComplete(Handle, true);
 	}
 }
 
@@ -662,24 +676,20 @@ bool UYapSubsystem::CancelSpeech(UObject* WorldContext, const FYapSpeechHandle& 
 	
 	UYapSubsystem* Subsystem = Get(WorldContext);
 
-	FYapConversationHandle* ConversationHandlePtr = Subsystem->SpeechConversationMapping.Find(Handle);
-
-	/*
-	if (ConversationHandlePtr)
-	{
-		//Subsystem->AdvanceConversation(Subsystem, *ConversationHandlePtr);
-		return true;
-	}
-	*/
-	
 	if (FTimerHandle* TimerHandle = Subsystem->SpeechTimers.Find(Handle))
 	{
 		WorldContext->GetWorld()->GetTimerManager().ClearTimer(*TimerHandle);
 
-		// Broadcast to Yap systems; in dialogue nodes, this will kill any running paddings
-		Subsystem->OnCancelDelegate.Broadcast(Subsystem, Handle);
+		//Broadcast to Yap systems; in dialogue nodes, this will kill any running paddings
+		//Subsystem->OnCancelDelegate.Broadcast(Subsystem, Handle);
 
-		Subsystem->OnSpeechComplete(Handle);
+		Subsystem->SpeechCompleteEvents.Remove(Handle);
+		//Subsystem->OnSpeechComplete(Handle, false);
+		
+		FYapSpeechEvent Evt;
+		Subsystem->SpeechCancelledEvents.RemoveAndCopyValue(Handle, Evt);
+		Evt.Broadcast(Subsystem, Handle);
+
 	
 		return true;
 	}
@@ -719,8 +729,9 @@ void UYapSubsystem::AdvanceConversation(UObject* Instigator, const FYapConversat
 	for (const FYapSpeechHandle& SpeechHandle : RunningFragments)
 	{
 		UE_LOG(LogYap, VeryVerbose, TEXT("Subsystem: AdvanceConversation CALLING ONSPEECHCOMPLETE [%s]"), *ConversationHandle.ToString());
-		Subsystem->OnSpeechComplete(SpeechHandle);
+		Subsystem->OnSpeechComplete(SpeechHandle, true);
 	}
+	
 	UE_LOG(LogYap, VeryVerbose, TEXT("Subsystem: AdvanceConversation FINISH [%s]"), *ConversationHandle.ToString());
 }
 
@@ -736,7 +747,7 @@ void UYapSubsystem::RegisterCharacterComponent(UYapCharacterComponent* YapCharac
 		return;
 	}
 
-	YapCharacterComponents.Add(YapCharacterComponent->GetCharacterIdentity(), YapCharacterComponent);
+	YapCharacterComponents.Add(YapCharacterComponent->GetCharacterID(), YapCharacterComponent);
 	
 	RegisteredYapCharacterActors.Add(Actor);
 }
@@ -747,7 +758,7 @@ void UYapSubsystem::UnregisterCharacterComponent(UYapCharacterComponent* YapChar
 {
 	AActor* Actor = YapCharacterComponent->GetOwner();
 
-	YapCharacterComponents.Remove(YapCharacterComponent->GetCharacterIdentity());
+	YapCharacterComponents.Remove(YapCharacterComponent->GetCharacterID());
 	RegisteredYapCharacterActors.Remove(Actor);
 }
 
@@ -795,29 +806,26 @@ TArray<TObjectPtr<UObject>>* UYapSubsystem::FindFreeSpeechHandlerArray(FYapDialo
 
 // ------------------------------------------------------------------------------------------------
 
-FYapSpeechHandle UYapSubsystem::GetNewSpeechHandle(FGuid Guid)
+FYapSpeechHandle UYapSubsystem::GetNewSpeechHandle(UObject* Owner)
 {
-	FYapSpeechHandle NewHandle(GetWorld(), Guid);
-	
-	SpeechCompleteEvents.Add(NewHandle);
+	FYapSpeechHandle NewHandle = GetNewSpeechHandle(FGuid::NewGuid());
 
+	auto& Array = ObjectSpeechHandles.FindOrAdd(Owner);
+
+	Array.Handles.Add(NewHandle);
+	
 	return NewHandle;
 }
 
-// ------------------------------------------------------------------------------------------------
-
-void UYapSubsystem::RegisterSpeechHandle(FYapSpeechHandle& Handle)
+FYapSpeechHandle UYapSubsystem::GetNewSpeechHandle(FGuid Guid)
 {
-	UE_LOG(LogYap, VeryVerbose, TEXT("RegisterSpeechHandle {%s}"), *Handle.ToString());
-	SpeechCompleteEvents.Add(Handle);
-}
+	FYapSpeechHandle NewHandle(GetWorld(), Guid);
 
-// ------------------------------------------------------------------------------------------------
+	// TODO URGENT I need to consolidate my "end" code somehow so that I never miss unbinding one of these things
+	SpeechCompleteEvents.Add(NewHandle);
+	SpeechCancelledEvents.Add(NewHandle);
 
-void UYapSubsystem::UnregisterSpeechHandle(FYapSpeechHandle& Handle)
-{
-	UE_LOG(LogYap, VeryVerbose, TEXT("UnregisterSpeechHandle {%s}"), *Handle.ToString());
-	SpeechCompleteEvents.Remove(Handle);
+	return NewHandle;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -849,25 +857,32 @@ void UYapSubsystem::OnWorldBeginPlay(UWorld& InWorld)
 
 // ------------------------------------------------------------------------------------------------
 
-void UYapSubsystem::OnSpeechComplete(FYapSpeechHandle Handle)
+void UYapSubsystem::OnSpeechComplete(FYapSpeechHandle Handle, bool bBroadcast)
 {
-	auto* Delegate = SpeechCompleteEvents.Find(Handle);
+	UE_LOG(LogYap, VeryVerbose, TEXT("%s: OnSpeechComplete entering {%s}"), *GetName(), *Handle.ToString());
 
-	if (Delegate)
+	if (bBroadcast)
 	{
-		UE_LOG(LogYap, VeryVerbose, TEXT("%s: OnSpeechComplete {%s}"), *GetName(), *Handle.ToString());
+		auto* Delegate = SpeechCompleteEvents.Find(Handle);
 
-		FYapSpeechEvent Evt;
-		SpeechCompleteEvents.RemoveAndCopyValue(Handle, Evt);
-		Evt.Broadcast(this, Handle);
+		if (Delegate)
+		{
+			UE_LOG(LogYap, VeryVerbose, TEXT("%s: OnSpeechComplete {%s}"), *GetName(), *Handle.ToString());
+
+			FYapSpeechEvent Evt;
+			SpeechCompleteEvents.RemoveAndCopyValue(Handle, Evt);
+			Evt.Broadcast(this, Handle);
+
+			SpeechCancelledEvents.Remove(Handle);
 		
-		//This more rudimentary method was throwing an ensure in MTAccessDetector.h destructor, Line ~502. I have no idea why, though.
-		//SpeechCompleteEvents[Handle].Broadcast(this, Handle);
-		//SpeechCompleteEvents.Remove(Handle);
-	}
-	else
-	{
-		UE_LOG(LogYap, Warning, TEXT("Handle was not registered into SpeechCompleteEvents! %s"), *Handle.ToString());
+			//This more rudimentary method was throwing an ensure in MTAccessDetector.h destructor, Line ~502. I have no idea why, though.
+			//SpeechCompleteEvents[Handle].Broadcast(this, Handle);
+			//SpeechCompleteEvents.Remove(Handle);
+		}
+		else
+		{
+			UE_LOG(LogYap, Warning, TEXT("Handle was not registered into SpeechCompleteEvents! Can't broadcast Complete event! %s"), *Handle.ToString());
+		}	
 	}
 	
 	FTimerHandle* Timer = SpeechTimers.Find(Handle);

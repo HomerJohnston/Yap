@@ -108,6 +108,10 @@ protected:
 	UPROPERTY()
 	FName FragmentID;
 
+	/**  */
+	UPROPERTY()
+	FName AudioID;
+	
 	/** Padding is idle time to wait after the fragment finishes running. An unset value will use project defaults. */
 	UPROPERTY()
 	TOptional<float> Padding;
@@ -221,18 +225,18 @@ public:
 	
 	const FGameplayTag& GetDirectedAtTag() const;
 
-	const UObject* GetSpeakerCharacter(EYapLoadContext LoadContext); // Non-const because of async loading handle
+	const TScriptInterface<IYapCharacterInterface> GetSpeakerCharacter(UWorld* World, EYapLoadContext LoadContext); // Non-const because of async loading handle
 
 	bool HasDeprecatedSpeakerAsset();
 	
 	bool HasSpeakerAssigned();
 
-	const TSoftObjectPtr<const UObject> GetCharacterAsset(const FGameplayTag& CharacterTag, TSharedPtr<FStreamableHandle>& Handle, EYapLoadContext LoadContext) const;
+	//const TSoftObjectPtr<const UObject> GetCharacterAsset(UWorld* World, const FGameplayTag& CharacterTag, TSharedPtr<FStreamableHandle>& Handle, EYapLoadContext LoadContext) const;
 	
-	const UObject* GetDirectedAt(EYapLoadContext LoadContext); // Non-const because of async loading handle
+	const TScriptInterface<IYapCharacterInterface> GetDirectedAt(UWorld* World, EYapLoadContext LoadContext); // Non-const because of async loading handle
 	
 private:
-	const UObject* GetCharacter_Internal(const FGameplayTag& CharacterTag, TSharedPtr<FStreamableHandle>& Handle, EYapLoadContext LoadContext);
+	const TScriptInterface<IYapCharacterInterface> GetCharacter_Internal(UWorld* World, const FGameplayTag& CharacterTag, TSharedPtr<FStreamableHandle>& Handle, EYapLoadContext LoadContext);
 
 public:
 	// TODO I don't think fragments should know where their position is!
@@ -303,6 +307,8 @@ public:
 
 	const FName& GetFragmentID() const { return FragmentID; } 
 
+	const FName& GetAudioID() const { return AudioID; }
+	
 	// TODO - want to design a better system for this.
 	//void ReplaceBit(EYapMaturitySetting MaturitySetting, const FYapBitReplacement& ReplacementBit);
 

@@ -314,6 +314,7 @@ void UFlowNode_YapDialogue::InitializeInstance()
 	{
 		if (Fragment.GetFragmentID().IsValid())
 		{
+			// TODO
 			UYapSubsystem* Subsystem = GetWorld()->GetSubsystem<UYapSubsystem>();
 			//Subsystem->RegisterTaggedFragment(Fragment.GetFragmentTag(), this);
 		}
@@ -344,7 +345,7 @@ void UFlowNode_YapDialogue::ExecuteInput(const FName& PinName)
 		}
 		else
 		{
-		UE_LOG(LogYap, VeryVerbose, TEXT("%s: Unbinding OnAdvanceConversation and OnCancel"), *GetName());
+			UE_LOG(LogYap, VeryVerbose, TEXT("%s: Unbinding OnAdvanceConversation and OnCancel"), *GetName());
 			UYapSubsystem::Get(this)->OnAdvanceConversationDelegate.RemoveDynamic(this, &ThisClass::OnAdvanceConversation);
 			UYapSubsystem::Get(this)->OnCancelDelegate.RemoveDynamic(this, &ThisClass::OnCancel);
 			
@@ -551,12 +552,12 @@ bool UFlowNode_YapDialogue::TryBroadcastPrompts()
 
  		if (ActiveConfig.GetUsesDirectedAt())
  		{
- 			Data.DirectedAt = TScriptInterface<IYapCharacterInterface>(const_cast<UObject*>(Fragment.GetDirectedAt(EYapLoadContext::Sync)));
+ 			Data.DirectedAt = Fragment.GetDirectedAt(GetWorld(), EYapLoadContext::Sync);
  		}
 
  		if (ActiveConfig.GetUsesSpeaker())
  		{
- 			Data.Speaker = TScriptInterface<IYapCharacterInterface>(const_cast<UObject*>(Fragment.GetSpeakerCharacter(EYapLoadContext::Sync)));
+ 			Data.Speaker = Fragment.GetSpeakerCharacter(GetWorld(), EYapLoadContext::Sync);
 	 		Data.SpeakerName = Fragment.GetSpeakerTag().GetTagName();	
  		}
 
@@ -719,13 +720,13 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 
 	if (ActiveConfig.GetUsesDirectedAt())
 	{
-		Data.DirectedAt = TScriptInterface<IYapCharacterInterface>(const_cast<UObject*>(Fragment.GetDirectedAt(EYapLoadContext::Sync)));
+		Data.DirectedAt = Fragment.GetDirectedAt(GetWorld(), EYapLoadContext::Sync);
 	}
 
 	if (ActiveConfig.GetUsesSpeaker())
 	{
-		Data.Speaker = TScriptInterface<IYapCharacterInterface>(const_cast<UObject*>(Fragment.GetSpeakerCharacter(EYapLoadContext::Sync)));
-		Data.SpeakerName = Fragment.GetSpeakerTag().GetTagName();
+		Data.Speaker = Fragment.GetSpeakerCharacter(GetWorld(), EYapLoadContext::Sync);
+		Data.SpeakerID = Fragment.GetSpeakerTag().GetTagName();
 	}
 
 	if (ActiveConfig.GetUsesMoodTags())
@@ -1687,7 +1688,6 @@ void UFlowNode_YapDialogue::PreSave(FObjectPreSaveContext SaveContext)
 
 // ------------------------------------------------------------------------------------------------
 
-#if WITH_EDITOR
 void UFlowNode_YapDialogue::PreloadContent()
 {
 	UWorld* World = GetWorld();
@@ -1707,7 +1707,6 @@ void UFlowNode_YapDialogue::PreloadContent()
 		Fragment.PreloadContent(GetWorld(), MaturitySetting, LoadContext);
 	}
 }
-#endif
 
 // ------------------------------------------------------------------------------------------------
 

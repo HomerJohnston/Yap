@@ -84,7 +84,7 @@ protected:
 
 	// Index of this fragment inside the dialogue node
 	uint8 FragmentIndex = 0;
-	
+
 	// Color lookup table for buttons and indicators
 	static TMap<EYapTimeMode, FLinearColor> TimeModeButtonColors;
 	
@@ -192,6 +192,7 @@ protected:
 	EVisibility 			Visibility_AudioSettingsButton() const;
 	EVisibility 			Visibility_DialogueErrorState() const;
 	FSlateColor 			ColorAndOpacity_AudioIDText() const;
+	FText					Text_AudioIDLabel() const;
 	EVisibility				Visibility_TimeProgressionWidget() const;
 	
 	// ------------------------------------------

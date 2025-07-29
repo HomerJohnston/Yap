@@ -298,7 +298,7 @@ FReply FDetailCustomization_YapProjectSettings::OnClicked_DeleteEmptyCharacters(
 		return FReply::Handled();
 	}
 
-	auto RemoveEmpty = [] (const FYapCharacterDefinition& CharacterDefinition) -> bool
+	auto RemoveEmpty = [] (const FYapCharacterStaticDefinition& CharacterDefinition) -> bool
 	{
 		return CharacterDefinition.CharacterAsset.IsNull() && !CharacterDefinition.CharacterTag.IsValid();
 	};
@@ -325,7 +325,7 @@ FReply FDetailCustomization_YapProjectSettings::OnClicked_PopulateFromParent() c
 
 	TSet<FGameplayTag> Existing;
 	
-	for (const FYapCharacterDefinition& CharacterDefinition : ProjectSettings.Get()->CharacterArray)
+	for (const FYapCharacterStaticDefinition& CharacterDefinition : ProjectSettings.Get()->CharacterArray)
 	{
 		Existing.Add(CharacterDefinition.CharacterTag);
 	}
@@ -337,7 +337,7 @@ FReply FDetailCustomization_YapProjectSettings::OnClicked_PopulateFromParent() c
 			continue;
 		}
 		
-		ProjectSettings->CharacterArray.Emplace(FYapCharacterDefinition(Tag));
+		ProjectSettings->CharacterArray.Emplace(FYapCharacterStaticDefinition(Tag));
 	}
 	
 	return FReply::Handled();

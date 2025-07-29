@@ -12,18 +12,27 @@
 UYapCharacterComponent::UYapCharacterComponent()
 {
 	AddGameplayTagFilter(GET_MEMBER_NAME_CHECKED(ThisClass, Identity), FGameplayTagFilterDelegate::CreateStatic(&GetIdentityRootTag));
+
+	PrimaryComponentTick.bCanEverTick = false;
+	PrimaryComponentTick.bStartWithTickEnabled = false;
 }
 
 void UYapCharacterComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	GetWorld()->GetSubsystem<UYapSubsystem>()->RegisterCharacterComponent(this);
+
+	if (bAutoRegister)
+	{
+		Register();
+	}
 }
 
 void UYapCharacterComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	GetWorld()->GetSubsystem<UYapSubsystem>()->UnregisterCharacterComponent(this);
+	if (bRegistered)
+	{
+		Unregister();
+	}
 	
 	Super::EndPlay(EndPlayReason);
 }
@@ -31,6 +40,18 @@ void UYapCharacterComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 const FGameplayTag& UYapCharacterComponent::GetIdentityRootTag()
 {
 	return UYapProjectSettings::GetCharacterRootTag();
+}
+
+void UYapCharacterComponent::Register()
+{
+	GetWorld()->GetSubsystem<UYapSubsystem>()->RegisterCharacterComponent(this);
+	bRegistered = true;
+}
+
+void UYapCharacterComponent::Unregister()
+{
+	GetWorld()->GetSubsystem<UYapSubsystem>()->UnregisterCharacterComponent(this);
+	bRegistered = false;
 }
 
 #undef LOCTEXT_NAMESPACE

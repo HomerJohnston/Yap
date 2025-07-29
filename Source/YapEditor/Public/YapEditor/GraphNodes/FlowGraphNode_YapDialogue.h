@@ -59,7 +59,7 @@ public:
 protected:
 	void GatherAllAudioAssets(TArray<FAssetData>& AllAudioAssets);
 
-	void GroupAudioAssetsByTags(TMap<FString, TArray<FAssetData>>& AudioAssetsByAudioTag);
+	void GroupAudioAssetsByTags(TMap<FString, TArray<FAssetData>>& AudioAssetsByAudioID);
 };
 
 #undef LOCTEXT_NAMESPACE

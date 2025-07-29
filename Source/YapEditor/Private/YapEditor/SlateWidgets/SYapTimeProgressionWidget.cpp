@@ -456,7 +456,12 @@ void SYapTimeProgressionWidget::HideTimeDisplayBox()
 
 bool SYapTimeProgressionWidget::AllowPaddingEditing() const
 {
-	return DialogueNode->GetNodeType() != EYapDialogueNodeType::TalkAndAdvance;
+	if (DialogueNode.IsValid())
+	{
+		return DialogueNode->GetNodeType() != EYapDialogueNodeType::TalkAndAdvance;
+	}
+
+	return false;
 }
 
 void SYapTimeProgressionWidget::Tick(const FGeometry& AllottedGeometry, const double InCurrentTime,

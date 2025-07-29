@@ -5,7 +5,7 @@
 
 #include "GameplayTagContainer.h"
 
-#include "YapCharacterDefinition.generated.h"
+#include "YapCharacterStaticDefinition.generated.h"
 
 struct FStreamableHandle;
 enum class EYapLoadContext : uint8;
@@ -21,7 +21,7 @@ enum class EYapCharacterDefinitionErrorState : uint8
 ENUM_CLASS_FLAGS(EYapCharacterDefinitionErrorState);
 
 USTRUCT()
-struct YAP_API FYapCharacterDefinition
+struct YAP_API FYapCharacterStaticDefinition
 {
     GENERATED_BODY()
 
@@ -31,25 +31,33 @@ struct YAP_API FYapCharacterDefinition
     friend class FPropertyCustomization_YapCharacterDefinition;
     friend class FDetailCustomization_YapProjectSettings;
 #endif
-    
-    FYapCharacterDefinition()
+
+public:
+    FYapCharacterStaticDefinition()
     {
     }
 
-    FYapCharacterDefinition(FGameplayTag InCharacterTag)
+    FYapCharacterStaticDefinition(FGameplayTag InCharacterTag)
         : CharacterTag(InCharacterTag)
     {
     }
 
+protected:
+    /**  */
     UPROPERTY(EditAnywhere)
     FGameplayTag CharacterTag;
 
-protected:
-    // If an asset is selected, this will store it
+    /**  */
     UPROPERTY(EditAnywhere)
     TSoftObjectPtr<UObject> CharacterAsset;
 
 public:
+
+    const FGameplayTag& GetCharacterTag() const { return CharacterTag; }
+    
+    TSoftObjectPtr<UObject> GetCharacter_Soft() const { return CharacterAsset; };
+    
+    // TODO this should probably be deprecated. Move into the character manager stuff.
     UObject* GetCharacter(TSharedPtr<FStreamableHandle>& Handle, EYapLoadContext LoadContext) const;
 
     UPROPERTY(Transient)
@@ -57,17 +65,17 @@ public:
 
     bool HasValidCharacterData() const;
     
-    bool operator< (const FYapCharacterDefinition& OtherCharacter) const
+    bool operator< (const FYapCharacterStaticDefinition& OtherCharacter) const
     {
         return CharacterTag < OtherCharacter.CharacterTag;
     }
     
-    friend uint32 GetTypeHash(const FYapCharacterDefinition& This)
+    friend uint32 GetTypeHash(const FYapCharacterStaticDefinition& This)
     {
         return GetTypeHash(This.CharacterTag);
     }
 
-    friend bool operator==(const FYapCharacterDefinition& This, const FYapCharacterDefinition& Other)
+    friend bool operator==(const FYapCharacterStaticDefinition& This, const FYapCharacterStaticDefinition& Other)
     {
         return This.CharacterTag == Other.CharacterTag;
     }

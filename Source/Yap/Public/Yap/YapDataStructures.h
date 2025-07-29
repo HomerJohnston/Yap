@@ -55,7 +55,7 @@ struct FYapData_SpeechBegins
 
 	/** Who is speaking. This is a Name. It will match the Gameplay Tag in project settings for predefined speakers. */
 	UPROPERTY(BlueprintReadWrite)
-	FName SpeakerName;
+	FName SpeakerID;
 
 	/** Mood of the speaker. */
     UPROPERTY(BlueprintReadOnly, Category = "Default")

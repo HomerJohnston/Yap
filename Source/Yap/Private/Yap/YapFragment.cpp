@@ -56,11 +56,22 @@ void FYapFragment::PreloadContent(UWorld* World, EYapMaturitySetting MaturitySet
 {
 	ResolveMaturitySetting(World, MaturitySetting);
 
-	// TODO after SpeakerAsset is removed, rename these
-	TSoftObjectPtr<const UObject> SpeakerAsset__ = GetCharacterAsset(Speaker, SpeakerHandle, LoadContext);
-	TSoftObjectPtr<const UObject> DirectedAtAsset__ = GetCharacterAsset(DirectedAt, DirectedAtHandle, LoadContext);
-	
-	// TODO I need some way for Yap to act upon the user changing their maturity setting. Broker needs an "OnMaturitySettingChanged" delegate?
+	// TODO: somehow, a flow graph should be able to work with "self" as the speaker, to make it possible to code flows for dynamic NPCs/dynamic speakers
+#if WITH_EDITOR
+	if (GEditor && GEditor->IsPlaySessionInProgress())
+	{
+		SpeakerHandle = UYapSubsystem::GetCharacterManager(World).RequestLoadAsync(Speaker.GetTagName());
+		DirectedAtHandle = UYapSubsystem::GetCharacterManager(World).RequestLoadAsync(DirectedAt.GetTagName());
+	}
+	else if (GEditor)
+	{
+		UYapProjectSettings::FindCharacter(Speaker, SpeakerHandle, EYapLoadContext::AsyncEditorOnly);
+		UYapProjectSettings::FindCharacter(DirectedAt, DirectedAtHandle, EYapLoadContext::AsyncEditorOnly);
+	}
+#else
+	SpeakerHandle = UYapSubsystem::GetCharacterManager(World).RequestLoadAsync(Speaker.GetTagName());
+	DirectedAtHandle = UYapSubsystem::GetCharacterManager(World).RequestLoadAsync(DirectedAt.GetTagName());
+#endif
 	
 	if (MaturitySetting == EYapMaturitySetting::ChildSafe && bEnableChildSafe)
 	{
@@ -82,9 +93,9 @@ const FGameplayTag& FYapFragment::GetDirectedAtTag() const
 	return DirectedAt;
 }
 
-const UObject* FYapFragment::GetSpeakerCharacter(EYapLoadContext LoadContext)
+const TScriptInterface<IYapCharacterInterface> FYapFragment::GetSpeakerCharacter(UWorld* World, EYapLoadContext LoadContext)
 {
-	return GetCharacter_Internal(Speaker, SpeakerHandle, LoadContext);
+	return GetCharacter_Internal(World, Speaker, SpeakerHandle, LoadContext);
 }
 
 bool FYapFragment::HasDeprecatedSpeakerAsset()
@@ -97,29 +108,32 @@ bool FYapFragment::HasSpeakerAssigned()
 	return Speaker.IsValid();
 }
 
-const TSoftObjectPtr<const UObject> FYapFragment::GetCharacterAsset(const FGameplayTag& CharacterTag, TSharedPtr<FStreamableHandle>& Handle, EYapLoadContext LoadContext) const
+/*
+const TSoftObjectPtr<const UObject> FYapFragment::GetCharacterAsset(UWorld* World, const FName& CharacterID, TSharedPtr<FStreamableHandle>& Handle, EYapLoadContext LoadContext) const
+{
+	if (CharacterID == NAME_None)
+	{
+		return nullptr;
+	}
+
+	UYapSubsystem::GetCharacterManager(World).FindCharacter(CharacterID);
+	return UYapProjectSettings::FindCharacter(CharacterID, Handle, LoadContext);
+}
+*/
+
+const TScriptInterface<IYapCharacterInterface> FYapFragment::GetDirectedAt(UWorld* World, EYapLoadContext LoadContext)
+{
+	return GetCharacter_Internal(World, DirectedAt, DirectedAtHandle, LoadContext);
+}
+
+const TScriptInterface<IYapCharacterInterface> FYapFragment::GetCharacter_Internal(UWorld* World, const FGameplayTag& CharacterTag, TSharedPtr<FStreamableHandle>& Handle, EYapLoadContext LoadContext)
 {
 	if (!CharacterTag.IsValid())
 	{
 		return nullptr;
 	}
 
-	return UYapProjectSettings::FindCharacter(CharacterTag, Handle, LoadContext);
-}
-
-const UObject* FYapFragment::GetDirectedAt(EYapLoadContext LoadContext)
-{
-	return GetCharacter_Internal(DirectedAt, DirectedAtHandle, LoadContext);
-}
-
-const UObject* FYapFragment::GetCharacter_Internal(const FGameplayTag& CharacterTag, TSharedPtr<FStreamableHandle>& Handle, EYapLoadContext LoadContext)
-{
-	if (!CharacterTag.IsValid())
-	{
-		return nullptr;
-	}
-
-	return UYapProjectSettings::FindCharacter(CharacterTag, Handle, LoadContext);
+	return UYapSubsystem::GetCharacterManager(World).FindCharacter(CharacterTag.GetTagName()).GetObject();
 }
 
 const FText& FYapFragment::GetDialogueText(UWorld* World, EYapMaturitySetting MaturitySetting) const

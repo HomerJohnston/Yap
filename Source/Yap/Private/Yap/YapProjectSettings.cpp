@@ -10,13 +10,13 @@
 #include "Yap/YapCharacterAsset.h"
 #include "Yap/Enums/YapLoadContext.h"
 #include "Yap/Globals/YapFileUtilities.h"
-#include "Yap/YapCharacterDefinition.h"
+#include "Yap/YapCharacterStaticDefinition.h"
 
 #define LOCTEXT_NAMESPACE "Yap"
 
 #if WITH_EDITOR
 FName UYapProjectSettings::CategoryName = FName("Yap");
-TMap<FYapCharacterDefinition, FGameplayTag> UYapProjectSettings::ReversedCharacterMap;
+TMap<FYapCharacterStaticDefinition, FGameplayTag> UYapProjectSettings::ReversedCharacterMap;
 #endif
 
 #include "Sound/SoundBase.h"
@@ -108,7 +108,7 @@ void UYapProjectSettings::AddAdditionalCharacterClass(TSoftClassPtr<UObject> Cla
 
 const UObject* UYapProjectSettings::FindCharacter(FGameplayTag CharacterTag, TSharedPtr<FStreamableHandle>& Handle, EYapLoadContext LoadContext)
 {
-	FYapCharacterDefinition* CharacterDefinition = Get().CharacterMap.Find(CharacterTag);
+	FYapCharacterStaticDefinition* CharacterDefinition = Get().CharacterMap.Find(CharacterTag);
 
 	if (CharacterDefinition)
 	{
@@ -122,7 +122,7 @@ const UObject* UYapProjectSettings::FindCharacter(FGameplayTag CharacterTag, TSh
 // TODO delete this in 2026. It's only for migrating fragments from old data to new data.
 const FGameplayTag& UYapProjectSettings::FindCharacterTag(const TSoftObjectPtr<UObject>& Character)
 {
-	for (const TTuple<FGameplayTag, FYapCharacterDefinition>& Pair : Get().CharacterMap)
+	for (const TTuple<FGameplayTag, FYapCharacterStaticDefinition>& Pair : Get().CharacterMap)
 	{
 		TSharedPtr<FStreamableHandle> TempHandle;
 		
@@ -144,7 +144,7 @@ void UYapProjectSettings::UpdateReversedCharacterMap()
 	
 	Get().ReversedCharacterMap.Empty(Get().CharacterMap.Num());
 	
-	for (const TPair<FGameplayTag, FYapCharacterDefinition>& Pair : Get().CharacterMap)
+	for (const TPair<FGameplayTag, FYapCharacterStaticDefinition>& Pair : Get().CharacterMap)
 	{
 		Get().ReversedCharacterMap.Add(Pair.Value, Pair.Key);
 	}
@@ -194,7 +194,7 @@ void UYapProjectSettings::ProcessCharacterArray(bool bUpdateMap)
 	
 	for (int32 i = 0; i < CharacterArray.Num(); ++i)
 	{
-		FYapCharacterDefinition& CharacterDefinition = CharacterArray[i];
+		FYapCharacterStaticDefinition& CharacterDefinition = CharacterArray[i];
 
 		if (CharacterDefinition.CharacterTag.IsValid())
 		{
@@ -226,7 +226,7 @@ void UYapProjectSettings::ProcessCharacterArray(bool bUpdateMap)
 	
 	for (int32 i = 0; i < CharacterArray.Num(); ++i)
 	{
-		FYapCharacterDefinition& CharacterDefinition = CharacterArray[i];
+		FYapCharacterStaticDefinition& CharacterDefinition = CharacterArray[i];
 		
 		bool bAddToMap = true;
 		

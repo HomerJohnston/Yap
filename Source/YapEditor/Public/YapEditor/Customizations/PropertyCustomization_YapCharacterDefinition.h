@@ -7,7 +7,7 @@
 #include "IPropertyTypeCustomization.h"
 #include "PropertyHandle.h"
 
-struct FYapCharacterDefinition;
+struct FYapCharacterStaticDefinition;
 /**
  * 
  */
@@ -24,7 +24,7 @@ public:
 protected:
     TWeakPtr<IPropertyHandle> CharacterDefinitionProperty_Weak;
 
-    FYapCharacterDefinition* GetCharacterDefinition() const;
+    FYapCharacterStaticDefinition* GetCharacterDefinition() const;
     TSharedPtr<IPropertyHandle> GetTagPropertyHandle() const;
     TSharedPtr<IPropertyHandle> GetAssetPropertyHandle() const;
     

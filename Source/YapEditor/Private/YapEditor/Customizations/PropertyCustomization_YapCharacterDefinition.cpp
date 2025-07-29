@@ -8,7 +8,7 @@
 #include "ThumbnailRendering/ThumbnailManager.h"
 #include "Widgets/Colors/SColorBlock.h"
 #include "Yap/YapCharacterAsset.h"
-#include "Yap/YapCharacterDefinition.h"
+#include "Yap/YapCharacterStaticDefinition.h"
 #include "Yap/YapProjectSettings.h"
 #include "Yap/Interfaces/IYapCharacterInterface.h"
 #include "YapEditor/YapEditorColor.h"
@@ -17,7 +17,7 @@
 
 #define LOCTEXT_NAMESPACE "YapEditor"
 
-FYapCharacterDefinition* FPropertyCustomization_YapCharacterDefinition::GetCharacterDefinition() const
+FYapCharacterStaticDefinition* FPropertyCustomization_YapCharacterDefinition::GetCharacterDefinition() const
 {
     if (!CharacterDefinitionProperty_Weak.IsValid())
     {
@@ -33,7 +33,7 @@ FYapCharacterDefinition* FPropertyCustomization_YapCharacterDefinition::GetChara
         return nullptr;
     }
 
-    return static_cast<FYapCharacterDefinition*>(CharacterDefinitionAddress);
+    return static_cast<FYapCharacterStaticDefinition*>(CharacterDefinitionAddress);
 }
 
 TSharedPtr<IPropertyHandle> FPropertyCustomization_YapCharacterDefinition::GetTagPropertyHandle() const
@@ -45,7 +45,7 @@ TSharedPtr<IPropertyHandle> FPropertyCustomization_YapCharacterDefinition::GetTa
 
     TSharedPtr<IPropertyHandle> CharacterDefinitionProperty = CharacterDefinitionProperty_Weak.Pin();
 
-    static const FName TagPropertyName = GET_MEMBER_NAME_CHECKED(FYapCharacterDefinition, CharacterTag);
+    static const FName TagPropertyName = GET_MEMBER_NAME_CHECKED(FYapCharacterStaticDefinition, CharacterTag);
 
     return CharacterDefinitionProperty->GetChildHandle(TagPropertyName);
 }
@@ -59,7 +59,7 @@ FGameplayTag FPropertyCustomization_YapCharacterDefinition::GetCharacterTag() co
 
     TSharedPtr<IPropertyHandle> CharacterDefinitionProperty = CharacterDefinitionProperty_Weak.Pin();
 
-    static const FName TagPropertyName = GET_MEMBER_NAME_CHECKED(FYapCharacterDefinition, CharacterTag);
+    static const FName TagPropertyName = GET_MEMBER_NAME_CHECKED(FYapCharacterStaticDefinition, CharacterTag);
 
     TSharedPtr<IPropertyHandle> TagPropertyHandle = CharacterDefinitionProperty->GetChildHandle(TagPropertyName);
 
@@ -82,7 +82,7 @@ TSharedPtr<IPropertyHandle> FPropertyCustomization_YapCharacterDefinition::GetAs
 
     TSharedPtr<IPropertyHandle> CharacterDefinitionProperty = CharacterDefinitionProperty_Weak.Pin();
 
-    static const FName AssetPropertyName = GET_MEMBER_NAME_CHECKED(FYapCharacterDefinition, CharacterAsset);
+    static const FName AssetPropertyName = GET_MEMBER_NAME_CHECKED(FYapCharacterStaticDefinition, CharacterAsset);
     
     return CharacterDefinitionProperty->GetChildHandle(AssetPropertyName);
 }
@@ -267,7 +267,7 @@ void FPropertyCustomization_YapCharacterDefinition::CustomizeChildren(TSharedRef
 
 FText FPropertyCustomization_YapCharacterDefinition::ToolTipText_AssetStatus() const
 {
-    FYapCharacterDefinition* CharacterDefinition = GetCharacterDefinition();
+    FYapCharacterStaticDefinition* CharacterDefinition = GetCharacterDefinition();
 
     if (!CharacterDefinition)
     {
@@ -297,7 +297,7 @@ FText FPropertyCustomization_YapCharacterDefinition::ToolTipText_AssetStatus() c
 
 FLinearColor FPropertyCustomization_YapCharacterDefinition::AssetStatusColor() const
 {
-    FYapCharacterDefinition* CharacterDefinition = GetCharacterDefinition();
+    FYapCharacterStaticDefinition* CharacterDefinition = GetCharacterDefinition();
 
     if (!CharacterDefinition)
     {
@@ -324,7 +324,7 @@ FLinearColor FPropertyCustomization_YapCharacterDefinition::AssetStatusColor() c
 
 FText FPropertyCustomization_YapCharacterDefinition::ToolTipText_TagStatus() const
 {
-    FYapCharacterDefinition* CharacterDefinition = GetCharacterDefinition();
+    FYapCharacterStaticDefinition* CharacterDefinition = GetCharacterDefinition();
 
     if (!CharacterDefinition)
     {
@@ -353,7 +353,7 @@ FText FPropertyCustomization_YapCharacterDefinition::ToolTipText_TagStatus() con
 
 FLinearColor FPropertyCustomization_YapCharacterDefinition::Color_TagStatus() const
 {
-    FYapCharacterDefinition* CharacterDefinition = GetCharacterDefinition();
+    FYapCharacterStaticDefinition* CharacterDefinition = GetCharacterDefinition();
 
     if (!CharacterDefinition)
     {
@@ -387,7 +387,7 @@ FLinearColor FPropertyCustomization_YapCharacterDefinition::Color_TagStatus() co
 
 FString FPropertyCustomization_YapCharacterDefinition::ObjectPath_CharacterAsset() const
 {
-    FYapCharacterDefinition* CharacterDefinition = GetCharacterDefinition();
+    FYapCharacterStaticDefinition* CharacterDefinition = GetCharacterDefinition();
 
     if (!CharacterDefinition)
     {
@@ -439,7 +439,7 @@ bool FPropertyCustomization_YapCharacterDefinition::OnShouldFilterAsset_Characte
 
 FReply FPropertyCustomization_YapCharacterDefinition::OnOpenCharacterAsset() const
 {
-    FYapCharacterDefinition* CharacterDefinition = GetCharacterDefinition();
+    FYapCharacterStaticDefinition* CharacterDefinition = GetCharacterDefinition();
 
     if (!CharacterDefinition)
     {
@@ -458,7 +458,7 @@ FReply FPropertyCustomization_YapCharacterDefinition::OnOpenCharacterAsset() con
 
 bool FPropertyCustomization_YapCharacterDefinition::GetCharacterHasErrors() const
 {
-    FYapCharacterDefinition* CharacterDefinition = GetCharacterDefinition();
+    FYapCharacterStaticDefinition* CharacterDefinition = GetCharacterDefinition();
 
     if (!CharacterDefinition || CharacterDefinition->CharacterAsset.IsNull())
     {

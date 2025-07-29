@@ -7,7 +7,7 @@
 #include "SYapHeadingBlock.h"
 #include "Filters/SFilterSearchBox.h"
 #include "Widgets/Colors/SColorBlock.h"
-#include "Yap/YapCharacterDefinition.h"
+#include "Yap/YapCharacterStaticDefinition.h"
 #include "Yap/YapProjectSettings.h"
 #include "YapEditor/YapEditorColor.h"
 #include "YapEditor/YapEditorStyle.h"
@@ -190,7 +190,7 @@ void SYapCharacterSelectWidget::UpdateCharacterSelector(const FText& FilterText)
 	int32 NumCharactersAdded = 0;
 	FGameplayTag LastCharacterTag;
 
-	auto CreateCharacterListEntry = [this, MoodTag, PortraitSize, BorderSize, FilterText, &NumCharactersAdded, &LastCharacterTag] (const FYapCharacterDefinition& CharacterDefinition)
+	auto CreateCharacterListEntry = [this, MoodTag, PortraitSize, BorderSize, FilterText, &NumCharactersAdded, &LastCharacterTag] (const FYapCharacterStaticDefinition& CharacterDefinition)
 	{
 		TSharedPtr<FStreamableHandle> Temp;
 		
@@ -291,7 +291,7 @@ void SYapCharacterSelectWidget::UpdateCharacterSelector(const FText& FilterText)
 			.ButtonStyle(FYapEditorStyle::Get(), YapStyles.ButtonStyle_CharacterSelect)
 			.ButtonColorAndOpacity(YapColor::DarkGray)
 			.ContentPadding(4)
-			.OnClicked_Lambda(OnClicked_CharacterSelect, CharacterDefinition.CharacterTag)
+			.OnClicked_Lambda(OnClicked_CharacterSelect, CharacterDefinition.GetCharacterTag())
 			[
 				SNew(SHorizontalBox)
 				+ SHorizontalBox::Slot()
@@ -342,14 +342,14 @@ void SYapCharacterSelectWidget::UpdateCharacterSelector(const FText& FilterText)
 					[
 						SNew(STextBlock)
 						.TextStyle(FYapEditorStyle::Get(), YapStyles.TextBlockStyle_CharacterTag)
-						.Text(FText::FromString(CharacterDefinition.CharacterTag.ToString()))	
+						.Text(FText::FromString(CharacterDefinition.GetCharacterTag().ToString()))	
 					]
 				]
 			]
 		];
 		
 		++NumCharactersAdded;
-		LastCharacterTag = CharacterDefinition.CharacterTag;
+		LastCharacterTag = CharacterDefinition.GetCharacterTag();
 	};
 
 	if (RecentlySelectedCharacterTags.Num() > 0)
@@ -363,9 +363,9 @@ void SYapCharacterSelectWidget::UpdateCharacterSelector(const FText& FilterText)
 			];
 		}
 		
-		for (const FYapCharacterDefinition& CharacterDefinition : UYapProjectSettings::GetCharacterDefinitions())
+		for (const FYapCharacterStaticDefinition& CharacterDefinition : UYapProjectSettings::GetCharacterDefinitions())
 		{
-			if (RecentlySelectedCharacterTags.Contains(CharacterDefinition.CharacterTag.GetTagName()))
+			if (RecentlySelectedCharacterTags.Contains(CharacterDefinition.GetCharacterTag().GetTagName()))
 			{
 				CreateCharacterListEntry(CharacterDefinition);
 			}
@@ -381,9 +381,9 @@ void SYapCharacterSelectWidget::UpdateCharacterSelector(const FText& FilterText)
 		];
 	}
 
-	for (const FYapCharacterDefinition& CharacterDefinition : UYapProjectSettings::GetCharacterDefinitions())
+	for (const FYapCharacterStaticDefinition& CharacterDefinition : UYapProjectSettings::GetCharacterDefinitions())
 	{
-		if (!RecentlySelectedCharacterTags.Contains(CharacterDefinition.CharacterTag.GetTagName()))
+		if (!RecentlySelectedCharacterTags.Contains(CharacterDefinition.GetCharacterTag().GetTagName()))
 		{
 			CreateCharacterListEntry(CharacterDefinition);
 		}

@@ -29,20 +29,12 @@ void FPropertyCustomization_YapCharacterIdentity::CustomizeHeader(TSharedRef<IPr
 		SNew(SVerticalBox)
 		+ SVerticalBox::Slot()
 		[
-		
-			SNew(SHorizontalBox)
-			+ SHorizontalBox::Slot()
-			[
-				NameProperty->CreatePropertyValueWidget()
-			]
-			+ SHorizontalBox::Slot()
-			[
-				TagProperty->CreatePropertyValueWidgetWithCustomization(nullptr)
-			]	
+			NameProperty->CreatePropertyValueWidget()
 		]
 		+ SVerticalBox::Slot()
 		[
-			SNew(SYapGameplayTagTypedPicker)
+			TagProperty->CreatePropertyValueWidgetWithCustomization(nullptr)
+//			SNew(SYapGameplayTagTypedPicker)
 		]
 	];
 }

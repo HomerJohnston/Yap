@@ -1,13 +1,13 @@
 // Copyright Ghost Pepper Games, Inc. All Rights Reserved.
 // This work is MIT-licensed. Feel free to use it however you wish, within the confines of the MIT license. 
 
-#include "Yap/YapCharacterDefinition.h"
+#include "Yap/YapCharacterStaticDefinition.h"
 
 #include "Engine/StreamableManager.h"
 #include "Yap/YapStreamableManager.h"
 #include "Yap/Enums/YapLoadContext.h"
 
-UObject* FYapCharacterDefinition::GetCharacter(TSharedPtr<FStreamableHandle>& Handle, EYapLoadContext LoadContext) const
+UObject* FYapCharacterStaticDefinition::GetCharacter(TSharedPtr<FStreamableHandle>& Handle, EYapLoadContext LoadContext) const
 {
     if (!HasValidCharacterData())
     {
@@ -50,7 +50,7 @@ UObject* FYapCharacterDefinition::GetCharacter(TSharedPtr<FStreamableHandle>& Ha
     return nullptr;
 }
 
-bool FYapCharacterDefinition::HasValidCharacterData() const
+bool FYapCharacterStaticDefinition::HasValidCharacterData() const
 {
     if (CharacterAsset.IsNull())
     {

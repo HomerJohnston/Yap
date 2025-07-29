@@ -6,10 +6,13 @@
 #include "Components/ActorComponent.h"
 #include "GameplayTagContainer.h"
 #include "GameplayTagFilterHelper.h"
+#include "InstancedStruct.h"
 
 #include "YapCharacterComponent.generated.h"
 
 #define LOCTEXT_NAMESPACE "Yap"
+
+struct FYapCharacterRuntimeDefinition;
 
 USTRUCT()
 struct FYapCharacterIdentity
@@ -18,15 +21,16 @@ struct FYapCharacterIdentity
 
 #if WITH_EDITOR
 	friend class FPropertyCustomization_YapCharacterIdentity;
+	friend class UYapCharacterComponent;
 #endif
 	
 private:
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Default")
 	FGameplayTag Identity_Tag;
 	
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Default")
 	FName Identity_Name;
-
+	
 public:
 	FName Get() const
 	{
@@ -39,7 +43,7 @@ public:
 	}
 };
 
-UCLASS(meta=(BlueprintSpawnableComponent))
+UCLASS(meta=(BlueprintSpawnableComponent), HideCategories = ("Sockets", "ComponentTick", "Cooking", "Events", "Asset UserData", "Navigation"))
 class YAP_API UYapCharacterComponent : public UActorComponent, public FGameplayTagFilterHelper<UYapCharacterComponent>
 {
 	GENERATED_BODY()
@@ -52,14 +56,27 @@ protected:
     UPROPERTY(EditAnywhere, Category = "Yap Character")
 	FYapCharacterIdentity Identity;
 	
+	UPROPERTY(EditAnywhere, Category = "Yap Character")
+	bool bAutoRegister = true;
+
+	UPROPERTY(EditAnywhere, Category = "Yap Character")
+	TInstancedStruct<FYapCharacterRuntimeDefinition> CharacterDefinition;
+
+	UPROPERTY(Transient)
+	bool bRegistered = false;
+	
 public:
 	void BeginPlay() override;
 
 	void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
-	const FName GetCharacterIdentity() { return Identity.Get(); }
+	const FName GetCharacterID() { return Identity.Get(); }
 	
 	static const FGameplayTag& GetIdentityRootTag();
+
+	void Register();
+
+	void Unregister();
 };
 
 #undef LOCTEXT_NAMESPACE

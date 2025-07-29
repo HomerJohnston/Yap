@@ -178,8 +178,8 @@ void UFlowGraphNode_YapDialogue::AutoAssignAudioOnAllFragments()
 	}
 
 	// Yap does not prevent conflicts between audio IDs across the whole project; only within a single Flow asset. Conflicts are segregated by folders for different Flow assets.
-	TMap<FString, TArray<FAssetData>> AudioAssetsByAudioTag;
-	GroupAudioAssetsByTags(AudioAssetsByAudioTag);
+	TMap<FString, TArray<FAssetData>> AudioAssetsByAudioID;
+	GroupAudioAssetsByTags(AudioAssetsByAudioID);
 
 	FYapTransactions::BeginModify(INVTEXT("TODO"), GetFlowAsset());
 
@@ -204,7 +204,7 @@ void UFlowGraphNode_YapDialogue::AutoAssignAudioOnAllFragments()
 		
 		FString AudioID = GetYapDialogueNode()->GetAudioID() + "-" + (FText::AsNumber(FragmentIndex, &Args)).ToString(); // TODO build some way for users to define their own sequencing. Maybe move this to a default in the Broker?
 
-		TArray<FAssetData>* CandidateAudioAssets = AudioAssetsByAudioTag.Find(AudioID);
+		TArray<FAssetData>* CandidateAudioAssets = AudioAssetsByAudioID.Find(AudioID);
 
 		if (CandidateAudioAssets)
 		{
@@ -336,7 +336,7 @@ void UFlowGraphNode_YapDialogue::GatherAllAudioAssets(TArray<FAssetData>& AllAud
 	AssetRegistry.GetAssets(Filter, AllAudioAssets, true);
 }
 
-void UFlowGraphNode_YapDialogue::GroupAudioAssetsByTags(TMap<FString, TArray<FAssetData>>& AudioAssetsByAudioTag)
+void UFlowGraphNode_YapDialogue::GroupAudioAssetsByTags(TMap<FString, TArray<FAssetData>>& AudioAssetsByAudioID)
 {
 	TArray<FAssetData> AllAudioAssets;
 	
@@ -365,7 +365,7 @@ void UFlowGraphNode_YapDialogue::GroupAudioAssetsByTags(TMap<FString, TArray<FAs
 			{
 				FString AudioID(ID.GetCaptureGroup(0));
 
-				TArray<FAssetData>& AudioAssetsWithTag = AudioAssetsByAudioTag.FindOrAdd(AudioID);
+				TArray<FAssetData>& AudioAssetsWithTag = AudioAssetsByAudioID.FindOrAdd(AudioID);
 				AudioAssetsWithTag.Add(AssetData);
 			}
 		}

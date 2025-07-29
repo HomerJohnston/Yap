@@ -21,7 +21,7 @@ FYapSpeechHandle::FYapSpeechHandle(UWorld* InWorld, FGuid InGuid)
 {
 	check(::IsValid(InWorld));
 	World = InWorld;
-	Guid = InGuid; //FGuid::NewGuid();
+	Guid = InGuid;
 }
 
 FYapSpeechHandle::~FYapSpeechHandle()
@@ -62,7 +62,21 @@ void UYapSpeechHandleBFL::BindToOnSpeechComplete(UObject* WorldContext, FYapSpee
 
 		if (Event)
 		{
-			UE_LOG(LogYap, VeryVerbose, TEXT("%s: Binding delegate %s for handle {%s}"), *Delegate.GetUObject()->GetName(), *Delegate.GetFunctionName().ToString(), *Handle.ToString());
+			UE_LOG(LogYap, VeryVerbose, TEXT("%s: Binding completion delegate %s for handle {%s}"), *Delegate.GetUObject()->GetName(), *Delegate.GetFunctionName().ToString(), *Handle.ToString());
+			Event->Add(Delegate);
+		}
+	}
+}
+
+void UYapSpeechHandleBFL::BindToOnSpeechCancelled(UObject* WorldContext, FYapSpeechHandle Handle, FYapSpeechEventDelegate Delegate)
+{
+	if (ensureAlwaysMsgf(Handle.IsValid(), TEXT("Null/unset Yap Speech Handle!")))
+	{
+		FYapSpeechEvent* Event = UYapSubsystem::Get(WorldContext->GetWorld())->SpeechCancelledEvents.Find(Handle);
+
+		if (Event)
+		{
+			UE_LOG(LogYap, VeryVerbose, TEXT("%s: Binding cancellation delegate %s for handle {%s}"), *Delegate.GetUObject()->GetName(), *Delegate.GetFunctionName().ToString(), *Handle.ToString());
 			Event->Add(Delegate);
 		}
 	}
@@ -128,11 +142,6 @@ bool UYapSpeechHandleBFL::CanSkip(UObject* WorldContext, const FYapSpeechHandle&
 }
 
 // ------------------------------------------------------------------------------------------------
-
-bool UYapSpeechHandleBFL::IsRunning(UObject* WorldContext, const FYapSpeechHandle& Handle)
-{
-	return UYapSubsystem::IsSpeechRunning(WorldContext->GetWorld(), Handle);
-}
 
 void UYapSpeechHandleBFL::Invalidate(FYapSpeechHandle& Handle)
 {

@@ -70,14 +70,14 @@ void UYapBlueprintFunctionLibrary::UnregisterFreeSpeechHandler(UObject* HandlerT
 
 // ------------------------------------------------------------------------------------------------
 
-AActor* UYapBlueprintFunctionLibrary::FindYapCharacterActor(UObject* WorldContext, FName Speaker)
+AActor* UYapBlueprintFunctionLibrary::FindYapCharacterActor(UObject* WorldContext, FName CharacterID)
 {
-	if (Speaker == NAME_None)
+	if (CharacterID == NAME_None)
 	{
 		return nullptr;
 	}
 	
-	UYapCharacterComponent* Comp = UYapSubsystem::FindCharacterComponent(WorldContext->GetWorld(), Speaker);
+	UYapCharacterComponent* Comp = UYapSubsystem::FindCharacterComponent(WorldContext->GetWorld(), CharacterID);
 
 	if (!IsValid(Comp))
 	{
@@ -87,9 +87,9 @@ AActor* UYapBlueprintFunctionLibrary::FindYapCharacterActor(UObject* WorldContex
 	return Comp->GetOwner();
 }
 
+
 FYapSpeechHandle UYapBlueprintFunctionLibrary::K2_RunSpeech(
-	TScriptInterface<IYapCharacterInterface> Speaker,
-	FName SpeakerName,
+	FName CharacterID,
 	FText DialogueText,
 	UObject* DialogueAudioAsset,
 	FGameplayTag MoodTag,
@@ -101,6 +101,8 @@ FYapSpeechHandle UYapBlueprintFunctionLibrary::K2_RunSpeech(
 	TSubclassOf<UFlowNode_YapDialogue> NodeType,
 	UObject* WorldContext)
 {
+	TScriptInterface<IYapCharacterInterface> Speaker = UYapSubsystem::GetCharacterManager(WorldContext).FindCharacter(CharacterID);
+	
 	UObject* WCO = WorldContext ? WorldContext : Speaker.GetObject();
 
 	if (!IsValid(WCO))
@@ -133,7 +135,7 @@ FYapSpeechHandle UYapBlueprintFunctionLibrary::K2_RunSpeech(
 	
 	FYapData_SpeechBegins SpeechData;
 	SpeechData.Speaker = Speaker;
-	SpeechData.SpeakerName = SpeakerName;
+	SpeechData.SpeakerID = CharacterID;
 	SpeechData.DirectedAt = DirectedAt;
 	SpeechData.DialogueText = DialogueText;
 	SpeechData.SpeechTime = SpeechTime;

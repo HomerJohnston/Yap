@@ -54,47 +54,23 @@ bool FYapSpeechHandle::operator==(const FYapSpeechHandle& Other) const
 
 // ------------------------------------------------------------------------------------------------
 
-void UYapSpeechHandleBFL::BindToOnSpeechComplete(UObject* WorldContext, FYapSpeechHandle Handle, FYapSpeechEventDelegate Delegate)
+void UYapSpeechHandleBFL::BindToOnSpeechComplete(UObject* WorldContext, const FYapSpeechHandle& Handle, FYapSpeechEventDelegate Delegate)
 {
 	if (ensureAlwaysMsgf(Handle.IsValid(), TEXT("Null/unset Yap Speech Handle!")))
 	{
-		FYapSpeechEvent* Event = UYapSubsystem::Get(WorldContext->GetWorld())->SpeechCompleteEvents.Find(Handle);
-
-		if (Event)
-		{
-			UE_LOG(LogYap, VeryVerbose, TEXT("%s: Binding completion delegate %s for handle {%s}"), *Delegate.GetUObject()->GetName(), *Delegate.GetFunctionName().ToString(), *Handle.ToString());
-			Event->Add(Delegate);
-		}
+		UE_LOG(LogYap, VeryVerbose, TEXT("%s: Binding completion delegate %s for handle {%s}"), *Delegate.GetUObject()->GetName(), *Delegate.GetFunctionName().ToString(), *Handle.ToString());
+			
+		UYapSubsystem::BindToSpeechFinish(WorldContext, Handle, Delegate);
 	}
 }
 
-void UYapSpeechHandleBFL::BindToOnSpeechCancelled(UObject* WorldContext, FYapSpeechHandle Handle, FYapSpeechEventDelegate Delegate)
+void UYapSpeechHandleBFL::UnbindToOnSpeechComplete(UObject* WorldContext, const FYapSpeechHandle& Handle, FYapSpeechEventDelegate Delegate)
 {
 	if (ensureAlwaysMsgf(Handle.IsValid(), TEXT("Null/unset Yap Speech Handle!")))
 	{
-		FYapSpeechEvent* Event = UYapSubsystem::Get(WorldContext->GetWorld())->SpeechCancelledEvents.Find(Handle);
+		UE_LOG(LogYap, VeryVerbose, TEXT("%s: Unbinding completion delegate %s for handle {%s}"), *Delegate.GetUObject()->GetName(), *Delegate.GetFunctionName().ToString(), *Handle.ToString());
 
-		if (Event)
-		{
-			UE_LOG(LogYap, VeryVerbose, TEXT("%s: Binding cancellation delegate %s for handle {%s}"), *Delegate.GetUObject()->GetName(), *Delegate.GetFunctionName().ToString(), *Handle.ToString());
-			Event->Add(Delegate);
-		}
-	}
-}
-
-void UYapSpeechHandleBFL::UnbindToOnSpeechComplete(UObject* WorldContext, FYapSpeechHandle Handle, FYapSpeechEventDelegate Delegate)
-{
-	if (ensureAlwaysMsgf(Handle.IsValid(), TEXT("Null/unset Yap Speech Handle!")))
-	{
-		UYapSubsystem* Subsystem = UYapSubsystem::Get(WorldContext->GetWorld());
-
-		FYapSpeechEvent* Event = Subsystem->SpeechCompleteEvents.Find(Handle);
-		
-		if (Event)
-		{
-			UE_LOG(LogYap, VeryVerbose, TEXT("%s: Unbinding delegate %s for handle {%s}"), *Delegate.GetUObject()->GetName(), *Delegate.GetFunctionName().ToString(), *Handle.ToString());
-			Event->Remove(Delegate);
-		}
+		UYapSubsystem::UnbindToSpeechFinish(WorldContext, Handle, Delegate);
 	}
 }
 

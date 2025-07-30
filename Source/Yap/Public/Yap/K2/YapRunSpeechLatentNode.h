@@ -11,6 +11,15 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FDelayOutputPin);
 
+// A comment above the delegate declaration
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPSOnAdvancedSpawnPrefabAsyncActionCreatedOutputPin, UObject*, AdvancedSpawnPrefabAsyncAction);
+
+UCLASS(BlueprintType)
+class ULolOmg : public UObject
+{
+	GENERATED_BODY()
+};
+
 UCLASS()
 class UYapRunSpeechLatent2 : public UBlueprintAsyncActionBase
 {
@@ -39,8 +48,22 @@ public:
 protected:
 	FYapSpeechEventDelegate OnSpeechComplete;
 	
-	FYapSpeechEventDelegate OnSpeechCancelled;
-	
+	/**
+	 * Run speech
+	 * @param CharacterID Thing
+	 * @param DialogueText Thing
+	 * @param DialogueAudioAsset 
+	 * @param MoodTag 
+	 * @param SpeechTime 
+	 * @param TitleText 
+	 * @param DirectedAt 
+	 * @param Conversation 
+	 * @param bSkippable 
+	 * @param NodeType 
+	 * @param WorldContext A stupid WC
+	 * @param Handle A stupid handle
+	 * @return 
+	 */
 	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext",  AdvancedDisplay = 4))
 	static UYapRunSpeechLatent2* RunSpeechLatent(
 		FName CharacterID,
@@ -57,27 +80,7 @@ protected:
 		UPARAM(Ref) FYapSpeechHandle& Handle);
 
 	UFUNCTION()
-	void OnSpeechCompleteFunc(UObject* Broadcaster, FYapSpeechHandle Handle);
+	void OnSpeechCompleteFunc(UObject* Broadcaster, const FYapSpeechHandle& Handle, EYapSpeechCompleteResult Result);
 
-	UFUNCTION()
-	void OnSpeechCancelledFunc(UObject* Instigator, FYapSpeechHandle Handle);
-	
 	void Activate() override;
 };
-
-
-/*
-UFUNCTION(BlueprintCallable, DisplayName = "Run Speech", Category = "Yap|Global", meta = (DefaultToSelf = "WorldContext", AdvancedDisplay = 4))
-static UPARAM(DisplayName = "Handle") FYapSpeechHandle K2_RunSpeech(
-	FName CharacterID,
-	FText DialogueText,
-	UObject* DialogueAudioAsset,
-	FGameplayTag MoodTag,
-	float SpeechTime,
-	FText TitleText,
-	TScriptInterface<IYapCharacterInterface> DirectedAt,
-	FGameplayTag Conversation,
-	bool bSkippable,
-	TSubclassOf<UFlowNode_YapDialogue> NodeType,
-	UObject* WorldContext);
- **/

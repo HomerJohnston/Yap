@@ -143,9 +143,6 @@ void UFlowNode_YapDialogue::OnAdvanceConversation(UObject* Instigator, FYapConve
 
 	UE_LOG(LogYap, VeryVerbose, TEXT("%s: OnAdvanceConversation [CH %s]"), *GetName(), *Handle.ToString());
 
-	// FocusedFragmentIndex could be reset during this function, cache it
-	uint8 ToIndex = FocusedFragmentIndex.GetValue();
-
 	FragmentsInPadding.Empty();
 
 	auto RunningFragmentsCopy = RunningFragments;
@@ -171,7 +168,6 @@ void UFlowNode_YapDialogue::FinishNode(FName OutputPinToTrigger)
 	UE_LOG(LogYap, VeryVerbose, TEXT("%s: FinishNode - Unbinding from OnAdvanceConversation"), *GetName());
 	
 	UYapSubsystem::Get(this)->OnAdvanceConversationDelegate.RemoveDynamic(this, &ThisClass::OnAdvanceConversation);
-	UYapSubsystem::Get(this)->OnCancelDelegate.RemoveDynamic(this, &ThisClass::OnCancel);
 		
 	bNodeActive = false;
 	FocusedFragmentIndex.Reset();
@@ -334,8 +330,8 @@ void UFlowNode_YapDialogue::ExecuteInput(const FName& PinName)
 		FocusedSpeechHandle.Invalidate();
 		
 		UE_LOG(LogYap, VeryVerbose, TEXT("%s: Binding OnAdvanceConversation and OnCancel"), *GetName());
-		UYapSubsystem::Get(this)->OnAdvanceConversationDelegate.AddDynamic(this, &ThisClass::OnAdvanceConversation);
-		UYapSubsystem::Get(this)->OnCancelDelegate.AddDynamic(this, &ThisClass::OnCancel);
+		//UYapSubsystem::Get(this)->OnAdvanceConversationDelegate.AddDynamic(this, &ThisClass::OnAdvanceConversation);
+		//UYapSubsystem::Get(this)->OnCancelDelegate.AddDynamic(this, &ThisClass::OnCancel);
 		
 		bool bStartedSuccessfully = IsPlayerPrompt() ? TryBroadcastPrompts() : TryStartFragments();
 
@@ -346,8 +342,8 @@ void UFlowNode_YapDialogue::ExecuteInput(const FName& PinName)
 		else
 		{
 			UE_LOG(LogYap, VeryVerbose, TEXT("%s: Unbinding OnAdvanceConversation and OnCancel"), *GetName());
-			UYapSubsystem::Get(this)->OnAdvanceConversationDelegate.RemoveDynamic(this, &ThisClass::OnAdvanceConversation);
-			UYapSubsystem::Get(this)->OnCancelDelegate.RemoveDynamic(this, &ThisClass::OnCancel);
+			//UYapSubsystem::Get(this)->OnAdvanceConversationDelegate.RemoveDynamic(this, &ThisClass::OnAdvanceConversation);
+			//UYapSubsystem::Get(this)->OnCancelDelegate.RemoveDynamic(this, &ThisClass::OnCancel);
 			
 			TriggerOutput(BypassPinName, true, EFlowPinActivationType::Default);
 		}
@@ -357,7 +353,7 @@ void UFlowNode_YapDialogue::ExecuteInput(const FName& PinName)
 #if !UE_BUILD_SHIPPING
 		if (!IsBypassPinRequired())
 		{
-			UE_LOG(LogYap, Warning, TEXT("Failed to enter dialogue node and bypass pin is not enabled - execution will halt!"));
+			UE_LOG(LogYap, Error, TEXT("Failed to enter dialogue node and bypass pin is not enabled - execution will halt! This should not happen!"));
 			return;
 		}
 #endif
@@ -530,6 +526,8 @@ bool UFlowNode_YapDialogue::TryBroadcastPrompts()
 
 	const FYapConversation& Conversation = Subsystem->GetConversationByOwner(this, GetFlowAsset()); 
 
+	FYapPromptHandle LastHandle;
+	
  	for (uint8 i = 0; i < Fragments.Num(); ++i)
 	{
 		FYapFragment& Fragment = Fragments[i];
@@ -573,34 +571,29 @@ bool UFlowNode_YapDialogue::TryBroadcastPrompts()
  			Data.TitleText = Bit.GetTitleText();
  		}
  		
-		FYapPromptHandle PromptHandle = Subsystem->BroadcastPrompt(Data, this->GetClass());
+		LastHandle = Subsystem->BroadcastPrompt(Data, this->GetClass());
 
- 		PromptIndices.Add(PromptHandle, i);
+ 		PromptIndices.Add(LastHandle, i);
+	}
+
+	if (PromptIndices.Num() == 0)
+	{
+		return false;
 	}
 	
+	Subsystem->OnPromptChosen.AddDynamic(this, &ThisClass::OnPromptChosen);
+	
+	if (PromptIndices.Num() == 1 && GetNodeConfig().Prompts.bAutoSelectLastPrompt)
+	{
+		LastHandle.RunPrompt(this);
+	}
+	else
 	{
 		FYapData_PlayerPromptsReady Data;
 		Data.Conversation = Conversation.GetHandle();
 		Subsystem->OnFinishedBroadcastingPrompts(Data, this->GetClass());
 	}
 	
-	Subsystem->OnPromptChosen.AddDynamic(this, &ThisClass::OnPromptChosen);
-	
-	// TODO - automatically return if there are no prompts or if there is only one prompt, optional plugin settings 
-	/*
-	if (PromptFragmentIndices.Num() == 0)
-	{
-		return false;
-	}
-
-	if (PromptFragmentIndices.Num() == 1)
-	{
-		if (UYapProjectSettings::GetAutoSelectLastPromptSetting())
-		{
-			LastHandle.RunPrompt(this);
-		}
-	}
-	*/
 	return true;
 }
 
@@ -807,9 +800,11 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 void UFlowNode_YapDialogue::BindToSubsystemSpeechCompleteEvent(const FYapSpeechHandle& Handle)
 {
 	UE_LOG(LogYap, VeryVerbose, TEXT("%s: Binding to Speech Completed Events {%s}"), *GetName(), *Handle.ToString());
+	
 	FYapSpeechEventDelegate Delegate;
 	Delegate.BindUFunction(this, GET_FUNCTION_NAME_CHECKED_TwoParams(ThisClass, OnSpeechComplete, UObject*, FYapSpeechHandle));
-	UYapSpeechHandleBFL::BindToOnSpeechComplete(GetWorld(), Handle, Delegate);	
+
+	UYapSubsystem::BindToSpeechFinish(this, Handle, Delegate);
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -817,9 +812,11 @@ void UFlowNode_YapDialogue::BindToSubsystemSpeechCompleteEvent(const FYapSpeechH
 void UFlowNode_YapDialogue::UnbindToSubsystemSpeechCompleteEvent(const FYapSpeechHandle& Handle)
 {
 	UE_LOG(LogYap, VeryVerbose, TEXT("%s: Unbinding from Speech Completed Events {%s}"), *GetName(), *Handle.ToString());
+	
 	FYapSpeechEventDelegate Delegate;
 	Delegate.BindUFunction(this, GET_FUNCTION_NAME_CHECKED_TwoParams(ThisClass, OnSpeechComplete, UObject*, FYapSpeechHandle));
-	UYapSpeechHandleBFL::UnbindToOnSpeechComplete(GetWorld(), Handle, Delegate);
+
+	UYapSubsystem::UnbindToSpeechFinish(this, Handle, Delegate);
 }
 
 // ------------------------------------------------------------------------------------------------

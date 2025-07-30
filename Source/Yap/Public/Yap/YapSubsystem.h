@@ -33,7 +33,22 @@ UDELEGATE()
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FYapPromptChosen, UObject*, Instigator, FYapPromptHandle, Handle);
 
 UDELEGATE()
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FYapSpeechEvent, UObject*, Instigator, FYapSpeechHandle, Handle);
+DECLARE_DYNAMIC_DELEGATE_ThreeParams(FYapSpeechEventHandler, UObject*, Instigator, FYapSpeechHandle, Handle, EYapSpeechCompleteResult, Result);
+
+UDELEGATE()
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FYapSpeechEvent, UObject*, Instigator, FYapSpeechHandle, Handle, EYapSpeechCompleteResult, Result);
+
+USTRUCT()
+struct FYapSpeechFinishDelegateContainer
+{
+	GENERATED_BODY()
+
+	UPROPERTY(Transient)
+	FYapSpeechEventHandler OnCompleted;
+
+	UPROPERTY(Transient)
+	FYapSpeechEventHandler OnCancelled;
+};
 
 // ================================================================================================
 
@@ -187,16 +202,17 @@ protected:
 
 public:
 	UPROPERTY(Transient)
-	TMap<FYapSpeechHandle, FYapSpeechEvent> SpeechCompleteEvents;
+	TMap<FYapSpeechHandle, FYapSpeechEvent> SpeechFinishDelegates;
+
+	static void BindToSpeechFinish(UObject* WorldContextObject, FYapSpeechHandle Handle, FYapSpeechEventDelegate Delegate);
 	
-	UPROPERTY(Transient)
-	TMap<FYapSpeechHandle, FYapSpeechEvent> SpeechCancelledEvents;
-	
+	static void UnbindToSpeechFinish(UObject* WorldContextObject, FYapSpeechHandle Handle, FYapSpeechEventDelegate Delegate);
+
 	UPROPERTY(Transient)
 	TMap<TObjectPtr<UObject>, FYapSpeechHandlesArray> ObjectSpeechHandles; // Warning: not TObjectKey? doesn't support UPROPERTY
 	
 	UPROPERTY(Transient)
-	TMap<FYapSpeechHandle, FTimerHandle> SpeechTimers;
+	TMap<FYapSpeechHandle, FTimerHandle> RunningSpeechTimers;
 
 	// TODO these should probably all be maps for more robust behavior in case multiple things are running!
 	
@@ -365,6 +381,8 @@ public:
 	
 	// TODO: ability to instantly playback/skip through multiple nodes until some sort of target point is hit, maybe a custom node? (imagine skipping an entire cutscene)
 	// static bool SkipConversationTo(???);
+
+	bool EmitSpeechResult(const FYapSpeechHandle& Handle, EYapSpeechCompleteResult Result);
 	
 public:
 	/**  */

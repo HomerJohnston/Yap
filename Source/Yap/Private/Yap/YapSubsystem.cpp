@@ -48,6 +48,40 @@ UYapSubsystem::UYapSubsystem()
 
 // ------------------------------------------------------------------------------------------------
 
+void UYapSubsystem::BindToSpeechFinish(UObject* WorldContextObject, FYapSpeechHandle Handle, FYapSpeechEventDelegate Delegate)
+{
+	if (UYapSubsystem* Subsystem = UYapSubsystem::Get(WorldContextObject))
+	{
+		FYapSpeechEvent* Evt = Subsystem->SpeechFinishDelegates.Find(Handle);
+
+		if (Evt)
+		{
+			Evt->Add(Delegate);
+		}	
+	}
+	else
+	{
+		UE_LOG(LogYap, Error, TEXT("Could not find UYapSubsystem!"));
+	}
+}
+
+void UYapSubsystem::UnbindToSpeechFinish(UObject* WorldContextObject, FYapSpeechHandle Handle, FYapSpeechEventDelegate Delegate)
+{
+	if (UYapSubsystem* Subsystem = UYapSubsystem::Get(WorldContextObject))
+	{
+		FYapSpeechEvent* Evt = Subsystem->SpeechFinishDelegates.Find(Handle);
+
+		if (Evt)
+		{
+			Evt->Remove(Delegate);
+		}
+	}
+	else
+	{
+		UE_LOG(LogYap, Error, TEXT("Could not find UYapSubsystem!"));
+	}
+}
+
 UYapCharacterManager& UYapSubsystem::GetCharacterManager(UObject* WorldContextObject)
 {
 	UYapSubsystem& Subsystem = *Get(WorldContextObject);
@@ -527,7 +561,7 @@ void UYapSubsystem::RunSpeech(const FYapData_SpeechBegins& SpeechData, FYapDialo
 		FTimerDelegate Delegate = FTimerDelegate::CreateUObject(this, &ThisClass::OnSpeechComplete, Handle, true);
 		GetWorld()->GetTimerManager().SetTimer(SpeechTimerHandle, Delegate, SpeechData.SpeechTime, false);
 
-		SpeechTimers.Add(Handle, SpeechTimerHandle);
+		RunningSpeechTimers.Add(Handle, SpeechTimerHandle);
 	}
 	else
 	{
@@ -676,10 +710,18 @@ bool UYapSubsystem::CancelSpeech(UObject* WorldContext, const FYapSpeechHandle& 
 	
 	UYapSubsystem* Subsystem = Get(WorldContext);
 
-	if (FTimerHandle* TimerHandle = Subsystem->SpeechTimers.Find(Handle))
+	if (FTimerHandle* TimerHandle = Subsystem->RunningSpeechTimers.Find(Handle))
 	{
 		WorldContext->GetWorld()->GetTimerManager().ClearTimer(*TimerHandle);
 
+		FYapSpeechEvent Evt;
+
+		if (!Subsystem->EmitSpeechResult(Handle, EYapSpeechCompleteResult::Cancelled))
+		{
+			return false;
+		}
+
+		/*
 		//Broadcast to Yap systems; in dialogue nodes, this will kill any running paddings
 		//Subsystem->OnCancelDelegate.Broadcast(Subsystem, Handle);
 
@@ -689,7 +731,7 @@ bool UYapSubsystem::CancelSpeech(UObject* WorldContext, const FYapSpeechHandle& 
 		FYapSpeechEvent Evt;
 		Subsystem->SpeechCancelledEvents.RemoveAndCopyValue(Handle, Evt);
 		Evt.Broadcast(Subsystem, Handle);
-
+		*/
 	
 		return true;
 	}
@@ -733,6 +775,23 @@ void UYapSubsystem::AdvanceConversation(UObject* Instigator, const FYapConversat
 	}
 	
 	UE_LOG(LogYap, VeryVerbose, TEXT("Subsystem: AdvanceConversation FINISH [%s]"), *ConversationHandle.ToString());
+}
+
+bool UYapSubsystem::EmitSpeechResult(const FYapSpeechHandle& Handle, EYapSpeechCompleteResult Result)
+{
+	FYapSpeechEvent Evt;
+
+	if (SpeechFinishDelegates.RemoveAndCopyValue(Handle, Evt))
+	{
+		Evt.Broadcast(this, Handle, Result);
+		return true;
+	}
+	
+	//This more rudimentary method was throwing an ensure in MTAccessDetector.h destructor, Line ~502. I have no idea why, though.
+	//SpeechCompleteEvents[Handle].Broadcast(this, Handle);
+	//SpeechCompleteEvents.Remove(Handle);
+
+	return false;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -821,9 +880,7 @@ FYapSpeechHandle UYapSubsystem::GetNewSpeechHandle(FGuid Guid)
 {
 	FYapSpeechHandle NewHandle(GetWorld(), Guid);
 
-	// TODO URGENT I need to consolidate my "end" code somehow so that I never miss unbinding one of these things
-	SpeechCompleteEvents.Add(NewHandle);
-	SpeechCancelledEvents.Add(NewHandle);
+	SpeechFinishDelegates.Add(NewHandle);
 
 	return NewHandle;
 }
@@ -863,36 +920,22 @@ void UYapSubsystem::OnSpeechComplete(FYapSpeechHandle Handle, bool bBroadcast)
 
 	if (bBroadcast)
 	{
-		auto* Delegate = SpeechCompleteEvents.Find(Handle);
+		UE_LOG(LogYap, VeryVerbose, TEXT("%s: OnSpeechComplete {%s}"), *GetName(), *Handle.ToString());
 
-		if (Delegate)
-		{
-			UE_LOG(LogYap, VeryVerbose, TEXT("%s: OnSpeechComplete {%s}"), *GetName(), *Handle.ToString());
-
-			FYapSpeechEvent Evt;
-			SpeechCompleteEvents.RemoveAndCopyValue(Handle, Evt);
-			Evt.Broadcast(this, Handle);
-
-			SpeechCancelledEvents.Remove(Handle);
-		
-			//This more rudimentary method was throwing an ensure in MTAccessDetector.h destructor, Line ~502. I have no idea why, though.
-			//SpeechCompleteEvents[Handle].Broadcast(this, Handle);
-			//SpeechCompleteEvents.Remove(Handle);
-		}
-		else
+		if (!EmitSpeechResult(Handle, EYapSpeechCompleteResult::Normal))
 		{
 			UE_LOG(LogYap, Warning, TEXT("Handle was not registered into SpeechCompleteEvents! Can't broadcast Complete event! %s"), *Handle.ToString());
 		}	
 	}
 	
-	FTimerHandle* Timer = SpeechTimers.Find(Handle);
+	FTimerHandle* Timer = RunningSpeechTimers.Find(Handle);
 
 	if (Timer)
 	{
 		GetWorld()->GetTimerManager().ClearTimer(*Timer);
 	}
 
-	SpeechTimers.Remove(Handle);
+	RunningSpeechTimers.Remove(Handle);
 
 	FYapConversationHandle* ConversationHandle = SpeechConversationMapping.Find(Handle);
 

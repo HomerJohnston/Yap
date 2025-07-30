@@ -8,6 +8,14 @@
 
 // ================================================================================================
 
+UENUM(BlueprintType)
+enum class EYapSpeechCompleteResult : uint8
+{
+    Undefined UMETA(Hidden),
+    Normal,
+    Cancelled,
+};
+
 /**
  * When a fragment (speech) begins running, you will be given a handle. You can use this handle to bind to events,
  * get fragment data, cancel the running speech, etc. using the function library.
@@ -73,9 +81,9 @@ FORCEINLINE uint32 GetTypeHash(const FYapSpeechHandle& Struct)
     return GetTypeHash(Struct.GetGuid());
 }
 
-UDELEGATE()
-DECLARE_DYNAMIC_DELEGATE_TwoParams(FYapSpeechEventDelegate, UObject*, Broadcaster, FYapSpeechHandle, Handle);
 
+UDELEGATE()
+DECLARE_DYNAMIC_DELEGATE_ThreeParams(FYapSpeechEventDelegate, UObject*, Broadcaster, const FYapSpeechHandle&, Handle, EYapSpeechCompleteResult, Result);
 
 /**
  * Function library for speech handles.
@@ -88,14 +96,11 @@ class YAP_API UYapSpeechHandleBFL : public UBlueprintFunctionLibrary
 public:
     /** Bind a delegate to run when speech completes. This is when actual talking finishes not when any fragment padding finishes. */
     UFUNCTION(BlueprintCallable, Category = "Yap|Speech Handle", meta = (WorldContext = "WorldContext"))
-    static void BindToOnSpeechComplete(UObject* WorldContext, FYapSpeechHandle Handle, FYapSpeechEventDelegate Delegate);
+    static void BindToOnSpeechComplete(UObject* WorldContext, const FYapSpeechHandle& Handle, FYapSpeechEventDelegate Delegate);
 
-    UFUNCTION(BlueprintCallable, Category = "Yap|Speech Handle", meta = (WorldContext = "WorldContext"))
-    static void BindToOnSpeechCancelled(UObject* WorldContext, FYapSpeechHandle Handle, FYapSpeechEventDelegate Delegate);
-    
     /** Unind a delegate for when speech completes (i.e. if you no longer want a delegate to run). */
     UFUNCTION(BlueprintCallable, Category = "Yap|Speech Handle", meta = (WorldContext = "WorldContext"))
-    static void UnbindToOnSpeechComplete(UObject* WorldContext, FYapSpeechHandle Handle, FYapSpeechEventDelegate Delegate);
+    static void UnbindToOnSpeechComplete(UObject* WorldContext, const FYapSpeechHandle& Handle, FYapSpeechEventDelegate Delegate);
 
     /** Stops a running speech. This is intended to be used to halt free speech; to advance conversations, use the conversation handle. */
     UFUNCTION(BlueprintCallable, Category = "Yap|Speech Handle", meta = (WorldContext = "WorldContext"))

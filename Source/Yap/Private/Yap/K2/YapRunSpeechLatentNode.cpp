@@ -30,7 +30,7 @@ UYapRunSpeechLatent2* UYapRunSpeechLatent2::RunSpeechLatent(FName CharacterID, F
 	UObject* DialogueAudioAsset, FGameplayTag MoodTag, float SpeechTime, FText TitleText,
 	TScriptInterface<IYapCharacterInterface> DirectedAt, FGameplayTag Conversation, bool bSkippable,
 	TSubclassOf<UFlowNode_YapDialogue> NodeType, UObject* WorldContext,
-	FYapSpeechHandle& Handle)
+	UPARAM(ref) FYapSpeechHandle& Handle)
 {
 	UYapRunSpeechLatent2* Node = NewObject<UYapRunSpeechLatent2>();
 
@@ -73,29 +73,30 @@ UYapRunSpeechLatent2* UYapRunSpeechLatent2::RunSpeechLatent(FName CharacterID, F
 	return Node;
 }
 
-void UYapRunSpeechLatent2::OnSpeechCompleteFunc(UObject* Broadcaster, FYapSpeechHandle Handle)
+void UYapRunSpeechLatent2::OnSpeechCompleteFunc(UObject* Broadcaster, const FYapSpeechHandle& Handle, EYapSpeechCompleteResult Result)
 {
 	SetReadyToDestroy();
 
 	UE_LOG(LogYap, VeryVerbose, TEXT("RunSpeechLatent completed!"));
 
-	Completed.Broadcast();
-}
-
-void UYapRunSpeechLatent2::OnSpeechCancelledFunc(UObject* Instigator, FYapSpeechHandle Handle)
-{
-	if (Handle != _Handle)
+	switch (Result)
 	{
-		return;
+		case EYapSpeechCompleteResult::Normal:
+		{
+			Completed.Broadcast();
+			break;
+		}
+		case EYapSpeechCompleteResult::Cancelled:
+		{
+			Cancelled.Broadcast();
+			break;
+		}
+		default:
+		{
+			UE_LOG(LogYap, Error, TEXT("Run Speech Latent node finished with undefined result! This should never happen!"));
+		}
 	}
-	
-	SetReadyToDestroy();
-
-	UE_LOG(LogYap, VeryVerbose, TEXT("RunSpeechLatent cancelled!"));
-	
-	Cancelled.Broadcast();
 }
-
 
 void UYapRunSpeechLatent2::Activate()
 {
@@ -106,10 +107,8 @@ void UYapRunSpeechLatent2::Activate()
 	Subsystem->RunSpeech(Data, _NodeType, _Handle);
 
 	OnSpeechComplete.BindDynamic(this, &ThisClass::OnSpeechCompleteFunc);
-	OnSpeechCancelled.BindDynamic(this, &ThisClass::OnSpeechCancelledFunc);
 
 	//UYapSubsystem::Get(_WorldContext)->OnCancelDelegate.AddDynamic(this, &ThisClass::OnSpeechCancelledFunc);
 
 	UYapSpeechHandleBFL::BindToOnSpeechComplete(_WorldContext, _Handle, OnSpeechComplete);
-	UYapSpeechHandleBFL::BindToOnSpeechCancelled(_WorldContext, _Handle, OnSpeechCancelled);
 }

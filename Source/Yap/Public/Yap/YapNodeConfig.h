@@ -20,10 +20,14 @@ struct FYapNodeConfigGroup_General
 {
 	GENERATED_BODY()
 
+#if WITH_EDITORONLY_DATA
 	/** Show an optional label for this node type on flow graphs, this will appear on the right side of the node's header area. */
 	UPROPERTY(EditAnywhere)
 	FText NodeLabel;
-
+	
+	UPROPERTY(EditAnywhere, meta = (DoNotDraw))
+	TOptional<FLinearColor> GroupColor;
+	
 	/** Controls which node types are permitted to be selected. */
 	UPROPERTY(EditAnywhere, meta = (Bitmask, BitmaskEnum = "/Script/Yap.EYapDialogueNodeType"))
 	int32 AllowableNodeTypes;
@@ -46,10 +50,11 @@ struct FYapNodeConfigGroup_General
 	/** Placeholder. This does nothing for now. */
 	UPROPERTY(Config, EditAnywhere, meta = (EditCondition = "false && (AllowableNodeTypes == 7)", EditConditionHides))
 	bool bPromptRequiresTalkAndAdvance = false;
-	
+
 	/** Use this to filter the character tag selector. If all of your game's character tags are under YourGame.Entity.Character.XYZ then set this to YourGame.Entity.Character for easier character selection. */
 	UPROPERTY(EditAnywhere)
 	FGameplayTag CharacterTagBase;
+#endif
 	
 	/** If this node type doesn't require any speaker info (such as for generic tutorial popups or simple player prompts), you can enable this. Requires graph refresh. */
 	UPROPERTY(EditAnywhere)
@@ -140,12 +145,16 @@ struct FYapNodeConfigGroup_DialoguePlayback
 {
 	GENERATED_BODY()
 
+	/** If set, a character will be able to say multiple things at once. By default, if you launch two dialogues on the same character, the second one will cause the first one to cancel. */
+	UPROPERTY(EditAnywhere)
+	bool bPermitOverlappingSpeech = false;
+	
 	/** If set, dialogue will be non-skippable by default and must play for its entire duration. */
-	UPROPERTY(EditAnywhere, Category = "Dialogue Playback|Timed Settings")
+	UPROPERTY(EditAnywhere)
 	bool bForcedDialogueDuration = false;
 	
 	/** If set, dialogue in a conversation will not auto-advance by default and will require advancement by using the Conversation Handle. */
-	UPROPERTY(EditAnywhere, Category = "Dialogue Playback|Timed Settings", DisplayName = "Manual Advance")
+	UPROPERTY(EditAnywhere, DisplayName = "Manual Advance")
 	bool bManualAdvanceInConversations = false;
 
 	/** If set, dialogue outside of a conversation will not auto-advance by default and will require advancement by using the Speech Handle. */
@@ -186,16 +195,13 @@ struct FYapNodeConfigGroup_FlowGraphSettings
 	FYapNodeConfigGroup_FlowGraphSettings();
 
 #if WITH_EDITORONLY_DATA
-	UPROPERTY(EditAnywhere, meta = (DoNotDraw))
-	FLinearColor GroupColor = FLinearColor::White;
-	
 	/** Adjusts the width of all dialogue nodes in graph grid units (16 px). */
 	UPROPERTY(EditAnywhere, meta = (ClampMin = -6, ClampMax = +100, UIMin = -6, UIMax = 20, Delta = 1))
 	int32 DialogueWidthAdjustment = 0;
 		
 	/** If set, dialogue in the nodes will cut off to the right. This may help if you intend to use lots of multi-line dialogue text. */
 	UPROPERTY(EditAnywhere)
-	bool bPreventDialogueTextWrapping = true;
+	bool bPreventDialogueTextWrapping = false;
 #endif
 	
 	/** If enabled, will show title text on normal talk nodes. Title text is not commonly used on automatically progressing dialogue, so it is hidden by default. */
@@ -312,7 +318,7 @@ private:
 public:
 
 #if WITH_EDITORONLY_DATA
-	FLinearColor GetGroupColor() const { return Graph.GroupColor; }
+	TOptional<FLinearColor> GetGroupColor() const { return General.GroupColor; }
 #endif
 	
 #ifdef RETURN

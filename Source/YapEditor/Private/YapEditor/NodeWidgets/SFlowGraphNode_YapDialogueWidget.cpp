@@ -373,14 +373,12 @@ TSharedRef<SWidget> SFlowGraphNode_YapDialogueWidget::CreateNodeContentArea()
 			// This is a helper identification bar on the left of the node, colored for the type group. Invisible for default type group.
 			SNew(SBox)
 			.WidthOverride(4)
-			/*
-			.Visibility_Lambda( [this] () { return GetDomainConfig().IsDefault() ? EVisibility::Collapsed : EVisibility::HitTestInvisible; })
+			.Visibility_Lambda( [this] () { return GetFlowYapDialogueNode()->GetNodeConfig().GetGroupColor().IsSet() ? EVisibility::HitTestInvisible : EVisibility::Collapsed; })
 			[
 				SNew(SImage)
 				.Image(FYapEditorStyle::GetImageBrush(YapBrushes.Box_SolidWhite))
-				.ColorAndOpacity_Lambda( [this] () { return GetDomainConfig().GetGroupColor().Desaturate(0.4F); }) // Epic's Desaturate command sets opacity as well, which I want for this
+				.ColorAndOpacity_Lambda( [this] () { return GetFlowYapDialogueNode()->GetNodeConfig().GetGroupColor().Get(YapColor::White).Desaturate(0.25F); }) // Epic's Desaturate command sets opacity as well, which I want for this
 			]
-			*/
 		]
 		+ SOverlay::Slot()
 		[

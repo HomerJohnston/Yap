@@ -214,13 +214,13 @@ public:
 	UPROPERTY(Transient)
 	TMap<FYapSpeechHandle, FTimerHandle> RunningSpeechTimers;
 
+	UPROPERTY(Transient)
+	TMap<FName, FYapSpeechHandle> ActiveSpeechByCharacter;
+	
 	// TODO these should probably all be maps for more robust behavior in case multiple things are running!
 	
 	UPROPERTY(Transient)
 	FYapPromptChosen OnPromptChosen;
-
-	UPROPERTY(Transient)
-	FYapSpeechEvent OnCancelDelegate;
 
 	UPROPERTY(Transient)
 	FYapConversationEvent OnAdvanceConversationDelegate;

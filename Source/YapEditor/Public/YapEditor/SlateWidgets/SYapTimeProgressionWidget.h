@@ -115,6 +115,8 @@ public:
 
 	float GetPaddingHandleSize() const;
 	
+	FVector2D GetPlaybackHandleSize() const;
+	
 	const FSlateBrush* GetPaddingHandleImage() const;
 	
 	const FSlateBrush* GetPlaybackHandleImage() const;

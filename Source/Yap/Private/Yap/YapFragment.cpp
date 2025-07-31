@@ -215,6 +215,11 @@ void FYapFragment::ClearAwaitingManualAdvance()
 TOptional<float> FYapFragment::GetSpeechTime(UWorld* World, EYapMaturitySetting MaturitySetting, EYapLoadContext LoadContext, const UYapNodeConfig& NodeConfig) const
 {
 	EYapTimeMode EffectiveTimeMode = GetTimeMode(World, MaturitySetting, NodeConfig);
+
+	if (EffectiveTimeMode == EYapTimeMode::None)
+	{
+		return NullOpt;
+	}
 	
 	return GetBit(World, MaturitySetting).GetSpeechTime(World, EffectiveTimeMode, LoadContext, NodeConfig);
 }

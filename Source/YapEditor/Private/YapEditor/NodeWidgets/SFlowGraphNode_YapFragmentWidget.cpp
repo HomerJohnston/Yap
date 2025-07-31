@@ -1668,7 +1668,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateDirectedAtWidget()
 FSlateColor SFlowGraphNode_YapFragmentWidget::BorderBackgroundColor_DirectedAtImage() const
 {
 	TSharedPtr<FStreamableHandle> DummyHandle;
-	const UObject* DirectedAt = UYapProjectSettings::FindCharacter(GetFragment().GetSpeakerTag(), DummyHandle, EYapLoadContext::DoNotLoad);
+	const UObject* DirectedAt = UYapProjectSettings::FindCharacter(GetFragment().GetDirectedAtTag(), DummyHandle, EYapLoadContext::DoNotLoad);
 	
 	FLinearColor Color = IYapCharacterInterface::GetColor(DirectedAt);
 
@@ -1729,7 +1729,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::PopupContentGetter_Directe
 const FSlateBrush* SFlowGraphNode_YapFragmentWidget::Image_DirectedAtWidget() const
 {
 	TSharedPtr<FStreamableHandle> DummyHandle;
-	const UObject* SpeakerAsset = UYapProjectSettings::FindCharacter(GetFragment().GetSpeakerTag(), DummyHandle, EYapLoadContext::AsyncEditorOnly);
+	const UObject* SpeakerAsset = UYapProjectSettings::FindCharacter(GetFragment().GetDirectedAtTag(), DummyHandle, EYapLoadContext::AsyncEditorOnly);
 
 	TSharedPtr<FSlateImageBrush> PortraitBrush = UYapEditorSubsystem::GetCharacterPortraitBrush(SpeakerAsset, FGameplayTag::EmptyTag);
 

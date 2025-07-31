@@ -695,15 +695,11 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 
 	TOptional<float> Time = Fragment.GetSpeechTime(GetWorld(), ActiveConfig);
 
-	float EffectiveTime;
+	float EffectiveTime = 0.0f;
 	
 	if (Time.IsSet())
 	{
-		EffectiveTime = Time.GetValue();
-	}
-	else
-	{
-		EffectiveTime = ActiveConfig.GetMinimumSpeakingTime();
+		EffectiveTime = FMath::Max(Time.GetValue(), ActiveConfig.GetMinimumSpeakingTime());
 	}
 
 	UYapSubsystem* Subsystem = GetWorld()->GetSubsystem<UYapSubsystem>();
@@ -771,7 +767,7 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 	
 	Subsystem->RunSpeech(Data, GetClass(), FocusedSpeechHandle);
 
-	if (GetNodeType() == EYapDialogueNodeType::TalkAndAdvance)
+	if (!Time.IsSet() || GetNodeType() == EYapDialogueNodeType::TalkAndAdvance)
 	{
 		OnPaddingComplete(FocusedSpeechHandle);
 	}
@@ -1418,7 +1414,7 @@ FString UFlowNode_YapDialogue::GetNodeDescription() const
 	{
 		if (GetClass() == UFlowNode_YapDialogue::StaticClass())
 		{
-			return "Invalid config!\nYou must assign a default config in Yap project settings.";
+			return "Invalid config!\nYou must assign a default config in Yap project settings for the default dialogue node to work.";
 		}
 
 		return "Invalid config!\nYou must assign a config for this node type in the Yap Node asset.";
@@ -1491,14 +1487,16 @@ bool UFlowNode_YapDialogue::CheckActivationLimits() const
 #if WITH_EDITOR
 bool UFlowNode_YapDialogue::ToggleNodeType(bool bHasOutputConnections)
 {
+	uint8 AllowableNodeTypes = GetNodeConfig().General.AllowableNodeTypes;
+	
 	// If the node config isn't valid, do nothing
-	if (GetNodeConfig().General.AllowableNodeTypes == 0)
+	if (AllowableNodeTypes == 0)
 	{
 		UE_LOG(LogYap, Error, TEXT("%s: Cannot toggle node type - node config is invalid!"), *GetName());
 		return false;
 	}
 
-	// Perform fixed changes when there's existing output connections
+	// Only allow specific changes when pins are connected
 	if (bHasOutputConnections)
 	{
 		if (GetNodeType() == EYapDialogueNodeType::PlayerPrompt)
@@ -1507,13 +1505,16 @@ bool UFlowNode_YapDialogue::ToggleNodeType(bool bHasOutputConnections)
 		}
 		else if (GetNodeType() == EYapDialogueNodeType::TalkAndAdvance)
 		{
-			DialogueNodeType = EYapDialogueNodeType::Talk;
+			AllowableNodeTypes = AllowableNodeTypes & (uint8)(EYapDialogueNodeType::Talk);
 		}
 		else if (GetNodeType() == EYapDialogueNodeType::Talk)
 		{
-			DialogueNodeType = EYapDialogueNodeType::TalkAndAdvance;
+			AllowableNodeTypes = AllowableNodeTypes & (uint8)(EYapDialogueNodeType::TalkAndAdvance);
 		}
-		
+	}
+
+	if (AllowableNodeTypes == 0)
+	{
 		return false;
 	}
 	
@@ -1529,7 +1530,7 @@ bool UFlowNode_YapDialogue::ToggleNodeType(bool bHasOutputConnections)
 			AsInt = 1 << 0;
 		}
 	}
-	while ((AsInt & GetNodeConfig().General.AllowableNodeTypes) == 0); // If the next setting isn't an allowable node type keep trying new allowable node types
+	while ((AsInt & AllowableNodeTypes) == 0); // If the next setting isn't an allowable node type keep trying new allowable node types
 
 	DialogueNodeType = static_cast<EYapDialogueNodeType>(AsInt);
 	
@@ -1678,6 +1679,32 @@ void UFlowNode_YapDialogue::PreSave(FObjectPreSaveContext SaveContext)
 				Fragment.DirectedAtAsset.Reset();
 				Modify();
 			}
+		}
+	}
+}
+#endif
+
+#if WITH_EDITOR
+void UFlowNode_YapDialogue::FixNode(UEdGraphNode* NewGraphNode)
+{
+	Super::FixNode(NewGraphNode);
+	
+	uint8 AllowableNodeTypes = GetNodeConfig().General.AllowableNodeTypes;
+
+	if (AllowableNodeTypes == 0)
+	{
+		return;
+	}
+
+	uint8 Breakout = 0;
+	while (((uint8)(DialogueNodeType) & AllowableNodeTypes) == 0)
+	{
+		ToggleNodeType(false);
+		Breakout++;
+
+		if (Breakout > (uint8)EYapDialogueNodeType::COUNT)
+		{
+			break;
 		}
 	}
 }

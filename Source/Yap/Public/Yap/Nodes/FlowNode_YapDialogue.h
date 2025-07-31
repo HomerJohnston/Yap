@@ -66,7 +66,7 @@ struct FYapFragmentRunData
 
 // ------------------------------------------------------------------------------------------------
 /**
- * Subclass this to create different "domains" for yap nodes. It's recommended to use the base class for common dialogue, and add subclasses for other dialogue-like features such as tutorial popups.
+ * Main dialogue node class. 
  */
 UCLASS(Blueprintable, BlueprintType, meta = (DisplayName = "Dialogue", Keywords = "yap")) /*, ToolTip = "Emits Yap dialogue events"*/
 class YAP_API UFlowNode_YapDialogue : public UFlowNode
@@ -408,6 +408,9 @@ public:
 	void PostLoad() override;
 
 	void PreSave(FObjectPreSaveContext SaveContext) override;
+
+	void FixNode(UEdGraphNode* NewGraphNode) override;
+	
 #endif // WITH_EDITOR
 	
 	void PreloadContent() override;

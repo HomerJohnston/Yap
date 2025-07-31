@@ -532,6 +532,19 @@ void UYapSubsystem::OnFinishedBroadcastingPrompts(const FYapData_PlayerPromptsRe
 
 void UYapSubsystem::RunSpeech(const FYapData_SpeechBegins& SpeechData, FYapDialogueNodeClassType NodeType, FYapSpeechHandle& Handle)
 {
+	if (FYapSpeechHandle* ActiveSpeech = ActiveSpeechByCharacter.Find(SpeechData.SpeakerID))
+	{
+		UFlowNode_YapDialogue* CDO = NodeType.Get()->GetDefaultObject<UFlowNode_YapDialogue>();
+		const UYapNodeConfig& Config = CDO->GetNodeConfig();
+		
+		if (!Config.DialoguePlayback.bPermitOverlappingSpeech)
+		{
+			OnSpeechComplete(*ActiveSpeech, true);
+		}
+	}
+
+	ActiveSpeechByCharacter.Add(SpeechData.SpeakerID, Handle);
+	
 	// TODO should SpeechData contain the conversation handle instead of the name?
 	if (SpeechData.Conversation.IsValid())
 	{

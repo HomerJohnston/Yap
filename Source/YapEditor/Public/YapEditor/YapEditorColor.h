@@ -87,17 +87,25 @@ namespace YapColor
 	DECLARE_COLOR_TRAN(Transparent,	1.000, 1.000, 1.000, 0.0);
 	DECLARE_COLOR(Error,		1.000, 0.000, 1.000);
 
-	inline FLinearColor WarningText = Yellow;
 	
-	const FLinearColor Asset_Character = LightGreen;
+	/** FLinearColor::Desaturate also lerps alpha towards zero for some reason... use my own instead. */
+	FLinearColor Desaturate(FLinearColor InColor, float Desaturation );
+
+	FLinearColor Darken(FLinearColor InColor, float Darken);
+	
+	// Other hardcoded values
+	const FLinearColor WarningText = Yellow;
+	
+	const FLinearColor DialogueNodeAssetColor = FLinearColor(1.000, 0.766, 0.500);
+	const FLinearColor DialogueNodeConfigColor = Darken(DialogueNodeAssetColor, 0.5);
+
+	const FLinearColor BrokerBlueprintColor = FLinearColor(0.390, 0.500, 1.000);
+	const FLinearColor CharacterAssetColor = Darken(BrokerBlueprintColor, 0.5);
+	
 	inline const FLinearColor Button_Unset() { return DarkGray; }
 
-	/** FLinearColor::Desaturate also lerps alpha towards zero for some reason... use my own instead. */
-	inline FLinearColor Desaturate(FLinearColor InColor, float Desaturation )
-	{
-		float Lum = InColor.GetLuminance();
-		return FMath::Lerp( InColor, FLinearColor( Lum, Lum, Lum, InColor.A ), Desaturation );
-	}
+	// Functions
+	
 }
 
 #undef LOCTEXT_NAMESPACE

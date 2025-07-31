@@ -4,6 +4,7 @@
 #include "YapEditor/AssetDefinitions/AssetDefinition_YapNodeConfig.h"
 
 #include "Yap/YapNodeConfig.h"
+#include "YapEditor/YapEditorColor.h"
 #include "YapEditor/YapEditorModule.h"
 
 #define LOCTEXT_NAMESPACE "AssetDefinition_YapNodeConfig"
@@ -15,7 +16,7 @@ FText UAssetDefinition_YapNodeConfig::GetAssetDisplayName() const
 
 FLinearColor UAssetDefinition_YapNodeConfig::GetAssetColor() const
 {
-	return FColor(255, 196, 128);
+	return YapColor::DialogueNodeConfigColor;
 }
 
 TSoftClassPtr<UObject> UAssetDefinition_YapNodeConfig::GetAssetClass() const

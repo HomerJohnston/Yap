@@ -161,12 +161,15 @@ int32 SYapTimeProgressionWidget::OnPaint(const FPaintArgs& Args, const FGeometry
 		float TimeValue = PlaybackTimeAtt.Get().GetValue();
 
 		float Normalized = DownScaling * TimeValue / MaxTime;
+
+		FVector2D HandleSize = GetPlaybackHandleSize();
+		FVector2D Position = FVector2D(GeoWidth * Normalized - 0.5 * HandleSize.X, 0.5 * GeoHeight - 0.5 * HandleSize.Y);
 		
 		FSlateDrawElement::MakeBox
 		(
 			OutDrawElements,
 			RetLayerId++,
-			AllottedGeometry.ToPaintGeometry(FVector2D(3.0f, 5.0f), FSlateLayoutTransform(FVector2D((GeoWidth - 3.0f) * Normalized, -1.0f))),
+			AllottedGeometry.ToPaintGeometry(HandleSize, FSlateLayoutTransform(Position)),
 			FYapEditorStyle::GetImageBrush(YapBrushes.Icon_PlaybackTimeHandle)
 		);
 	}
@@ -179,16 +182,16 @@ int32 SYapTimeProgressionWidget::OnPaint(const FPaintArgs& Args, const FGeometry
 
 			FLinearColor HandleColor = (PaddingIsSetAtt.Get() ? YapColor::LightGray : BarColor);
 
-			float HandleSize = GetPaddingHandleSize();
+			float HandleDiameter = GetPaddingHandleSize();
 			
-			FVector2D Size = FVector2D(HandleSize);
-			FVector2D Trans = FVector2D(GeoWidth * Normalized - 0.5 * HandleSize, 0.5 * GeoHeight - 0.5 * HandleSize);
+			FVector2D HandleSize = FVector2D(HandleDiameter);
+			FVector2D Position = FVector2D(GeoWidth * Normalized - 0.5 * HandleDiameter, 0.5 * GeoHeight - 0.5 * HandleDiameter);
 		
 			FSlateDrawElement::MakeBox
 			(
 				OutDrawElements,
 				RetLayerId++,
-				AllottedGeometry.ToPaintGeometry(Size, FSlateLayoutTransform(Trans)),
+				AllottedGeometry.ToPaintGeometry(HandleSize, FSlateLayoutTransform(Position)),
 				FYapEditorStyle::GetImageBrush(YapBrushes.Icon_FilledCircle),
 				ESlateDrawEffect::None,
 				HandleColor
@@ -482,6 +485,11 @@ void SYapTimeProgressionWidget::Tick(const FGeometry& AllottedGeometry, const do
 float SYapTimeProgressionWidget::GetPaddingHandleSize() const
 {
 	return GetTickSpaceGeometry().GetLocalSize().Y - 2;
+}
+
+FVector2D SYapTimeProgressionWidget::GetPlaybackHandleSize() const
+{
+	return GetPlaybackHandleImage()->GetImageSize();
 }
 
 const FSlateBrush* SYapTimeProgressionWidget::GetPaddingHandleImage() const

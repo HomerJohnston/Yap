@@ -4,9 +4,10 @@
 #include "YapEditor/AssetDefinitions/AssetDefinition_YapCharacterAsset.h"
 
 #include "Yap/YapCharacterAsset.h"
+#include "YapEditor/YapEditorColor.h"
 #include "YapEditor/YapEditorModule.h"
 
-#define LOCTEXT_NAMESPACE "AssetDefinition_YapNodeConfig"
+#define LOCTEXT_NAMESPACE "YapEditor"
 
 FText UAssetDefinition_YapCharacterAsset::GetAssetDisplayName() const
 {
@@ -15,7 +16,7 @@ FText UAssetDefinition_YapCharacterAsset::GetAssetDisplayName() const
 
 FLinearColor UAssetDefinition_YapCharacterAsset::GetAssetColor() const
 {
-    return FColor(255, 196, 128);
+    return YapColor::CharacterAssetColor;
 }
 
 TSoftClassPtr<UObject> UAssetDefinition_YapCharacterAsset::GetAssetClass() const

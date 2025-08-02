@@ -30,7 +30,7 @@ UYapRunSpeechLatent2* UYapRunSpeechLatent2::RunSpeechLatent(
 		UObject* SpeechOwner,
 		FName CharacterID, FText DialogueText,
 	UObject* DialogueAudioAsset, FGameplayTag MoodTag, float SpeechTime, FText TitleText,
-	TScriptInterface<IYapCharacterInterface> DirectedAt, FGameplayTag Conversation, bool bSkippable,
+	FName DirectedAt, FGameplayTag Conversation, bool bSkippable,
 	TSubclassOf<UFlowNode_YapDialogue> NodeType,
 	UPARAM(ref) FYapSpeechHandle& Handle)
 {
@@ -61,7 +61,7 @@ UYapRunSpeechLatent2* UYapRunSpeechLatent2::RunSpeechLatent(
 	Node->Data.MoodTag = MoodTag;
 	Node->Data.SpeechTime = SpeechTime;
 	Node->Data.TitleText = TitleText;
-	Node->Data.DirectedAt = DirectedAt;
+	Node->Data.DirectedAtID = DirectedAt;
 	Node->Data.Conversation = Conversation;
 	Node->Data.bSkippable = bSkippable;
 	Node->_NodeType = NodeType;
@@ -81,6 +81,8 @@ void UYapRunSpeechLatent2::OnSpeechCompleteFunc(UObject* Broadcaster, const FYap
 
 	UE_LOG(LogYap, VeryVerbose, TEXT("RunSpeechLatent completed! <%s>"), *Handle.ToString());
 
+	AnyCompletion.Broadcast();
+	
 	switch (Result)
 	{
 		case EYapSpeechCompleteResult::Normal:

@@ -47,7 +47,7 @@ struct FYapData_SpeechBegins
 	
 	/** Who is being speaked towards. */
     UPROPERTY(BlueprintReadOnly, Category = "Default")
-	TScriptInterface<IYapCharacterInterface> DirectedAt = nullptr;
+	FName DirectedAtID;
 
 	/** Who is speaking. */
     UPROPERTY(BlueprintReadOnly, Category = "Default")

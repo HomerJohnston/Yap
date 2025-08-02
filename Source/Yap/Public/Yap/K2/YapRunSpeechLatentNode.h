@@ -39,10 +39,16 @@ protected:
 	FYapSpeechHandle _Handle;
 	
 public:
-	UPROPERTY(BlueprintAssignable, DisplayName = "Done")
+	/** Executed when the node is done, regardless of whether speech ran fully or was cancelled. */
+	UPROPERTY(BlueprintAssignable, DisplayName = "Finished")
+	FDelayOutputPin AnyCompletion;
+
+	/** Executed ONLY if the speech finishes naturally. */
+	UPROPERTY(BlueprintAssignable, DisplayName = "Succeeded")
 	FDelayOutputPin Completed;
-	
-	UPROPERTY(BlueprintAssignable, DisplayName = "Cancel")
+
+	/** Executed ONLY if the speech was interrupted/cancelled. */
+	UPROPERTY(BlueprintAssignable, DisplayName = "Cancelled")
 	FDelayOutputPin Cancelled;
 
 protected:
@@ -50,18 +56,18 @@ protected:
 	
 	/**
 	 * Run speech
-	 * @param CharacterID 
-	 * @param DialogueText 
-	 * @param DialogueAudioAsset  
-	 * @param MoodTag 
-	 * @param SpeechTime 
-	 * @param TitleText 
-	 * @param DirectedAt 
-	 * @param Conversation 
-	 * @param bSkippable 
-	 * @param NodeType 
-	 * @param SpeechOwner 
-	 * @param Handle 
+	 * @param CharacterID Who will be speaking? If left unset, Yap will look for a Yap Character Component on 'this' to use.
+	 * @param DialogueText Text to be spoken.
+	 * @param DialogueAudioAsset Audio asset to play.
+	 * @param MoodTag Mood tag.
+	 * @param SpeechTime How long to play the speech. If left unset, Yap will calculate length from the Audio Asset or the Dialogue Text. // TODO 
+	 * @param TitleText Title text info to include in speech data.
+	 * @param DirectedAtID Who we are speaking to, if applicable. 
+	 * @param Conversation Conversation tag to include in speech data. 
+	 * @param bSkippable Can this speech be interrupted/cancelled/skipped?
+	 * @param NodeType What dialogue type is this? Used to read config settings.
+	 * @param SpeechOwner Who owns this speech object? If left unset, Yap will use 'this'.
+	 * @param Handle Resulting handle, optionally used for cancelling speech.
 	 * @return 
 	 */
 	UFUNCTION(BlueprintCallable, meta = (DefaultToSelf = "SpeechOwner",  AdvancedDisplay = 4))
@@ -73,11 +79,11 @@ protected:
 		FGameplayTag MoodTag,
 		float SpeechTime,
 		FText TitleText,
-		TScriptInterface<IYapCharacterInterface> DirectedAt,
+		FName DirectedAtID,
 		FGameplayTag Conversation,
 		bool bSkippable,
 		TSubclassOf<UFlowNode_YapDialogue> NodeType,
-		UPARAM(Ref) FYapSpeechHandle& Handle);
+		FYapSpeechHandle& Handle);
 
 	UFUNCTION()
 	void OnSpeechCompleteFunc(UObject* Broadcaster, const FYapSpeechHandle& Handle, EYapSpeechCompleteResult Result);

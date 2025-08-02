@@ -737,7 +737,7 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 	
 	if (ActiveConfig.GetUsesDirectedAt())
 	{
-		Data.DirectedAt = Fragment.GetDirectedAt(GetWorld(), EYapLoadContext::Sync);
+		Data.DirectedAtID = Fragment.GetDirectedAtTag().GetTagName();
 	}
 
 	if (ActiveConfig.GetUsesSpeaker())

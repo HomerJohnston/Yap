@@ -931,6 +931,13 @@ void UYapSubsystem::OnSpeechComplete(FYapSpeechHandle Handle, bool bBroadcast)
 {
 	UE_LOG(LogYap, VeryVerbose, TEXT("%s: OnSpeechComplete entering {%s}"), *GetName(), *Handle.ToString());
 
+	const FName* Key = ActiveSpeechByCharacter.FindKey(Handle);
+
+	if (Key)
+	{
+		ActiveSpeechByCharacter.Remove(*Key);
+	}
+	
 	if (bBroadcast)
 	{
 		UE_LOG(LogYap, VeryVerbose, TEXT("%s: OnSpeechComplete {%s}"), *GetName(), *Handle.ToString());
@@ -938,7 +945,7 @@ void UYapSubsystem::OnSpeechComplete(FYapSpeechHandle Handle, bool bBroadcast)
 		if (!EmitSpeechResult(Handle, EYapSpeechCompleteResult::Normal))
 		{
 			UE_LOG(LogYap, Warning, TEXT("Handle was not registered into SpeechCompleteEvents! Can't broadcast Complete event! %s"), *Handle.ToString());
-		}	
+		}
 	}
 	
 	FTimerHandle* Timer = RunningSpeechTimers.Find(Handle);

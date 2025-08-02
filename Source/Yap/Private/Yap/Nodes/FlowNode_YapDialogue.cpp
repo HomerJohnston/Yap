@@ -255,8 +255,10 @@ bool UFlowNode_YapDialogue::CanSkip(FYapSpeechHandle Handle) const
 		return true;
 	}
 
+	bool bInConversation = UYapSubsystem::IsSpeechInConversation(this, Handle);
+	
 	// Is skipping allowed or not?
-	bool bPreventSkippingTimers = !Fragment.GetSkippable(this->GetSkippable());
+	bool bPreventSkippingTimers = !Fragment.GetSkippable(this->GetInterruptible(bInConversation));
 	
 	if (bPreventSkippingTimers)
 	{
@@ -450,13 +452,17 @@ const FYapFragment& UFlowNode_YapDialogue::GetFragment(uint8 FragmentIndex) cons
 
 // ------------------------------------------------------------------------------------------------
 
-bool UFlowNode_YapDialogue::GetSkippable() const
+bool UFlowNode_YapDialogue::GetInterruptible(bool bInConversation) const
 {
-	return Skippable.Get(!GetNodeConfig().GetForcedDialogueDuration());
+	// TODO
+	return false;
 }
 
-bool UFlowNode_YapDialogue::GetNodeAutoAdvance() const
+bool UFlowNode_YapDialogue::GetNodeAutoAdvance(bool bInConversation) const
 {
+	// TODO
+	return true;
+	/*
 	if (GetNodeType() == EYapDialogueNodeType::TalkAndAdvance)
 	{
 		return true;
@@ -466,14 +472,27 @@ bool UFlowNode_YapDialogue::GetNodeAutoAdvance() const
 	{
 		return true;
 	}
+
+	if (bInConversation)
+	{
+		return !ManualAdvanceInConversation.Get(GetNodeConfig().DialoguePlayback.bManualAdvanceInConversation);
+	}
+	else
+	{
+		return !ManualAdvanceInFreeSpeech.Get(GetNodeConfig().DialoguePlayback.bManualAdvanceInFreeSpeech);
+	}
 	
-	return AutoAdvance.Get(!GetNodeConfig().GetManualAdvanceOnly());
+	return true;
+	*/
 }
 
 // ------------------------------------------------------------------------------------------------
 
-bool UFlowNode_YapDialogue::GetFragmentAutoAdvance(uint8 FragmentIndex) const
+bool UFlowNode_YapDialogue::GetFragmentAutoAdvance(uint8 FragmentIndex, bool bInConversation) const
 {
+	return true;
+
+	/*
 	check(Fragments.IsValidIndex(FragmentIndex));
 
 	const FYapFragment& Fragment = Fragments[FragmentIndex]; 
@@ -484,6 +503,10 @@ bool UFlowNode_YapDialogue::GetFragmentAutoAdvance(uint8 FragmentIndex) const
 		return Fragment.GetAutoAdvanceSetting().GetValue();
 	}
 
+	return true;
+	*/
+
+	/*
 	// Use node override
 	if (AutoAdvance.IsSet())
 	{
@@ -491,16 +514,8 @@ bool UFlowNode_YapDialogue::GetFragmentAutoAdvance(uint8 FragmentIndex) const
 	}
 
 	return GetNodeAutoAdvance();
+	*/
 }
-
-// ------------------------------------------------------------------------------------------------
-
-#if WITH_EDITOR
-TOptional<bool> UFlowNode_YapDialogue::GetSkippableSetting() const
-{
-	return Skippable;
-}
-#endif
 
 // ------------------------------------------------------------------------------------------------
 
@@ -707,6 +722,8 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 	FYapData_SpeechBegins Data;
 	Data.Conversation = Subsystem->GetConversationByOwner(GetWorld(), GetFlowAsset()).GetConversationName();
 
+	bool bInConversation = Data.Conversation.IsValid();
+	
 	if (ActiveConfig.GetUsesDirectedAt())
 	{
 		Data.DirectedAt = Fragment.GetDirectedAt(GetWorld(), EYapLoadContext::Sync);
@@ -731,7 +748,7 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 		Data.DialogueAudioAsset = Bit.GetAudioAsset<UObject>();		
 	}
 	
-	Data.bSkippable = Fragment.GetSkippable(GetSkippable());
+	Data.bSkippable = Fragment.GetSkippable(GetInterruptible(bInConversation));
 
 	if (!ActiveConfig.GetUsesTitleText(GetNodeType()))
 	{
@@ -897,9 +914,10 @@ void UFlowNode_YapDialogue::TryAdvanceFromFragment(const FYapSpeechHandle& Handl
 	
 	FYapFragment& Fragment = Fragments[FragmentIndex];
 
+	bool bInConversation = UYapSubsystem::IsSpeechInConversation(this, Handle);
 	
 	// TODO When calling AdvanceFromFragment in Skip function, if the game is set to do manual advancement, this won't run. Push this into a separate function I can call or add another route into this.
-	if (GetFragmentAutoAdvance(FragmentIndex))
+	if (GetFragmentAutoAdvance(FragmentIndex, bInConversation))
 	{
 		UE_LOG(LogYap, VeryVerbose, TEXT("%s [%i]: TryAdvanceFromFragment passed - GetFragmentAutoAdvance true)"), *GetName(), FragmentIndex);
 
@@ -907,16 +925,20 @@ void UFlowNode_YapDialogue::TryAdvanceFromFragment(const FYapSpeechHandle& Handl
 	}
 	else
 	{
-		if (GetNodeConfig().GetIgnoreManualAdvanceOutsideConversations() && !UYapSubsystem::IsSpeechInConversation(this, Handle))
+		/*
+		if (GetNodeConfig().GetManualAdvanceFreeSpeech() && !bInConversation)
 		{
 			UE_LOG(LogYap, VeryVerbose, TEXT("%s [%i]: TryAdvanceFromFragment passed - GetFragmentAutoAdvance true)"), *GetName(), FragmentIndex);
 			AdvanceFromFragment(Handle, FragmentIndex);
 		}
 		else
 		{
+		*/
 			UE_LOG(LogYap, VeryVerbose, TEXT("%s [%i]: TryAdvanceFromFragment failed - fragment awaiting manual advance"), *GetName(), FragmentIndex);
 			Fragment.SetAwaitingManualAdvance();
+		/*
 		}
+		*/
 	}
 }
 

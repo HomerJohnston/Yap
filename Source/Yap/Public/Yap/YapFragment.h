@@ -17,6 +17,8 @@
 
 #include "YapFragment.generated.h"
 
+enum class EYapAutoAdvanceFlags : uint8;
+enum class EYapInterruptibleFlags : uint8;
 class IYapCharacterInterface;
 enum class EYapLoadContext : uint8;
 class UYapCharacterAsset;
@@ -118,11 +120,11 @@ protected:
 	
 	/**  */
 	UPROPERTY()
-	TOptional<bool> Skippable;
+	TOptional<EYapInterruptibleFlags> InterruptibleFlags;
 	
 	/**  */
 	UPROPERTY()
-	TOptional<bool> AutoAdvance;
+	TOptional<EYapAutoAdvanceFlags> AutoAdvanceFlags;
 	
 	/** Indicates whether child-safe data is available in this bit or not */
 	UPROPERTY()
@@ -328,13 +330,13 @@ public:
 
 	void ResolveMaturitySetting(UWorld* World, EYapMaturitySetting& MaturitySetting) const;
 	
-	TOptional<bool> GetSkippableSetting() const { return Skippable; }
+	TOptional<EYapInterruptibleFlags> GetSkippableSetting() const { return InterruptibleFlags; }
 	
-	TOptional<bool>& GetSkippableSetting() { return Skippable; }
+	TOptional<EYapInterruptibleFlags>& GetSkippableSetting() { return InterruptibleFlags; }
 	
-	TOptional<bool> GetAutoAdvanceSetting() const { return AutoAdvance; }
+	TOptional<EYapAutoAdvanceFlags> GetAutoAdvanceSetting() const { return AutoAdvanceFlags; }
 	
-	TOptional<bool>& GetAutoAdvanceSetting() { return AutoAdvance; }
+	TOptional<EYapAutoAdvanceFlags>& GetAutoAdvanceSetting() { return AutoAdvanceFlags; }
 	
 	/** Gets the evaluated skippable setting to be used for this fragment (incorporating project default settings and fallbacks) */
 	bool GetSkippable(bool Default) const;

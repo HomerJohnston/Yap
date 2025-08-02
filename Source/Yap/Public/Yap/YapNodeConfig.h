@@ -13,7 +13,10 @@
 
 // ================================================================================================
 
+enum class EYapInterruptibleFlags : uint8;
 enum class EYapDialogueNodeType : uint8;
+
+enum class EYapAutoAdvanceFlags : uint8;
 
 USTRUCT()
 struct FYapNodeConfigGroup_General
@@ -146,21 +149,17 @@ struct FYapNodeConfigGroup_DialoguePlayback
 	GENERATED_BODY()
 
 	/** If set, a character will be able to say multiple things at once. By default, if you launch two dialogues on the same character, the second one will cause the first one to cancel. */
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Default")
 	bool bPermitOverlappingSpeech = false;
 	
-	/** If set, dialogue will be non-skippable by default and must play for its entire duration. */
-	UPROPERTY(EditAnywhere)
-	bool bForcedDialogueDuration = false;
+	/** Controls if running speech can be interrupted (forcefully cancelled or advanced). */
+	UPROPERTY(EditAnywhere, Category = "Default", meta = (Bitmask, BitmaskEnum = "/Script/Yap.EYapInterruptibleFlags"))
+	uint8 SpeechInterruptibleFlags = 1 << 0 | 1 << 1;
 	
-	/** If set, dialogue in a conversation will not auto-advance by default and will require advancement by using the Conversation Handle. */
-	UPROPERTY(EditAnywhere, DisplayName = "Manual Advance")
-	bool bManualAdvanceInConversations = false;
-
-	/** If set, dialogue outside of a conversation will not auto-advance by default and will require advancement by using the Speech Handle. */
-	UPROPERTY(EditAnywhere)
-	bool bManualAdvanceFreeSpeech = false;
-
+	/** Controls if dialogue automatically advances (only applicable if it has a time duration set). */
+	UPROPERTY(EditAnywhere, Category = "Default", meta = (Bitmask, BitmaskEnum = "/Script/Yap.EYapAutoAdvanceFlags"))
+	uint8 AutoAdvanceFlags = 1 << 0 | 1 << 1;
+	
 	UPROPERTY(EditAnywhere)
 	FYapNodeConfigGroup_DialoguePlaybackTime TimeSettings;
 };
@@ -332,26 +331,12 @@ public:
 
 	EYapMissingAudioErrorLevel GetMissingAudioErrorLevel() const { return Audio.MissingAudioErrorLevel; }
 	
-	bool GetForcedDialogueDuration() const { return DialoguePlayback.bForcedDialogueDuration; }
-	
-	bool GetManualAdvanceOnly() const
-	{
-		EYapTimeMode TimeMode = GetDefaultTimeModeSetting();
-		
-		if (TimeMode == EYapTimeMode::None)
-		{
-			return true;
-		}
-		
-		return DialoguePlayback.bManualAdvanceInConversations;
-	}
+	EYapAutoAdvanceFlags GetAutoAdvanceFlags() const { return (EYapAutoAdvanceFlags)DialoguePlayback.AutoAdvanceFlags; }
 
 	bool GetPromptAdvancesImmediately() const { return Prompts.bPromptAdvancesImmediately; }
 	
 	bool GetAutoSelectLastPrompt() const { return Prompts.bAutoSelectLastPrompt; }
 
-	bool GetIgnoreManualAdvanceOutsideConversations() const { return DialoguePlayback.bManualAdvanceFreeSpeech; }
-	
 	float GetDefaultFragmentPaddingTime() const { return DialoguePlayback.TimeSettings.PaddingTimeDefault; }
 	
 	float GetMinimumAutoTextTimeLength() const { return DialoguePlayback.TimeSettings.MinimumAutoTextTimeLength; }

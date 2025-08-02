@@ -3,7 +3,7 @@
    id="glyphicons-arrows"
    viewBox="0 0 32 16"
    version="1.1"
-   sodipodi:docname="Icon_NotSkippable.svg"
+   sodipodi:docname="Icon_AutoAdvance_None.svg"
    inkscape:version="1.4 (86a8ad7, 2024-10-11)"
    width="32"
    height="16"
@@ -22,23 +22,24 @@
      inkscape:pageopacity="0"
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#505050"
-     inkscape:zoom="64.000003"
-     inkscape:cx="13.539062"
-     inkscape:cy="6.5937497"
+     inkscape:zoom="90.509668"
+     inkscape:cx="16.766165"
+     inkscape:cy="6.9163882"
      inkscape:window-width="5120"
      inkscape:window-height="2089"
      inkscape:window-x="1192"
      inkscape:window-y="-8"
      inkscape:window-maximized="1"
-     inkscape:current-layer="glyphicons-arrows" />
+     inkscape:current-layer="glyphicons-arrows"
+     showgrid="false" />
   <path
-     id="step-forward"
-     d="M 31.468833,7.6201129 24.251521,13.071765 C 23.52038,13.624329 22.515509,13.059845 22.51557,12.096597 V 9.6210241 l -12.034704,0 c -2.7418841,0 -4.9646206,1.6473249 -4.9646206,4.6061789 v 0.582246 C 5.5162454,15.466972 5.0223039,16 4.4129964,16 H 1.1032491 C 0.4939415,16 0,15.466972 0,14.809449 V 14.227203 C 4.94e-5,7.9807544 4.692464,3.6683217 10.480866,3.668269 l 12.034704,0 V 1.1926963 c -2e-6,-0.9631977 1.00469,-1.5277472 1.735951,-0.9754543 l 7.217312,5.4519388 c 0.627444,0.474065 0.627444,1.4768671 0,1.9509321 z"
-     style="fill:#999999;fill-opacity:1;stroke-width:1.14607"
-     sodipodi:nodetypes="ccccssssssccccccc" />
+     id="path1"
+     style="fill:#ffffff;stroke-width:1.14015;fill-opacity:0.60000002"
+     d="m 23.621094,1.3574219 c -0.54912,0.033413 -1.044924,0.514159 -1.044922,1.1914062 v 2.5019531 h -4.126953 v 5.9511718 h 4.126953 v 2.449219 c -6.1e-5,0.963248 1.005187,1.529126 1.736328,0.976562 l 7.216797,-5.4531246 c 0.627444,-0.474065 0.627444,-1.4751541 0,-1.9492188 L 24.3125,1.5722656 c -0.182815,-0.138073 -0.383055,-0.2051537 -0.580078,-0.2148437 -0.03694,-0.00182 -0.07472,-0.00223 -0.111328,0 z M 7.3789062,5 v 5.953125 H 9.8691406 V 5 Z m 4.9218748,0 v 5.953125 h 3.935547 V 5 Z M 0,5.0507812 V 11.001953 H 1.2304688 V 5.0507812 Z m 3.6894531,0 V 11.001953 H 4.9199219 V 5.0507812 Z" />
   <g
-     id="g1"
-     transform="translate(-1.6457352)">
+     id="g2"
+     transform="matrix(1.147259,0,0,1.147259,-4.2442292,0.36471214)"
+     style="fill:#ffffff;fill-opacity:1">
     <rect
        style="font-variation-settings:normal;vector-effect:none;fill:#ffffff;fill-opacity:1;stroke-width:0.44172;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;-inkscape-stroke:none;stop-color:#000000"
        id="rect1-4"

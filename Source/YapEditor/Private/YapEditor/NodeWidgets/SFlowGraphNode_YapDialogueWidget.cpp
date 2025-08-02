@@ -128,9 +128,9 @@ int32 SFlowGraphNode_YapDialogueWidget::GetDialogueActivationLimit() const
 // ------------------------------------------------------------------------------------------------
 void SFlowGraphNode_YapDialogueWidget::OnTextCommitted_DialogueActivationLimit(const FText& Text, ETextCommit::Type Arg)
 {
-	FYapTransactions::BeginModify(LOCTEXT("ChangeActivationLimit", "Change activation limit"), GetFlowYapDialogueNodeMutable());
+	FYapTransactions::BeginModify(LOCTEXT("ChangeActivationLimit", "Change activation limit"), GetDialogueNodeMutable());
 
-	GetFlowYapDialogueNodeMutable()->SetNodeActivationLimit(FCString::Atoi(*Text.ToString()));
+	GetDialogueNodeMutable()->SetNodeActivationLimit(FCString::Atoi(*Text.ToString()));
 
 	FYapTransactions::EndModify();
 }
@@ -162,9 +162,9 @@ void SFlowGraphNode_YapDialogueWidget::OnTextChanged_DialogueID(const FText& New
 
 	FName NewName(NewValueString);
 	
-	FYapTransactions::BeginModify(LOCTEXT("ChangeFragmentID", "Change fragment ID"), GetFlowYapDialogueNodeMutable());
+	FYapTransactions::BeginModify(LOCTEXT("ChangeFragmentID", "Change fragment ID"), GetDialogueNodeMutable());
 
-	GetFlowYapDialogueNodeMutable()->DialogueID = NewName;
+	GetDialogueNodeMutable()->DialogueID = NewName;
 
 	FYapTransactions::EndModify();
 }
@@ -201,11 +201,11 @@ bool SFlowGraphNode_YapDialogueWidget::UseLowDetail(EGraphRenderingLOD::Type LOD
 // ------------------------------------------------------------------------------------------------
 void SFlowGraphNode_YapDialogueWidget::OnClick_NewConditionButton(int32 FragmentIndex)
 {
-	FYapTransactions::BeginModify(LOCTEXT("AddCondition", "Add condition"), GetFlowYapDialogueNodeMutable());
+	FYapTransactions::BeginModify(LOCTEXT("AddCondition", "Add condition"), GetDialogueNodeMutable());
 
 	if (FragmentIndex == INDEX_NONE)
 	{
-		GetFlowYapDialogueNodeMutable()->GetConditionsMutable().Add(nullptr);
+		GetDialogueNodeMutable()->GetConditionsMutable().Add(nullptr);
 	}
 	else
 	{
@@ -214,7 +214,7 @@ void SFlowGraphNode_YapDialogueWidget::OnClick_NewConditionButton(int32 Fragment
 
 	FYapTransactions::EndModify();
 
-	GetFlowYapDialogueNodeMutable()->ForceReconstruction();
+	GetDialogueNodeMutable()->ForceReconstruction();
 }
 
 // ------------------------------------------
@@ -245,22 +245,14 @@ TSharedRef<SWidget> SFlowGraphNode_YapDialogueWidget::CreateTitleWidget(TSharedP
 	
 	FString AssetName = FlowAsset->GetName();
 			
-	TOptional<bool>* SkippableSettingRaw = &GetFlowYapDialogueNodeMutable()->Skippable;
-	const TAttribute<bool> SkippableEvaluatedAttr = TAttribute<bool>::CreateLambda( [this] ()
-	{
-		return GetFlowYapDialogueNode()->GetSkippable();
-	});
-	TOptional<bool>* AutoAdvanceSettingRaw = &GetFlowYapDialogueNodeMutable()->AutoAdvance;
-	const TAttribute<bool> AutoAdvanceEvaluatedAttr = TAttribute<bool>::CreateLambda( [this] ()
-	{
-		return GetFlowYapDialogueNode()->GetNodeAutoAdvance();
-	});
+	TOptional<EYapInterruptibleFlags>* InterruptibleFlagsRaw = &GetDialogueNodeMutable()->InterruptibleFlags;
 	
+	TOptional<EYapAutoAdvanceFlags>* AutoAdvanceSettingRaw = &GetDialogueNodeMutable()->AutoAdvanceFlags;
+
 	TSharedRef<SWidget> ProgressionPopupButton = SNew(SYapProgressionSettingsWidget)
-		.SkippableSettingRaw(SkippableSettingRaw)
-		.SkippableEvaluatedAttr(SkippableEvaluatedAttr)
-		.AutoAdvanceSettingRaw(AutoAdvanceSettingRaw)
-		.AutoAdvanceEvaluatedAttr(AutoAdvanceEvaluatedAttr);
+		.DialogueNode(GetDialogueNodeMutable())
+		.SkippableSettingRaw(InterruptibleFlagsRaw)
+		.AutoAdvanceSettingRaw(AutoAdvanceSettingRaw);
 
 	TSharedRef<SHorizontalBox> Row = SNew(SHorizontalBox);
 
@@ -295,9 +287,9 @@ TSharedRef<SWidget> SFlowGraphNode_YapDialogueWidget::CreateTitleWidget(TSharedP
 		.HighDetail()
 		[
 			SAssignNew(DialogueConditionsScrollBox, SYapConditionsScrollBox)
-			.DialogueNode_Lambda( [this] () { return GetFlowYapDialogueNodeMutable(); } )
+			.DialogueNode_Lambda( [this] () { return GetDialogueNodeMutable(); } )
 			.ConditionsArrayProperty(FindFProperty<FArrayProperty>(UFlowNode_YapDialogue::StaticClass(), GET_MEMBER_NAME_CHECKED(UFlowNode_YapDialogue, Conditions)))
-			.ConditionsContainer_Lambda( [this] () { return GetFlowYapDialogueNodeMutable(); } )
+			.ConditionsContainer_Lambda( [this] () { return GetDialogueNodeMutable(); } )
 			.OnConditionsArrayChanged(this, &SFlowGraphNode_YapDialogueWidget::OnConditionsArrayChanged)
 		]
 	];
@@ -510,7 +502,7 @@ FText SFlowGraphNode_YapDialogueWidget::Text_FragmentSequencingButton() const
 FReply SFlowGraphNode_YapDialogueWidget::OnClicked_TogglePlayerPrompt()
 {
 	{
-		FYapScopedTransaction T("TODO", LOCTEXT("TransactionText_TogglePlayerPrompt", "Toggle Player Prompt"), GetFlowYapDialogueNodeMutable());
+		FYapScopedTransaction T("TODO", LOCTEXT("TransactionText_TogglePlayerPrompt", "Toggle Player Prompt"), GetDialogueNodeMutable());
 
 		bool bHasOutputConnections = false;
 		// Get all output pins of this node and iterate them
@@ -523,9 +515,9 @@ FReply SFlowGraphNode_YapDialogueWidget::OnClicked_TogglePlayerPrompt()
 			}
 		}
 		
-		if (GetFlowYapDialogueNodeMutable()->ToggleNodeType(bHasOutputConnections))
+		if (GetDialogueNodeMutable()->ToggleNodeType(bHasOutputConnections))
 		{
-			GetFlowYapDialogueNodeMutable()->ForceReconstruction();
+			GetDialogueNodeMutable()->ForceReconstruction();
 		}
 
 		NodeHeaderButtonToolTip->SetText(Text_NodeHeader());
@@ -772,7 +764,7 @@ EVisibility SFlowGraphNode_YapDialogueWidget::Visibility_FragmentSeparator() con
 // ------------------------------------------------------------------------------------------------
 FReply SFlowGraphNode_YapDialogueWidget::OnClicked_FragmentSeparator(uint8 Index)
 {
-	FYapTransactions::BeginModify(LOCTEXT("AddFragment", "Add fragment"), GetFlowYapDialogueNodeMutable());
+	FYapTransactions::BeginModify(LOCTEXT("AddFragment", "Add fragment"), GetDialogueNodeMutable());
 
 	GetFlowGraphNode_YapDialogueMutable()->AddFragment(Index);
 
@@ -965,9 +957,9 @@ FReply SFlowGraphNode_YapDialogueWidget::OnClicked_FragmentSequencingButton()
 	{
 		//FYapScopedTransaction(LOCTEXT("ChangeDialogueNodeSequencing", "Change dialogue node sequencing mode"), FlowGraphNode_YapDialogue, YapEditor::Events::DialogueNode::Test, true);
 	
-		FYapTransactions::BeginModify(LOCTEXT("ChangeSequencingSetting", "Change sequencing setting"), GetFlowYapDialogueNodeMutable());
+		FYapTransactions::BeginModify(LOCTEXT("ChangeSequencingSetting", "Change sequencing setting"), GetDialogueNodeMutable());
 
-		GetFlowYapDialogueNodeMutable()->CycleFragmentSequencingMode();
+		GetDialogueNodeMutable()->CycleFragmentSequencingMode();
 
 		//FragmentSequencingButton_Box->SetVisibility(Visibility_FragmentSequencingButton());
 
@@ -1083,7 +1075,7 @@ EVisibility SFlowGraphNode_YapDialogueWidget::Visibility_AppendFragmentButton() 
 // ------------------------------------------------------------------------------------------------
 FReply SFlowGraphNode_YapDialogueWidget::OnClicked_AppendFragmentButton()
 {
-	FYapTransactions::BeginModify(LOCTEXT("AddFragment", "Add fragment"), GetFlowYapDialogueNodeMutable());
+	FYapTransactions::BeginModify(LOCTEXT("AddFragment", "Add fragment"), GetDialogueNodeMutable());
 
 	GetFlowGraphNode_YapDialogueMutable()->AddFragment(GetFlowYapDialogueNode()->GetNumFragments());
 
@@ -1115,11 +1107,11 @@ EVisibility SFlowGraphNode_YapDialogueWidget::Visibility_AddonsSeparator() const
 // ------------------------------------------------------------------------------------------------
 void SFlowGraphNode_YapDialogueWidget::OnClick_DeleteConditionButton(int32 FragmentIndex, int32 ConditionIndex)
 {
-	FYapTransactions::BeginModify(LOCTEXT("DeleteCondition", "Delete condition"), GetFlowYapDialogueNodeMutable());
+	FYapTransactions::BeginModify(LOCTEXT("DeleteCondition", "Delete condition"), GetDialogueNodeMutable());
 
 	if (FragmentIndex == INDEX_NONE)
 	{
-		GetFlowYapDialogueNodeMutable()->GetConditionsMutable().RemoveAt(ConditionIndex);
+		GetDialogueNodeMutable()->GetConditionsMutable().RemoveAt(ConditionIndex);
 	}
 	else
 	{
@@ -1128,7 +1120,7 @@ void SFlowGraphNode_YapDialogueWidget::OnClick_DeleteConditionButton(int32 Fragm
 
 	FYapTransactions::EndModify();
 
-	GetFlowYapDialogueNodeMutable()->ForceReconstruction();
+	GetDialogueNodeMutable()->ForceReconstruction();
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -1232,7 +1224,7 @@ void SFlowGraphNode_YapDialogueWidget::ClearTypingFocus()
 }
 
 // ------------------------------------------------------------------------------------------------
-UFlowNode_YapDialogue* SFlowGraphNode_YapDialogueWidget::GetFlowYapDialogueNodeMutable()
+UFlowNode_YapDialogue* SFlowGraphNode_YapDialogueWidget::GetDialogueNodeMutable()
 {
 	return Cast<UFlowNode_YapDialogue>(FlowGraphNode->GetFlowNodeBase());
 }
@@ -1536,7 +1528,7 @@ const FYapFragment& SFlowGraphNode_YapDialogueWidget::GetFragment(uint8 Fragment
 // ------------------------------------------------------------------------------------------------
 FYapFragment& SFlowGraphNode_YapDialogueWidget::GetFragmentMutable(uint8 FragmentIndex)
 {
-	return GetFlowYapDialogueNodeMutable()->GetFragmentByIndexMutable(FragmentIndex);
+	return GetDialogueNodeMutable()->GetFragmentByIndexMutable(FragmentIndex);
 }
 
 // ------------------------------------------------------------------------------------------------

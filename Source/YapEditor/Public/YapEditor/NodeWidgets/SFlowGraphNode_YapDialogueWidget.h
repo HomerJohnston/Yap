@@ -207,7 +207,7 @@ public:
 
 	void ClearTypingFocus();
 	
-	UFlowNode_YapDialogue* GetFlowYapDialogueNodeMutable();
+	UFlowNode_YapDialogue* GetDialogueNodeMutable();
 	
 	const UFlowNode_YapDialogue* GetFlowYapDialogueNode() const;
 	const UFlowGraphNode_YapDialogue* GetFlowGraphNode_YapDialogue() const;

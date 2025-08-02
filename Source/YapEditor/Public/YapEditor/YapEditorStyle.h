@@ -43,8 +43,14 @@ struct FYapBrushes
 	FName Icon_UpArrow;
 	FName Icon_Skippable;
 	FName Icon_NotSkippable;
-	FName Icon_AutoAdvance;
-	FName Icon_ManualAdvance;
+	FName Icon_AutoAdvance_None;
+	FName Icon_AutoAdvance_FreeSpeech;
+	FName Icon_AutoAdvance_Conversation;
+	FName Icon_AutoAdvance_All;
+	FName Icon_Interruptible_None;
+	FName Icon_Interruptible_FreeSpeech;
+	FName Icon_Interruptible_Conversation;
+	FName Icon_Interruptible_All;
 	FName Icon_Reset_Small;
 	FName Icon_Notes;
 	FName Icon_FragmentData;

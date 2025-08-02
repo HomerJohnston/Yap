@@ -340,7 +340,9 @@ void FYapFragment::ResolveMaturitySetting(UWorld* World, EYapMaturitySetting& Ma
 
 bool FYapFragment::GetSkippable(bool Default) const
 {
-	return Skippable.Get(Default);
+	return true;
+	// TODO
+	//return Skippable.Get(Default);
 }
 
 EYapTimeMode FYapFragment::GetTimeMode(UWorld* World, const UYapNodeConfig& NodeConfig) const

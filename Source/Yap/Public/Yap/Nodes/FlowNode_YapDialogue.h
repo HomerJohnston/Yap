@@ -41,6 +41,8 @@ enum class EYapDialogueNodeType : uint8
 	COUNT			= 1 << 3	UMETA(Hidden)
 };
 
+ENUM_CLASS_FLAGS(EYapDialogueNodeType);
+
 USTRUCT()
 struct FYapFragmentRunData
 {
@@ -113,17 +115,15 @@ protected:
     UPROPERTY(BlueprintReadOnly, Category = "Default")
 	EYapDialogueTalkSequencing TalkSequencing;
 
-	// This is used to update the fragment sequencing mode when the talk mode is changed
+	// This is used to update the fragment sequencing mode when the talk mode is changed // TODO should be editor only?
 	EYapDialogueTalkSequencing OldTalkSequencing;
 
-	/** Controls if dialogue can be interrupted. Overrides Config settings. */
-    UPROPERTY(BlueprintReadOnly, Category = "Default")
-	TOptional<bool> Skippable;
-
-	/** Controls if dialogue automatically advances (only applicable if it has a time duration set). Overrides Config settings. */
-    UPROPERTY(BlueprintReadOnly, Category = "Default")
-	TOptional<bool> AutoAdvance;
-
+	UPROPERTY()
+	TOptional<EYapInterruptibleFlags> InterruptibleFlags;
+	
+    UPROPERTY()
+	TOptional<EYapAutoAdvanceFlags> AutoAdvanceFlags;
+	
 	/** IDs can be used to interact with this dialogue node during the game. */
     UPROPERTY(BlueprintReadOnly, Category = "Default")
 	FName DialogueID;
@@ -212,12 +212,19 @@ public:
 	/** Simple helper function. */
 	uint8 GetNumFragments() const { return Fragments.Num(); }
 
-	/** Is dialogue from this node skippable by default? */
-	bool GetSkippable() const;
-
-	bool GetNodeAutoAdvance() const;
+	/**  */
+	bool GetInterruptible(bool bInConversation) const;
 	
-	bool GetFragmentAutoAdvance(uint8 FragmentIndex) const;
+	/** Is dialogue from this node skippable by default? */
+	TOptional<EYapInterruptibleFlags> GetInterruptibleFlags() const { return InterruptibleFlags; }
+
+	TOptional<EYapAutoAdvanceFlags> GetAutoAdvanceFlags() const { return AutoAdvanceFlags; }
+
+	/**  */
+	bool GetNodeAutoAdvance(bool bInConversation) const;
+
+	/**  */
+	bool GetFragmentAutoAdvance(uint8 FragmentIndex, bool bInConversation) const;
 
 	int32 GetRunningFragmentIndex() const { return FocusedFragmentIndex.Get(INDEX_NONE); }
 	

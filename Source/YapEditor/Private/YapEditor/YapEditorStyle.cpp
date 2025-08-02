@@ -203,7 +203,7 @@ void FYapEditorStyle::Initialize_Internal()
 	// BRUSHES
 	// ============================================================================================
 	YAP_DEFINE_BRUSH(FSlateImageBrush,			Icon_AudioTime,					"DialogueNodeIcons/AudioTime", ".png",	FVector2f(16, 16));
-	YAP_DEFINE_BRUSH(FSlateImageBrush,			Icon_PlaybackTimeHandle,		"Icon_PlaybackTimeHandle", ".png",	FVector2f(5, 7));
+	YAP_DEFINE_BRUSH(FSlateImageBrush,			Icon_PlaybackTimeHandle,		"Icon_PlaybackTimeHandle", ".png",		FVector2f(5, 7));
 	YAP_DEFINE_BRUSH(FSlateVectorImageBrush,	Icon_Baby,						"Icon_Baby", ".svg",					FVector2f(16, 16));
 	YAP_DEFINE_BRUSH(FSlateVectorImageBrush,	Icon_MoodTag_Missing,			"Icon_MoodTag_Missing", ".svg",			FVector2f(16, 16));
 	YAP_DEFINE_BRUSH(FSlateImageBrush,			Icon_Delete,					"Icon_Delete", ".png",					FVector2f(16, 16));
@@ -219,10 +219,14 @@ void FYapEditorStyle::Initialize_Internal()
 	YAP_DEFINE_BRUSH(FSlateVectorImageBrush,	Icon_Checkmark,					"Icon_Checkmark", ".svg",				FVector2f(16, 16));
 	YAP_DEFINE_BRUSH(FSlateVectorImageBrush,	Icon_CrossX,					"Icon_CrossX", ".svg",					FVector2f(16, 16));
 	YAP_DEFINE_BRUSH(FSlateImageBrush,			Icon_UpArrow,					"Icon_UpArrow", ".png",					FVector2f(8, 8));
-	YAP_DEFINE_BRUSH(FSlateVectorImageBrush,	Icon_Skippable,					"Icon_Skippable", ".svg",				FVector2f(16, 16));
-	YAP_DEFINE_BRUSH(FSlateVectorImageBrush,	Icon_NotSkippable,				"Icon_NotSkippable", ".svg",			FVector2f(16, 16));
-	YAP_DEFINE_BRUSH(FSlateVectorImageBrush,	Icon_AutoAdvance,				"Icon_AutoAdvance", ".svg",				FVector2f(16, 16));
-	YAP_DEFINE_BRUSH(FSlateVectorImageBrush,	Icon_ManualAdvance,				"Icon_ManualAdvance", ".svg",			FVector2f(16, 16));
+	YAP_DEFINE_BRUSH(FSlateVectorImageBrush,	Icon_AutoAdvance_None,			"Icon_AutoAdvance_None", ".svg",		FVector2f(32, 16));
+	YAP_DEFINE_BRUSH(FSlateVectorImageBrush,	Icon_AutoAdvance_FreeSpeech,	"Icon_AutoAdvance_FreeSpeech", ".svg",	FVector2f(32, 16));
+	YAP_DEFINE_BRUSH(FSlateVectorImageBrush,	Icon_AutoAdvance_Conversation,	"Icon_AutoAdvance_Conversation", ".svg",FVector2f(32, 16));
+	YAP_DEFINE_BRUSH(FSlateVectorImageBrush,	Icon_AutoAdvance_All,			"Icon_AutoAdvance_All", ".svg",			FVector2f(32, 16));
+	YAP_DEFINE_BRUSH(FSlateVectorImageBrush,	Icon_Interruptible_None,		"Icon_Interruptible_None", ".svg",		FVector2f(32, 16));
+	YAP_DEFINE_BRUSH(FSlateVectorImageBrush,	Icon_Interruptible_FreeSpeech,	"Icon_Interruptible_FreeSpeech", ".svg",	FVector2f(32, 16));
+	YAP_DEFINE_BRUSH(FSlateVectorImageBrush,	Icon_Interruptible_Conversation,"Icon_Interruptible_Conversation", ".svg",	FVector2f(32, 16));
+	YAP_DEFINE_BRUSH(FSlateVectorImageBrush,	Icon_Interruptible_All,			"Icon_Interruptible_All", ".svg",			FVector2f(32, 16));
 	YAP_DEFINE_BRUSH(FSlateVectorImageBrush,	Icon_Reset_Small,				"Icon_Reset_Small", ".svg",				FVector2f(16, 16));
 	YAP_DEFINE_BRUSH(FSlateVectorImageBrush,	Icon_Notes,						"Icon_Notes", ".svg",					FVector2f(32, 32));
 	YAP_DEFINE_BRUSH(FSlateVectorImageBrush,	Icon_FragmentData,				"Icon_FragmentData", ".svg",			FVector2f(32, 32));

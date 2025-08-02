@@ -463,24 +463,14 @@ void SFlowGraphNode_YapFragmentWidget::OnTextCommitted_FragmentActivationLimit(c
 
 TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateUpperFragmentBar()
 {
-	TOptional<bool>* SkippableSettingRaw = &GetFragmentMutable().Skippable;
-	const TAttribute<bool> SkippableDefaultAttr = TAttribute<bool>::CreateLambda( [this] () { return GetDialogueNode()->GetSkippable(); });
-	const TAttribute<bool> SkippableEvaluatedAttr = TAttribute<bool>::CreateLambda( [this, SkippableDefaultAttr] ()
-	{
-		return GetFragment().GetSkippable(SkippableDefaultAttr.Get());
-	});
-	TOptional<bool>* AutoAdvanceSettingRaw = &GetFragmentMutable().AutoAdvance;
-	const TAttribute<bool> AutoAdvanceDefaultAttr = TAttribute<bool>::CreateLambda( [this] () { return GetDialogueNode()->GetNodeAutoAdvance(); });
-	const TAttribute<bool> AutoAdvanceEvaluatedAttr = TAttribute<bool>::CreateLambda( [this] ()
-	{
-		return GetDialogueNode()->GetFragmentAutoAdvance(FragmentIndex);
-	});
+	TOptional<EYapInterruptibleFlags>* InterruptibleFlagsRaw = &GetFragmentMutable().InterruptibleFlags;
+	
+	TOptional<EYapAutoAdvanceFlags>* AutoAdvanceSettingRaw = &GetFragmentMutable().AutoAdvanceFlags;
 
 	TSharedRef<SWidget> ProgressionPopupButton = SNew(SYapProgressionSettingsWidget)
-		.SkippableSettingRaw(SkippableSettingRaw)
-		.SkippableEvaluatedAttr(SkippableEvaluatedAttr)
-		.AutoAdvanceSettingRaw(AutoAdvanceSettingRaw)
-		.AutoAdvanceEvaluatedAttr(AutoAdvanceEvaluatedAttr);
+		.DialogueNode(GetDialogueNodeMutable())
+		.SkippableSettingRaw(InterruptibleFlagsRaw)
+		.AutoAdvanceSettingRaw(AutoAdvanceSettingRaw);
 
 	return SNew(SBox)
 	.Padding(0, 0, 32, 4)
@@ -2213,7 +2203,7 @@ EYapErrorLevel SFlowGraphNode_YapFragmentWidget::GetAudioAssetErrorLevel(const T
 
 const UFlowNode_YapDialogue* SFlowGraphNode_YapFragmentWidget::GetDialogueNode() const
 {
-	return Owner->GetFlowYapDialogueNodeMutable();
+	return Owner->GetDialogueNodeMutable();
 }
 
 UFlowNode_YapDialogue* SFlowGraphNode_YapFragmentWidget::GetDialogueNodeMutable()

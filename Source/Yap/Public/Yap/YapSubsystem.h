@@ -271,7 +271,7 @@ public:
 	// =========================================
 public:
 
-	static UYapSubsystem* Get(UObject* WorldContext)
+	static UYapSubsystem* Get(const UObject* WorldContext)
 	{
 		if (IsValid(WorldContext))
 		{
@@ -281,7 +281,7 @@ public:
 		return nullptr;
 	}
 	
-	static UYapSubsystem* Get(UWorld* World)
+	static UYapSubsystem* Get(const UWorld* World)
 	{
 		if (IsValid(World))
 		{
@@ -291,7 +291,7 @@ public:
 		return nullptr;
 	}
 
-	static bool IsSpeechInConversation(UObject* WorldContext, const FYapSpeechHandle& Handle)
+	static bool IsSpeechInConversation(const UObject* WorldContext, const FYapSpeechHandle& Handle)
 	{
 		return Get(WorldContext)->SpeechConversationMapping.Contains(Handle);
 	}

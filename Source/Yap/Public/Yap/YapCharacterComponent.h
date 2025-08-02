@@ -6,7 +6,12 @@
 #include "Components/ActorComponent.h"
 #include "GameplayTagContainer.h"
 #include "GameplayTagFilterHelper.h"
-#include "InstancedStruct.h"
+
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION < 5
+	#include "InstancedStruct.h"
+#else
+	#include "StructUtils/InstancedStruct.h"
+#endif
 
 #include "YapCharacterComponent.generated.h"
 

@@ -5,7 +5,6 @@
 
 #include "Yap/YapCharacterAsset.h"
 #include "Yap/YapCondition.h"
-#include "Yap/YapProjectSettings.h"
 #include "Yap/YapStreamableManager.h"
 #include "Yap/YapSubsystem.h"
 #include "Yap/Enums/YapLoadContext.h"
@@ -13,6 +12,11 @@
 
 #include "Yap/Nodes/FlowNode_YapDialogue.h"
 #include "Engine/Blueprint.h"
+#include "Yap/YapCharacterManager.h"
+
+#if WITH_EDITOR
+#include "Yap/YapProjectSettings.h"
+#endif
 
 #define LOCTEXT_NAMESPACE "Yap"
 

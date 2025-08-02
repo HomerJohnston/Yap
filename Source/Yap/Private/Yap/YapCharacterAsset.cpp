@@ -3,13 +3,9 @@
 
 #include "Yap/YapCharacterAsset.h"
 
-#include "AssetRegistry/AssetRegistryModule.h"
 #include "Yap/YapProjectSettings.h"
 
 #include "Engine/Texture2D.h"
-#include "UObject/ObjectSaveContext.h"
-#include "Yap/YapNodeBlueprint.h"
-#include "Yap/Globals/YapFileUtilities.h"
 #include "Yap/Globals/YapMoodTags.h"
 
 #define LOCTEXT_NAMESPACE "Yap"

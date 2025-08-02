@@ -13,12 +13,15 @@
 
 #define LOCTEXT_NAMESPACE "YapEditor"
 
+// ------------------------------------------------------------------------------------------------
+
 SLATE_IMPLEMENT_WIDGET(SYapProgressionSettingsWidget)
 void SYapProgressionSettingsWidget::PrivateRegisterAttributes(struct FSlateAttributeDescriptor::FInitializer&)
 {
 	// TODO wtf does anything go in here?
 }
 
+// ------------------------------------------------------------------------------------------------
 
 void SYapProgressionSettingsWidget::Construct(const FArguments& InArgs)
 {
@@ -61,18 +64,20 @@ void SYapProgressionSettingsWidget::Construct(const FArguments& InArgs)
 					.Cursor(EMouseCursor::Default)
 					.ButtonStyle(FYapEditorStyle::Get(), YapStyles.ButtonStyle_HoverHintOnly)
 					.ContentPadding(0)
-					.OnClicked(this, &SYapProgressionSettingsWidget::OnClicked_AutoAdvanceToggle)
-					.ToolTipText(this, &SYapProgressionSettingsWidget::ToolTipText_AutoAdvanceToggle)
+					.OnClicked(this, &ThisClass::OnClicked_AutoAdvanceToggle)
+					.ToolTipText(this, &ThisClass::ToolTipText_AutoAdvanceToggle)
 					[
 						SNew(SImage)
-						.Image(this, &SYapProgressionSettingsWidget::Image_AutoAdvanceToggle)
-						.ColorAndOpacity(this, &SYapProgressionSettingsWidget::ColorAndOpacity_AutoAdvanceToggle)
+						.Image(this, &ThisClass::Image_AutoAdvanceToggle)
+						.ColorAndOpacity(this, &ThisClass::ColorAndOpacity_AutoAdvanceToggle)
 					]
 				]
 			]
 		]
 	];
 }
+
+// ------------------------------------------------------------------------------------------------
 
 FReply SYapProgressionSettingsWidget::OnClicked_AutoAdvanceToggle() const
 {
@@ -129,6 +134,8 @@ FReply SYapProgressionSettingsWidget::OnClicked_AutoAdvanceToggle() const
 	return FReply::Handled();
 }
 
+// ------------------------------------------------------------------------------------------------
+
 FReply SYapProgressionSettingsWidget::OnClicked_InterruptibleToggle() const
 {
 	if (IsCtrlPressed())
@@ -175,53 +182,71 @@ FReply SYapProgressionSettingsWidget::OnClicked_InterruptibleToggle() const
 	return FReply::Handled();
 }
 
+// ------------------------------------------------------------------------------------------------
+
 FText SYapProgressionSettingsWidget::ToolTipText_AutoAdvanceToggle() const
 {
 	uint8 Current = GetAutoAdvanceValue();
 
+	FText BaseText = INVTEXT("Error");
+	
 	switch (Current)
 	{
 		case (uint8)(EYapAutoAdvanceFlags::None):
-		{ return LOCTEXT("ToolTipText_AutoAdvanceState_None", "Requires manual advance");}
+		{ BaseText = LOCTEXT("ToolTipText_AutoAdvanceState_None", "Requires manual advancing"); break; }
 
 		case (uint8)(EYapAutoAdvanceFlags::FreeSpeech):
-		{ return LOCTEXT("ToolTipText_AutoAdvanceState_FreeSpeech", "Auto advances free speech only");}
+		{ BaseText = LOCTEXT("ToolTipText_AutoAdvanceState_FreeSpeech", "Auto-advances free speech"); break; }
 
 		case (uint8)(EYapAutoAdvanceFlags::Conversation):
-		{ return LOCTEXT("ToolTipText_AutoAdvanceState_Conversation", "Auto advances conversations only");}
+		{ BaseText = LOCTEXT("ToolTipText_AutoAdvanceState_Conversation", "Auto-advances in conversations"); break; }
 
 		case (uint8)(EYapAutoAdvanceFlags::FreeSpeech | EYapAutoAdvanceFlags::Conversation):
-		{ return LOCTEXT("ToolTipText_AutoAdvanceState_All", "Auto advances");}
+		{ BaseText = LOCTEXT("ToolTipText_AutoAdvanceState_All", "Auto-advances"); break; }
 		
 		default: {}	
 	}
 
-	return INVTEXT("Error");
+	FText SuffixText = IsAutoAdvanceOverridden() ? LOCTEXT("ToolTipText_ProgressionSetting_ResetHint", "(ctrl-click resets)") : LOCTEXT("ToolTipText_ProgressionSetting_DefaultHint", "(default)");
+
+	TArray<FText> Texts = { BaseText, SuffixText };
+	
+	return FText::Join(FText::FromString(TEXT(" ")), Texts);
 }
+
+// ------------------------------------------------------------------------------------------------
 
 FText SYapProgressionSettingsWidget::ToolTipText_InterruptibleToggle() const
 {
 	uint8 Current = GetInterruptibleValue();
 
+	FText BaseText = INVTEXT("Error");
+	
 	switch (Current)
 	{
 		case (uint8)(EYapInterruptibleFlags::None):
-		{ return LOCTEXT("ToolTipText_InterruptibleState_None", "Playback is not interruptible"); }
+		{ BaseText = LOCTEXT("ToolTipText_InterruptibleState_None", "Playback is not interruptible"); break; }
 
 		case (uint8)(EYapInterruptibleFlags::FreeSpeech):
-		{ return LOCTEXT("ToolTipText_InterruptibleState_FreeSpeech", "Playback interruptible in free speech only"); }
+		{ BaseText = LOCTEXT("ToolTipText_InterruptibleState_FreeSpeech", "Playback interruptible for free speech"); break; }
 
 		case (uint8)(EYapInterruptibleFlags::Conversation):
-		{ return LOCTEXT("ToolTipText_InterruptibleState_Conversation", "Playback interruptible in conversations only"); }
+		{ BaseText = LOCTEXT("ToolTipText_InterruptibleState_Conversation", "Playback interruptible in conversations"); break; }
 
 		case (uint8)(EYapInterruptibleFlags::FreeSpeech | EYapInterruptibleFlags::Conversation):
-		{ return LOCTEXT("ToolTipText_InterruptibleState_All", "Playback is interruptible"); }
+		{ BaseText = LOCTEXT("ToolTipText_InterruptibleState_All", "Playback is interruptible"); break; }
 		
 		default: {}
 	}
 	
-	return INVTEXT("Error");
+	FText SuffixText = IsInterruptibleOverridden() ? LOCTEXT("ToolTipText_ProgressionSetting_ResetHint", "(ctrl-click resets)") : LOCTEXT("ToolTipText_ProgressionSetting_DefaultHint", "(default)");
+
+	TArray<FText> Texts = { BaseText, SuffixText };
+	
+	return FText::Join(FText::FromString(TEXT(" ")), Texts);
 }
+
+// ------------------------------------------------------------------------------------------------
 
 const FSlateBrush* SYapProgressionSettingsWidget::Image_AutoAdvanceToggle() const
 {
@@ -249,6 +274,8 @@ const FSlateBrush* SYapProgressionSettingsWidget::Image_AutoAdvanceToggle() cons
 	return FYapEditorStyle::GetImageBrush(BrushName);
 }
 
+// ------------------------------------------------------------------------------------------------
+
 const FSlateBrush* SYapProgressionSettingsWidget::Image_InterruptibleToggle() const
 {
 	uint8 Current = GetInterruptibleValue();
@@ -258,22 +285,24 @@ const FSlateBrush* SYapProgressionSettingsWidget::Image_InterruptibleToggle() co
 	switch (Current)
 	{
 		case (uint8)(EYapInterruptibleFlags::None):
-			{ BrushName = YapBrushes.Icon_Interruptible_None; break; }
+		{ BrushName = YapBrushes.Icon_Interruptible_None; break; }
 
 		case (uint8)(EYapInterruptibleFlags::FreeSpeech):
-			{ BrushName = YapBrushes.Icon_Interruptible_FreeSpeech; break; }
+		{ BrushName = YapBrushes.Icon_Interruptible_FreeSpeech; break; }
 
 		case (uint8)(EYapInterruptibleFlags::Conversation):
-			{ BrushName = YapBrushes.Icon_Interruptible_Conversation; break; }
+		{ BrushName = YapBrushes.Icon_Interruptible_Conversation; break; }
 
 		case (uint8)(EYapInterruptibleFlags::FreeSpeech | EYapInterruptibleFlags::Conversation):
-			{ BrushName = YapBrushes.Icon_Interruptible_All; break; }
+		{ BrushName = YapBrushes.Icon_Interruptible_All; break; }
 		
 		default: {}
 	}
 	
 	return FYapEditorStyle::GetImageBrush(BrushName);
 }
+
+// ------------------------------------------------------------------------------------------------
 
 FSlateColor SYapProgressionSettingsWidget::ColorAndOpacity_AutoAdvanceToggle() const
 {
@@ -306,6 +335,8 @@ FSlateColor SYapProgressionSettingsWidget::ColorAndOpacity_AutoAdvanceToggle() c
 	return Color;
 }
 
+// ------------------------------------------------------------------------------------------------
+
 FSlateColor SYapProgressionSettingsWidget::ColorAndOpacity_InterruptibleToggle() const
 {
 	if (!IsInterruptibleOverridden())
@@ -337,6 +368,8 @@ FSlateColor SYapProgressionSettingsWidget::ColorAndOpacity_InterruptibleToggle()
 	return Color;
 }
 
+// ------------------------------------------------------------------------------------------------
+
 uint8 SYapProgressionSettingsWidget::GetAutoAdvanceValue() const
 {
 	uint8 Current;
@@ -359,6 +392,8 @@ uint8 SYapProgressionSettingsWidget::GetAutoAdvanceValue() const
 
 	return Current;
 }
+
+// ------------------------------------------------------------------------------------------------
 
 uint8 SYapProgressionSettingsWidget::GetInterruptibleValue() const
 {
@@ -383,15 +418,21 @@ uint8 SYapProgressionSettingsWidget::GetInterruptibleValue() const
 	return Current;
 }
 
+// ------------------------------------------------------------------------------------------------
+
 bool SYapProgressionSettingsWidget::IsInterruptibleOverridden() const
 {
 	return InterruptibleSettingRaw->IsSet();
 }
 
+// ------------------------------------------------------------------------------------------------
+
 bool SYapProgressionSettingsWidget::IsAutoAdvanceOverridden() const
 {
 	return AutoAdvanceSettingRaw->IsSet();
 }
+
+// ------------------------------------------------------------------------------------------------
 
 bool SYapProgressionSettingsWidget::IsCtrlPressed() const
 {

@@ -64,8 +64,6 @@ public:
 
     bool SkipDialogue();
 
-   // const TArray<FInstancedStruct>& GetFragmentData();
-
     void Invalidate();
 
     bool operator== (const FYapSpeechHandle& Other) const;
@@ -95,17 +93,20 @@ class YAP_API UYapSpeechHandleBFL : public UBlueprintFunctionLibrary
 
 public:
     /** Bind a delegate to run when speech completes. This is when actual talking finishes not when any fragment padding finishes. */
-    UFUNCTION(BlueprintCallable, Category = "Yap|Speech Handle", meta = (WorldContext = "WorldContext"))
-    static void BindToOnSpeechComplete(UObject* WorldContext, const FYapSpeechHandle& Handle, FYapSpeechEventDelegate Delegate);
+    UFUNCTION(BlueprintCallable, Category = "Yap|Speech", meta = (WorldContext = "WorldContext"))
+    static void BindToOnSpeechComplete(UObject* WorldContext, UPARAM(ref) FYapSpeechHandle& Handle, FYapSpeechEventDelegate Delegate);
 
     /** Unind a delegate for when speech completes (i.e. if you no longer want a delegate to run). */
-    UFUNCTION(BlueprintCallable, Category = "Yap|Speech Handle", meta = (WorldContext = "WorldContext"))
-    static void UnbindToOnSpeechComplete(UObject* WorldContext, const FYapSpeechHandle& Handle, FYapSpeechEventDelegate Delegate);
+    UFUNCTION(BlueprintCallable, Category = "Yap|Speech", meta = (WorldContext = "WorldContext"))
+    static void UnbindToOnSpeechComplete(UObject* WorldContext, UPARAM(ref) FYapSpeechHandle& Handle, FYapSpeechEventDelegate Delegate);
 
     /** Stops a running speech. This is intended to be used to halt free speech; to advance conversations, use the conversation handle. */
-    UFUNCTION(BlueprintCallable, Category = "Yap|Speech Handle", meta = (WorldContext = "WorldContext"))
-    static bool CancelSpeech(UObject* WorldContext, const FYapSpeechHandle& Handle);
+    UFUNCTION(BlueprintCallable, Category = "Yap|Speech", meta = (WorldContext = "WorldContext"))
+    static bool CancelSpeech(UObject* WorldContext, UPARAM(ref) FYapSpeechHandle& Handle);
 
+    UFUNCTION(BlueprintCallable, Category = "Yap|Speech", meta = (DefaultToSelf = "SpeechOwner"))
+    static bool CancelSpeechByOwner(UObject* SpeechOwner);
+    
     /** If speech is set as forced duration (unskippable) this will return false. This is intended to be used to help show/hide "Continue" style buttons. */
     UFUNCTION(BlueprintCallable, Category = "Yap|Speech Handle", meta = (WorldContext = "WorldContext"))
     static bool CanSkip(UObject* WorldContext, const FYapSpeechHandle& Handle);

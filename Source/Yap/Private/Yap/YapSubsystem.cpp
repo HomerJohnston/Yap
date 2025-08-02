@@ -32,6 +32,157 @@ FYapConversation UYapSubsystem::NullConversation;
 
 // ------------------------------------------------------------------------------------------------
 
+FYap__ActiveSpeechContainer* FYap__ActiveSpeechMap::AddSpeech(FYapSpeechHandle Handle, FName SpeakerID, UObject* SpeechOwner)
+{
+	if (AllSpeech.Contains(Handle))
+	{
+		UE_LOG(LogYap, Warning, TEXT("Tried to add speech handle more than once, ignoring! <%s>"), *Handle.ToString());
+		return nullptr;
+	}
+	
+	FYap__ActiveSpeechContainer& NewSpeechContainer = AllSpeech.Add(Handle);
+
+	if (SpeakerID != NAME_None)
+	{
+		FYapSpeechHandlesArray& HandlesContainer = ContainersBySpeakerID.FindOrAdd(SpeakerID);
+		HandlesContainer.Handles.Add(Handle);
+		NewSpeechContainer.SpeakerID = SpeakerID;
+	}
+
+	if (IsValid(SpeechOwner))
+	{
+		FYapSpeechHandlesArray& HandlesContainer = ContainersByOwner.FindOrAdd(SpeechOwner);
+		HandlesContainer.Handles.Add(Handle);
+		NewSpeechContainer.SpeechOwner = SpeechOwner;
+	}
+
+	return &NewSpeechContainer;
+}
+
+FName FYap__ActiveSpeechMap::FindSpeakerID(const FYapSpeechHandle& Handle)
+{
+	FYap__ActiveSpeechContainer* Container = AllSpeech.Find(Handle);
+
+	if (Container)
+	{
+		return Container->SpeakerID;
+	}
+	else
+	{
+		UE_LOG(LogYap, Warning, TEXT("Tried to find speaker ID for handle but handle was not found! <%s>"), *Handle.ToString());
+		return NAME_None;
+	}
+}
+
+FTimerHandle FYap__ActiveSpeechMap::FindTimerHandle(const FYapSpeechHandle& Handle)
+{
+	FYap__ActiveSpeechContainer* Container = AllSpeech.Find(Handle);
+
+	if (Container)
+	{
+		return Container->SpeechTimerHandle;
+	}
+	else
+	{
+		UE_LOG(LogYap, Warning, TEXT("Tried to find timer handle for handle but handle was not found! <%s>"), *Handle.ToString());
+		return {};
+	}
+}
+
+FYapSpeechEvent FYap__ActiveSpeechMap::FindSpeechFinishedEvent(const FYapSpeechHandle& Handle)
+{
+	FYap__ActiveSpeechContainer* Container = AllSpeech.Find(Handle);
+
+	if (Container)
+	{
+		return Container->OnSpeechFinish;
+	}
+	else
+	{
+		UE_LOG(LogYap, Warning, TEXT("Tried to find speech finish event for handle but handle was not found! <%s>"), *Handle.ToString());
+		return {};
+	}
+}
+
+void FYap__ActiveSpeechMap::RemoveSpeech(const FYapSpeechHandle& Handle)
+{
+	FYap__ActiveSpeechContainer Container;
+
+	if (AllSpeech.RemoveAndCopyValue(Handle, Container))
+	{
+		ContainersByOwner.Remove(Container.SpeechOwner);
+		ContainersBySpeakerID.Remove(Container.SpeakerID);
+	}
+}
+
+void FYap__ActiveSpeechMap::BindToSpeechFinish(const FYapSpeechHandle& Handle, FYapSpeechEventDelegate Delegate)
+{
+	FYap__ActiveSpeechContainer* Container = AllSpeech.Find(Handle);
+
+	if (Container)
+	{
+		Container->OnSpeechFinish.Add(Delegate);
+	}
+	else
+	{
+		UE_LOG(LogYap, Warning, TEXT("Tried to bind to speech finish but handle was not found! <%s>"), *Handle.ToString());
+	}
+}
+
+void FYap__ActiveSpeechMap::UnbindToSpeechFinish(const FYapSpeechHandle& Handle, FYapSpeechEventDelegate Delegate)
+{
+	FYap__ActiveSpeechContainer* Container = AllSpeech.Find(Handle);
+
+	if (Container)
+	{
+		Container->OnSpeechFinish.Remove(Delegate);
+	}
+	else
+	{
+		UE_LOG(LogYap, Warning, TEXT("Tried to unbind from speech finish but handle was not found! <%s>"), *Handle.ToString());
+	}
+}
+
+void FYap__ActiveSpeechMap::SetTimer(const FYapSpeechHandle& Handle, FTimerHandle TimerHandle)
+{
+	FYap__ActiveSpeechContainer* Container = AllSpeech.Find(Handle);
+
+	if (Container)
+	{
+		Container->SpeechTimerHandle = TimerHandle;
+	}
+	else
+	{
+		UE_LOG(LogYap, Warning, TEXT("Tried to set timer for speech but handle was not found! <%s>"), *Handle.ToString());
+	}
+}
+
+TArray<FYapSpeechHandle> FYap__ActiveSpeechMap::GetHandles(FName SpeakerID)
+{
+	FYapSpeechHandlesArray* Container = ContainersBySpeakerID.Find(SpeakerID);
+
+	if (Container)
+	{
+		return Container->Handles;
+	}
+
+	return { };
+}
+
+TArray<FYapSpeechHandle> FYap__ActiveSpeechMap::GetHandles(UObject* SpeechOwner)
+{
+	FYapSpeechHandlesArray* Container = ContainersByOwner.Find(SpeechOwner);
+
+	if (Container)
+	{
+		return Container->Handles;
+	}
+
+	return { };
+}
+
+// ================================================================================================
+
 UYapSubsystem::UYapSubsystem()
 {
 	UGameplayTagsManager& TagsManager = UGameplayTagsManager::Get();
@@ -52,12 +203,7 @@ void UYapSubsystem::BindToSpeechFinish(UObject* WorldContextObject, FYapSpeechHa
 {
 	if (UYapSubsystem* Subsystem = UYapSubsystem::Get(WorldContextObject))
 	{
-		FYapSpeechEvent* Evt = Subsystem->SpeechFinishDelegates.Find(Handle);
-
-		if (Evt)
-		{
-			Evt->Add(Delegate);
-		}	
+		Subsystem->ActiveSpeechMap.BindToSpeechFinish(Handle, Delegate);
 	}
 	else
 	{
@@ -69,12 +215,7 @@ void UYapSubsystem::UnbindToSpeechFinish(UObject* WorldContextObject, FYapSpeech
 {
 	if (UYapSubsystem* Subsystem = UYapSubsystem::Get(WorldContextObject))
 	{
-		FYapSpeechEvent* Evt = Subsystem->SpeechFinishDelegates.Find(Handle);
-
-		if (Evt)
-		{
-			Evt->Remove(Delegate);
-		}
+		Subsystem->ActiveSpeechMap.UnbindToSpeechFinish(Handle, Delegate);
 	}
 	else
 	{
@@ -530,20 +671,25 @@ void UYapSubsystem::OnFinishedBroadcastingPrompts(const FYapData_PlayerPromptsRe
 
 // ------------------------------------------------------------------------------------------------
 
-void UYapSubsystem::RunSpeech(const FYapData_SpeechBegins& SpeechData, FYapDialogueNodeClassType NodeType, FYapSpeechHandle& Handle)
+void UYapSubsystem::RunSpeech(const FYapData_SpeechBegins& SpeechData, FYapDialogueNodeClassType NodeType, const FYapSpeechHandle& Handle)
 {
-	if (FYapSpeechHandle* ActiveSpeech = ActiveSpeechByCharacter.Find(SpeechData.SpeakerID))
+	TArray<FYapSpeechHandle> ActiveSpeech = ActiveSpeechMap.GetHandles(SpeechData.SpeakerID);
+
+	UFlowNode_YapDialogue* CDO = NodeType.Get()->GetDefaultObject<UFlowNode_YapDialogue>();
+	const UYapNodeConfig& Config = CDO->GetNodeConfig();
+
+	if (!Config.DialoguePlayback.bPermitOverlappingSpeech)
 	{
-		UFlowNode_YapDialogue* CDO = NodeType.Get()->GetDefaultObject<UFlowNode_YapDialogue>();
-		const UYapNodeConfig& Config = CDO->GetNodeConfig();
-		
-		if (!Config.DialoguePlayback.bPermitOverlappingSpeech)
+		for (int32 i = ActiveSpeech.Num() - 1; i >= 0; --i)
 		{
-			OnSpeechComplete(*ActiveSpeech, true);
+			if (ActiveSpeech[i] == Handle)
+			{
+				continue;
+			}
+			
+			OnSpeechComplete(ActiveSpeech[i], true);
 		}
 	}
-
-	ActiveSpeechByCharacter.Add(SpeechData.SpeakerID, Handle);
 	
 	// TODO should SpeechData contain the conversation handle instead of the name?
 	if (SpeechData.Conversation.IsValid())
@@ -574,7 +720,7 @@ void UYapSubsystem::RunSpeech(const FYapData_SpeechBegins& SpeechData, FYapDialo
 		FTimerDelegate Delegate = FTimerDelegate::CreateUObject(this, &ThisClass::OnSpeechComplete, Handle, true);
 		GetWorld()->GetTimerManager().SetTimer(SpeechTimerHandle, Delegate, SpeechData.SpeechTime, false);
 
-		RunningSpeechTimers.Add(Handle, SpeechTimerHandle);
+		ActiveSpeechMap.SetTimer(Handle, SpeechTimerHandle);
 	}
 	else
 	{
@@ -705,7 +851,7 @@ void UYapSubsystem::RunPrompt(UObject* WorldContext, const FYapPromptHandle& Han
 
 // ------------------------------------------------------------------------------------------------
 
-bool UYapSubsystem::CancelSpeech(UObject* WorldContext, const FYapSpeechHandle& Handle)
+bool UYapSubsystem::CancelSpeech(UObject* WorldContext, FYapSpeechHandle& Handle)
 {
 	if (!IsValid(WorldContext))
 	{
@@ -718,39 +864,53 @@ bool UYapSubsystem::CancelSpeech(UObject* WorldContext, const FYapSpeechHandle& 
 		UE_LOG(LogYap, Display, TEXT("Subsystem: CancelSpeech failed - speech handle was invalid"));
 		return false;
 	}
-
+	
 	UE_LOG(LogYap, VeryVerbose, TEXT("Subsystem: CancelSpeech {%s}"), *Handle.ToString());
+
+	FYapSpeechHandle HandleCopy = Handle;
+	Handle.Invalidate();
 	
 	UYapSubsystem* Subsystem = Get(WorldContext);
 
-	if (FTimerHandle* TimerHandle = Subsystem->RunningSpeechTimers.Find(Handle))
+	FTimerHandle TimerHandle = Subsystem->ActiveSpeechMap.FindTimerHandle(HandleCopy);
+	
+	if (TimerHandle.IsValid())
 	{
-		WorldContext->GetWorld()->GetTimerManager().ClearTimer(*TimerHandle);
+		WorldContext->GetWorld()->GetTimerManager().ClearTimer(TimerHandle);
 
 		FYapSpeechEvent Evt;
 
-		if (!Subsystem->EmitSpeechResult(Handle, EYapSpeechCompleteResult::Cancelled))
+		if (!Subsystem->EmitSpeechResult(HandleCopy, EYapSpeechCompleteResult::Cancelled))
 		{
 			return false;
 		}
-
-		/*
-		//Broadcast to Yap systems; in dialogue nodes, this will kill any running paddings
-		//Subsystem->OnCancelDelegate.Broadcast(Subsystem, Handle);
-
-		Subsystem->SpeechCompleteEvents.Remove(Handle);
-		//Subsystem->OnSpeechComplete(Handle, false);
 		
-		FYapSpeechEvent Evt;
-		Subsystem->SpeechCancelledEvents.RemoveAndCopyValue(Handle, Evt);
-		Evt.Broadcast(Subsystem, Handle);
-		*/
-	
 		return true;
 	}
 
-	UE_LOG(LogYap, Warning, TEXT("Subsystem: CancelSpeech [%s] ignored - SpeechTimers array did not contain an entry for this handle"), *Handle.ToString());
+	UE_LOG(LogYap, Display, TEXT("Subsystem: CancelSpeech [%s] ignored - SpeechTimers array did not contain an entry for this handle. Invalidating this handle."), *Handle.ToString());
 	
+	return false;
+}
+
+bool UYapSubsystem::CancelSpeech(UObject* SpeechOwner)
+{
+	UYapSubsystem* Subsystem = UYapSubsystem::Get(SpeechOwner);
+
+	if (Subsystem)
+	{
+		TArray<FYapSpeechHandle> Handles = Subsystem->ActiveSpeechMap.GetHandles(SpeechOwner);
+
+		for (FYapSpeechHandle& Handle : Handles)
+		{
+			CancelSpeech(SpeechOwner, Handle);
+		}
+	}
+	else
+	{
+		UE_LOG(LogYap, Warning, TEXT("Failed to find subsystem - did you pass an invalid speech owner into Cancel Speech?"));	
+	}
+
 	return false;
 }
 
@@ -792,19 +952,21 @@ void UYapSubsystem::AdvanceConversation(UObject* Instigator, const FYapConversat
 
 bool UYapSubsystem::EmitSpeechResult(const FYapSpeechHandle& Handle, EYapSpeechCompleteResult Result)
 {
-	FYapSpeechEvent Evt;
+	
+	FYapSpeechEvent Evt = ActiveSpeechMap.FindSpeechFinishedEvent(Handle);
 
-	if (SpeechFinishDelegates.RemoveAndCopyValue(Handle, Evt))
+	FTimerHandle Timer = ActiveSpeechMap.FindTimerHandle(Handle);
+
+	ActiveSpeechMap.RemoveSpeech(Handle);
+	
+	Evt.Broadcast(this, Handle, Result);
+	
+	if (Timer.IsValid())
 	{
-		Evt.Broadcast(this, Handle, Result);
-		return true;
+		GetWorld()->GetTimerManager().ClearTimer(Timer);
 	}
 	
-	//This more rudimentary method was throwing an ensure in MTAccessDetector.h destructor, Line ~502. I have no idea why, though.
-	//SpeechCompleteEvents[Handle].Broadcast(this, Handle);
-	//SpeechCompleteEvents.Remove(Handle);
-
-	return false;
+	return true;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -878,22 +1040,16 @@ TArray<TObjectPtr<UObject>>* UYapSubsystem::FindFreeSpeechHandlerArray(FYapDialo
 
 // ------------------------------------------------------------------------------------------------
 
-FYapSpeechHandle UYapSubsystem::GetNewSpeechHandle(UObject* Owner)
+FYapSpeechHandle UYapSubsystem::GetNewSpeechHandle(FName SpeakerID, UObject* SpeechOwner)
 {
-	FYapSpeechHandle NewHandle = GetNewSpeechHandle(FGuid::NewGuid());
-
-	auto& Array = ObjectSpeechHandles.FindOrAdd(Owner);
-
-	Array.Handles.Add(NewHandle);
-	
-	return NewHandle;
+	return GetNewSpeechHandle(FGuid::NewGuid(), SpeakerID, SpeechOwner);
 }
 
-FYapSpeechHandle UYapSubsystem::GetNewSpeechHandle(FGuid Guid)
+FYapSpeechHandle UYapSubsystem::GetNewSpeechHandle(FGuid Guid, FName SpeakerID, UObject* SpeechOwner)
 {
 	FYapSpeechHandle NewHandle(GetWorld(), Guid);
 
-	SpeechFinishDelegates.Add(NewHandle);
+	ActiveSpeechMap.AddSpeech(NewHandle, SpeakerID, SpeechOwner);
 
 	return NewHandle;
 }
@@ -930,33 +1086,7 @@ void UYapSubsystem::OnWorldBeginPlay(UWorld& InWorld)
 void UYapSubsystem::OnSpeechComplete(FYapSpeechHandle Handle, bool bBroadcast)
 {
 	UE_LOG(LogYap, VeryVerbose, TEXT("%s: OnSpeechComplete entering {%s}"), *GetName(), *Handle.ToString());
-
-	const FName* Key = ActiveSpeechByCharacter.FindKey(Handle);
-
-	if (Key)
-	{
-		ActiveSpeechByCharacter.Remove(*Key);
-	}
 	
-	if (bBroadcast)
-	{
-		UE_LOG(LogYap, VeryVerbose, TEXT("%s: OnSpeechComplete {%s}"), *GetName(), *Handle.ToString());
-
-		if (!EmitSpeechResult(Handle, EYapSpeechCompleteResult::Normal))
-		{
-			UE_LOG(LogYap, Warning, TEXT("Handle was not registered into SpeechCompleteEvents! Can't broadcast Complete event! %s"), *Handle.ToString());
-		}
-	}
-	
-	FTimerHandle* Timer = RunningSpeechTimers.Find(Handle);
-
-	if (Timer)
-	{
-		GetWorld()->GetTimerManager().ClearTimer(*Timer);
-	}
-
-	RunningSpeechTimers.Remove(Handle);
-
 	FYapConversationHandle* ConversationHandle = SpeechConversationMapping.Find(Handle);
 
 	if (ConversationHandle && ConversationHandle->IsValid())
@@ -969,6 +1099,16 @@ void UYapSubsystem::OnSpeechComplete(FYapSpeechHandle Handle, bool bBroadcast)
 		}
 		
 		SpeechConversationMapping.Remove(Handle);
+	}
+	
+	if (bBroadcast)
+	{
+		UE_LOG(LogYap, VeryVerbose, TEXT("%s: OnSpeechComplete {%s}"), *GetName(), *Handle.ToString());
+
+		if (!EmitSpeechResult(Handle, EYapSpeechCompleteResult::Normal))
+		{
+			UE_LOG(LogYap, Warning, TEXT("Handle was not registered into SpeechCompleteEvents! Can't broadcast Complete event! %s"), *Handle.ToString());
+		}
 	}
 }
 

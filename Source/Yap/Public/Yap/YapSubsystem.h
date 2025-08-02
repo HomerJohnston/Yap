@@ -80,6 +80,60 @@ struct FYapSpeechHandlesArray
 	TArray<FYapSpeechHandle> Handles;
 };
 
+USTRUCT()
+struct FYap__ActiveSpeechContainer
+{
+	GENERATED_BODY()
+	
+	UPROPERTY(Transient)
+	TObjectPtr<UObject> SpeechOwner = nullptr;
+	
+	UPROPERTY(Transient)
+	FName SpeakerID;
+
+	UPROPERTY(Transient)
+	FYapSpeechEvent OnSpeechFinish;
+
+	UPROPERTY(Transient)
+	FTimerHandle SpeechTimerHandle;
+};
+
+USTRUCT()
+struct FYap__ActiveSpeechMap
+{
+	GENERATED_BODY()
+
+	UPROPERTY(Transient)
+	TMap<FYapSpeechHandle, FYap__ActiveSpeechContainer> AllSpeech;
+	
+	UPROPERTY(Transient)
+	TMap<TObjectPtr<UObject>, FYapSpeechHandlesArray> ContainersByOwner;
+	
+	UPROPERTY(Transient)
+	TMap<FName, FYapSpeechHandlesArray> ContainersBySpeakerID;
+
+	FYap__ActiveSpeechContainer* AddSpeech(FYapSpeechHandle Handle, FName SpeakerID, UObject* SpeechOwner);
+
+	FName FindSpeakerID(const FYapSpeechHandle& Handle);
+
+	FTimerHandle FindTimerHandle(const FYapSpeechHandle& Handle);
+
+	FYapSpeechEvent FindSpeechFinishedEvent(const FYapSpeechHandle& Handle);
+	
+	void RemoveSpeech(const FYapSpeechHandle& Handle);
+
+	void BindToSpeechFinish(const FYapSpeechHandle& Handle, FYapSpeechEventDelegate Delegate);
+	
+	void UnbindToSpeechFinish(const FYapSpeechHandle& Handle, FYapSpeechEventDelegate Delegate);
+
+	void SetTimer(const FYapSpeechHandle& Handle, FTimerHandle TimerHandle);
+	
+	TArray<FYapSpeechHandle> GetHandles(FName SpeakerID);
+	
+	TArray<FYapSpeechHandle> GetHandles(UObject* SpeechOwner);
+
+};
+
 // ================================================================================================
 
 // Alias for TSubclassOf<UFlowNode_YapDialogue>.
@@ -201,21 +255,12 @@ protected:
 	static bool bGetGameMaturitySettingWarningIssued;
 
 public:
-	UPROPERTY(Transient)
-	TMap<FYapSpeechHandle, FYapSpeechEvent> SpeechFinishDelegates;
-
 	static void BindToSpeechFinish(UObject* WorldContextObject, FYapSpeechHandle Handle, FYapSpeechEventDelegate Delegate);
 	
 	static void UnbindToSpeechFinish(UObject* WorldContextObject, FYapSpeechHandle Handle, FYapSpeechEventDelegate Delegate);
 
 	UPROPERTY(Transient)
-	TMap<TObjectPtr<UObject>, FYapSpeechHandlesArray> ObjectSpeechHandles; // Warning: not TObjectKey? doesn't support UPROPERTY
-	
-	UPROPERTY(Transient)
-	TMap<FYapSpeechHandle, FTimerHandle> RunningSpeechTimers;
-
-	UPROPERTY(Transient)
-	TMap<FName, FYapSpeechHandle> ActiveSpeechByCharacter;
+	FYap__ActiveSpeechMap ActiveSpeechMap;
 	
 	// TODO these should probably all be maps for more robust behavior in case multiple things are running!
 	
@@ -350,7 +395,7 @@ protected:
 	void OnFinishedBroadcastingPrompts(const FYapData_PlayerPromptsReady& Data, FYapDialogueNodeClassType NodeType);
 
 public:
-	void RunSpeech(const FYapData_SpeechBegins& SpeechData, FYapDialogueNodeClassType NodeType, FYapSpeechHandle& Handle);
+	void RunSpeech(const FYapData_SpeechBegins& SpeechData, FYapDialogueNodeClassType NodeType, const FYapSpeechHandle& Handle);
 
 	// TODO I hate this thing
 	static FYapConversation NullConversation;
@@ -374,7 +419,10 @@ public:
 	static void RunPrompt(UObject* WorldContext, const FYapPromptHandle& Handle);
 
 	/** Used to complete a single speech early; supposed to be used for free world speech */
-	static bool CancelSpeech(UObject* WorldContext, const FYapSpeechHandle& Handle);
+	static bool CancelSpeech(UObject* WorldContext, FYapSpeechHandle& Handle);
+
+	/** Used to complete a single speech early; supposed to be used for free world speech */
+	static bool CancelSpeech(UObject* SpeechOwner);
 
 	/** Used to complete all running speech within a given conversation; supposed to be used for "skip" or "continue/advance" type buttons */
 	static void AdvanceConversation(UObject* Instigator, const FYapConversationHandle& ConversationHandle);
@@ -399,9 +447,9 @@ public:
 	
 	TArray<TObjectPtr<UObject>>* FindFreeSpeechHandlerArray(FYapDialogueNodeClassType NodeType);
 
-	FYapSpeechHandle GetNewSpeechHandle(UObject* Owner);
+	FYapSpeechHandle GetNewSpeechHandle(FName SpeakerID, UObject* SpeechOwner);
 	
-	FYapSpeechHandle GetNewSpeechHandle(FGuid Guid);
+	FYapSpeechHandle GetNewSpeechHandle(FGuid Guid, FName SpeakerID, UObject* SpeechOwner);
 	
 public:
 	/**  */

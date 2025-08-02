@@ -33,16 +33,16 @@ protected:
 	TSubclassOf<UFlowNode_YapDialogue> _NodeType;
 
 	UPROPERTY()
-	TObjectPtr<UObject> _WorldContext;
+	TObjectPtr<UObject> _SpeechOwner;
 
 	UPROPERTY()
 	FYapSpeechHandle _Handle;
 	
 public:
-	UPROPERTY(BlueprintAssignable)
+	UPROPERTY(BlueprintAssignable, DisplayName = "Done")
 	FDelayOutputPin Completed;
 	
-	UPROPERTY(BlueprintAssignable)
+	UPROPERTY(BlueprintAssignable, DisplayName = "Cancel")
 	FDelayOutputPin Cancelled;
 
 protected:
@@ -50,9 +50,9 @@ protected:
 	
 	/**
 	 * Run speech
-	 * @param CharacterID Thing
-	 * @param DialogueText Thing
-	 * @param DialogueAudioAsset 
+	 * @param CharacterID 
+	 * @param DialogueText 
+	 * @param DialogueAudioAsset  
 	 * @param MoodTag 
 	 * @param SpeechTime 
 	 * @param TitleText 
@@ -60,12 +60,13 @@ protected:
 	 * @param Conversation 
 	 * @param bSkippable 
 	 * @param NodeType 
-	 * @param WorldContext A stupid WC
-	 * @param Handle A stupid handle
+	 * @param SpeechOwner 
+	 * @param Handle 
 	 * @return 
 	 */
-	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContext",  AdvancedDisplay = 4))
+	UFUNCTION(BlueprintCallable, meta = (DefaultToSelf = "SpeechOwner",  AdvancedDisplay = 4))
 	static UYapRunSpeechLatent2* RunSpeechLatent(
+		UObject* SpeechOwner,
 		FName CharacterID,
 		FText DialogueText,
 		UObject* DialogueAudioAsset,
@@ -76,7 +77,6 @@ protected:
 		FGameplayTag Conversation,
 		bool bSkippable,
 		TSubclassOf<UFlowNode_YapDialogue> NodeType,
-		UObject* WorldContext,
 		UPARAM(Ref) FYapSpeechHandle& Handle);
 
 	UFUNCTION()

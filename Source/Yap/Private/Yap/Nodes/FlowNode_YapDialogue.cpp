@@ -636,10 +636,21 @@ bool UFlowNode_YapDialogue::TryStartFragments()
 
 		for (uint8 i = 0; i < Fragments.Num(); ++i)
 		{
+			if (i == LastRanFragment && !GetNodeConfig().DialoguePlayback.bRandomAllowsSelectingSameFragment)
+			{
+				continue;
+			}
+			
 			if (Fragments[i].CanRun())
 			{
 				ValidFragments.Add(i);
 			}
+		}
+
+		// If we didn't find any valid fragments but we culled out the last ran fragment, put it back in the pool.
+		if (ValidFragments.Num() == 0 && LastRanFragment != INDEX_NONE && Fragments.Num() > LastRanFragment)
+		{
+			ValidFragments.Add(LastRanFragment);
 		}
 
 		if (ValidFragments.Num() > 0)
@@ -651,9 +662,6 @@ bool UFlowNode_YapDialogue::TryStartFragments()
 			else if (UYapSubsystem* Subsystem = UYapSubsystem::Get(this))
 			{
 				double Val = Subsystem->GetNoiseGenerator().NextReal();
-				double Val2 = Subsystem->GetNoiseGenerator().NextReal();
-				double Val3 = Subsystem->GetNoiseGenerator().NextReal();
-				double Val4 = Subsystem->GetNoiseGenerator().NextReal();
 
 				double IntervalVal = Val * (double)ValidFragments.Num();
 
@@ -693,6 +701,7 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 
 	FYapFragment& Fragment = Fragments[FragmentIndex];
 
+	// TODO: the select random node needs to check this for all fragments. I should probably chop off the rest of this function into something else and call that from the random mode.
 	if (!FragmentCanRun(FragmentIndex))
 	{
 		UE_LOG(LogYap, VeryVerbose, TEXT("FAILED - FragmentCanRun returned false"));
@@ -702,6 +711,8 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 		return false;
 	}
 
+	LastRanFragment = FragmentIndex;
+	
 	Fragment.SetRunState(EYapFragmentRunState::Running);
 	Fragment.ClearAwaitingManualAdvance();
 	
@@ -769,10 +780,8 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 #endif
 	
 	// Make a handle for the pending speech and bind to completion events of it
-	FocusedSpeechHandle = Subsystem->GetNewSpeechHandle(Fragment.GetGuid());
+	FocusedSpeechHandle = Subsystem->GetNewSpeechHandle(Fragment.GetGuid(), Data.SpeakerID, Data.Speaker.GetObject());
 	FocusedFragmentIndex = FragmentIndex;
-
-	BindToSubsystemSpeechCompleteEvent(FocusedSpeechHandle);
 
 	RunningFragments.Add(FocusedSpeechHandle, FragmentIndex);
 	SpeakingFragments.Add(FocusedSpeechHandle);
@@ -783,6 +792,8 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 	Fragment.IncrementActivations();
 	
 	Subsystem->RunSpeech(Data, GetClass(), FocusedSpeechHandle);
+
+	BindToSubsystemSpeechCompleteEvent(FocusedSpeechHandle);
 
 	if (!Time.IsSet() || GetNodeType() == EYapDialogueNodeType::TalkAndAdvance)
 	{
@@ -848,8 +859,6 @@ void UFlowNode_YapDialogue::OnSpeechComplete(UObject* Instigator, FYapSpeechHand
 
 	SpeakingFragments.Remove(Handle);
 
-	UnbindToSubsystemSpeechCompleteEvent(Handle);
-	
 	TriggerSpeechEndPin(*FragmentIndex);
 	
 	// No positive padding - this fragment is done
@@ -1002,36 +1011,6 @@ void UFlowNode_YapDialogue::AdvanceFromFragment(const FYapSpeechHandle& Handle, 
 			}
 			case EYapDialogueTalkSequencing::SelectRandom:
 			{
-				/*
-				TArray<uint8> ValidFragments;
-
-				ValidFragments.Reserve(Fragments.Num());
-
-				for (uint8 i = 0; Fragments.Num(); ++i)
-				{
-					if (Fragments[i].CanRun())
-					{
-						ValidFragments.Add(i);
-					}
-				}
-
-				UYapSubsystem* Subsystem = UYapSubsystem::Get(this);
-				
-				if (Subsystem)
-				{
-					double Val = Subsystem->GetNoiseGenerator().NextReal();
-
-					double IntervalVal = Val / (double)ValidFragments.Num();
-
-					uint8 Final = (uint8)FMath::FloorToInt(IntervalVal);
-					
-					
-				}
-				else
-				{
-					checkNoEntry();
-				}
-				*/
 				FinishNode(OutputPinName);
 				
 				break;

@@ -57,21 +57,6 @@ public:
 	/**  */
 	UFUNCTION(BlueprintCallable, Category = "Yap|Character", meta = (WorldContext = "WorldContext"))
 	static AActor* FindYapCharacterActor(UObject* WorldContext, FName CharacterID);
-	
-	/**  */
-	UFUNCTION(BlueprintCallable, DisplayName = "Run Speech", Category = "Yap|Global", meta = (DefaultToSelf = "WorldContext", AdvancedDisplay = 4))
-	static UPARAM(DisplayName = "Handle") FYapSpeechHandle K2_RunSpeech(
-		FName CharacterID,
-		FText DialogueText,
-		UObject* DialogueAudioAsset,
-		FGameplayTag MoodTag,
-		float SpeechTime,
-		FText TitleText,
-		TScriptInterface<IYapCharacterInterface> DirectedAt,
-		FGameplayTag Conversation,
-		bool bSkippable,
-		TSubclassOf<UFlowNode_YapDialogue> NodeType,
-		UObject* WorldContext);
 };
 
 

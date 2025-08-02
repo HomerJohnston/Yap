@@ -159,6 +159,10 @@ struct FYapNodeConfigGroup_DialoguePlayback
 	/** Controls if dialogue automatically advances (only applicable if it has a time duration set). */
 	UPROPERTY(EditAnywhere, Category = "Default", meta = (Bitmask, BitmaskEnum = "/Script/Yap.EYapAutoAdvanceFlags"))
 	uint8 AutoAdvanceFlags = 1 << 0 | 1 << 1;
+
+	/** If set, "Select Random" sequencing mode will not attempt to prevent selecting the same fragment on consecutive runs. Note that Yap will still permit selecting the same fragment when there is only one valid runnable fragment. */
+	UPROPERTY(EditAnywhere, Category = "Default")
+	bool bRandomAllowsSelectingSameFragment = false;
 	
 	UPROPERTY(EditAnywhere)
 	FYapNodeConfigGroup_DialoguePlaybackTime TimeSettings;

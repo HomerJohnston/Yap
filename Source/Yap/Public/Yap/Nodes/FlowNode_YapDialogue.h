@@ -183,6 +183,9 @@ protected:
 	UPROPERTY(Transient)
 	TSet<FYapSpeechHandle> FragmentsInPadding;
 
+	UPROPERTY(Transient)
+	int32 LastRanFragment = INDEX_NONE;
+	
 	// ============================================================================================
 	// PUBLIC API
 	// ============================================================================================

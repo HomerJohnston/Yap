@@ -35,10 +35,7 @@ bool FYapSpeechHandle::SkipDialogue()
 
 void FYapSpeechHandle::Invalidate()
 {
-	if (World.IsValid())
-	{
-		//UYapSubsystem::Get(World.Get())->UnregisterSpeechHandle(*this);
-	}
+	World = nullptr;
         
 	Guid.Invalidate();
 	
@@ -54,7 +51,7 @@ bool FYapSpeechHandle::operator==(const FYapSpeechHandle& Other) const
 
 // ------------------------------------------------------------------------------------------------
 
-void UYapSpeechHandleBFL::BindToOnSpeechComplete(UObject* WorldContext, const FYapSpeechHandle& Handle, FYapSpeechEventDelegate Delegate)
+void UYapSpeechHandleBFL::BindToOnSpeechComplete(UObject* WorldContext, FYapSpeechHandle& Handle, FYapSpeechEventDelegate Delegate)
 {
 	if (ensureAlwaysMsgf(Handle.IsValid(), TEXT("Null/unset Yap Speech Handle!")))
 	{
@@ -64,7 +61,7 @@ void UYapSpeechHandleBFL::BindToOnSpeechComplete(UObject* WorldContext, const FY
 	}
 }
 
-void UYapSpeechHandleBFL::UnbindToOnSpeechComplete(UObject* WorldContext, const FYapSpeechHandle& Handle, FYapSpeechEventDelegate Delegate)
+void UYapSpeechHandleBFL::UnbindToOnSpeechComplete(UObject* WorldContext, FYapSpeechHandle& Handle, FYapSpeechEventDelegate Delegate)
 {
 	if (ensureAlwaysMsgf(Handle.IsValid(), TEXT("Null/unset Yap Speech Handle!")))
 	{
@@ -76,18 +73,29 @@ void UYapSpeechHandleBFL::UnbindToOnSpeechComplete(UObject* WorldContext, const 
 
 // ------------------------------------------------------------------------------------------------
 
-bool UYapSpeechHandleBFL::CancelSpeech(UObject* WorldContext, const FYapSpeechHandle& Handle)
+bool UYapSpeechHandleBFL::CancelSpeech(UObject* WorldContext, FYapSpeechHandle& Handle)
 {
 	if (Handle.IsValid())
 	{
-		if (!UYapSubsystem::CancelSpeech(WorldContext, Handle))
-		{
-			UE_LOG(LogYap, Display, TEXT("Failed to cancel speech!"))
-		}
+		return UYapSubsystem::CancelSpeech(WorldContext, Handle);
 	}
 	else
 	{
 		UE_LOG(LogYap, Warning, TEXT("Attempted to cancel an invalid speech handle!"))
+	}
+	
+	return false;
+}
+
+bool UYapSpeechHandleBFL::CancelSpeechByOwner(UObject* SpeechOwner)
+{
+	if (IsValid(SpeechOwner))
+	{
+		return UYapSubsystem::CancelSpeech(SpeechOwner);
+	}
+	else
+	{
+		UE_LOG(LogYap, Warning, TEXT("Attempting to cancel speech for a null speech owner!"));
 	}
 	
 	return false;

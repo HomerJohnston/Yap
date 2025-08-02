@@ -26,20 +26,22 @@ void UYapLatentLibrary::RunSpeechLatent(UObject* WorldContext, FLatentActionInfo
 }
 */
 
-UYapRunSpeechLatent2* UYapRunSpeechLatent2::RunSpeechLatent(FName CharacterID, FText DialogueText,
+UYapRunSpeechLatent2* UYapRunSpeechLatent2::RunSpeechLatent(
+		UObject* SpeechOwner,
+		FName CharacterID, FText DialogueText,
 	UObject* DialogueAudioAsset, FGameplayTag MoodTag, float SpeechTime, FText TitleText,
 	TScriptInterface<IYapCharacterInterface> DirectedAt, FGameplayTag Conversation, bool bSkippable,
-	TSubclassOf<UFlowNode_YapDialogue> NodeType, UObject* WorldContext,
+	TSubclassOf<UFlowNode_YapDialogue> NodeType,
 	UPARAM(ref) FYapSpeechHandle& Handle)
 {
 	UYapRunSpeechLatent2* Node = NewObject<UYapRunSpeechLatent2>();
 
-	Node->RegisterWithGameInstance(WorldContext);
+	Node->RegisterWithGameInstance(SpeechOwner);
 
 	// Attempt to pull an ID off of a Yap Character Component on the incoming object
 	if (CharacterID == NAME_None)
 	{
-		if (AActor* Actor = Cast<AActor>(WorldContext))
+		if (AActor* Actor = Cast<AActor>(SpeechOwner))
 		{
 			if (UYapCharacterComponent* CharacterComponent = Actor->FindComponentByClass<UYapCharacterComponent>())
 			{
@@ -63,11 +65,11 @@ UYapRunSpeechLatent2* UYapRunSpeechLatent2::RunSpeechLatent(FName CharacterID, F
 	Node->Data.Conversation = Conversation;
 	Node->Data.bSkippable = bSkippable;
 	Node->_NodeType = NodeType;
-	Node->_WorldContext = WorldContext;
+	Node->_SpeechOwner = SpeechOwner;
 
-	UYapSubsystem* Subsystem = UYapSubsystem::Get(WorldContext);
+	UYapSubsystem* Subsystem = UYapSubsystem::Get(SpeechOwner);
 
-	Handle = Subsystem->GetNewSpeechHandle(WorldContext);
+	Handle = Subsystem->GetNewSpeechHandle(CharacterID, SpeechOwner);
 	Node->_Handle = Handle;
 
 	return Node;
@@ -77,7 +79,7 @@ void UYapRunSpeechLatent2::OnSpeechCompleteFunc(UObject* Broadcaster, const FYap
 {
 	SetReadyToDestroy();
 
-	UE_LOG(LogYap, VeryVerbose, TEXT("RunSpeechLatent completed!"));
+	UE_LOG(LogYap, VeryVerbose, TEXT("RunSpeechLatent completed! <%s>"), *Handle.ToString());
 
 	switch (Result)
 	{
@@ -96,13 +98,15 @@ void UYapRunSpeechLatent2::OnSpeechCompleteFunc(UObject* Broadcaster, const FYap
 			UE_LOG(LogYap, Error, TEXT("Run Speech Latent node finished with undefined result! This should never happen!"));
 		}
 	}
+
+	// I would prefer to invalidate the handle here, but I can't. Blueprint won't modify the original reference at the end of a latent node, it just treats it like a copy.
 }
 
 void UYapRunSpeechLatent2::Activate()
 {
-	UYapSubsystem* Subsystem = UYapSubsystem::Get(_WorldContext);
+	UYapSubsystem* Subsystem = UYapSubsystem::Get(_SpeechOwner);
 
-	UE_LOG(LogYap, VeryVerbose, TEXT("RunSpeechLatent activate"));
+	UE_LOG(LogYap, VeryVerbose, TEXT("RunSpeechLatent activate... Running speech: %s <%s>"), *Data.DialogueText.ToString(), *_Handle.ToString());
 	
 	Subsystem->RunSpeech(Data, _NodeType, _Handle);
 
@@ -110,5 +114,5 @@ void UYapRunSpeechLatent2::Activate()
 
 	//UYapSubsystem::Get(_WorldContext)->OnCancelDelegate.AddDynamic(this, &ThisClass::OnSpeechCancelledFunc);
 
-	UYapSpeechHandleBFL::BindToOnSpeechComplete(_WorldContext, _Handle, OnSpeechComplete);
+	UYapSpeechHandleBFL::BindToOnSpeechComplete(_SpeechOwner, _Handle, OnSpeechComplete);
 }

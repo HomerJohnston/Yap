@@ -16,6 +16,7 @@
 #include "Yap/Enums/YapLoadContext.h"
 #include "Engine/World.h"
 #include "TimerManager.h"
+#include "Yap/Enums/YapAutoAdvanceFlags.h"
 
 #define LOCTEXT_NAMESPACE "Yap"
 
@@ -460,9 +461,6 @@ bool UFlowNode_YapDialogue::GetInterruptible(bool bInConversation) const
 
 bool UFlowNode_YapDialogue::GetNodeAutoAdvance(bool bInConversation) const
 {
-	// TODO
-	return true;
-	/*
 	if (GetNodeType() == EYapDialogueNodeType::TalkAndAdvance)
 	{
 		return true;
@@ -473,48 +471,50 @@ bool UFlowNode_YapDialogue::GetNodeAutoAdvance(bool bInConversation) const
 		return true;
 	}
 
+	EYapAutoAdvanceFlags Mask;
+	
 	if (bInConversation)
 	{
-		return !ManualAdvanceInConversation.Get(GetNodeConfig().DialoguePlayback.bManualAdvanceInConversation);
+		Mask = EYapAutoAdvanceFlags::Conversation;
 	}
 	else
 	{
-		return !ManualAdvanceInFreeSpeech.Get(GetNodeConfig().DialoguePlayback.bManualAdvanceInFreeSpeech);
+		Mask = EYapAutoAdvanceFlags::FreeSpeech;
 	}
+
+	EYapAutoAdvanceFlags Flags = (AutoAdvanceFlags.IsSet()) ? AutoAdvanceFlags.GetValue() : (EYapAutoAdvanceFlags)GetNodeConfig().DialoguePlayback.AutoAdvanceFlags;
 	
-	return true;
-	*/
+	return (Mask & Flags) == Mask;
 }
 
 // ------------------------------------------------------------------------------------------------
 
 bool UFlowNode_YapDialogue::GetFragmentAutoAdvance(uint8 FragmentIndex, bool bInConversation) const
 {
-	return true;
-
-	/*
 	check(Fragments.IsValidIndex(FragmentIndex));
 
 	const FYapFragment& Fragment = Fragments[FragmentIndex]; 
-
+	
 	// Use fragment override
 	if (Fragment.GetAutoAdvanceSetting().IsSet())
 	{
-		return Fragment.GetAutoAdvanceSetting().GetValue();
+		EYapAutoAdvanceFlags Mask;
+
+		if (bInConversation)
+		{
+			Mask = EYapAutoAdvanceFlags::Conversation;
+		}
+		else
+		{
+			Mask = EYapAutoAdvanceFlags::FreeSpeech;
+		}
+
+		EYapAutoAdvanceFlags Flags = Fragment.GetAutoAdvanceSetting().GetValue();
+
+		return (Mask & Flags) == Mask;
 	}
 
-	return true;
-	*/
-
-	/*
-	// Use node override
-	if (AutoAdvance.IsSet())
-	{
-		return AutoAdvance.GetValue();
-	}
-
-	return GetNodeAutoAdvance();
-	*/
+	return GetNodeAutoAdvance(bInConversation);
 }
 
 // ------------------------------------------------------------------------------------------------

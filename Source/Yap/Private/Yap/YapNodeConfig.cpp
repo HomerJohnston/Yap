@@ -27,11 +27,11 @@ FGameplayTagContainer FYapNodeConfigGroup_MoodTags::GetAllMoodTags()
 
 UYapNodeConfig::UYapNodeConfig()
 {
+#if WITH_EDITOR
     General.AllowableNodeTypes = static_cast<int32>(EYapDialogueNodeType::COUNT) - 1;
 
     AddGameplayTagFilter(GET_MEMBER_NAME_CHECKED(ThisClass, MoodTags.DefaultMoodTag), FGameplayTagFilterDelegate::CreateUObject(this, &ThisClass::GetMoodTagsRoot));
 
-#if WITH_EDITOR
     if (IsTemplate())
     {
         const static FString ResourcesFolder = Yap::FileUtilities::GetResourcesFolder();

@@ -106,6 +106,7 @@ void UYapProjectSettings::AddAdditionalCharacterClass(TSoftClassPtr<UObject> Cla
 }
 #endif
 
+#if WITH_EDITOR
 const UObject* UYapProjectSettings::FindCharacter(FGameplayTag CharacterTag, TSharedPtr<FStreamableHandle>& Handle, EYapLoadContext LoadContext)
 {
 	FYapCharacterStaticDefinition* CharacterDefinition = Get().CharacterMap.Find(CharacterTag);
@@ -117,6 +118,7 @@ const UObject* UYapProjectSettings::FindCharacter(FGameplayTag CharacterTag, TSh
 
 	return nullptr;
 }
+#endif
 
 #if WITH_EDITOR
 // TODO delete this in 2026. It's only for migrating fragments from old data to new data.

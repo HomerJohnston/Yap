@@ -105,6 +105,11 @@ bool IYapCharacterInterface::IsAsset_YapCharacter(const FAssetData& AssetData)
 
 FText IYapCharacterInterface::GetName(const UObject* Character)
 {
+    if (const UClass* Class = Cast<UClass>(Character))
+    {
+        Character = Class->GetDefaultObject();
+    }
+    
     FText Name = FText::GetEmpty();
 
     if (IsValid(Character))
@@ -130,6 +135,11 @@ FText IYapCharacterInterface::GetName(const UObject* Character)
 
 FLinearColor IYapCharacterInterface::GetColor(const UObject* Character)
 {
+    if (const UClass* Class = Cast<UClass>(Character))
+    {
+        Character = Class->GetDefaultObject();
+    }
+    
     FLinearColor Color(0.030f, 0.030f, 0.030f, 1.0f);
 
     if (IsValid(Character))
@@ -153,23 +163,28 @@ FLinearColor IYapCharacterInterface::GetColor(const UObject* Character)
 
 // ----------------------------------------------
 
-const UTexture2D* IYapCharacterInterface::GetPortrait(const UObject* CharacterAsset, FGameplayTag MoodTag)
+const UTexture2D* IYapCharacterInterface::GetPortrait(const UObject* Character, FGameplayTag MoodTag)
 {
+    if (const UClass* Class = Cast<UClass>(Character))
+    {
+        Character = Class->GetDefaultObject();
+    }
+    
     const UTexture2D* Texture = nullptr;
     
-    if (IsValid(CharacterAsset))
+    if (IsValid(Character))
     {        
-        if (const IYapCharacterInterface* Speaker = Cast<IYapCharacterInterface>(CharacterAsset))
+        if (const IYapCharacterInterface* Speaker = Cast<IYapCharacterInterface>(Character))
         {
             Texture = Speaker->GetCharacterPortrait(MoodTag);
         }
-        else if (CharacterAsset->Implements<UYapCharacterInterface>())
+        else if (Character->Implements<UYapCharacterInterface>())
         {
-            Texture = IYapCharacterInterface::Execute_K2_GetYapCharacterPortrait(CharacterAsset, MoodTag);
+            Texture = IYapCharacterInterface::Execute_K2_GetYapCharacterPortrait(Character, MoodTag);
         }
         else
         {
-            UE_LOG(LogYap, Error, TEXT("IYapCharacterInterface::GetPortrait failure - Object [%s] did not implement IYapCharacterInterface in C++ or blueprint!"), *CharacterAsset->GetName());
+            UE_LOG(LogYap, Error, TEXT("IYapCharacterInterface::GetPortrait failure - Object [%s] did not implement IYapCharacterInterface in C++ or blueprint!"), *Character->GetName());
         }
     }
 

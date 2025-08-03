@@ -55,7 +55,7 @@ protected:
     TSubclassOf<UFlowNode_YapDialogue> NodeType;
     
     UPROPERTY(Transient)
-    TArray<FYapSpeechHandle> RunningFragments;
+    TArray<FYapSpeechHandle> RunningSpeech;
 
     UPROPERTY(Transient)
     TArray<FYapPromptHandle> OpenPrompts;
@@ -103,7 +103,7 @@ public:
 
     const TSubclassOf<UFlowNode_YapDialogue> GetNodeType() const { return NodeType; }
     
-    const TArray<FYapSpeechHandle>& GetRunningFragments() const { return RunningFragments; }
+    const TArray<FYapSpeechHandle>& GetRunningFragments() const { return RunningSpeech; }
 
     FYapConversationHandle& GetHandle() { return Handle; }
 

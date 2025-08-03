@@ -13,6 +13,7 @@
 #include "Yap/Nodes/FlowNode_YapDialogue.h"
 #include "Engine/Blueprint.h"
 #include "Yap/YapCharacterManager.h"
+#include "Yap/Enums/YapInterruptibleFlags.h"
 
 #if WITH_EDITOR
 #include "Yap/YapProjectSettings.h"
@@ -342,11 +343,23 @@ void FYapFragment::ResolveMaturitySetting(UWorld* World, EYapMaturitySetting& Ma
 	}
 }
 
-bool FYapFragment::GetSkippable(bool Default) const
+bool FYapFragment::GetInterruptible(bool Default, bool bInConversation) const
 {
-	return true;
-	// TODO
-	//return Skippable.Get(Default);
+	if (InterruptibleFlags.IsSet())
+	{
+		EYapInterruptibleFlags Flags = InterruptibleFlags.GetValue();
+		
+		if (bInConversation)
+		{
+			return ((Flags & EYapInterruptibleFlags::Conversation) == EYapInterruptibleFlags::Conversation);
+		}
+		else
+		{
+			return ((Flags & EYapInterruptibleFlags::FreeSpeech) == EYapInterruptibleFlags::FreeSpeech);			
+		}
+	}
+
+	return Default;
 }
 
 EYapTimeMode FYapFragment::GetTimeMode(UWorld* World, const UYapNodeConfig& NodeConfig) const

@@ -339,7 +339,7 @@ public:
 	TOptional<EYapAutoAdvanceFlags>& GetAutoAdvanceSetting() { return AutoAdvanceFlags; }
 	
 	/** Gets the evaluated skippable setting to be used for this fragment (incorporating project default settings and fallbacks) */
-	bool GetSkippable(bool Default) const;
+	bool GetInterruptible(bool Default, bool bInConversation) const;
 	
 	/** Gets the evaluated time mode to be used for this bit (incorporating project default settings and fallbacks) */
 	EYapTimeMode GetTimeMode(UWorld* World, const UYapNodeConfig& NodeConfig) const;

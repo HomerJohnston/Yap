@@ -155,6 +155,9 @@ protected:
     UPROPERTY(Transient, BlueprintReadOnly, Category = "Default")
 	int32 NodeActivationCount = 0;
 
+	UPROPERTY(Transient)
+	bool bForceAdvanceOnSpeechComplete = false;
+	
 	/** The most recent running fragment */
 	UPROPERTY(Transient)
 	TOptional<uint8> FocusedFragmentIndex;
@@ -298,7 +301,7 @@ protected:
 public:
 	/** This gets run by the subsystem when the actual speaking finishes */
 	UFUNCTION()
-	void OnSpeechComplete(UObject* Instigator, FYapSpeechHandle Handle);
+	void OnSpeechComplete(UObject* Instigator, FYapSpeechHandle Handle, EYapSpeechCompleteResult Result);
 
 	/** This gets run by the dialogue node's own timers, only if the fragment is set to use padding */
 	UFUNCTION()

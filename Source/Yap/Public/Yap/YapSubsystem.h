@@ -96,6 +96,9 @@ struct FYap__ActiveSpeechContainer
 
 	UPROPERTY(Transient)
 	FTimerHandle SpeechTimerHandle;
+
+	UPROPERTY(Transient)
+	FYapConversationHandle ConversationHandle;
 };
 
 USTRUCT()
@@ -103,6 +106,8 @@ struct FYap__ActiveSpeechMap
 {
 	GENERATED_BODY()
 
+// ----------------------------------------------
+	
 	UPROPERTY(Transient)
 	TMap<FYapSpeechHandle, FYap__ActiveSpeechContainer> AllSpeech;
 	
@@ -112,13 +117,20 @@ struct FYap__ActiveSpeechMap
 	UPROPERTY(Transient)
 	TMap<FName, FYapSpeechHandlesArray> ContainersBySpeakerID;
 
-	FYap__ActiveSpeechContainer* AddSpeech(FYapSpeechHandle Handle, FName SpeakerID, UObject* SpeechOwner);
+	UPROPERTY(Transient)
+	TMap<FYapConversationHandle, FYapSpeechHandlesArray> ContainersByConversation;
+	
+// ----------------------------------------------
+	
+	FYap__ActiveSpeechContainer* AddSpeech(FYapSpeechHandle Handle, FName SpeakerID, UObject* SpeechOwner, FYapConversationHandle ConversationHandle);
 
 	FName FindSpeakerID(const FYapSpeechHandle& Handle);
 
 	FTimerHandle FindTimerHandle(const FYapSpeechHandle& Handle);
 
 	FYapSpeechEvent FindSpeechFinishedEvent(const FYapSpeechHandle& Handle);
+
+	FYapConversationHandle FindConversation(const FYapSpeechHandle& Handle);
 	
 	void RemoveSpeech(const FYapSpeechHandle& Handle);
 
@@ -132,6 +144,7 @@ struct FYap__ActiveSpeechMap
 	
 	TArray<FYapSpeechHandle> GetHandles(UObject* SpeechOwner);
 
+	TArray<FYapSpeechHandle> GetHandles(const FYapConversationHandle& ConversationHandle);
 };
 
 // ================================================================================================
@@ -336,6 +349,8 @@ public:
 		return nullptr;
 	}
 
+	static bool IsNodeInConversation(const UFlowNode_YapDialogue* DialogueNode);
+	
 	static bool IsSpeechInConversation(const UObject* WorldContext, const FYapSpeechHandle& Handle)
 	{
 		return Get(WorldContext)->SpeechConversationMapping.Contains(Handle);
@@ -395,7 +410,7 @@ protected:
 	void OnFinishedBroadcastingPrompts(const FYapData_PlayerPromptsReady& Data, FYapDialogueNodeClassType NodeType);
 
 public:
-	void RunSpeech(const FYapData_SpeechBegins& SpeechData, FYapDialogueNodeClassType NodeType, const FYapSpeechHandle& Handle);
+	void RunSpeech(const FYapData_SpeechBegins& SpeechData, FYapDialogueNodeClassType NodeType, const FYapSpeechHandle& SpeechHandle);
 
 	// TODO I hate this thing
 	static FYapConversation NullConversation;
@@ -462,7 +477,7 @@ public:
 	void OnWorldBeginPlay(UWorld& InWorld) override;
 	
 protected:
-	void OnSpeechComplete(FYapSpeechHandle Handle, bool bBroadcast);
+	void OnSpeechComplete(FYapSpeechHandle Handle, bool bBroadcast, EYapSpeechCompleteResult SpeechResult = EYapSpeechCompleteResult::Undefined);
 
 	/**  */
 	bool DoesSupportWorldType(const EWorldType::Type WorldType) const override;

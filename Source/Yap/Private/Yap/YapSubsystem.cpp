@@ -32,7 +32,7 @@ FYapConversation UYapSubsystem::NullConversation;
 
 // ------------------------------------------------------------------------------------------------
 
-FYap__ActiveSpeechContainer* FYap__ActiveSpeechMap::AddSpeech(FYapSpeechHandle Handle, FName SpeakerID, UObject* SpeechOwner)
+FYap__ActiveSpeechContainer* FYap__ActiveSpeechMap::AddSpeech(FYapSpeechHandle Handle, FName SpeakerID, UObject* SpeechOwner, FYapConversationHandle ConversationHandle)
 {
 	if (AllSpeech.Contains(Handle))
 	{
@@ -54,6 +54,13 @@ FYap__ActiveSpeechContainer* FYap__ActiveSpeechMap::AddSpeech(FYapSpeechHandle H
 		FYapSpeechHandlesArray& HandlesContainer = ContainersByOwner.FindOrAdd(SpeechOwner);
 		HandlesContainer.Handles.Add(Handle);
 		NewSpeechContainer.SpeechOwner = SpeechOwner;
+	}
+
+	if (ConversationHandle.IsValid())
+	{
+		FYapSpeechHandlesArray& HandlesContainer = ContainersByConversation.FindOrAdd(ConversationHandle);
+		HandlesContainer.Handles.Add(Handle);
+		NewSpeechContainer.ConversationHandle = ConversationHandle;
 	}
 
 	return &NewSpeechContainer;
@@ -102,6 +109,20 @@ FYapSpeechEvent FYap__ActiveSpeechMap::FindSpeechFinishedEvent(const FYapSpeechH
 		UE_LOG(LogYap, Warning, TEXT("Tried to find speech finish event for handle but handle was not found! <%s>"), *Handle.ToString());
 		return {};
 	}
+}
+
+FYapConversationHandle FYap__ActiveSpeechMap::FindConversation(const FYapSpeechHandle& Handle)
+{
+	FYap__ActiveSpeechContainer* Container = AllSpeech.Find(Handle);
+
+	if (Container)
+	{
+		return Container->ConversationHandle;
+	}
+
+	UE_LOG(LogYap, Warning, TEXT("Tried to find conversation for handle but handle was not found! <%s>"), *Handle.ToString());
+
+	return {};
 }
 
 void FYap__ActiveSpeechMap::RemoveSpeech(const FYapSpeechHandle& Handle)
@@ -178,6 +199,11 @@ TArray<FYapSpeechHandle> FYap__ActiveSpeechMap::GetHandles(UObject* SpeechOwner)
 		return Container->Handles;
 	}
 
+	return { };
+}
+
+TArray<FYapSpeechHandle> FYap__ActiveSpeechMap::GetHandles(const FYapConversationHandle& ConversationHandle)
+{
 	return { };
 }
 
@@ -343,6 +369,26 @@ UYapCharacterComponent* UYapSubsystem::FindCharacterComponent(UWorld* World, FNa
 // ------------------------------------------------------------------------------------------------
 
 #if WITH_EDITOR
+bool UYapSubsystem::IsNodeInConversation(const UFlowNode_YapDialogue* DialogueNode)
+{
+	UObject* Owner = DialogueNode->GetFlowAsset();
+
+	UYapSubsystem* Subsystem = UYapSubsystem::Get(DialogueNode);
+
+	if (Subsystem)
+	{
+		for (auto&[key, value] : Subsystem->Conversations)
+		{
+			if (Owner == value.GetOwner())
+			{
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
 const UYapBroker& UYapSubsystem::GetBroker_Editor()
 {
 	// During play, use GEditor to get the broker normally
@@ -671,23 +717,23 @@ void UYapSubsystem::OnFinishedBroadcastingPrompts(const FYapData_PlayerPromptsRe
 
 // ------------------------------------------------------------------------------------------------
 
-void UYapSubsystem::RunSpeech(const FYapData_SpeechBegins& SpeechData, FYapDialogueNodeClassType NodeType, const FYapSpeechHandle& Handle)
+void UYapSubsystem::RunSpeech(const FYapData_SpeechBegins& SpeechData, FYapDialogueNodeClassType NodeType, const FYapSpeechHandle& SpeechHandle)
 {
-	TArray<FYapSpeechHandle> ActiveSpeech = ActiveSpeechMap.GetHandles(SpeechData.SpeakerID);
+	TArray<FYapSpeechHandle> ActiveSpeechHandle = ActiveSpeechMap.GetHandles(SpeechData.SpeakerID);
 
 	UFlowNode_YapDialogue* CDO = NodeType.Get()->GetDefaultObject<UFlowNode_YapDialogue>();
 	const UYapNodeConfig& Config = CDO->GetNodeConfig();
 
 	if (!Config.DialoguePlayback.bPermitOverlappingSpeech)
 	{
-		for (int32 i = ActiveSpeech.Num() - 1; i >= 0; --i)
+		for (int32 i = ActiveSpeechHandle.Num() - 1; i >= 0; --i)
 		{
-			if (ActiveSpeech[i] == Handle)
+			if (ActiveSpeechHandle[i] == SpeechHandle)
 			{
 				continue;
 			}
 			
-			OnSpeechComplete(ActiveSpeech[i], true);
+			OnSpeechComplete(ActiveSpeechHandle[i], true);
 		}
 	}
 	
@@ -698,33 +744,33 @@ void UYapSubsystem::RunSpeech(const FYapData_SpeechBegins& SpeechData, FYapDialo
 		{
 			if (Conversation.GetConversationName() == SpeechData.Conversation)
 			{
-				SpeechConversationMapping.Add(Handle, ConversationHandle);
-				Conversation.AddRunningFragment(Handle);
+				SpeechConversationMapping.Add(SpeechHandle, ConversationHandle);
+				Conversation.AddRunningFragment(SpeechHandle);
 			}
 		}
 		
 		auto* HandlerArray = FindConversationHandlerArray(NodeType);
 		
-		BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapConversationHandler, OnConversationSpeechBegins, Execute_K2_ConversationSpeechBegins)>(HandlerArray, SpeechData, Handle);
+		BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapConversationHandler, OnConversationSpeechBegins, Execute_K2_ConversationSpeechBegins)>(HandlerArray, SpeechData, SpeechHandle);
 	}
 	else
 	{
 		auto* HandlerArray = FindFreeSpeechHandlerArray(NodeType);
 		
-		BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapFreeSpeechHandler, OnTalkSpeechBegins, Execute_K2_TalkSpeechBegins)>(HandlerArray, SpeechData, Handle);
+		BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapFreeSpeechHandler, OnTalkSpeechBegins, Execute_K2_TalkSpeechBegins)>(HandlerArray, SpeechData, SpeechHandle);
 	}
 
 	if (SpeechData.SpeechTime > 0)
 	{
 		FTimerHandle SpeechTimerHandle;
-		FTimerDelegate Delegate = FTimerDelegate::CreateUObject(this, &ThisClass::OnSpeechComplete, Handle, true);
+		FTimerDelegate Delegate = FTimerDelegate::CreateUObject(this, &ThisClass::OnSpeechComplete, SpeechHandle, true, EYapSpeechCompleteResult::Normal);
 		GetWorld()->GetTimerManager().SetTimer(SpeechTimerHandle, Delegate, SpeechData.SpeechTime, false);
 
-		ActiveSpeechMap.SetTimer(Handle, SpeechTimerHandle);
+		ActiveSpeechMap.SetTimer(SpeechHandle, SpeechTimerHandle);
 	}
 	else
 	{
-		OnSpeechComplete(Handle, true);
+		OnSpeechComplete(SpeechHandle, true);
 	}
 }
 
@@ -934,25 +980,25 @@ void UYapSubsystem::AdvanceConversation(UObject* Instigator, const FYapConversat
 		UE_LOG(LogYap, Warning, TEXT("UYapSubsystem::AdvanceConversation - could not find conversation for handle {%s}"), *ConversationHandle.ToString());
 		return;
 	}
+	
 	TArray<FYapSpeechHandle> RunningFragments = ConversationPtr->GetRunningFragments();
-
-	UE_LOG(LogYap, VeryVerbose, TEXT("Subsystem: AdvanceConversation CALLING ONADVANCECONVERSATIONDELEGATE [%s]"), *ConversationHandle.ToString());
+	
+	//UE_LOG(LogYap, VeryVerbose, TEXT("Subsystem: AdvanceConversation CALLING ONADVANCECONVERSATIONDELEGATE [%s]"), *ConversationHandle.ToString());
 	// Broadcast to Yap systems; in dialogue nodes, this will kill any running paddings
 	Subsystem->OnAdvanceConversationDelegate.Broadcast(Instigator, ConversationHandle);
-
+	
 	// Finish all running speeches
 	for (const FYapSpeechHandle& SpeechHandle : RunningFragments)
 	{
 		UE_LOG(LogYap, VeryVerbose, TEXT("Subsystem: AdvanceConversation CALLING ONSPEECHCOMPLETE [%s]"), *ConversationHandle.ToString());
-		Subsystem->OnSpeechComplete(SpeechHandle, true);
+		Subsystem->OnSpeechComplete(SpeechHandle, true, EYapSpeechCompleteResult::Cancelled);
 	}
 	
 	UE_LOG(LogYap, VeryVerbose, TEXT("Subsystem: AdvanceConversation FINISH [%s]"), *ConversationHandle.ToString());
 }
 
 bool UYapSubsystem::EmitSpeechResult(const FYapSpeechHandle& Handle, EYapSpeechCompleteResult Result)
-{
-	
+{	
 	FYapSpeechEvent Evt = ActiveSpeechMap.FindSpeechFinishedEvent(Handle);
 
 	FTimerHandle Timer = ActiveSpeechMap.FindTimerHandle(Handle);
@@ -1049,7 +1095,7 @@ FYapSpeechHandle UYapSubsystem::GetNewSpeechHandle(FGuid Guid, FName SpeakerID, 
 {
 	FYapSpeechHandle NewHandle(GetWorld(), Guid);
 
-	ActiveSpeechMap.AddSpeech(NewHandle, SpeakerID, SpeechOwner);
+	ActiveSpeechMap.AddSpeech(NewHandle, SpeakerID, SpeechOwner, FYapConversationHandle());
 
 	return NewHandle;
 }
@@ -1083,9 +1129,14 @@ void UYapSubsystem::OnWorldBeginPlay(UWorld& InWorld)
 
 // ------------------------------------------------------------------------------------------------
 
-void UYapSubsystem::OnSpeechComplete(FYapSpeechHandle Handle, bool bBroadcast)
+void UYapSubsystem::OnSpeechComplete(FYapSpeechHandle Handle, bool bBroadcast, EYapSpeechCompleteResult SpeechResult)
 {
 	UE_LOG(LogYap, VeryVerbose, TEXT("%s: OnSpeechComplete entering {%s}"), *GetName(), *Handle.ToString());
+
+	if (SpeechResult == EYapSpeechCompleteResult::Undefined)
+	{
+		SpeechResult = EYapSpeechCompleteResult::Normal;
+	}
 	
 	FYapConversationHandle* ConversationHandle = SpeechConversationMapping.Find(Handle);
 
@@ -1105,7 +1156,7 @@ void UYapSubsystem::OnSpeechComplete(FYapSpeechHandle Handle, bool bBroadcast)
 	{
 		UE_LOG(LogYap, VeryVerbose, TEXT("%s: OnSpeechComplete {%s}"), *GetName(), *Handle.ToString());
 
-		if (!EmitSpeechResult(Handle, EYapSpeechCompleteResult::Normal))
+		if (!EmitSpeechResult(Handle, SpeechResult))
 		{
 			UE_LOG(LogYap, Warning, TEXT("Handle was not registered into SpeechCompleteEvents! Can't broadcast Complete event! %s"), *Handle.ToString());
 		}

@@ -27,18 +27,18 @@ FYapConversation::FYapConversation(const FGameplayTag& InConversationName, UObje
 
 void FYapConversation::AddRunningFragment(FYapSpeechHandle FragmentHandle)
 {
-    check(!RunningFragments.Contains(FragmentHandle));
+    check(!RunningSpeech.Contains(FragmentHandle));
 
-    RunningFragments.Add(FragmentHandle);
+    RunningSpeech.Add(FragmentHandle);
 }
 
 // ------------------------------------------------------------------------------------------------
 
 void FYapConversation::RemoveRunningFragment(FYapSpeechHandle FragmentHandle)
 {
-    check(RunningFragments.Contains(FragmentHandle));
+    check(RunningSpeech.Contains(FragmentHandle));
 
-    RunningFragments.Remove(FragmentHandle);
+    RunningSpeech.Remove(FragmentHandle);
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -139,7 +139,7 @@ void FYapConversation::FinishClosing(UObject* Instigator)
 
 void FYapConversation::ExecuteSkip()
 {
-    if (RunningFragments.Num() == 0)
+    if (RunningSpeech.Num() == 0)
     {
         return;
     }

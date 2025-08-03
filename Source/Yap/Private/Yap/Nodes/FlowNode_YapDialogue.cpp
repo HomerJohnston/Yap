@@ -728,15 +728,28 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 	
 	if (SpeechTime.IsSet())
 	{
-		EffectiveTime = FMath::Max(SpeechTime.GetValue(), ActiveConfig.GetMinimumSpeakingTime());
+		EffectiveTime = SpeechTime.GetValue();
 	}
-
+	
 	UYapSubsystem* Subsystem = GetWorld()->GetSubsystem<UYapSubsystem>();
 	
 	FYapData_SpeechBegins Data;
 	Data.Conversation = Subsystem->GetConversationByOwner(GetWorld(), GetFlowAsset()).GetConversationName();
 
 	bool bInConversation = Data.Conversation.IsValid();
+
+	float PaddingTime = 0;
+
+	if (Fragment.GetUsesPadding(GetWorld(), ActiveConfig))
+	{
+		PaddingTime = Fragment.GetProgressionTime(GetWorld(), ActiveConfig);
+	}
+	
+	if (!GetFragmentAutoAdvance(FragmentIndex, bInConversation))
+	{
+		EffectiveTime = PaddingTime;
+		PaddingTime = 0;
+	}
 	
 	if (ActiveConfig.GetUsesDirectedAt())
 	{
@@ -797,23 +810,15 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 
 	BindToSubsystemSpeechCompleteEvent(FocusedSpeechHandle);
 	
-	if (!SpeechTime.IsSet() || GetNodeType() == EYapDialogueNodeType::TalkAndAdvance)
+	if (EffectiveTime <= 0.0f || GetNodeType() == EYapDialogueNodeType::TalkAndAdvance)
 	{
 		OnPaddingComplete(FocusedSpeechHandle);
 	}
-	else if (Fragment.GetUsesPadding(GetWorld(), ActiveConfig))
+	
+	if (PaddingTime > 0)
 	{
-		float PaddingCompletionTime = Fragment.GetProgressionTime(GetWorld(), ActiveConfig);
-
-		if (PaddingCompletionTime > 0)
-		{
-			GetWorld()->GetTimerManager().SetTimer(Fragment.PaddingTimerHandle, FTimerDelegate::CreateUObject(this, &ThisClass::OnPaddingComplete, FocusedSpeechHandle), PaddingCompletionTime, false);
-			FragmentsInPadding.Add(FocusedSpeechHandle);	
-		}
-		else
-		{
-			OnPaddingComplete(FocusedSpeechHandle);
-		}
+		GetWorld()->GetTimerManager().SetTimer(Fragment.PaddingTimerHandle, FTimerDelegate::CreateUObject(this, &ThisClass::OnPaddingComplete, FocusedSpeechHandle), PaddingTime, false);
+		FragmentsInPadding.Add(FocusedSpeechHandle);	
 	}
 	
 	TriggerSpeechStartPin(FragmentIndex);
@@ -865,36 +870,10 @@ void UFlowNode_YapDialogue::OnSpeechComplete(UObject* Instigator, FYapSpeechHand
 
 	TriggerSpeechEndPin(*FragmentIndex);
 
-	/*
-	if (Result == EYapSpeechCompleteResult::Cancelled)
-	{
-		FTimerHandle& PaddingTimerHandle = Fragment.PaddingTimerHandle;
-
-		if (PaddingTimerHandle.IsValid())
-		{
-			GetWorld()->GetTimerManager().ClearTimer(PaddingTimerHandle);
-		}
-		
-		FragmentsInPadding.Remove(Handle);
-	}
-	*/
-	
 	// No positive padding - this fragment is done
 	if (!FragmentsInPadding.Contains(Handle))
 	{
 		FinishFragment(Handle, *FragmentIndex);
-
-		/*
-		if (Result == EYapSpeechCompleteResult::Cancelled)
-		{
-			AdvanceFromFragment(Handle, *FragmentIndex);	
-		}
-		else
-		{
-			TryAdvanceFromFragment(Handle, *FragmentIndex);
-		}
-		*/
-		
 		TryAdvanceFromFragment(Handle, *FragmentIndex);
 	}
 }
@@ -958,6 +937,8 @@ void UFlowNode_YapDialogue::TryAdvanceFromFragment(const FYapSpeechHandle& Handl
 	// TODO When calling AdvanceFromFragment in Skip function, if the game is set to do manual advancement, this won't run. Push this into a separate function I can call or add another route into this.
 	if (bForceAdvanceOnSpeechComplete || GetFragmentAutoAdvance(FragmentIndex, bInConversation))
 	{
+		bForceAdvanceOnSpeechComplete = false;
+		
 		UE_LOG(LogYap, VeryVerbose, TEXT("%s [%i]: TryAdvanceFromFragment passed - GetFragmentAutoAdvance true)"), *GetName(), FragmentIndex);
 
 		AdvanceFromFragment(Handle, FragmentIndex);

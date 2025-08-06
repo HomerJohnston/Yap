@@ -461,7 +461,6 @@ UYapCharacterComponent* UYapSubsystem::FindCharacterComponent(UWorld* World, FNa
 
 // ------------------------------------------------------------------------------------------------
 
-#if WITH_EDITOR
 bool UYapSubsystem::IsNodeInConversation(const UFlowNode_YapDialogue* DialogueNode)
 {
 	UObject* Owner = DialogueNode->GetFlowAsset();
@@ -490,6 +489,7 @@ bool UYapSubsystem::IsSpeechInConversation(const UObject* WorldContext, const FY
 	return false;
 }
 
+#if WITH_EDITOR
 const UYapBroker& UYapSubsystem::GetBroker_Editor()
 {
 	// During play, use GEditor to get the broker normally

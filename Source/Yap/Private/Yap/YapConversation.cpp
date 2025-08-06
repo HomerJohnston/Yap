@@ -16,7 +16,7 @@ FYapConversation::FYapConversation()
 
 // ------------------------------------------------------------------------------------------------
 
-FYapConversation::FYapConversation(const FGameplayTag& InConversationName, UObject* ConversationOwner, const FYapConversationHandle& InHandle)
+FYapConversation::FYapConversation(const FName InConversationName, UObject* ConversationOwner, const FYapConversationHandle& InHandle)
     : ConversationName(InConversationName)
     , Owner(ConversationOwner)
 {
@@ -34,7 +34,7 @@ void FYapConversation::AddRunningFragment(FYapSpeechHandle FragmentHandle)
 
 // ------------------------------------------------------------------------------------------------
 
-void FYapConversation::RemoveRunningFragment(FYapSpeechHandle FragmentHandle)
+void FYapConversation::RemoveRunningSpeech(FYapSpeechHandle FragmentHandle)
 {
     check(RunningSpeech.Contains(FragmentHandle));
 
@@ -143,11 +143,6 @@ void FYapConversation::ExecuteSkip()
     {
         return;
     }
-}
-
-bool FYapConversation::IsNull() const
-{
-    return this == &UYapSubsystem::NullConversation;
 }
 
 // ------------------------------------------------------------------------------------------------

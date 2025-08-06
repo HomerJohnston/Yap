@@ -30,7 +30,7 @@ UYapRunSpeechLatent2* UYapRunSpeechLatent2::RunSpeechLatent(
 		UObject* SpeechOwner,
 		FName CharacterID, FText DialogueText,
 	UObject* DialogueAudioAsset, FGameplayTag MoodTag, float SpeechTime, FText TitleText,
-	FName DirectedAt, FGameplayTag Conversation, bool bSkippable,
+	FName DirectedAt, bool bSkippable,
 	TSubclassOf<UFlowNode_YapDialogue> NodeType,
 	UPARAM(ref) FYapSpeechHandle& Handle)
 {
@@ -62,14 +62,13 @@ UYapRunSpeechLatent2* UYapRunSpeechLatent2::RunSpeechLatent(
 	Node->Data.SpeechTime = SpeechTime;
 	Node->Data.TitleText = TitleText;
 	Node->Data.DirectedAtID = DirectedAt;
-	Node->Data.Conversation = Conversation;
 	Node->Data.bSkippable = bSkippable;
 	Node->_NodeType = NodeType;
 	Node->_SpeechOwner = SpeechOwner;
 
 	UYapSubsystem* Subsystem = UYapSubsystem::Get(SpeechOwner);
 
-	Handle = Subsystem->GetNewSpeechHandle(CharacterID, SpeechOwner);
+	Handle = Subsystem->GetNewSpeechHandle(CharacterID, SpeechOwner, nullptr);
 	Node->_Handle = Handle;
 
 	return Node;

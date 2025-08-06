@@ -14,21 +14,24 @@ UFlowNode_YapConversation_Close::UFlowNode_YapConversation_Close()
 #endif
 }
 
+// TODO check if name matches, log errors (GetConversationByOwner should be GetConversationByOwnerAndName)
+// TODO more safety if checking of funcs. Few crash chances in here.
 void UFlowNode_YapConversation_Close::ExecuteInput(const FName& PinName)
 {
 	Super::ExecuteInput(PinName);
 
 	UYapSubsystem* Subsystem = UYapSubsystem::Get(this);
 
-	FYapConversation& ConversationInst = (Conversation.IsValid()) ? Subsystem->GetConversationByName(Conversation, GetFlowAsset()) : Subsystem->GetConversationByOwner(this, GetFlowAsset());
+	// TODO figure out if conversation name matches. Right now this doesn't compare.
+	FYapConversation* ConversationInst = (Conversation.IsValid()) ? Subsystem->GetConversationByOwner(this, GetFlowAsset()) : Subsystem->GetConversationByOwner(this, GetFlowAsset());
 
-	if (ConversationInst.IsNull())
+	if (!ConversationInst)
 	{
 		UE_LOG(LogYap, Warning, TEXT("Found no conversation to close! Conversation name: %s, owner: %s"), *Conversation.ToString(), *GetName());
 		return;
 	}
 	
-	EYapConversationState Result = Subsystem->CloseConversation(ConversationInst.GetHandle());
+	EYapConversationState Result = Subsystem->CloseConversation(ConversationInst->GetHandle());
 
 	switch (Result)
 	{
@@ -39,7 +42,7 @@ void UFlowNode_YapConversation_Close::ExecuteInput(const FName& PinName)
 		}
 		case EYapConversationState::Closing:
 		{
-			ConversationInst.OnConversationClosed.AddDynamic(this, &ThisClass::FinishNode);
+			ConversationInst->OnConversationClosed.AddDynamic(this, &ThisClass::FinishNode);
 			break;
 		}
 		default:
@@ -59,7 +62,7 @@ void UFlowNode_YapConversation_Close::FinishNode_Internal()
 {
 	UE_LOG(LogYap, Verbose, TEXT("Conversation closed: %s for owner: %s"), *Conversation.GetTagName().ToString(), *GetFlowAsset()->GetName());
 
-	UYapSubsystem::GetConversationByName(Conversation, GetFlowAsset()).OnConversationClosed.RemoveAll(this);
+	UYapSubsystem::GetConversationByOwner(this, GetFlowAsset())->OnConversationClosed.RemoveAll(this);
 	
 	TriggerFirstOutput(true);
 }

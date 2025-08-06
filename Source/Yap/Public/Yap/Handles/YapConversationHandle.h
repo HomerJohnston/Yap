@@ -29,6 +29,8 @@ public:
 
     FYapConversationHandle(const FGuid& InGuid);
 
+    FYapConversationHandle(UObject* Owner, FName Name);
+    
     // ------------------------------------------
     // STATE
     // ------------------------------------------

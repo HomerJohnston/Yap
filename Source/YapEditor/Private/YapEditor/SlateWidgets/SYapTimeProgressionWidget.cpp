@@ -461,7 +461,7 @@ bool SYapTimeProgressionWidget::AllowPaddingEditing() const
 {
 	if (DialogueNode.IsValid())
 	{
-		return DialogueNode->GetNodeType() != EYapDialogueNodeType::TalkAndAdvance;
+		return true;// DialogueNode->GetNodeType() != EYapDialogueNodeType::TalkAndAdvance;
 	}
 
 	return false;

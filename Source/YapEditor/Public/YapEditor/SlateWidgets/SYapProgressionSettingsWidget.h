@@ -24,7 +24,7 @@ public:
 
     void Construct(const FArguments& InArgs);
 
-    UFlowNode_YapDialogue* DialogueNode = nullptr;
+    TWeakObjectPtr<UFlowNode_YapDialogue> DialogueNode = nullptr;
     int32 FragmentIndex = INDEX_NONE;
     TOptional<EYapInterruptibleFlags>* InterruptibleSettingRaw = nullptr;
     TOptional<EYapAutoAdvanceFlags>* AutoAdvanceSettingRaw = nullptr;

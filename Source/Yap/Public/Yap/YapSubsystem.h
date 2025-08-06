@@ -101,13 +101,36 @@ struct FYap__ActiveSpeechContainer
 	FYapConversationHandle ConversationHandle;
 };
 
+/*
+USTRUCT()
+struct FYapConversationTestMap
+{
+	GENERATED_BODY()
+
+	// ----------------------------------------------
+
+	TMap<FYapConversationHandle, FYapConversation> Conversations;
+
+	TMap<TObjectPtr<UObject>, FYapConversationHandle> HandlesByOwner;
+
+	TMap<FName, FYapConversationHandle> HandlesByName;
+
+	// ----------------------------------------------
+
+	const FYapConversationHandle& AddConversation(UObject* Owner, FName Name);
+
+	FYapConversation* FindConversation(UObject* Owner, FName Name);
+};
+*/
+
 USTRUCT()
 struct FYap__ActiveSpeechMap
 {
 	GENERATED_BODY()
 
 // ----------------------------------------------
-	
+// ----------------------------------------------
+private:
 	UPROPERTY(Transient)
 	TMap<FYapSpeechHandle, FYap__ActiveSpeechContainer> AllSpeech;
 	
@@ -117,21 +140,10 @@ struct FYap__ActiveSpeechMap
 	UPROPERTY(Transient)
 	TMap<FName, FYapSpeechHandlesArray> ContainersBySpeakerID;
 
-	UPROPERTY(Transient)
-	TMap<FYapConversationHandle, FYapSpeechHandlesArray> ContainersByConversation;
-	
-// ----------------------------------------------
-	
-	FYap__ActiveSpeechContainer* AddSpeech(FYapSpeechHandle Handle, FName SpeakerID, UObject* SpeechOwner, FYapConversationHandle ConversationHandle);
+// ----------
+public:
+	FYap__ActiveSpeechContainer* AddSpeech(FYapSpeechHandle Handle, FName SpeakerID, UObject* SpeechOwner, UObject* ConversationOwner);
 
-	FName FindSpeakerID(const FYapSpeechHandle& Handle);
-
-	FTimerHandle FindTimerHandle(const FYapSpeechHandle& Handle);
-
-	FYapSpeechEvent FindSpeechFinishedEvent(const FYapSpeechHandle& Handle);
-
-	FYapConversationHandle FindConversation(const FYapSpeechHandle& Handle);
-	
 	void RemoveSpeech(const FYapSpeechHandle& Handle);
 
 	void BindToSpeechFinish(const FYapSpeechHandle& Handle, FYapSpeechEventDelegate Delegate);
@@ -145,6 +157,37 @@ struct FYap__ActiveSpeechMap
 	TArray<FYapSpeechHandle> GetHandles(UObject* SpeechOwner);
 
 	TArray<FYapSpeechHandle> GetHandles(const FYapConversationHandle& ConversationHandle);
+	
+	FName FindSpeakerID(const FYapSpeechHandle& Handle);
+
+	FTimerHandle FindTimerHandle(const FYapSpeechHandle& Handle);
+
+	FYapSpeechEvent FindSpeechFinishedEvent(const FYapSpeechHandle& Handle);
+
+	FYapConversationHandle FindSpeechConversationHandle(const FYapSpeechHandle& Handle);
+
+	bool IsSpeechRunning(const FYapSpeechHandle& Handle);
+	
+// ----------------------------------------------
+// ----------------------------------------------
+private:
+	UPROPERTY(Transient)
+	TMap<FYapConversationHandle, FYapConversation> Conversations;
+
+	UPROPERTY(Transient)
+	TMap<TObjectPtr<UObject>, FYapConversationHandle> ConversationsByOwner;
+	
+// ----------
+public:
+	FYapConversation& AddConversation(FName ConversationName, UObject* ConversationOwner, FYapConversationHandle& ConversationHandle);
+
+	void RemoveConversation(FYapConversationHandle ConversationHandle);
+	
+	FYapConversation* FindConversationByOwner(const UObject* Owner);
+
+	FYapConversationHandle* FindConversationHandleByOwner(const UObject* Owner);
+	
+	FYapConversation* FindConversation(const FYapConversationHandle& ConversationHandle);
 };
 
 // ================================================================================================
@@ -231,17 +274,13 @@ protected:
 	UPROPERTY(Transient)
 	TObjectPtr<UYapBroker> Broker;
 
-	/** Master container of conversations */
-	UPROPERTY(Transient)
-	TMap<FYapConversationHandle, FYapConversation> Conversations;
-	
 	/** Queue of conversations. The top one is always going to be "active". If two "Open Conversation" nodes run, the second one will wait in this queue until the first one closes. */
 	UPROPERTY(Transient)
 	TArray<FYapConversationHandle> ConversationQueue;
 
-	/** Stores which conversation a given speech is a part of */
-	UPROPERTY(Transient)
-	TMap<FYapSpeechHandle, FYapConversationHandle> SpeechConversationMapping;
+	///** Stores which conversation a given speech is a part of */
+	//UPROPERTY(Transient)
+	//TMap<FYapSpeechHandle, FYapConversationHandle> SpeechConversationMapping;
 	
 	/** Stores which conversation a given prompt is a part of */
 	UPROPERTY(Transient)
@@ -282,7 +321,7 @@ public:
 
 	UPROPERTY(Transient)
 	FYapConversationEvent OnAdvanceConversationDelegate;
-
+	
 	UPROPERTY(Transient, Instanced)
 	TObjectPtr<UYapSquirrel> NoiseGenerator;
 
@@ -351,11 +390,8 @@ public:
 
 	static bool IsNodeInConversation(const UFlowNode_YapDialogue* DialogueNode);
 	
-	static bool IsSpeechInConversation(const UObject* WorldContext, const FYapSpeechHandle& Handle)
-	{
-		return Get(WorldContext)->SpeechConversationMapping.Contains(Handle);
-	}
-	
+	static bool IsSpeechInConversation(const UObject* WorldContext, const FYapSpeechHandle& Handle);
+
 public:
 #if WITH_EDITOR
 	static const UYapBroker& GetBroker_Editor();
@@ -374,7 +410,7 @@ protected:  // TODO should some of these be public?
 
 public:
 	// Main open conversation function, and is called by the Open Conversation flow node
-	FYapConversation& OpenConversation(FGameplayTag ConversationName, UObject* ConversationOwner); // Called by Open Conversation node
+	FYapConversation& OpenConversation(FName ConversationName, UObject* ConversationOwner); // Called by Open Conversation node
 
 	// Main close conversation function
 	EYapConversationState CloseConversation(FYapConversationHandle& Handle);
@@ -412,22 +448,28 @@ protected:
 public:
 	void RunSpeech(const FYapData_SpeechBegins& SpeechData, FYapDialogueNodeClassType NodeType, const FYapSpeechHandle& SpeechHandle);
 
-	// TODO I hate this thing
-	static FYapConversation NullConversation;
+	/** This is a bit ghetto. Normally Yap permits speech to overlap (negative padding or Talk And Advance node usage), but sometimes we don't want that. This tells the subsystem to cancel this speech event if another one starts up. */
+	void MarkConversationSpeechAsFragile(const FYapSpeechHandle& Handle);
 
+	UPROPERTY(Transient)
+	TMap<FYapConversationHandle, FYapSpeechHandlesArray> FragileSpeechHandles;
+	
+	// TODO I hate this thing
+	// static FYapConversation NullConversation;
+
+	static FName Yap_UnnamedConvo;
+	
 	// TODO I also hate these things
 	/**  */
-	static FYapConversation& GetConversationByOwner(UObject* WorldContext, UObject* Owner);
+	static FYapConversation* GetConversationByOwner(UObject* WorldContext, UObject* Owner);
 	
 	/**  */
-	static FYapConversation& GetConversationByHandle(UObject* WorldContext, const FYapConversationHandle& Handle);
+	static FYapConversation* GetConversationByHandle(UObject* WorldContext, const FYapConversationHandle& Handle);
 
-	/**  */
-	static FYapConversation& GetConversationByName(const FGameplayTag& ConversationName, UObject* Owner);
-
-	/**  */
+	/**  
 	static FGameplayTag GetActiveConversationName(UWorld* World);
-
+	*/
+	
 public:
 	// TODO should I make a ref struct for FYapPromptHandle too?
 	/** The prompt handle will call this function, passing in itself. */
@@ -462,9 +504,9 @@ public:
 	
 	TArray<TObjectPtr<UObject>>* FindFreeSpeechHandlerArray(FYapDialogueNodeClassType NodeType);
 
-	FYapSpeechHandle GetNewSpeechHandle(FName SpeakerID, UObject* SpeechOwner);
+	FYapSpeechHandle GetNewSpeechHandle(FName SpeakerID, UObject* SpeechOwner, UObject* ConversationOwner);
 	
-	FYapSpeechHandle GetNewSpeechHandle(FGuid Guid, FName SpeakerID, UObject* SpeechOwner);
+	FYapSpeechHandle GetNewSpeechHandle(FGuid Guid, FName SpeakerID, UObject* SpeechOwner, UObject* ConversationOwner);
 	
 public:
 	/**  */

@@ -37,7 +37,7 @@ struct FYapConversation
 
     FYapConversation();
 
-    FYapConversation(const FGameplayTag& InConversationName, UObject* ConversationOwner, const FYapConversationHandle& InHandle);
+    FYapConversation(const FName InConversationName, UObject* ConversationOwner, const FYapConversationHandle& InHandle);
 
     // ==========================================
     // STATE
@@ -49,7 +49,7 @@ protected:
     FYapConversationHandle Handle;
     
     UPROPERTY(Transient)
-    FGameplayTag ConversationName;
+    FName ConversationName;
 
     UPROPERTY(Transient)
     TSubclassOf<UFlowNode_YapDialogue> NodeType;
@@ -99,7 +99,11 @@ public:
     // API
     // ==========================================
 public:
-    const FGameplayTag& GetConversationName() const { return ConversationName; }
+    const FName GetConversationName() const { return ConversationName; }
+
+    void SetConversationHandle(const FYapConversationHandle& InConversationHandle) { Handle = InConversationHandle; }
+    
+    void SetConversationName(FName InConversationName) { ConversationName = InConversationName; }
 
     const TSubclassOf<UFlowNode_YapDialogue> GetNodeType() const { return NodeType; }
     
@@ -115,7 +119,7 @@ public:
     
     void AddRunningFragment(FYapSpeechHandle Handle);
 
-    void RemoveRunningFragment(FYapSpeechHandle Handle);
+    void RemoveRunningSpeech(FYapSpeechHandle Handle);
     
     // -----
     
@@ -136,9 +140,8 @@ public:
     // -----
     
     void ExecuteSkip();
-
-    bool IsNull() const;
     
+
 private:
     void FinishOpening(UObject* Instigator);
     

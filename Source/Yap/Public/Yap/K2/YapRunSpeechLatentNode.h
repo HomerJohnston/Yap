@@ -63,7 +63,6 @@ protected:
 	 * @param SpeechTime How long to play the speech. If left unset, Yap will calculate length from the Audio Asset or the Dialogue Text. // TODO 
 	 * @param TitleText Title text info to include in speech data.
 	 * @param DirectedAtID Who we are speaking to, if applicable. 
-	 * @param Conversation Conversation tag to include in speech data. 
 	 * @param bSkippable Can this speech be interrupted/cancelled/skipped?
 	 * @param NodeType What dialogue type is this? Used to read config settings.
 	 * @param SpeechOwner Who owns this speech object? If left unset, Yap will use 'this'.
@@ -80,7 +79,6 @@ protected:
 		float SpeechTime,
 		FText TitleText,
 		FName DirectedAtID,
-		FGameplayTag Conversation,
 		bool bSkippable,
 		TSubclassOf<UFlowNode_YapDialogue> NodeType,
 		FYapSpeechHandle& Handle);

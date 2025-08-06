@@ -23,7 +23,7 @@ void UFlowNode_YapConversation_Open::ExecuteInput(const FName& PinName)
 {
 	Super::ExecuteInput(PinName);
 	
-	FYapConversation& NewConversation = UYapSubsystem::Get(GetWorld())->OpenConversation(ConversationName, GetFlowAsset());
+	FYapConversation& NewConversation = UYapSubsystem::Get(GetWorld())->OpenConversation(ConversationName.GetTagName(), GetFlowAsset());
 
 	// The subsystem will give conversation listeners a chance to set an interlock. If so, the state will be "Opening" rather than "Open".
 	// When the interlock gets released, the delegate below will get called instead.
@@ -45,9 +45,17 @@ void UFlowNode_YapConversation_Open::FinishNode(UObject* Instigator, FYapConvers
 
 void UFlowNode_YapConversation_Open::FinishNode_Internal()
 {
-	UYapSubsystem::GetConversationByName(ConversationName, GetFlowAsset()).OnConversationOpened.RemoveAll(this);
-	
-	TriggerFirstOutput(true);
+	FYapConversation* Conversation = UYapSubsystem::GetConversationByOwner(this, GetFlowAsset());
+
+	if (Conversation)
+	{
+		Conversation->OnConversationOpened.RemoveAll(this);
+		TriggerFirstOutput(true);
+	}
+	else
+	{
+		UE_LOG(LogYap, Error, TEXT("Failed to open conversation!"));
+	}
 }
 
 #if WITH_EDITOR

@@ -30,7 +30,7 @@ struct FYapData_ConversationOpened
 
 	/** Conversation name. */
     UPROPERTY(BlueprintReadOnly, Category = "Default")
-	FGameplayTag Conversation;
+	FName Conversation;
 };
 
 // ------------------------------------------------------------------------------------------------
@@ -43,7 +43,7 @@ struct FYapData_SpeechBegins
 
 	/** Conversation name. This will be empty for speech occurring outside of a conversation. */
     UPROPERTY(BlueprintReadOnly, Category = "Default")
-	FGameplayTag Conversation;
+	FName Conversation;
 	
 	/** Who is being speaked towards. */
     UPROPERTY(BlueprintReadOnly, Category = "Default")

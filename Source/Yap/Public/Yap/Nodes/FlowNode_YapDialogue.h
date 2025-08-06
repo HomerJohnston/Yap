@@ -66,6 +66,9 @@ struct FYapFragmentRunData
 	FTimerHandle PaddingTimerHandle;
 };
 
+// TODO this class is utterly hilarious and needs to be busted out into separate smaller classes that handle each mode (Talk, Talk and Advance, Prompt ... and sequencing modes Run All, Select One, Select Random, etc)
+// I haven't figured out a great way to architect it yet since it's 2D. This class just kept growing. Spaghet!
+
 // ------------------------------------------------------------------------------------------------
 /**
  * Main dialogue node class. 
@@ -298,6 +301,14 @@ protected:
 
 	bool RunFragment(uint8 FragmentIndex);
 
+	void AddRunningFragment(const FYapSpeechHandle& Handle, uint8 FragmentIndex);
+
+	void RemoveRunningFragment(const FYapSpeechHandle& Handle, uint8 FragmentIndex);
+
+	void OnConversationSpeech(FName Name);
+
+	FName InConversation;
+	
 public:
 	/** This gets run by the subsystem when the actual speaking finishes */
 	UFUNCTION()
@@ -308,6 +319,7 @@ public:
 	void OnPaddingComplete(FYapSpeechHandle Handle);
 
 	/** Called when a fragment is done running - speech is done AND padding is done */
+	UFUNCTION()
 	void FinishFragment(const FYapSpeechHandle& Handle, uint8 FragmentIndex);
 
 	/** This should be called whenever speech finishes OR padding finishes */

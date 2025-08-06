@@ -7,12 +7,17 @@
 
 FYapConversationHandle::FYapConversationHandle()
 {
-    Guid = FGuid::NewGuid();
+//    UE_LOG(LogTemp, Display, TEXT("Default convo handle"));
 }
 
 FYapConversationHandle::FYapConversationHandle(const FGuid& InGuid)
     : Guid(InGuid)
 {
+}
+
+FYapConversationHandle::FYapConversationHandle(UObject* Owner, FName Name)
+{
+    Guid = FGuid(GetTypeHash(Owner->GetName()), GetTypeHash(Name), 0, 0);
 }
 
 bool FYapConversationHandle::operator==(const FYapConversationHandle& Other) const
@@ -22,32 +27,40 @@ bool FYapConversationHandle::operator==(const FYapConversationHandle& Other) con
 
 FYapConversationHandle UYapConversationHandleBFL::BindToConversationOpening(UObject* WorldContext, FYapConversationHandle Handle, FYapConversationEventDelegate Delegate)
 {
-    FYapConversation& Conversation = UYapSubsystem::GetConversationByHandle(WorldContext->GetWorld(), Handle);
-    Conversation.OnConversationOpening.Add(Delegate);
+    if (FYapConversation* Conversation = UYapSubsystem::GetConversationByHandle(WorldContext, Handle))
+    {
+        Conversation->OnConversationOpening.Add(Delegate);
+    }
 
     return Handle;
 }
 
 FYapConversationHandle UYapConversationHandleBFL::BindToConversationOpened(UObject* WorldContext, FYapConversationHandle Handle, FYapConversationEventDelegate Delegate)
 {
-    FYapConversation& Conversation = UYapSubsystem::GetConversationByHandle(WorldContext->GetWorld(), Handle);
-    Conversation.OnConversationOpened.Add(Delegate);
+    if (FYapConversation* Conversation = UYapSubsystem::GetConversationByHandle(WorldContext, Handle))
+    {
+        Conversation->OnConversationOpened.Add(Delegate);
+    }
 
     return Handle;
 }
 
 FYapConversationHandle UYapConversationHandleBFL::BindToConversationClosing(UObject* WorldContext, FYapConversationHandle Handle, FYapConversationEventDelegate Delegate)
 {
-    FYapConversation& Conversation = UYapSubsystem::GetConversationByHandle(WorldContext->GetWorld(), Handle);
-    Conversation.OnConversationClosing.Add(Delegate);
+    if (FYapConversation* Conversation = UYapSubsystem::GetConversationByHandle(WorldContext, Handle))
+    {
+        Conversation->OnConversationClosing.Add(Delegate);
+    }
 
     return Handle;
 }
 
 FYapConversationHandle UYapConversationHandleBFL::BindToConversationClosed(UObject* WorldContext, FYapConversationHandle Handle, FYapConversationEventDelegate Delegate)
 {
-    FYapConversation& Conversation = UYapSubsystem::GetConversationByHandle(WorldContext->GetWorld(), Handle);
-    Conversation.OnConversationClosed.Add(Delegate);
+    if (FYapConversation* Conversation = UYapSubsystem::GetConversationByHandle(WorldContext, Handle))
+    {
+        Conversation->OnConversationClosed.Add(Delegate);
+    }
     
     return Handle;
 }
@@ -61,33 +74,42 @@ FYapConversationHandle UYapConversationHandleBFL::AdvanceConversation(UObject* W
 
 FYapConversationHandle UYapConversationHandleBFL::ApplyOpeningInterlock(FYapConversationHandle Handle, UObject* LockObject)
 {
-    FYapConversation& Conversation = UYapSubsystem::GetConversationByHandle(LockObject->GetWorld(), Handle);
-    Conversation.ApplyOpeningInterlock(LockObject);
+    if (FYapConversation* Conversation = UYapSubsystem::GetConversationByHandle(LockObject, Handle))
+    {
+        Conversation->ApplyOpeningInterlock(LockObject);
+    }
 
     return Handle;
 }
 
 FYapConversationHandle UYapConversationHandleBFL::ReleaseOpeningInterlock(FYapConversationHandle Handle, UObject* LockObject)
 {
-    FYapConversation& Conversation = UYapSubsystem::GetConversationByHandle(LockObject->GetWorld(), Handle);
-    Conversation.ReleaseOpeningInterlock(LockObject);
+    if (FYapConversation* Conversation = UYapSubsystem::GetConversationByHandle(LockObject, Handle))
+    {
+        Conversation->ReleaseOpeningInterlock(LockObject);
+    }
 
     return Handle;
 }
 
 FYapConversationHandle UYapConversationHandleBFL::ApplyClosingInterlock(FYapConversationHandle Handle, UObject* LockObject)
 {
-    FYapConversation& Conversation = UYapSubsystem::GetConversationByHandle(LockObject->GetWorld(), Handle);
-    Conversation.ApplyClosingInterlock(LockObject);
+    if (FYapConversation* Conversation = UYapSubsystem::GetConversationByHandle(LockObject, Handle))
+    {
+        Conversation->ApplyClosingInterlock(LockObject);
+    }
 
     return Handle;
 }
 
 FYapConversationHandle UYapConversationHandleBFL::ReleaseClosingInterlock(FYapConversationHandle Handle, UObject* LockObject)
 {
-    FYapConversation& Conversation = UYapSubsystem::GetConversationByHandle(LockObject->GetWorld(), Handle);
-    Conversation.ReleaseClosingInterlock(LockObject);
+    if (FYapConversation* Conversation = UYapSubsystem::GetConversationByHandle(LockObject, Handle))
+    {
+        Conversation->ReleaseClosingInterlock(LockObject);        
+    }
 
     return Handle;
 }
 
+// TODO error logging?

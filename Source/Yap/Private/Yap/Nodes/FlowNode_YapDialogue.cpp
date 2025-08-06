@@ -183,8 +183,6 @@ void UFlowNode_YapDialogue::FinishNode(FName OutputPinToTrigger)
 {
 	UE_LOG(LogYap, VeryVerbose, TEXT("%s: FinishNode - Unbinding from OnAdvanceConversation"), *GetName());
 	
-	UYapSubsystem::Get(this)->OnAdvanceConversationDelegate.RemoveDynamic(this, &ThisClass::OnAdvanceConversation);
-		
 	bNodeActive = false;
 	FocusedFragmentIndex.Reset();
 	FocusedSpeechHandle.Invalidate();
@@ -225,10 +223,12 @@ TOptional<float> UFlowNode_YapDialogue::GetSpeechTime(uint8 FragmentIndex, EYapM
 
 float UFlowNode_YapDialogue::GetPadding(uint8 FragmentIndex) const
 {
+	/*
 	if (GetNodeType() == EYapDialogueNodeType::TalkAndAdvance)
 	{
 		return 0.0f;
 	}
+	*/
 	
 	const FYapFragment& Fragment = GetFragment(FragmentIndex);
 
@@ -329,14 +329,14 @@ void UFlowNode_YapDialogue::ExecuteInput(const FName& PinName)
 	if (CanEnterNode())
 	{
 		bNodeActive = true;
+
 		FocusedFragmentIndex.Reset();
 		FocusedSpeechHandle.Invalidate();
-
+		
 		bool bStartedSuccessfully = IsPlayerPrompt() ? TryBroadcastPrompts() : TryStartFragments();
 
 		if (bStartedSuccessfully)
-		{
-			UYapSubsystem::Get(this)->OnAdvanceConversationDelegate.AddDynamic(this, &ThisClass::OnAdvanceConversation);
+		{			
 			++NodeActivationCount;
 		}
 		else
@@ -496,6 +496,11 @@ bool UFlowNode_YapDialogue::GetFragmentAutoAdvance(uint8 FragmentIndex, bool bIn
 {
 	check(Fragments.IsValidIndex(FragmentIndex));
 
+	if (GetNodeType() == EYapDialogueNodeType::TalkAndAdvance)
+	{
+		return true;
+	}
+	
 	const FYapFragment& Fragment = Fragments[FragmentIndex]; 
 	
 	// Use fragment override
@@ -542,7 +547,7 @@ bool UFlowNode_YapDialogue::TryBroadcastPrompts()
 	
 	UYapSubsystem* Subsystem = GetWorld()->GetSubsystem<UYapSubsystem>();
 
-	const FYapConversation& Conversation = Subsystem->GetConversationByOwner(this, GetFlowAsset()); 
+	const FYapConversation* Conversation = Subsystem->GetConversationByOwner(this, GetFlowAsset()); 
 
 	FYapPromptHandle LastHandle;
 	
@@ -564,7 +569,7 @@ bool UFlowNode_YapDialogue::TryBroadcastPrompts()
  		const UYapNodeConfig& ActiveConfig = GetNodeConfig();
  		
  		FYapData_PlayerPromptCreated Data;
- 		Data.Conversation = Conversation.GetHandle();
+ 		Data.Conversation = Conversation->GetHandle();
 
  		if (ActiveConfig.GetUsesDirectedAt())
  		{
@@ -608,7 +613,7 @@ bool UFlowNode_YapDialogue::TryBroadcastPrompts()
 	else
 	{
 		FYapData_PlayerPromptsReady Data;
-		Data.Conversation = Conversation.GetHandle();
+		Data.Conversation = Conversation->GetHandle();
 		Subsystem->OnFinishedBroadcastingPrompts(Data, this->GetClass());
 	}
 	
@@ -618,7 +623,9 @@ bool UFlowNode_YapDialogue::TryBroadcastPrompts()
 // ------------------------------------------------------------------------------------------------
 
 void UFlowNode_YapDialogue::RunPrompt(uint8 FragmentIndex)
-{	
+{
+	UYapSubsystem::Get(GetWorld())->OnPromptChosen.RemoveDynamic(this, &ThisClass::OnPromptChosen);
+
 	if (!RunFragment(FragmentIndex))
 	{
 		UE_LOG(LogYap, Error, TEXT("%s [%i]: RunPrompt failed! This should never happen. Execution of this flow will stop."), *GetName(), FragmentIndex);
@@ -734,17 +741,32 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 	UYapSubsystem* Subsystem = GetWorld()->GetSubsystem<UYapSubsystem>();
 	
 	FYapData_SpeechBegins Data;
-	Data.Conversation = Subsystem->GetConversationByOwner(GetWorld(), GetFlowAsset()).GetConversationName();
 
-	bool bInConversation = Data.Conversation.IsValid();
+	if (FYapConversation* Conversation = Subsystem->GetConversationByOwner(GetWorld(), GetFlowAsset()))
+	{
+		Data.Conversation = Conversation->GetConversationName();
+		InConversation = Data.Conversation;
+	}
+	else
+	{
+		InConversation = NAME_None;
+	}
+	
+	bool bInConversation = InConversation != NAME_None;
 
 	float PaddingTime = 0;
 
 	if (Fragment.GetUsesPadding(GetWorld(), ActiveConfig))
 	{
 		PaddingTime = Fragment.GetProgressionTime(GetWorld(), ActiveConfig);
+		
+		if (GetNodeType() == EYapDialogueNodeType::TalkAndAdvance)
+		{
+			EffectiveTime = PaddingTime;
+			PaddingTime = 0;
+		}
 	}
-	
+
 	if (!GetFragmentAutoAdvance(FragmentIndex, bInConversation))
 	{
 		EffectiveTime = PaddingTime;
@@ -796,10 +818,10 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 #endif
 	
 	// Make a handle for the pending speech and bind to completion events of it
-	FocusedSpeechHandle = Subsystem->GetNewSpeechHandle(Fragment.GetGuid(), Data.SpeakerID, Data.Speaker.GetObject());
+	FocusedSpeechHandle = Subsystem->GetNewSpeechHandle(Fragment.GetGuid(), Data.SpeakerID, Data.Speaker.GetObject(), bInConversation ? GetFlowAsset() : nullptr);
 	FocusedFragmentIndex = FragmentIndex;
 
-	RunningFragments.Add(FocusedSpeechHandle, FragmentIndex);
+	AddRunningFragment(FocusedSpeechHandle, FragmentIndex);
 	SpeakingFragments.Add(FocusedSpeechHandle);
 
 	Fragment.SetStartTime(GetWorld()->GetTimeSeconds());
@@ -808,6 +830,11 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 	
 	Subsystem->RunSpeech(Data, GetClass(), FocusedSpeechHandle);
 
+	if (GetNodeType() == EYapDialogueNodeType::TalkAndAdvance) // TODO || something else?
+	{
+		UYapSubsystem::Get(this)->MarkConversationSpeechAsFragile(FocusedSpeechHandle);
+	}
+	
 	BindToSubsystemSpeechCompleteEvent(FocusedSpeechHandle);
 	
 	if (EffectiveTime <= 0.0f || GetNodeType() == EYapDialogueNodeType::TalkAndAdvance)
@@ -824,6 +851,34 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 	TriggerSpeechStartPin(FragmentIndex);
 	
 	return true;
+}
+
+void UFlowNode_YapDialogue::AddRunningFragment(const FYapSpeechHandle& Handle, uint8 FragmentIndex)
+{
+	if (RunningFragments.Num() == 0)
+	{
+		if (GetNodeType() != EYapDialogueNodeType::TalkAndAdvance)
+		{
+			UYapSubsystem::Get(this)->OnAdvanceConversationDelegate.AddDynamic(this, &ThisClass::OnAdvanceConversation);
+		}
+	}
+
+	RunningFragments.Add(Handle, FragmentIndex);
+}
+
+void UFlowNode_YapDialogue::RemoveRunningFragment(const FYapSpeechHandle& Handle, uint8 FragmentIndex)
+{
+	RunningFragments.Remove(Handle);
+
+	if (RunningFragments.Num() == 0)
+	{
+		if (GetNodeType() != EYapDialogueNodeType::TalkAndAdvance)
+		{
+			//UYapSubsystem::Get(this)->OnAdvanceConversationDelegate.RemoveDynamic(this, &ThisClass::OnAdvanceConversation);
+		}
+
+		InConversation = NAME_None;
+	}
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -874,7 +929,11 @@ void UFlowNode_YapDialogue::OnSpeechComplete(UObject* Instigator, FYapSpeechHand
 	if (!FragmentsInPadding.Contains(Handle))
 	{
 		FinishFragment(Handle, *FragmentIndex);
-		TryAdvanceFromFragment(Handle, *FragmentIndex);
+
+		if (GetNodeType() != EYapDialogueNodeType::TalkAndAdvance)
+		{
+			TryAdvanceFromFragment(Handle, *FragmentIndex);
+		}
 	}
 }
 
@@ -882,6 +941,11 @@ void UFlowNode_YapDialogue::OnSpeechComplete(UObject* Instigator, FYapSpeechHand
 
 void UFlowNode_YapDialogue::OnPaddingComplete(FYapSpeechHandle Handle)
 {
+	if (!Handle.IsValid())
+	{
+		return;
+	}
+	
 	uint8* FragmentIndex = RunningFragments.Find(Handle);
 	
 	if (!FragmentIndex)
@@ -917,7 +981,7 @@ void UFlowNode_YapDialogue::FinishFragment(const FYapSpeechHandle& Handle, uint8
 	
 	Fragment.SetEndTime(GetWorld()->GetTimeSeconds());
 
-	RunningFragments.Remove(Handle);
+	RemoveRunningFragment(Handle, FragmentIndex);
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -976,6 +1040,8 @@ void UFlowNode_YapDialogue::AdvanceFromFragment(const FYapSpeechHandle& Handle, 
 	}
 	
 	Fragment.ClearAwaitingManualAdvance();
+	
+	UYapSubsystem::Get(this)->OnAdvanceConversationDelegate.RemoveDynamic(this, &ThisClass::OnAdvanceConversation);
 
 	if (IsPlayerPrompt())
 	{
@@ -1184,8 +1250,6 @@ FYapFragment& UFlowNode_YapDialogue::GetFragmentMutableByIndex(uint8 Index)
 
 void UFlowNode_YapDialogue::OnPromptChosen(UObject* Instigator, FYapPromptHandle Handle)
 {
-	UYapSubsystem::Get(GetWorld())->OnPromptChosen.RemoveDynamic(this, &ThisClass::OnPromptChosen);
-
 	uint8* FragmentIndex = PromptIndices.Find(Handle);
 
 	if (FragmentIndex)

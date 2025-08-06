@@ -25,14 +25,15 @@
 
 #define YAP_BROADCAST_EVT_TARGS(NAME, CPPFUNC, K2FUNC) U##NAME, I##NAME, &I##NAME::CPPFUNC, &I##NAME::K2FUNC
 
-UE_DEFINE_GAMEPLAY_TAG_STATIC(Yap_UnnamedConvo, "Yap.Conversation.__UnnamedConvo__");
+FName UYapSubsystem::Yap_UnnamedConvo("Yap.Conversation.__UnnamedConvo__");
 
 bool UYapSubsystem::bGetGameMaturitySettingWarningIssued = false;
-FYapConversation UYapSubsystem::NullConversation;
+
+//FYapConversation UYapSubsystem::NullConversation;
 
 // ------------------------------------------------------------------------------------------------
 
-FYap__ActiveSpeechContainer* FYap__ActiveSpeechMap::AddSpeech(FYapSpeechHandle Handle, FName SpeakerID, UObject* SpeechOwner, FYapConversationHandle ConversationHandle)
+FYap__ActiveSpeechContainer* FYap__ActiveSpeechMap::AddSpeech(FYapSpeechHandle Handle, FName SpeakerID, UObject* SpeechOwner, UObject* ConversationOwner)
 {
 	if (AllSpeech.Contains(Handle))
 	{
@@ -56,14 +57,81 @@ FYap__ActiveSpeechContainer* FYap__ActiveSpeechMap::AddSpeech(FYapSpeechHandle H
 		NewSpeechContainer.SpeechOwner = SpeechOwner;
 	}
 
-	if (ConversationHandle.IsValid())
+	if (ConversationOwner)
 	{
-		FYapSpeechHandlesArray& HandlesContainer = ContainersByConversation.FindOrAdd(ConversationHandle);
-		HandlesContainer.Handles.Add(Handle);
-		NewSpeechContainer.ConversationHandle = ConversationHandle;
+		if (FYapConversationHandle* ConversationHandle = ConversationsByOwner.Find(ConversationOwner))
+		{
+			NewSpeechContainer.ConversationHandle = *ConversationHandle;
+
+			FYapConversation* Conversation = Conversations.Find(*ConversationHandle);
+
+			check(Conversation);
+			
+			Conversation->AddRunningFragment(Handle);
+		}
+		else
+		{
+			UE_LOG(LogYap, Error, TEXT("AddSpeech was called with a conversation name but no conversation was found, this should never happen!"));
+		}
 	}
 
 	return &NewSpeechContainer;
+}
+
+FYapConversation& FYap__ActiveSpeechMap::AddConversation(FName ConversationName, UObject* ConversationOwner, FYapConversationHandle& ConversationHandle)
+{
+	ConversationHandle = FYapConversationHandle(ConversationOwner, ConversationName);
+
+	if (FYapConversation* ExistingConversation = Conversations.Find(ConversationHandle))
+	{
+		return *ExistingConversation;
+	}
+
+	ConversationsByOwner.Add(ConversationOwner, ConversationHandle);
+	
+	FYapConversation& Conversation = Conversations.Add(ConversationHandle);
+	Conversation.SetConversationHandle(ConversationHandle);
+	Conversation.SetConversationName(UYapSubsystem::Yap_UnnamedConvo);
+
+	return Conversation;
+}
+
+void FYap__ActiveSpeechMap::RemoveConversation(FYapConversationHandle ConversationHandle)
+{
+	int32 Removed = Conversations.Remove(ConversationHandle);
+	
+	if (Removed == 0)
+	{
+		UE_LOG(LogYap, Warning, TEXT("Tried to remove conversation <%s> but converation was not found!"), *ConversationHandle.ToString());
+	}
+
+	for (auto It = ConversationsByOwner.CreateIterator(); It; ++It)
+	{
+		if (It.Value() == ConversationHandle)
+		{
+			It.RemoveCurrent();
+		}
+	}
+}
+
+FYapConversation* FYap__ActiveSpeechMap::FindConversationByOwner(const UObject* Owner)
+{
+	if (FYapConversationHandle* Handle = ConversationsByOwner.Find(Owner))
+	{
+		return Conversations.Find(*Handle);
+	}
+
+	return nullptr;
+}
+
+FYapConversationHandle* FYap__ActiveSpeechMap::FindConversationHandleByOwner(const UObject* Owner)
+{
+	return ConversationsByOwner.Find(Owner);
+}
+
+FYapConversation* FYap__ActiveSpeechMap::FindConversation(const FYapConversationHandle& ConversationHandle)
+{
+	return Conversations.Find(ConversationHandle);
 }
 
 FName FYap__ActiveSpeechMap::FindSpeakerID(const FYapSpeechHandle& Handle)
@@ -111,7 +179,7 @@ FYapSpeechEvent FYap__ActiveSpeechMap::FindSpeechFinishedEvent(const FYapSpeechH
 	}
 }
 
-FYapConversationHandle FYap__ActiveSpeechMap::FindConversation(const FYapSpeechHandle& Handle)
+FYapConversationHandle FYap__ActiveSpeechMap::FindSpeechConversationHandle(const FYapSpeechHandle& Handle)
 {
 	FYap__ActiveSpeechContainer* Container = AllSpeech.Find(Handle);
 
@@ -125,14 +193,37 @@ FYapConversationHandle FYap__ActiveSpeechMap::FindConversation(const FYapSpeechH
 	return {};
 }
 
+bool FYap__ActiveSpeechMap::IsSpeechRunning(const FYapSpeechHandle& Handle)
+{
+	return AllSpeech.Contains(Handle);
+}
+
 void FYap__ActiveSpeechMap::RemoveSpeech(const FYapSpeechHandle& Handle)
 {
 	FYap__ActiveSpeechContainer Container;
 
 	if (AllSpeech.RemoveAndCopyValue(Handle, Container))
-	{
-		ContainersByOwner.Remove(Container.SpeechOwner);
-		ContainersBySpeakerID.Remove(Container.SpeakerID);
+	{		
+		ContainersByOwner[Container.SpeechOwner].Handles.Remove(Handle);
+		ContainersBySpeakerID[Container.SpeakerID].Handles.Remove(Handle);
+		
+		if (ContainersByOwner[Container.SpeechOwner].Handles.Num() == 0)
+		{
+			ContainersByOwner.Remove(Container.SpeechOwner);
+		}
+
+		if (ContainersBySpeakerID[Container.SpeakerID].Handles.Num() == 0)
+		{
+			ContainersBySpeakerID.Remove(Container.SpeakerID);
+		}
+		
+		if (Container.ConversationHandle.IsValid())
+		{
+			if (FYapConversation* Conversation = Conversations.Find(Container.ConversationHandle))
+			{
+				Conversation->RemoveRunningSpeech(Handle);
+			}
+		}
 	}
 }
 
@@ -227,7 +318,7 @@ UYapSubsystem::UYapSubsystem()
 
 void UYapSubsystem::BindToSpeechFinish(UObject* WorldContextObject, FYapSpeechHandle Handle, FYapSpeechEventDelegate Delegate)
 {
-	if (UYapSubsystem* Subsystem = UYapSubsystem::Get(WorldContextObject))
+	if (UYapSubsystem* Subsystem = Get(WorldContextObject))
 	{
 		Subsystem->ActiveSpeechMap.BindToSpeechFinish(Handle, Delegate);
 	}
@@ -239,7 +330,7 @@ void UYapSubsystem::BindToSpeechFinish(UObject* WorldContextObject, FYapSpeechHa
 
 void UYapSubsystem::UnbindToSpeechFinish(UObject* WorldContextObject, FYapSpeechHandle Handle, FYapSpeechEventDelegate Delegate)
 {
-	if (UYapSubsystem* Subsystem = UYapSubsystem::Get(WorldContextObject))
+	if (UYapSubsystem* Subsystem = Get(WorldContextObject))
 	{
 		Subsystem->ActiveSpeechMap.UnbindToSpeechFinish(Handle, Delegate);
 	}
@@ -251,15 +342,17 @@ void UYapSubsystem::UnbindToSpeechFinish(UObject* WorldContextObject, FYapSpeech
 
 UYapCharacterManager& UYapSubsystem::GetCharacterManager(UObject* WorldContextObject)
 {
-	UYapSubsystem& Subsystem = *Get(WorldContextObject);
+	UYapSubsystem* Subsystem = Get(WorldContextObject);
 
-	if (!IsValid(Subsystem.CharacterManager))
+	check(Subsystem);
+	
+	if (!IsValid(Subsystem->CharacterManager))
 	{
-		Subsystem.CharacterManager = NewObject<UYapCharacterManager>(&Subsystem);
-		Subsystem.CharacterManager->Initialize();
+		Subsystem->CharacterManager = NewObject<UYapCharacterManager>(Subsystem);
+		Subsystem->CharacterManager->Initialize();
 	}
 
-	return *Subsystem.CharacterManager;
+	return *Subsystem->CharacterManager;
 }
 
 void UYapSubsystem::RegisterConversationHandler(UObject* NewHandler, FYapDialogueNodeClassType NodeType)
@@ -373,18 +466,26 @@ bool UYapSubsystem::IsNodeInConversation(const UFlowNode_YapDialogue* DialogueNo
 {
 	UObject* Owner = DialogueNode->GetFlowAsset();
 
-	UYapSubsystem* Subsystem = UYapSubsystem::Get(DialogueNode);
+	UYapSubsystem* Subsystem = Get(DialogueNode);
 
 	if (Subsystem)
 	{
-		for (auto&[key, value] : Subsystem->Conversations)
-		{
-			if (Owner == value.GetOwner())
-			{
-				return true;
-			}
-		}
+		return !!Subsystem->ActiveSpeechMap.FindConversationByOwner(Owner);
 	}
+
+	return false;
+}
+
+bool UYapSubsystem::IsSpeechInConversation(const UObject* WorldContext, const FYapSpeechHandle& Handle)
+{
+	UYapSubsystem* Subsystem = Get(WorldContext);
+
+	if (Subsystem)
+	{
+		return Subsystem->ActiveSpeechMap.FindSpeechConversationHandle(Handle).IsValid();
+	}
+
+	UE_LOG(LogYap, Error, TEXT("Could not get Yap Subsystem!"));
 
 	return false;
 }
@@ -484,25 +585,17 @@ FYapFragment* UYapSubsystem::FindTaggedFragment(const FGameplayTag& FragmentTag)
 
 // ------------------------------------------------------------------------------------------------
 
-FYapConversation& UYapSubsystem::OpenConversation(FGameplayTag ConversationName, UObject* ConversationOwner)
+FYapConversation& UYapSubsystem::OpenConversation(FName ConversationName, UObject* ConversationOwner)
 {
 	if (!ConversationName.IsValid())
 	{
 		ConversationName = Yap_UnnamedConvo;
 	}
-	
-	// Check if this conversation already exists, if so just return it. Yap assumes there will be a few conversations open at a time (at most!), so iteration is cheap.
-	for (auto& [Handle, Conversation] : Conversations)
-	{
-		if (Conversation.GetConversationName() == ConversationName && Conversation.GetOwner() == ConversationOwner)
-		{
-			UE_LOG(LogYap, Warning, TEXT("Tried to start a new conversation {%s} owned by {%s} but conversation was already open or in queue!"), *ConversationName.ToString(), *ConversationOwner->GetName());
-			return Conversation;
-		}
-	}
 
-	FYapConversationHandle NewHandle = ConversationQueue.EmplaceAt_GetRef(0);
-	FYapConversation& NewConversation = Conversations.Emplace(NewHandle, {ConversationName, ConversationOwner, NewHandle});
+	FYapConversationHandle NewHandle;
+	FYapConversation& NewConversation = ActiveSpeechMap.AddConversation(ConversationName, ConversationOwner, NewHandle);
+
+	ConversationQueue.EmplaceAt(0, NewHandle);
 	
 	if (ConversationQueue.Num() == 1)
 	{
@@ -516,7 +609,7 @@ FYapConversation& UYapSubsystem::OpenConversation(FGameplayTag ConversationName,
 
 EYapConversationState UYapSubsystem::CloseConversation(FYapConversationHandle& Handle)
 {
-	FYapConversation* ConversationPtr = Conversations.Find(Handle);
+	FYapConversation* ConversationPtr = ActiveSpeechMap.FindConversation(Handle);
 
 	if (ConversationPtr)
 	{
@@ -532,31 +625,27 @@ EYapConversationState UYapSubsystem::CloseConversation(FYapConversationHandle& H
 
 // ------------------------------------------------------------------------------------------------
 
+/*
 EYapConversationState UYapSubsystem::CloseConversation(const FGameplayTag& ConversationName)
 {
-	for (auto& [Handle, Conversation] : Conversations)
+	if (FYapConversationHandle* ConversationHandle = ActiveSpeechMap.ConversationHandles.Find(ConversationName.GetTagName()))
 	{
-		if (Conversation.GetConversationName() == ConversationName)
-		{
-			return CloseConversation(Handle);
-		}
+		return CloseConversation(*ConversationHandle);
 	}
 
 	UE_LOG(LogYap, Warning, TEXT("Tried to close conversation named {%s} but it did not exist!"), *ConversationName.ToString());
 
 	return EYapConversationState::Undefined;
 }
+*/
 
 // ------------------------------------------------------------------------------------------------
 
 EYapConversationState UYapSubsystem::CloseConversation(const UObject* Owner)
 {
-	for (auto& [Handle, Conversation] : Conversations)
+	if (FYapConversationHandle* ConversationHandle = ActiveSpeechMap.FindConversationHandleByOwner(Owner))
 	{
-		if (Conversation.GetOwner() == Owner)
-		{
-			return CloseConversation(Handle);
-		}
+		return CloseConversation(*ConversationHandle);
 	}
 
 	UE_LOG(LogYap, Warning, TEXT("Tried to close conversation for owner {%s} but it did not exist!"), *Owner->GetName());
@@ -574,9 +663,7 @@ void UYapSubsystem::StartOpeningConversation(const FYapConversationHandle& Handl
 		return;
 	}
 	
-	FYapConversation* ConversationPtr = Conversations.Find(Handle);
-
-	if (ConversationPtr)
+	if (FYapConversation* ConversationPtr = ActiveSpeechMap.FindConversation(Handle))
 	{
 		(void) StartOpeningConversation(*ConversationPtr);
 	}
@@ -611,9 +698,7 @@ bool UYapSubsystem::StartOpeningConversation(FYapConversation& Conversation)
 
 EYapConversationState UYapSubsystem::StartClosingConversation(FYapConversationHandle& Handle)
 {
-	FYapConversation* ConversationPtr = Conversations.Find(Handle);
-
-	if (ConversationPtr)
+	if (FYapConversation* ConversationPtr = ActiveSpeechMap.FindConversation(Handle))
 	{
 		ConversationPtr->StartClosing(this);
 
@@ -621,8 +706,6 @@ EYapConversationState UYapSubsystem::StartClosingConversation(FYapConversationHa
 		{
 			ConversationQueue.Remove(Handle);
 			
-			Conversations.Remove(Handle);
-
 			Handle.Invalidate();
 			
 			StartNextQueuedConversation();
@@ -675,7 +758,7 @@ void UYapSubsystem::OnActiveConversationClosed(UObject* Instigator, FYapConversa
 {	
 	ConversationQueue.Remove(Handle);
 	
-	Conversations.Remove(Handle);
+	ActiveSpeechMap.RemoveConversation(Handle);
 	
 	StartNextQueuedConversation();
 }
@@ -736,16 +819,27 @@ void UYapSubsystem::RunSpeech(const FYapData_SpeechBegins& SpeechData, FYapDialo
 			OnSpeechComplete(ActiveSpeechHandle[i], true);
 		}
 	}
-	
+
 	// TODO should SpeechData contain the conversation handle instead of the name?
-	if (SpeechData.Conversation.IsValid())
+	if (SpeechData.Conversation != NAME_None)
 	{
-		for (auto& [ConversationHandle, Conversation] : Conversations)
+		FYapConversationHandle ConversationHandle = ActiveSpeechMap.FindSpeechConversationHandle(SpeechHandle);
+		
+		if (ConversationHandle.IsValid())
 		{
-			if (Conversation.GetConversationName() == SpeechData.Conversation)
+			if (FYapSpeechHandlesArray* FragileHandles = FragileSpeechHandles.Find(ConversationHandle))
 			{
-				SpeechConversationMapping.Add(SpeechHandle, ConversationHandle);
-				Conversation.AddRunningFragment(SpeechHandle);
+				TArray<FYapSpeechHandle> FragileHandlesCopy = FragileHandles->Handles;
+
+				for (FYapSpeechHandle& Handle : FragileHandlesCopy)
+				{
+					if (ActiveSpeechMap.IsSpeechRunning(Handle))
+					{
+						CancelSpeech(this, Handle);
+					}
+				}
+
+				FragileSpeechHandles.Remove(ConversationHandle);
 			}
 		}
 		
@@ -774,52 +868,36 @@ void UYapSubsystem::RunSpeech(const FYapData_SpeechBegins& SpeechData, FYapDialo
 	}
 }
 
-// ------------------------------------------------------------------------------------------------
-
-FYapConversation& UYapSubsystem::GetConversationByOwner(UObject* WorldContext, UObject* Owner)
+void UYapSubsystem::MarkConversationSpeechAsFragile(const FYapSpeechHandle& Handle)
 {
-	for (auto& [Handle, Conversation] : Get(WorldContext->GetWorld())->Conversations)
-	{
-		if (Conversation.GetOwner() == Owner)
-		{
-			return Conversation;
-		}
-	}
+	FYapConversationHandle ConversationHandle = ActiveSpeechMap.FindSpeechConversationHandle(Handle);
 
-	return NullConversation;
+	FYapSpeechHandlesArray& FragileHandles = FragileSpeechHandles.FindOrAdd(ConversationHandle);
+
+	FragileHandles.Handles.Add(Handle);
 }
 
 // ------------------------------------------------------------------------------------------------
 
-FYapConversation& UYapSubsystem::GetConversationByHandle(UObject* WorldContext, const FYapConversationHandle& Handle)
+FYapConversation* UYapSubsystem::GetConversationByOwner(UObject* WorldContext, UObject* Owner)
 {
-	FYapConversation* ConversationPtr = Get(WorldContext->GetWorld())->Conversations.Find(Handle);
-
-	if (ConversationPtr)
-	{
-		return *ConversationPtr;
-	}
-
-	return NullConversation;
+	UYapSubsystem* Subsystem = Get(WorldContext);
+	
+	return Subsystem->ActiveSpeechMap.FindConversationByOwner(Owner);
 }
 
 // ------------------------------------------------------------------------------------------------
 
-FYapConversation& UYapSubsystem::GetConversationByName(const FGameplayTag& ConversationName, UObject* Owner)
+FYapConversation* UYapSubsystem::GetConversationByHandle(UObject* WorldContext, const FYapConversationHandle& Handle)
 {
-	for (auto& [Handle, Conversation] : Get(Owner->GetWorld())->Conversations)
-	{
-		if (Conversation.GetOwner() == Owner && Conversation.GetConversationName() == ConversationName)
-		{
-			return Conversation;
-		}
-	}
+	UYapSubsystem* Subsystem = Get(WorldContext);
 
-	return NullConversation;	
+	return Subsystem->ActiveSpeechMap.FindConversation(Handle);
 }
 
 // ------------------------------------------------------------------------------------------------
 
+/*
 FGameplayTag UYapSubsystem::GetActiveConversationName(UWorld* World)
 {
 	UYapSubsystem* Subsystem = Get(World);
@@ -844,6 +922,7 @@ FGameplayTag UYapSubsystem::GetActiveConversationName(UWorld* World)
 		return FGameplayTag::EmptyTag;
 	}
 }
+*/
 
 // ------------------------------------------------------------------------------------------------
 
@@ -860,8 +939,6 @@ void UYapSubsystem::RunPrompt(UObject* WorldContext, const FYapPromptHandle& Han
 		return;
 	}
 
-	
-
 	UYapSubsystem* Subsystem = Get(WorldContext);
 	
 	// Broadcast to game listeners
@@ -871,11 +948,11 @@ void UYapSubsystem::RunPrompt(UObject* WorldContext, const FYapPromptHandle& Han
 
 	if (ConversationHandle)
 	{
-		const FYapConversation& Conversation = GetConversationByHandle(WorldContext, *ConversationHandle);
+		const FYapConversation* Conversation = GetConversationByHandle(WorldContext, *ConversationHandle);
 
-		if (!Conversation.IsNull())
+		if (Conversation)
 		{
-			auto* HandlerArray = Subsystem->FindConversationHandlerArray(Conversation.GetNodeType());
+			auto* HandlerArray = Subsystem->FindConversationHandlerArray(Conversation->GetNodeType());
 		
 			BroadcastEventHandlerFunc<YAP_BROADCAST_EVT_TARGS(YapConversationHandler, OnConversationPlayerPromptChosen, Execute_K2_ConversationPlayerPromptChosen)>(HandlerArray, Data, Handle);
 		}
@@ -941,7 +1018,7 @@ bool UYapSubsystem::CancelSpeech(UObject* WorldContext, FYapSpeechHandle& Handle
 
 bool UYapSubsystem::CancelSpeech(UObject* SpeechOwner)
 {
-	UYapSubsystem* Subsystem = UYapSubsystem::Get(SpeechOwner);
+	UYapSubsystem* Subsystem = Get(SpeechOwner);
 
 	if (Subsystem)
 	{
@@ -973,7 +1050,7 @@ void UYapSubsystem::AdvanceConversation(UObject* Instigator, const FYapConversat
 	
 	UYapSubsystem* Subsystem = Get(Instigator);
 
-	FYapConversation* ConversationPtr = Subsystem->Conversations.Find(ConversationHandle);
+	FYapConversation* ConversationPtr = Subsystem->ActiveSpeechMap.FindConversation(ConversationHandle);
 
 	if (!ConversationPtr)
 	{
@@ -1086,16 +1163,16 @@ TArray<TObjectPtr<UObject>>* UYapSubsystem::FindFreeSpeechHandlerArray(FYapDialo
 
 // ------------------------------------------------------------------------------------------------
 
-FYapSpeechHandle UYapSubsystem::GetNewSpeechHandle(FName SpeakerID, UObject* SpeechOwner)
+FYapSpeechHandle UYapSubsystem::GetNewSpeechHandle(FName SpeakerID, UObject* SpeechOwner, UObject* ConversationOwner)
 {
-	return GetNewSpeechHandle(FGuid::NewGuid(), SpeakerID, SpeechOwner);
+	return GetNewSpeechHandle(FGuid::NewGuid(), SpeakerID, SpeechOwner, ConversationOwner);
 }
 
-FYapSpeechHandle UYapSubsystem::GetNewSpeechHandle(FGuid Guid, FName SpeakerID, UObject* SpeechOwner)
+FYapSpeechHandle UYapSubsystem::GetNewSpeechHandle(FGuid Guid, FName SpeakerID, UObject* SpeechOwner, UObject* ConversationOwner)
 {
 	FYapSpeechHandle NewHandle(GetWorld(), Guid);
 
-	ActiveSpeechMap.AddSpeech(NewHandle, SpeakerID, SpeechOwner, FYapConversationHandle());
+	ActiveSpeechMap.AddSpeech(NewHandle, SpeakerID, SpeechOwner, ConversationOwner);
 
 	return NewHandle;
 }
@@ -1137,21 +1214,7 @@ void UYapSubsystem::OnSpeechComplete(FYapSpeechHandle Handle, bool bBroadcast, E
 	{
 		SpeechResult = EYapSpeechCompleteResult::Normal;
 	}
-	
-	FYapConversationHandle* ConversationHandle = SpeechConversationMapping.Find(Handle);
 
-	if (ConversationHandle && ConversationHandle->IsValid())
-	{
-		FYapConversation* ConversationPtr = Conversations.Find(*ConversationHandle);
-
-		if (ConversationPtr)
-		{
-			ConversationPtr->RemoveRunningFragment(Handle);
-		}
-		
-		SpeechConversationMapping.Remove(Handle);
-	}
-	
 	if (bBroadcast)
 	{
 		UE_LOG(LogYap, VeryVerbose, TEXT("%s: OnSpeechComplete {%s}"), *GetName(), *Handle.ToString());

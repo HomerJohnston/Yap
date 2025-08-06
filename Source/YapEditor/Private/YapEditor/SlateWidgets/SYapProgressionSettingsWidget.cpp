@@ -107,7 +107,14 @@ FReply SYapProgressionSettingsWidget::OnClicked_AutoAdvanceToggle() const
 		}
 		else
 		{
-			Current = (uint8)(DialogueNode->GetNodeConfig().DialoguePlayback.AutoAdvanceFlags);
+			if (DialogueNode.IsValid())
+			{
+				Current = (uint8)(DialogueNode->GetNodeConfig().DialoguePlayback.AutoAdvanceFlags);
+			}
+			else
+			{
+				Current = 255;
+			}
 		}
 
 		uint8 Index = AutoAdvanceToggles.Find(Current);
@@ -380,13 +387,20 @@ uint8 SYapProgressionSettingsWidget::GetAutoAdvanceValue() const
 	}
 	else
 	{
-		if (FragmentIndex != INDEX_NONE && DialogueNode->GetAutoAdvanceFlags().IsSet())
+		if (DialogueNode.IsValid())
 		{
-			Current = (uint8)(DialogueNode->GetAutoAdvanceFlags().GetValue());
+			if (FragmentIndex != INDEX_NONE && DialogueNode->GetAutoAdvanceFlags().IsSet())
+			{
+				Current = (uint8)(DialogueNode->GetAutoAdvanceFlags().GetValue());
+			}
+			else
+			{
+				Current = (uint8)(DialogueNode->GetNodeConfig().DialoguePlayback.AutoAdvanceFlags);
+			}	
 		}
 		else
 		{
-			Current = (uint8)(DialogueNode->GetNodeConfig().DialoguePlayback.AutoAdvanceFlags);
+			Current = 255;
 		}
 	}
 
@@ -405,13 +419,20 @@ uint8 SYapProgressionSettingsWidget::GetInterruptibleValue() const
 	}
 	else
 	{
-		if (FragmentIndex != INDEX_NONE && DialogueNode->GetInterruptibleFlags().IsSet())
+		if (DialogueNode.IsValid())
 		{
-			Current = (uint8)(DialogueNode->GetInterruptibleFlags().GetValue());
+			if (FragmentIndex != INDEX_NONE && DialogueNode->GetInterruptibleFlags().IsSet())
+			{
+				Current = (uint8)(DialogueNode->GetInterruptibleFlags().GetValue());
+			}
+			else
+			{
+				Current = (uint8)(DialogueNode->GetNodeConfig().DialoguePlayback.SpeechInterruptibleFlags);
+			}	
 		}
 		else
 		{
-			Current = (uint8)(DialogueNode->GetNodeConfig().DialoguePlayback.SpeechInterruptibleFlags);
+			Current = 255;
 		}
 	}
 

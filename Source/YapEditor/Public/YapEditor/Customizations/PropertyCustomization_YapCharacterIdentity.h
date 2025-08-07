@@ -5,6 +5,7 @@
 
 #include "IPropertyTypeCustomization.h"
 
+struct FGameplayTag;
 struct FYapCharacterIdentity;
 class IDetailCategoryBuilder;
 
@@ -14,10 +15,23 @@ class FPropertyCustomization_YapCharacterIdentity : public IPropertyTypeCustomiz
 {
 public:
 	static TSharedRef<IPropertyTypeCustomization> MakeInstance() { return MakeShared<FPropertyCustomization_YapCharacterIdentity>(); }
-  
+
 	void CustomizeHeader(TSharedRef<IPropertyHandle> StructPropertyHandle, FDetailWidgetRow& HeaderRow, IPropertyTypeCustomizationUtils& StructCustomizationUtils) override;
 
 	void CustomizeChildren(TSharedRef<IPropertyHandle> StructPropertyHandle, IDetailChildrenBuilder& StructBuilder, IPropertyTypeCustomizationUtils& StructCustomizationUtils) override;
+
+	TSharedPtr<IPropertyHandle> TagProperty;
+	TSharedPtr<IPropertyHandle> NameProperty;
+	
+	FText Text_NameContent() const;
+	
+	FName GetIDName() const;
+
+	FGameplayTag GetIDTag() const;
+
+	void SetIDName(FName Name) const;
+
+	void SetIDTag(FGameplayTag Tag) const;
 };
 
 #undef LOCTEXT_NAMESPACE

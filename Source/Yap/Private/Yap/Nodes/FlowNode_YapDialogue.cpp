@@ -1794,6 +1794,13 @@ void UFlowNode_YapDialogue::PreloadContent()
 {
 	UWorld* World = GetWorld();
 
+#if WITH_EDITOR
+	if (!World && GEditor && GEditor->IsPlaySessionInProgress())
+	{
+		World = GEditor->PlayWorld;
+	}
+#endif
+
 	EYapLoadContext LoadContext = EYapLoadContext::Async;
 	EYapMaturitySetting MaturitySetting = EYapMaturitySetting::Unspecified;
 
@@ -1806,7 +1813,7 @@ void UFlowNode_YapDialogue::PreloadContent()
 
 	for (FYapFragment& Fragment : Fragments)
 	{
-		Fragment.PreloadContent(GetWorld(), MaturitySetting, LoadContext);
+		Fragment.PreloadContent(World, MaturitySetting, LoadContext);
 	}
 }
 

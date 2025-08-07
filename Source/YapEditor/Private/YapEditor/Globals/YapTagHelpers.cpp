@@ -48,6 +48,11 @@ FName Yap::Tags::GetLeafOfTag(const FGameplayTag& Tag)
 	return NAME_None;
 }
 
+FGameplayTag Yap::Tags::GetTag(FString TagString)
+{
+	return UGameplayTagsManager::Get().RequestGameplayTag(FName(TagString), false);
+}
+
 // ------------------------------------------------------------------------------------------------
 
 const FGameplayTag& Yap::Tags::GetOrAddTag(FString NewTagString, FString Comment)

@@ -63,7 +63,7 @@ void FYapFragment::PreloadContent(UWorld* World, EYapMaturitySetting MaturitySet
 
 	// TODO: somehow, a flow graph should be able to work with "self" as the speaker, to make it possible to code flows for dynamic NPCs/dynamic speakers
 #if WITH_EDITOR
-	if (GEditor && GEditor->IsPlaySessionInProgress())
+	if (World && GEditor && GEditor->IsPlaySessionInProgress())
 	{
 		SpeakerHandle = UYapSubsystem::GetCharacterManager(World).RequestLoadAsync(Speaker.GetTagName());
 		DirectedAtHandle = UYapSubsystem::GetCharacterManager(World).RequestLoadAsync(DirectedAt.GetTagName());

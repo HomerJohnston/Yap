@@ -21,6 +21,8 @@ namespace Yap
 
 		/**  */
 		FName GetLeafOfTag(const FGameplayTag& Tag);
+
+		FGameplayTag GetTag(FString TagString);
 		
 		/**  */
 		const FGameplayTag& GetOrAddTag(FString NewTagString, FString Comment = "");

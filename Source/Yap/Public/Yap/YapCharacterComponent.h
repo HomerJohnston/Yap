@@ -64,8 +64,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Yap Character")
 	bool bAutoRegister = true;
 
+	/** TODO: This is only used when an identity is manually typed into the selector above. */
 	UPROPERTY(EditAnywhere, Category = "Yap Character")
-	TInstancedStruct<FYapCharacterRuntimeDefinition> CharacterDefinition;
+	TInstancedStruct<FYapCharacterRuntimeDefinition> ManualCharacterDefinition;
 
 	UPROPERTY(Transient)
 	bool bRegistered = false;

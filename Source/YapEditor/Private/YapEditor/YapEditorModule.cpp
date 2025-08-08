@@ -10,7 +10,7 @@
 #include "YapEditor/AssetThumbnailRenderers/YapCharacterThumbnailRenderer.h"
 #include "YapEditor/YapEditorStyle.h"
 #include "YapEditor/Customizations/DetailCustomization_YapProjectSettings.h"
-#include "YapEditor/Customizations/DetailCustomization_YapCharacter.h"
+#include "YapEditor/Customizations/DetailCustomization_YapCharacterAsset.h"
 #include "YapEditor/Customizations/PropertyCustomization_YapCharacterDefinition.h"
 #include "YapEditor/Customizations/PropertyCustomization_YapNodeConfigGroup_MoodTags.h"
 #include "YapEditor/Customizations/PropertyCustomization_YapPortraitList.h"
@@ -28,7 +28,7 @@ void FYapEditorModule::StartupModule()
 	AssetCategory = { "Yap", LOCTEXT("Yap", "Yap") };
 
 	REGISTER_DETAIL_CUSTOMIZATION(UYapProjectSettings, FDetailCustomization_YapProjectSettings);
-	REGISTER_DETAIL_CUSTOMIZATION(UYapCharacterAsset, FDetailCustomization_YapCharacter);
+	REGISTER_DETAIL_CUSTOMIZATION(UYapCharacterAsset, FDetailCustomization_YapCharacterAsset);
 
 	REGISTER_PROPERTY_CUSTOMIZATION(FYapCharacterStaticDefinition, FPropertyCustomization_YapCharacterDefinition);
 	REGISTER_PROPERTY_CUSTOMIZATION(FYapNodeConfigGroup_MoodTags, FPropertyCustomization_YapNodeConfigGroup_MoodTags);

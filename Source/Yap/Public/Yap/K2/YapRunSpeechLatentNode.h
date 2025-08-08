@@ -11,17 +11,10 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FDelayOutputPin);
 
-// A comment above the delegate declaration
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPSOnAdvancedSpawnPrefabAsyncActionCreatedOutputPin, UObject*, AdvancedSpawnPrefabAsyncAction);
 
-UCLASS(BlueprintType)
-class ULolOmg : public UObject
-{
-	GENERATED_BODY()
-};
-
 UCLASS()
-class UYapRunSpeechLatent2 : public UBlueprintAsyncActionBase
+class UYapRunSpeechLatentNode : public UBlueprintAsyncActionBase
 {
 	GENERATED_BODY()
 
@@ -39,15 +32,19 @@ protected:
 	FYapSpeechHandle _Handle;
 	
 public:
-	/** Executed when the node is done, regardless of whether speech ran fully or was cancelled. */
+	/** Executed when the node is either succeeded OR advanced. */
 	UPROPERTY(BlueprintAssignable, DisplayName = "Finished")
-	FDelayOutputPin AnyCompletion;
+	FDelayOutputPin Finished;
 
 	/** Executed ONLY if the speech finishes naturally. */
 	UPROPERTY(BlueprintAssignable, DisplayName = "Succeeded")
 	FDelayOutputPin Completed;
 
-	/** Executed ONLY if the speech was interrupted/cancelled. */
+	/** Executed ONLY if the speech was advanced. */
+	UPROPERTY(BlueprintAssignable, DisplayName = "Advanced")
+	FDelayOutputPin Advanced;
+
+	/** Executed ONLY if the speech was cancelled. */
 	UPROPERTY(BlueprintAssignable, DisplayName = "Cancelled")
 	FDelayOutputPin Cancelled;
 
@@ -69,8 +66,8 @@ protected:
 	 * @param Handle Resulting handle, optionally used for cancelling speech.
 	 * @return 
 	 */
-	UFUNCTION(BlueprintCallable, meta = (DefaultToSelf = "SpeechOwner",  AdvancedDisplay = 4))
-	static UYapRunSpeechLatent2* RunSpeechLatent(
+	UFUNCTION(BlueprintCallable, DisplayName = "Run Speech", meta = (BlueprintInternalUseOnly = "true", DefaultToSelf = "SpeechOwner",  AdvancedDisplay = 4))
+	static UYapRunSpeechLatentNode* RunSpeechLatent(
 		UObject* SpeechOwner,
 		FName CharacterID,
 		FText DialogueText,

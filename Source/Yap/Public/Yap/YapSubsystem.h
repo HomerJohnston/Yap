@@ -481,6 +481,12 @@ public:
 	/** Used to complete a single speech early; supposed to be used for free world speech */
 	static bool CancelSpeech(UObject* SpeechOwner);
 
+	static bool AdvanceSpeech(UObject* WorldContext, FYapSpeechHandle& Handle);
+
+	static bool AdvanceSpeech(UObject* SpeechOwner);
+	
+	bool EndSpeech(FYapSpeechHandle& Handle, EYapSpeechCompleteResult Result);
+	
 	/** Used to complete all running speech within a given conversation; supposed to be used for "skip" or "continue/advance" type buttons */
 	static void AdvanceConversation(UObject* Instigator, const FYapConversationHandle& ConversationHandle);
 	

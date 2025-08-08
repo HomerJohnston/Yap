@@ -6,6 +6,7 @@
 #include "Components/ActorComponent.h"
 #include "GameplayTagContainer.h"
 #include "GameplayTagFilterHelper.h"
+#include "YapCharacterRuntimeDefinition.h"
 
 #if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION < 5
 	#include "InstancedStruct.h"
@@ -31,10 +32,10 @@ struct FYapCharacterIdentity
 	
 private:
 	UPROPERTY(EditAnywhere, Category = "Default")
-	FGameplayTag Identity_Tag;
+	FName Identity_Name;
 	
 	UPROPERTY(EditAnywhere, Category = "Default")
-	FName Identity_Name;
+	FGameplayTag Identity_Tag;
 	
 public:
 	FName Get() const
@@ -46,6 +47,11 @@ public:
 
 		return Identity_Name;
 	}
+
+	bool UsesCustomID()
+	{
+		return Identity_Name != NAME_None;
+	}
 };
 
 UCLASS(meta=(BlueprintSpawnableComponent), HideCategories = ("Sockets", "ComponentTick", "Cooking", "Events", "Asset UserData", "Navigation"))
@@ -53,36 +59,48 @@ class YAP_API UYapCharacterComponent : public UActorComponent, public FGameplayT
 {
 	GENERATED_BODY()
 
+	// CONSTRUCTION
 public:
 	UYapCharacterComponent();
-	
+
+	// SETTINGS
 protected:
 	/** Identity of this character. Use this for project hero characters which are scripted in a Flow Graph. Create character mappings in Yap's Project Settings panel. */
     UPROPERTY(EditAnywhere, Category = "Yap Character")
 	FYapCharacterIdentity Identity;
+
+	/** If set, the character will not be automatically registered to Yap during BeginPlay. */
+	UPROPERTY(EditAnywhere, AdvancedDisplay, Category = "Yap Character")
+	bool bPreventAutoRegister = false;
+
+	/** When this character speaks, this data will be used for its name, portrait info, etc.; this should normally only be used for dynamic characters (NPCs) and not for project characters. */
+	UPROPERTY(EditAnywhere, Category = "Yap Character")
+	FYapCharacterRuntimeDefinition CharacterDefinition;
+
+	// STATE
+protected:
 	
-	UPROPERTY(EditAnywhere, Category = "Yap Character")
-	bool bAutoRegister = true;
-
-	/** TODO: This is only used when an identity is manually typed into the selector above. */
-	UPROPERTY(EditAnywhere, Category = "Yap Character")
-	TInstancedStruct<FYapCharacterRuntimeDefinition> ManualCharacterDefinition;
-
 	UPROPERTY(Transient)
 	bool bRegistered = false;
-	
+
+	// PUBLIC API
 public:
+	UFUNCTION(BlueprintCallable, Category = "Yap|Character")
+	void RegisterYapCharacter();
+
+	UFUNCTION(BlueprintCallable, Category = "Yap|Character")
+	void UnregisterYapCharacter();
+
+	const FName GetCharacterID() { return Identity.Get(); }
+
+	// OTHER API
+protected:
 	void BeginPlay() override;
 
 	void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
-	const FName GetCharacterID() { return Identity.Get(); }
 	
 	static const FGameplayTag& GetIdentityRootTag();
-
-	void Register();
-
-	void Unregister();
 };
 
 #undef LOCTEXT_NAMESPACE

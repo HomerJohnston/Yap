@@ -82,17 +82,11 @@ void UYapCharacterManager::Initialize()
 
 // ------------------------------------------------------------------------------------------------
 
-void UYapCharacterManager::RegisterCharacter(FName CharacterID,	const TInstancedStruct<FYapCharacterRuntimeDefinition>& CharacterDefinition, bool bReplaceExisting)
+void UYapCharacterManager::RegisterCharacter(FName CharacterID,	const FYapCharacterRuntimeDefinition& CharacterDefinition, bool bReplaceExisting)
 {
 	if (CharacterID == NAME_None)
 	{
 		UE_LOG(LogYap, Error, TEXT("Tried to register a character ID of none, ignoring!"));
-		return;
-	}
-
-	if (!CharacterDefinition.IsValid())
-	{
-		UE_LOG(LogYap, Error, TEXT("Tried to register character ID <%s> but Character Definition was not set!"), *CharacterID.ToString());
 		return;
 	}
 
@@ -105,13 +99,15 @@ void UYapCharacterManager::RegisterCharacter(FName CharacterID,	const TInstanced
 			UE_LOG(LogYap, Error, TEXT("Tried to register character ID <%s>, but this ID was already registered!"), *CharacterID.ToString());
 			return;
 		}
+
+		// TODO make a project setting to log this more visibly?
 		
-		UE_LOG(LogYap, Display, TEXT("New character registration for ID <%s> is stomping an existing character."), *CharacterID.ToString());
+		UE_LOG(LogYap, VeryVerbose, TEXT("New character registration for ID <%s> is stomping an existing character."), *CharacterID.ToString());
 	}
 
 	UYapCharacterAsset* NewCharacter = NewObject<UYapCharacterAsset>(this);
 
-	CharacterDefinition.Get().InitializeCharacter(NewCharacter);
+	CharacterDefinition.InitializeCharacter(NewCharacter);
 
 	RegisteredCharacters.Add(CharacterID, NewCharacter);
 }
@@ -184,16 +180,11 @@ void UYapCharacterManager_BPFL::RegisterCharacter(UObject* WorldContext, FName C
 	CharacterManager.RegisterCharacter(CharacterID, CharacterObject, bReplaceExisting);
 }
 
-void UYapCharacterManager_BPFL::RegisterCharacter_Dynamic(UObject* WorldContext, FName CharacterID, FInstancedStruct CharacterDefinition, bool bReplaceExisting)
+void UYapCharacterManager_BPFL::RegisterCharacter_Dynamic(UObject* WorldContext, FName CharacterID, const FYapCharacterRuntimeDefinition& CharacterDefinition, bool bReplaceExisting)
 {
 	UYapCharacterManager& CharacterManager = GetCharacterManager(WorldContext);
 
-	if (CharacterDefinition.GetScriptStruct()->IsChildOf(FYapCharacterRuntimeDefinition::StaticStruct()))
-	{
-		auto TCharacterDefinition = TInstancedStruct<FYapCharacterRuntimeDefinition>::Make(CharacterDefinition.Get<FYapCharacterRuntimeDefinition>());
-		
-		CharacterManager.RegisterCharacter(CharacterID, TCharacterDefinition, bReplaceExisting);
-	}
+	CharacterManager.RegisterCharacter(CharacterID, CharacterDefinition, bReplaceExisting);
 }
 
 // ------------------------------------------------------------------------------------------------

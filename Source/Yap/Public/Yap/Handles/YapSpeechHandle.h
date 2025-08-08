@@ -14,6 +14,7 @@ enum class EYapSpeechCompleteResult : uint8
     Undefined UMETA(Hidden),
     Normal,
     Cancelled,
+    Advanced,
 };
 
 /**
@@ -106,6 +107,12 @@ public:
 
     UFUNCTION(BlueprintCallable, Category = "Yap|Speech", meta = (DefaultToSelf = "SpeechOwner"))
     static bool CancelSpeechByOwner(UObject* SpeechOwner);
+
+    UFUNCTION(BlueprintCallable, Category = "Yap|Speech", meta = (WorldContext = "WorldContext"))
+    static bool AdvanceSpeech(UObject* WorldContext, UPARAM(ref) FYapSpeechHandle& Handle);
+
+    UFUNCTION(BlueprintCallable, Category = "Yap|Speech", meta = (DefaultToSelf = "SpeechOwner"))
+    static bool AdvanceSpeechByOwner(UObject* SpeechOwner);
     
     /** If speech is set as forced duration (unskippable) this will return false. This is intended to be used to help show/hide "Continue" style buttons. */
     UFUNCTION(BlueprintCallable, Category = "Yap|Speech Handle", meta = (WorldContext = "WorldContext"))

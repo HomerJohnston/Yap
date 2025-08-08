@@ -1,7 +1,7 @@
 ﻿// Copyright Ghost Pepper Games, Inc. All Rights Reserved.
 // This work is MIT-licensed. Feel free to use it however you wish, within the confines of the MIT license. 
 
-#include "YapEditor/Customizations/DetailCustomization_YapCharacter.h"
+#include "YapEditor/Customizations/DetailCustomization_YapCharacterAsset.h"
 
 #include "DetailCategoryBuilder.h"
 #include "DetailLayoutBuilder.h"
@@ -23,11 +23,11 @@
 
 #define LOCTEXT_NAMESPACE "YapEditor"
 
-FDetailCustomization_YapCharacter::FDetailCustomization_YapCharacter()
+FDetailCustomization_YapCharacterAsset::FDetailCustomization_YapCharacterAsset()
 {
 	ButtonWidth = 300;
 
-	Handle = UGameplayTagsManager::OnEditorRefreshGameplayTagTree.AddRaw(this, &FDetailCustomization_YapCharacter::RefreshDetails);
+	Handle = UGameplayTagsManager::OnEditorRefreshGameplayTagTree.AddRaw(this, &FDetailCustomization_YapCharacterAsset::RefreshDetails);
 	
 	if (GEditor)
 	{
@@ -35,7 +35,7 @@ FDetailCustomization_YapCharacter::FDetailCustomization_YapCharacter()
 	}
 }
 
-FDetailCustomization_YapCharacter::~FDetailCustomization_YapCharacter()
+FDetailCustomization_YapCharacterAsset::~FDetailCustomization_YapCharacterAsset()
 {
 	UGameplayTagsManager::OnEditorRefreshGameplayTagTree.Remove(Handle);
 
@@ -45,7 +45,7 @@ FDetailCustomization_YapCharacter::~FDetailCustomization_YapCharacter()
 	}
 }
 
-FText FDetailCustomization_YapCharacter::Text_MoodTag(FGameplayTag MoodRoot, FGameplayTag MoodTag) const
+FText FDetailCustomization_YapCharacterAsset::Text_MoodTag(FGameplayTag MoodRoot, FGameplayTag MoodTag) const
 {
 	const TWeakObjectPtr<const UYapNodeConfig>* Config = NodeConfigs.Find(MoodRoot);
 	
@@ -63,7 +63,7 @@ FText FDetailCustomization_YapCharacter::Text_MoodTag(FGameplayTag MoodRoot, FGa
 	return FText::GetEmpty();	
 }
 
-void FDetailCustomization_YapCharacter::CustomizeDetails(IDetailLayoutBuilder& InDetailBuilder)
+void FDetailCustomization_YapCharacterAsset::CustomizeDetails(IDetailLayoutBuilder& InDetailBuilder)
 {
 	if (!CacheEditedCharacterAsset(InDetailBuilder))
 	{
@@ -161,8 +161,8 @@ void FDetailCustomization_YapCharacter::CustomizeDetails(IDetailLayoutBuilder& I
 				.Padding(0, 0, 8, 0)
 				[
 					SNew(SImage)
-					.Image(this, &FDetailCustomization_YapCharacter::Image_MoodTag, MoodRoot, MoodTag)
-					.ToolTipText(this, &FDetailCustomization_YapCharacter::Text_MoodTag, MoodRoot, MoodTag)
+					.Image(this, &FDetailCustomization_YapCharacterAsset::Image_MoodTag, MoodRoot, MoodTag)
+					.ToolTipText(this, &FDetailCustomization_YapCharacterAsset::Text_MoodTag, MoodRoot, MoodTag)
 					.ColorAndOpacity(YapColor::White)
 					.DesiredSizeOverride(FVector2d(24, 24))
 				]
@@ -200,13 +200,13 @@ void FDetailCustomization_YapCharacter::CustomizeDetails(IDetailLayoutBuilder& I
 	//PortraitsCategory.AddProperty(GET_MEMBER_NAME_CHECKED(UYapCharacterAsset, PortraitsMap));
 }
 
-void FDetailCustomization_YapCharacter::CustomizeDetails(const TSharedPtr<IDetailLayoutBuilder>& InDetailBuilder)
+void FDetailCustomization_YapCharacterAsset::CustomizeDetails(const TSharedPtr<IDetailLayoutBuilder>& InDetailBuilder)
 {
 	CachedDetailBuilder = InDetailBuilder;
 	CustomizeDetails(*InDetailBuilder);
 }
 
-EVisibility FDetailCustomization_YapCharacter::Visibility_MoodTagsOutOfDateWarning() const
+EVisibility FDetailCustomization_YapCharacterAsset::Visibility_MoodTagsOutOfDateWarning() const
 {
 	if (!CharacterBeingCustomized.IsValid())
 	{
@@ -216,7 +216,7 @@ EVisibility FDetailCustomization_YapCharacter::Visibility_MoodTagsOutOfDateWarni
 	return CharacterBeingCustomized->GetPortraitsOutOfDate() ? EVisibility::Visible : EVisibility::Collapsed;
 }
 
-FText FDetailCustomization_YapCharacter::Text_PortraitsListHint() const
+FText FDetailCustomization_YapCharacterAsset::Text_PortraitsListHint() const
 {
 	if (CharacterBeingCustomized.IsValid())
 	{
@@ -242,7 +242,7 @@ FText FDetailCustomization_YapCharacter::Text_PortraitsListHint() const
 	return INVTEXT("ERROR");
 }
 
-void FDetailCustomization_YapCharacter::OnClicked_RefreshMoodTagsButton() const
+void FDetailCustomization_YapCharacterAsset::OnClicked_RefreshMoodTagsButton() const
 {
 	if (CharacterBeingCustomized.IsValid())
 	{
@@ -358,7 +358,7 @@ void FDetailCustomization_YapCharacter::OnClicked_RefreshMoodTagsButton() const
 	RefreshDetails();
 }
 
-bool FDetailCustomization_YapCharacter::CacheEditedCharacterAsset(IDetailLayoutBuilder& DetailBuilder)
+bool FDetailCustomization_YapCharacterAsset::CacheEditedCharacterAsset(IDetailLayoutBuilder& DetailBuilder)
 {
 	TArray<TWeakObjectPtr<UObject>> Objects;
 	
@@ -377,7 +377,7 @@ bool FDetailCustomization_YapCharacter::CacheEditedCharacterAsset(IDetailLayoutB
 	return false;
 }
 
-void FDetailCustomization_YapCharacter::CachePropertyHandles(IDetailLayoutBuilder& DetailBuilder)
+void FDetailCustomization_YapCharacterAsset::CachePropertyHandles(IDetailLayoutBuilder& DetailBuilder)
 {
 	DefaultPortraitProperty = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UYapCharacterAsset, Portrait));
 	DefaultPortraitProperty->MarkHiddenByCustomization();
@@ -389,7 +389,7 @@ void FDetailCustomization_YapCharacter::CachePropertyHandles(IDetailLayoutBuilde
 	PortraitsProperty->MarkHiddenByCustomization();
 }
 
-void FDetailCustomization_YapCharacter::SortCategories(IDetailLayoutBuilder& DetailBuilder) const
+void FDetailCustomization_YapCharacterAsset::SortCategories(IDetailLayoutBuilder& DetailBuilder) const
 {
 	DetailBuilder.SortCategories([](const TMap<FName, IDetailCategoryBuilder*>& CategoryMap)
 	{
@@ -410,7 +410,7 @@ void FDetailCustomization_YapCharacter::SortCategories(IDetailLayoutBuilder& Det
 	});
 }
 
-void FDetailCustomization_YapCharacter::DrawObsoleteDataWarning(IDetailLayoutBuilder& DetailBuilder)
+void FDetailCustomization_YapCharacterAsset::DrawObsoleteDataWarning(IDetailLayoutBuilder& DetailBuilder)
 {
 	IDetailCategoryBuilder& CategoryBuilder = DetailBuilder.EditCategory("Warnings");
 
@@ -453,7 +453,7 @@ void FDetailCustomization_YapCharacter::DrawObsoleteDataWarning(IDetailLayoutBui
 					SNew(SYapHyperlink)
 					.Text(LOCTEXT("YapCharacterAsset_FixupOldPortraitsMap", "Migrate"))
 					.ToolTipText(LOCTEXT("YapCharacterAsset_FixupOldPortraitsMap_Tooltip", "This will convert the old portraits map to the new format, and remove the old data."))
-					.OnNavigate(this, &FDetailCustomization_YapCharacter::OnClicked_FixupOldPortraitsMap)
+					.OnNavigate(this, &FDetailCustomization_YapCharacterAsset::OnClicked_FixupOldPortraitsMap)
 				]
 			]
 			+ SVerticalBox::Slot()
@@ -480,7 +480,7 @@ void FDetailCustomization_YapCharacter::DrawObsoleteDataWarning(IDetailLayoutBui
 	];
 }
 
-bool FDetailCustomization_YapCharacter::GetHasPortraitData() const
+bool FDetailCustomization_YapCharacterAsset::GetHasPortraitData() const
 {
 	void* PortraitsMapDataPtr = nullptr;
 	
@@ -491,7 +491,7 @@ bool FDetailCustomization_YapCharacter::GetHasPortraitData() const
 	return PortraitsMapPtr->Num() > 0;
 }
 
-bool FDetailCustomization_YapCharacter::GetHasObsoleteData() const
+bool FDetailCustomization_YapCharacterAsset::GetHasObsoleteData() const
 {
 	if (CharacterBeingCustomized.IsValid())
 	{
@@ -501,7 +501,7 @@ bool FDetailCustomization_YapCharacter::GetHasObsoleteData() const
 	return false;
 }
 
-void FDetailCustomization_YapCharacter::OnClicked_FixupOldPortraitsMap()
+void FDetailCustomization_YapCharacterAsset::OnClicked_FixupOldPortraitsMap()
 {
 	FYapScopedTransaction Transaction(YapTransactions::FixupOldPortraitsMap, LOCTEXT("FixupOldPortraitsMap_Transaction", "Fixup old portraits map"), CharacterBeingCustomized.Get());
 
@@ -511,7 +511,7 @@ void FDetailCustomization_YapCharacter::OnClicked_FixupOldPortraitsMap()
 	}
 }
 
-bool FDetailCustomization_YapCharacter::FixupOldPortraitsMap()
+bool FDetailCustomization_YapCharacterAsset::FixupOldPortraitsMap()
 {
 	CharacterBeingCustomized->Modify();
 	
@@ -621,7 +621,7 @@ bool FDetailCustomization_YapCharacter::FixupOldPortraitsMap()
 	return true;
 }
 
-void FDetailCustomization_YapCharacter::AddEntryToMap(TSharedPtr<IPropertyHandleMap> Map, const FGameplayTag& NewKey) const
+void FDetailCustomization_YapCharacterAsset::AddEntryToMap(TSharedPtr<IPropertyHandleMap> Map, const FGameplayTag& NewKey) const
 {
 	uint32 NumElements;
 	
@@ -657,7 +657,7 @@ void FDetailCustomization_YapCharacter::AddEntryToMap(TSharedPtr<IPropertyHandle
 	}
 }
 
-void FDetailCustomization_YapCharacter::RefreshList(TSharedPtr<IPropertyHandle> MoodRootProperty, TSharedPtr<IPropertyHandle> ListProperty) const
+void FDetailCustomization_YapCharacterAsset::RefreshList(TSharedPtr<IPropertyHandle> MoodRootProperty, TSharedPtr<IPropertyHandle> ListProperty) const
 {
 	using PropHandle = TSharedPtr<IPropertyHandle>;
 	using MapHandle = TSharedPtr<IPropertyHandleMap>;
@@ -735,7 +735,7 @@ void FDetailCustomization_YapCharacter::RefreshList(TSharedPtr<IPropertyHandle> 
 	}
 }
 
-void FDetailCustomization_YapCharacter::RemoveEntryFromMap(TSharedPtr<IPropertyHandleMap> Map, const FName& DeadKey) const
+void FDetailCustomization_YapCharacterAsset::RemoveEntryFromMap(TSharedPtr<IPropertyHandleMap> Map, const FName& DeadKey) const
 {
 	uint32 NumElements;
 	
@@ -766,7 +766,7 @@ void FDetailCustomization_YapCharacter::RemoveEntryFromMap(TSharedPtr<IPropertyH
 	}
 }
 
-void FDetailCustomization_YapCharacter::RefreshDetails() const
+void FDetailCustomization_YapCharacterAsset::RefreshDetails() const
 {
 	if (CachedDetailBuilder.IsValid())
 	{
@@ -782,7 +782,7 @@ void FDetailCustomization_YapCharacter::RefreshDetails() const
 	}
 }
 
-void FDetailCustomization_YapCharacter::AddBottomControls(IDetailCategoryBuilder& Category) const
+void FDetailCustomization_YapCharacterAsset::AddBottomControls(IDetailCategoryBuilder& Category) const
 {
 	Category.AddCustomRow(LOCTEXT("MoodTags", "Mood Tags"))
 	[
@@ -803,7 +803,7 @@ void FDetailCustomization_YapCharacter::AddBottomControls(IDetailCategoryBuilder
 				[
 					SNew(STextBlock)
 					.Font(YapFonts.Font_WarningText)
-					.Visibility(this, &FDetailCustomization_YapCharacter::Visibility_MoodTagsOutOfDateWarning)
+					.Visibility(this, &FDetailCustomization_YapCharacterAsset::Visibility_MoodTagsOutOfDateWarning)
 					.SimpleTextMode(true)
 					.Text(LOCTEXT("CharacterPortraits_MoodTagsNeedRefresh", "Portraits list is out of date. "))
 					.ColorAndOpacity(YapColor::OrangeRed)
@@ -813,7 +813,7 @@ void FDetailCustomization_YapCharacter::AddBottomControls(IDetailCategoryBuilder
 				[
 					SNew(SYapHyperlink)
 					.Text(LOCTEXT("CharacterPortraits_PerformMoodTagsRefresh", "Click to refresh."))
-					.OnNavigate(this, &FDetailCustomization_YapCharacter::OnClicked_RefreshMoodTagsButton)
+					.OnNavigate(this, &FDetailCustomization_YapCharacterAsset::OnClicked_RefreshMoodTagsButton)
 					.ToolTipText(LOCTEXT("RefreshMoodTags_ToolTIp", "Will process the portraits list, removing entries which are no longer present in project settings, and adding missing entries. Also sorts the list."))
 				]
 			]
@@ -835,7 +835,7 @@ void FDetailCustomization_YapCharacter::AddBottomControls(IDetailCategoryBuilder
 					SNew(STextBlock)
 					.Font(YapFonts.Font_WarningText)
 					.SimpleTextMode(true)
-					.Text(this, &FDetailCustomization_YapCharacter::Text_PortraitsListHint)
+					.Text(this, &FDetailCustomization_YapCharacterAsset::Text_PortraitsListHint)
 					.ColorAndOpacity(YapColor::LightYellow)
 				]
 				+ SVerticalBox::Slot()
@@ -853,17 +853,17 @@ void FDetailCustomization_YapCharacter::AddBottomControls(IDetailCategoryBuilder
 	];
 }
 
-void FDetailCustomization_YapCharacter::PostUndo(bool bSuccess)
+void FDetailCustomization_YapCharacterAsset::PostUndo(bool bSuccess)
 {
 	RefreshDetails();
 }
 
-void FDetailCustomization_YapCharacter::PostRedo(bool bSuccess)
+void FDetailCustomization_YapCharacterAsset::PostRedo(bool bSuccess)
 {
 	RefreshDetails();
 }
 
-const FSlateBrush* FDetailCustomization_YapCharacter::Image_MoodTag(FGameplayTag MoodRoot, FGameplayTag MoodTag) const
+const FSlateBrush* FDetailCustomization_YapCharacterAsset::Image_MoodTag(FGameplayTag MoodRoot, FGameplayTag MoodTag) const
 {
 	const TWeakObjectPtr<const UYapNodeConfig>* Config = NodeConfigs.Find(MoodRoot);
 
@@ -877,7 +877,7 @@ const FSlateBrush* FDetailCustomization_YapCharacter::Image_MoodTag(FGameplayTag
 		}
 	}
 
-	FDetailCustomization_YapCharacter* MutableThis = const_cast<FDetailCustomization_YapCharacter*>(this);
+	FDetailCustomization_YapCharacterAsset* MutableThis = const_cast<FDetailCustomization_YapCharacterAsset*>(this);
 	MutableThis->MissingMoodTagIcons.Add(MoodTag);
 	
 	return FYapEditorStyle::GetImageBrush(YapBrushes.Icon_Circle_Alert);

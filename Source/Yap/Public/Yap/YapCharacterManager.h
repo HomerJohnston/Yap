@@ -76,7 +76,7 @@ protected:
 	TMap<FName, FYapCharacterRegisteredInstance> RegisteredCharacters;
 
 public:
-	void RegisterCharacter(FName CharacterID, const TInstancedStruct<FYapCharacterRuntimeDefinition>& CharacterDefinition, bool bReplaceExisting = false);
+	void RegisterCharacter(FName CharacterID, const FYapCharacterRuntimeDefinition& CharacterDefinition, bool bReplaceExisting = false);
 
 	void RegisterCharacter(FName CharacterID, TSoftObjectPtr<UObject> Character, bool bReplaceExisting = false);
 	
@@ -166,7 +166,7 @@ class YAP_API UYapCharacterManager_BPFL : public UBlueprintFunctionLibrary
 	 * @param bReplaceExisting 
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Yap|Character", meta = (WorldContext = "WorldContext"))
-	static void RegisterCharacter_Dynamic(UObject* WorldContext, FName CharacterID, FInstancedStruct CharacterDefinition, bool bReplaceExisting = false);
+	static void RegisterCharacter_Dynamic(UObject* WorldContext, FName CharacterID, const FYapCharacterRuntimeDefinition& CharacterDefinition, bool bReplaceExisting = false);
 
 	/**
 	 * 

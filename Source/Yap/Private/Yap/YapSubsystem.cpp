@@ -982,36 +982,14 @@ bool UYapSubsystem::CancelSpeech(UObject* WorldContext, FYapSpeechHandle& Handle
 		return false;
 	}
 
-	if (!Handle.IsValid())
-	{
-		UE_LOG(LogYap, Display, TEXT("Subsystem: CancelSpeech failed - speech handle was invalid"));
-		return false;
-	}
-	
-	UE_LOG(LogYap, VeryVerbose, TEXT("Subsystem: CancelSpeech {%s}"), *Handle.ToString());
-
-	FYapSpeechHandle HandleCopy = Handle;
-	Handle.Invalidate();
-	
 	UYapSubsystem* Subsystem = Get(WorldContext);
 
-	FTimerHandle TimerHandle = Subsystem->ActiveSpeechMap.FindTimerHandle(HandleCopy);
-	
-	if (TimerHandle.IsValid())
+	if (Subsystem)
 	{
-		WorldContext->GetWorld()->GetTimerManager().ClearTimer(TimerHandle);
-
-		FYapSpeechEvent Evt;
-
-		if (!Subsystem->EmitSpeechResult(HandleCopy, EYapSpeechCompleteResult::Cancelled))
-		{
-			return false;
-		}
-		
-		return true;
+		return Subsystem->EndSpeech(Handle, EYapSpeechCompleteResult::Cancelled);
 	}
-
-	UE_LOG(LogYap, Display, TEXT("Subsystem: CancelSpeech [%s] ignored - SpeechTimers array did not contain an entry for this handle. Invalidating this handle."), *Handle.ToString());
+	
+	UE_LOG(LogYap, Error, TEXT("Subsystem: CancelSpeech - SUBSYSTEM NOT FOUND"));
 	
 	return false;
 }
@@ -1034,6 +1012,76 @@ bool UYapSubsystem::CancelSpeech(UObject* SpeechOwner)
 		UE_LOG(LogYap, Warning, TEXT("Failed to find subsystem - did you pass an invalid speech owner into Cancel Speech?"));	
 	}
 
+	return false;
+}
+
+bool UYapSubsystem::AdvanceSpeech(UObject* WorldContext, FYapSpeechHandle& Handle)
+{
+	if (!IsValid(WorldContext))
+	{
+		UE_LOG(LogYap, Warning, TEXT("Subsystem: AdvanceSpeech failed - world context was invalid"));
+		return false;
+	}
+
+	UYapSubsystem* Subsystem = Get(WorldContext);
+
+	if (Subsystem)
+	{
+		return Subsystem->EndSpeech(Handle, EYapSpeechCompleteResult::Advanced);
+	}
+	
+	UE_LOG(LogYap, Error, TEXT("Subsystem: CancelSpeech - SUBSYSTEM NOT FOUND"));
+	
+	return false;
+}
+
+bool UYapSubsystem::AdvanceSpeech(UObject* SpeechOwner)
+{
+	UYapSubsystem* Subsystem = Get(SpeechOwner);
+
+	if (Subsystem)
+	{
+		TArray<FYapSpeechHandle> Handles = Subsystem->ActiveSpeechMap.GetHandles(SpeechOwner);
+
+		for (FYapSpeechHandle& Handle : Handles)
+		{
+			AdvanceSpeech(SpeechOwner, Handle);
+		}
+	}
+	else
+	{
+		UE_LOG(LogYap, Warning, TEXT("Failed to find subsystem - did you pass an invalid speech owner into Cancel Speech?"));	
+	}
+
+	return false;
+}
+
+bool UYapSubsystem::EndSpeech(FYapSpeechHandle& Handle, EYapSpeechCompleteResult Result)
+{
+	if (!Handle.IsValid())
+	{
+		UE_LOG(LogYap, Display, TEXT("Subsystem: CancelSpeech failed - speech handle was invalid"));
+		return false;
+	}
+	
+	UE_LOG(LogYap, VeryVerbose, TEXT("Subsystem: CancelSpeech {%s}"), *Handle.ToString());
+
+	FYapSpeechHandle HandleCopy = Handle;
+	Handle.Invalidate();
+	
+	FTimerHandle TimerHandle = ActiveSpeechMap.FindTimerHandle(HandleCopy);
+	
+	if (TimerHandle.IsValid())
+	{
+		GetWorld()->GetTimerManager().ClearTimer(TimerHandle);
+
+		FYapSpeechEvent Evt;
+
+		return EmitSpeechResult(HandleCopy, Result);
+	}
+
+	UE_LOG(LogYap, Display, TEXT("Subsystem: CancelSpeech [%s] ignored - SpeechTimers array did not contain an entry for this handle. Invalidating this handle."), *Handle.ToString());
+	
 	return false;
 }
 
@@ -1068,7 +1116,7 @@ void UYapSubsystem::AdvanceConversation(UObject* Instigator, const FYapConversat
 	for (const FYapSpeechHandle& SpeechHandle : RunningFragments)
 	{
 		UE_LOG(LogYap, VeryVerbose, TEXT("Subsystem: AdvanceConversation CALLING ONSPEECHCOMPLETE [%s]"), *ConversationHandle.ToString());
-		Subsystem->OnSpeechComplete(SpeechHandle, true, EYapSpeechCompleteResult::Cancelled);
+		Subsystem->OnSpeechComplete(SpeechHandle, true, EYapSpeechCompleteResult::Advanced);
 	}
 	
 	UE_LOG(LogYap, VeryVerbose, TEXT("Subsystem: AdvanceConversation FINISH [%s]"), *ConversationHandle.ToString());

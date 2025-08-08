@@ -101,6 +101,34 @@ bool UYapSpeechHandleBFL::CancelSpeechByOwner(UObject* SpeechOwner)
 	return false;
 }
 
+bool UYapSpeechHandleBFL::AdvanceSpeech(UObject* WorldContext, FYapSpeechHandle& Handle)
+{
+	if (Handle.IsValid())
+	{
+		return UYapSubsystem::AdvanceSpeech(WorldContext, Handle);
+	}
+	else
+	{
+		UE_LOG(LogYap, Warning, TEXT("Attempted to cancel an invalid speech handle!"))
+	}
+	
+	return false;
+}
+
+bool UYapSpeechHandleBFL::AdvanceSpeechByOwner(UObject* SpeechOwner)
+{
+	if (IsValid(SpeechOwner))
+	{
+		return UYapSubsystem::AdvanceSpeech(SpeechOwner);
+	}
+	else
+	{
+		UE_LOG(LogYap, Warning, TEXT("Attempting to cancel speech for a null speech owner!"));
+	}
+	
+	return false;
+}
+
 // ------------------------------------------------------------------------------------------------
 
 bool UYapSpeechHandleBFL::CanSkip(UObject* WorldContext, const FYapSpeechHandle& Handle)

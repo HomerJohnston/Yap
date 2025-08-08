@@ -14,12 +14,12 @@ class IDetailCategoryBuilder;
 
 #define LOCTEXT_NAMESPACE "YapEditor"
 
-class FDetailCustomization_YapCharacter : public IDetailCustomization, public FEditorUndoClient//, TSharedFromThis<FDetailCustomization_YapCharacter>
+class FDetailCustomization_YapCharacterAsset : public IDetailCustomization, public FEditorUndoClient//, TSharedFromThis<FDetailCustomization_YapCharacter>
 {
 public:
-	FDetailCustomization_YapCharacter();
+	FDetailCustomization_YapCharacterAsset();
 	
-	virtual ~FDetailCustomization_YapCharacter();
+	virtual ~FDetailCustomization_YapCharacterAsset();
 
 	FDelegateHandle Handle;
 	
@@ -33,7 +33,7 @@ private:
 public:
 	static TSharedRef<IDetailCustomization> MakeInstance()
 	{
-		return MakeShareable(new FDetailCustomization_YapCharacter());
+		return MakeShareable(new FDetailCustomization_YapCharacterAsset());
 	}
 
 	FText Text_MoodTag(FGameplayTag MoodRoot, FGameplayTag MoodTag) const;

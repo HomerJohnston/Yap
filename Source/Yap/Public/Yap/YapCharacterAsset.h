@@ -39,7 +39,7 @@ UCLASS(meta = (DataAssetCategory = "TODO"))
 class YAP_API UYapCharacterAsset : public UObject, public IYapCharacterInterface
 {
 #if WITH_EDITOR
-	friend class FDetailCustomization_YapCharacter;
+	friend class FDetailCustomization_YapCharacterAsset;
 #endif
 
 	GENERATED_BODY()

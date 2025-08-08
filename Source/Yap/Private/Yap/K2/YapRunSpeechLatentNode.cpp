@@ -3,38 +3,25 @@
 
 #include "Yap/K2/YapRunSpeechLatentNode.h"
 
+#include "Yap/YapCharacterManager.h"
 #include "Yap/YapLog.h"
 #include "Yap/YapSubsystem.h"
 
-/*
-void UYapLatentLibrary::RunSpeechLatent(UObject* WorldContext, FLatentActionInfo LatentInfo)
-{
-	if (UWorld* World = WorldContext->GetWorld())
-	{
-		FLatentActionManager& LatentActionManager = World->GetLatentActionManager();
-
-		if (LatentActionManager.FindExistingAction<FYapRunSpeechLatent>(LatentInfo.CallbackTarget, LatentInfo.UUID))
-		{
-			
-			
-		}
-		else
-		{
-			
-		}
-	}
-}
-*/
-
-UYapRunSpeechLatent2* UYapRunSpeechLatent2::RunSpeechLatent(
-		UObject* SpeechOwner,
-		FName CharacterID, FText DialogueText,
-	UObject* DialogueAudioAsset, FGameplayTag MoodTag, float SpeechTime, FText TitleText,
-	FName DirectedAt, bool bSkippable,
+UYapRunSpeechLatentNode* UYapRunSpeechLatentNode::RunSpeechLatent(
+	UObject* SpeechOwner,
+	FName CharacterID,
+	FText DialogueText,
+	UObject* DialogueAudioAsset,
+	// ADVANCED DISPLAY
+	FGameplayTag MoodTag,
+	float SpeechTime,
+	FText TitleText,
+	FName DirectedAt,
+	bool bSkippable,
 	TSubclassOf<UFlowNode_YapDialogue> NodeType,
 	UPARAM(ref) FYapSpeechHandle& Handle)
 {
-	UYapRunSpeechLatent2* Node = NewObject<UYapRunSpeechLatent2>();
+	UYapRunSpeechLatentNode* Node = NewObject<UYapRunSpeechLatentNode>();
 
 	Node->RegisterWithGameInstance(SpeechOwner);
 
@@ -54,8 +41,14 @@ UYapRunSpeechLatent2* UYapRunSpeechLatent2::RunSpeechLatent(
 	{
 		return nullptr;
 	}
-	
+
+	if (SpeechTime == 0.0f)
+	{
+		// TODO calculate time from audio or text using broker
+	}
+
 	Node->Data.SpeakerID = CharacterID;
+	Node->Data.Speaker = UYapSubsystem::GetCharacterManager(SpeechOwner).FindCharacter(CharacterID);
 	Node->Data.DialogueText = DialogueText;
 	Node->Data.DialogueAudioAsset =  DialogueAudioAsset;
 	Node->Data.MoodTag = MoodTag;
@@ -74,18 +67,38 @@ UYapRunSpeechLatent2* UYapRunSpeechLatent2::RunSpeechLatent(
 	return Node;
 }
 
-void UYapRunSpeechLatent2::OnSpeechCompleteFunc(UObject* Broadcaster, const FYapSpeechHandle& Handle, EYapSpeechCompleteResult Result)
+void UYapRunSpeechLatentNode::Activate()
+{
+	UYapSubsystem* Subsystem = UYapSubsystem::Get(_SpeechOwner);
+
+	UE_LOG(LogYap, VeryVerbose, TEXT("RunSpeechLatent activate... Running speech: %s <%s>"), *Data.DialogueText.ToString(), *_Handle.ToString());
+	
+	Subsystem->RunSpeech(Data, _NodeType, _Handle);
+
+	OnSpeechComplete.BindDynamic(this, &ThisClass::OnSpeechCompleteFunc);
+
+	//UYapSubsystem::Get(_WorldContext)->OnCancelDelegate.AddDynamic(this, &ThisClass::OnSpeechCancelledFunc);
+
+	UYapSpeechHandleBFL::BindToOnSpeechComplete(_SpeechOwner, _Handle, OnSpeechComplete);
+}
+
+void UYapRunSpeechLatentNode::OnSpeechCompleteFunc(UObject* Broadcaster, const FYapSpeechHandle& Handle, EYapSpeechCompleteResult Result)
 {
 	SetReadyToDestroy();
 
 	UE_LOG(LogYap, VeryVerbose, TEXT("RunSpeechLatent completed! <%s>"), *Handle.ToString());
-
-	AnyCompletion.Broadcast();
 	
 	switch (Result)
 	{
+		case EYapSpeechCompleteResult::Advanced:
+		{
+			Finished.Broadcast();
+			Advanced.Broadcast();
+			break;
+		}
 		case EYapSpeechCompleteResult::Normal:
 		{
+			Finished.Broadcast();
 			Completed.Broadcast();
 			break;
 		}
@@ -100,20 +113,6 @@ void UYapRunSpeechLatent2::OnSpeechCompleteFunc(UObject* Broadcaster, const FYap
 		}
 	}
 
-	// I would prefer to invalidate the handle here, but I can't. Blueprint won't modify the original reference at the end of a latent node, it just treats it like a copy.
-}
-
-void UYapRunSpeechLatent2::Activate()
-{
-	UYapSubsystem* Subsystem = UYapSubsystem::Get(_SpeechOwner);
-
-	UE_LOG(LogYap, VeryVerbose, TEXT("RunSpeechLatent activate... Running speech: %s <%s>"), *Data.DialogueText.ToString(), *_Handle.ToString());
-	
-	Subsystem->RunSpeech(Data, _NodeType, _Handle);
-
-	OnSpeechComplete.BindDynamic(this, &ThisClass::OnSpeechCompleteFunc);
-
-	//UYapSubsystem::Get(_WorldContext)->OnCancelDelegate.AddDynamic(this, &ThisClass::OnSpeechCancelledFunc);
-
-	UYapSpeechHandleBFL::BindToOnSpeechComplete(_SpeechOwner, _Handle, OnSpeechComplete);
+	// I would prefer to invalidate the incoming handle here for correctness, but I can't. Blueprint won't modify the original reference at the end of a latent node, it just treats it like a copy.
+	_Handle.Invalidate();
 }

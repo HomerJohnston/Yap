@@ -71,7 +71,11 @@ protected:
 
 	/** If set, the character will not be automatically registered to Yap during BeginPlay. */
 	UPROPERTY(EditAnywhere, AdvancedDisplay, Category = "Yap Character")
-	bool bPreventAutoRegister = false;
+	bool bPreventAutoRegisterComponent = false;
+
+	/** If set, the character will not be automatically registered to Yap during BeginPlay. */
+	UPROPERTY(EditAnywhere, AdvancedDisplay, Category = "Yap Character")
+	bool bPreventAutoRegisterCharacterDefinition = false;
 
 	/** When this character speaks, this data will be used for its name, portrait info, etc.; this should normally only be used for dynamic characters (NPCs) and not for project characters. */
 	UPROPERTY(EditAnywhere, Category = "Yap Character")
@@ -81,15 +85,18 @@ protected:
 protected:
 	
 	UPROPERTY(Transient)
-	bool bRegistered = false;
+	bool bComponentRegistered = false;
+
+	UPROPERTY(Transient)
+	bool bDefinitionRegistered = false;
 
 	// PUBLIC API
 public:
 	UFUNCTION(BlueprintCallable, Category = "Yap|Character")
-	void RegisterYapCharacter();
+	void RegisterCharacterDefinition();
 
 	UFUNCTION(BlueprintCallable, Category = "Yap|Character")
-	void UnregisterYapCharacter();
+	void UnregisterCharacterDefinition();
 
 	const FName GetCharacterID() { return Identity.Get(); }
 

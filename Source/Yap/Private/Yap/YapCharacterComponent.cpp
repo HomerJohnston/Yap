@@ -22,17 +22,29 @@ void UYapCharacterComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (!bPreventAutoRegister && Identity.UsesCustomID())
+	if (!bComponentRegistered)
 	{
-		RegisterYapCharacter();
+		GetWorld()->GetSubsystem<UYapSubsystem>()->RegisterCharacterComponent(this);
+		bComponentRegistered = true;
+	}
+	
+	if (!bPreventAutoRegisterCharacterDefinition && Identity.UsesCustomID())
+	{
+		RegisterCharacterDefinition();
 	}
 }
 
 void UYapCharacterComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	if (bRegistered)
+	if (bComponentRegistered)
 	{
-		UnregisterYapCharacter();
+		GetWorld()->GetSubsystem<UYapSubsystem>()->UnregisterCharacterComponent(this);
+		bComponentRegistered = false;
+	}
+	
+	if (!bPreventAutoRegisterCharacterDefinition && Identity.UsesCustomID())
+	{
+		UnregisterCharacterDefinition();
 	}
 	
 	Super::EndPlay(EndPlayReason);
@@ -43,26 +55,28 @@ const FGameplayTag& UYapCharacterComponent::GetIdentityRootTag()
 	return UYapProjectSettings::GetCharacterRootTag();
 }
 
-void UYapCharacterComponent::RegisterYapCharacter()
+void UYapCharacterComponent::RegisterCharacterDefinition()
 {
-	GetWorld()->GetSubsystem<UYapSubsystem>()->RegisterCharacterComponent(this);
-
-	UYapCharacterManager& CharacterManager = UYapSubsystem::GetCharacterManager(this);
-
-	CharacterManager.RegisterCharacter(Identity.Get(), CharacterDefinition, true);
+	if (bDefinitionRegistered)
+	{
+		return;
+	}
 	
-	bRegistered = true;
+	UYapCharacterManager& CharacterManager = UYapSubsystem::GetCharacterManager(this);
+	CharacterManager.RegisterCharacter(Identity.Get(), CharacterDefinition, true);
+	bDefinitionRegistered = true;
 }
 
-void UYapCharacterComponent::UnregisterYapCharacter()
+void UYapCharacterComponent::UnregisterCharacterDefinition()
 {
-	GetWorld()->GetSubsystem<UYapSubsystem>()->UnregisterCharacterComponent(this);
-
-	UYapCharacterManager& CharacterManager = UYapSubsystem::GetCharacterManager(this);
-
-	CharacterManager.UnregisterCharacter(Identity.Get());
+	if (!bDefinitionRegistered)
+	{
+		return;
+	}
 	
-	bRegistered = false;
+	UYapCharacterManager& CharacterManager = UYapSubsystem::GetCharacterManager(this);
+	CharacterManager.UnregisterCharacter(Identity.Get());
+	bDefinitionRegistered = false;
 }
 
 #undef LOCTEXT_NAMESPACE

@@ -28,7 +28,7 @@ void UYapCharacterComponent::BeginPlay()
 		bComponentRegistered = true;
 	}
 	
-	if (!bPreventAutoRegisterCharacterDefinition && Identity.UsesCustomID())
+	if (!bPreventAutoRegisterCharacterDefinition && !Identity.UsesProjectCharacter())
 	{
 		RegisterCharacterDefinition();
 	}
@@ -42,7 +42,7 @@ void UYapCharacterComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		bComponentRegistered = false;
 	}
 	
-	if (!bPreventAutoRegisterCharacterDefinition && Identity.UsesCustomID())
+	if (!bPreventAutoRegisterCharacterDefinition && !Identity.UsesProjectCharacter())
 	{
 		UnregisterCharacterDefinition();
 	}
@@ -63,7 +63,7 @@ void UYapCharacterComponent::RegisterCharacterDefinition()
 	}
 	
 	UYapCharacterManager& CharacterManager = UYapSubsystem::GetCharacterManager(this);
-	CharacterManager.RegisterCharacter(Identity.Get(), CharacterDefinition, true);
+	CharacterManager.RegisterCharacter(Identity.Get(this), CharacterDefinition, true);
 	bDefinitionRegistered = true;
 }
 
@@ -75,7 +75,7 @@ void UYapCharacterComponent::UnregisterCharacterDefinition()
 	}
 	
 	UYapCharacterManager& CharacterManager = UYapSubsystem::GetCharacterManager(this);
-	CharacterManager.UnregisterCharacter(Identity.Get());
+	CharacterManager.UnregisterCharacter(Identity.Get(this));
 	bDefinitionRegistered = false;
 }
 

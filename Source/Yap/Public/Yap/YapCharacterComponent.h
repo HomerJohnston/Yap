@@ -36,21 +36,36 @@ private:
 	
 	UPROPERTY(EditAnywhere, Category = "Default")
 	FGameplayTag Identity_Tag;
+
+	UPROPERTY(VisibleAnywhere, Transient)
+	FName Identity_Auto;
 	
 public:
-	FName Get() const
+	FName Get(UObject* Owner)
 	{
+		if (Identity_Name != NAME_None)
+		{
+			return Identity_Name;
+		}
+		
 		if (Identity_Tag.IsValid())
 		{
 			return Identity_Tag.GetTagName();
 		}
 
-		return Identity_Name;
+		if (Identity_Auto == NAME_None)
+		{
+			FGuid GUID = FGuid::NewGuid();
+			
+			Identity_Auto = FName(Owner->GetFName().ToString() + "_" + GUID.ToString()); // TODO I need to investigate if this is stable long-term (e.g. after saving/destroying lots of actors or 
+		}
+
+		return Identity_Auto;
 	}
 
-	bool UsesCustomID()
+	bool UsesProjectCharacter()
 	{
-		return Identity_Name != NAME_None;
+		return Identity_Tag.IsValid();
 	}
 };
 
@@ -98,7 +113,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Yap|Character")
 	void UnregisterCharacterDefinition();
 
-	const FName GetCharacterID() { return Identity.Get(); }
+	const FName GetCharacterID() { return Identity.Get(GetOwner()); }
 
 	// OTHER API
 protected:

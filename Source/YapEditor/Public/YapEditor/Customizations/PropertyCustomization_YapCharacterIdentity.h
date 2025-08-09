@@ -22,6 +22,7 @@ public:
 
 	TSharedPtr<IPropertyHandle> TagProperty;
 	TSharedPtr<IPropertyHandle> NameProperty;
+	TSharedPtr<IPropertyHandle> AutoNameProperty;
 	
 	FText Text_NameContent() const;
 	

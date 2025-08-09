@@ -127,10 +127,19 @@ FText SYapCharacterIDSelector::Text_TagValue() const
 		return FText::FromName(IDName.Get());
 	}
 
-	FGameplayTag TagVal = IDTag.Get();
-	
-	return FText::FromName(TagVal.GetTagName());
+	if (IDTag.Get().IsValid())
+	{
+		return FText::FromName(IDTag.Get().GetTagName());
+	}
 
+	if (GEditor && GEditor->IsPlaySessionInProgress())
+	{
+		return LOCTEXT("YapCharacterID_Unset", "<Unset>");
+	}
+	else
+	{
+		return LOCTEXT("YapCharacterID_AutoHint", "(auto)");
+	}
 	/*
 	FString TagAsString = IDTag.Get().ToString();
 
@@ -207,8 +216,13 @@ FSlateColor SYapCharacterIDSelector::ColorAndOpacity_TagText() const
 	{
 		return YapColor::LightBlue;
 	}
-	
-	return YapColor::OrangeRed;
+
+	if (GEditor && GEditor->IsPlaySessionInProgress())
+	{
+		return YapColor::OrangeRed;
+	}
+
+	return YapColor::Gray;
 }
 
 // ------------------------------------------------------------------------------------------------

@@ -18,7 +18,7 @@ UYapRunSpeechLatentNode* UYapRunSpeechLatentNode::RunSpeechLatent(
 	FText TitleText,
 	FName DirectedAt,
 	bool bSkippable,
-	TSubclassOf<UFlowNode_YapDialogue> NodeType,
+	TSubclassOf<UFlowNode_YapDialogue> DialogueType,
 	UPARAM(ref) FYapSpeechHandle& Handle)
 {
 	UYapRunSpeechLatentNode* Node = NewObject<UYapRunSpeechLatentNode>();
@@ -56,7 +56,7 @@ UYapRunSpeechLatentNode* UYapRunSpeechLatentNode::RunSpeechLatent(
 	Node->Data.TitleText = TitleText;
 	Node->Data.DirectedAtID = DirectedAt;
 	Node->Data.bSkippable = bSkippable;
-	Node->_NodeType = NodeType;
+	Node->_NodeType = DialogueType;
 	Node->_SpeechOwner = SpeechOwner;
 
 	UYapSubsystem* Subsystem = UYapSubsystem::Get(SpeechOwner);

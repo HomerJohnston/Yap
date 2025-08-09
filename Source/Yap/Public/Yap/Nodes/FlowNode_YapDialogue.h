@@ -71,7 +71,7 @@ struct FYapFragmentRunData
 
 // ------------------------------------------------------------------------------------------------
 /**
- * Main dialogue node class. 
+ * Default dialogue node class. Use this for the most common type of dialogue in your game such as normal interactive speech. 
  */
 UCLASS(Blueprintable, BlueprintType, meta = (DisplayName = "Dialogue", Keywords = "yap")) /*, ToolTip = "Emits Yap dialogue events"*/
 class YAP_API UFlowNode_YapDialogue : public UFlowNode

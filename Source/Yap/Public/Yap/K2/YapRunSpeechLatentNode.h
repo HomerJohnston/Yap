@@ -61,7 +61,7 @@ protected:
 	 * @param TitleText Title text info to include in speech data.
 	 * @param DirectedAtID Who we are speaking to, if applicable. 
 	 * @param bSkippable Can this speech be interrupted/cancelled/skipped?
-	 * @param NodeType What dialogue type is this? Used to read config settings.
+	 * @param DialogueType What dialogue type is this? Used to read config settings.
 	 * @param SpeechOwner Who owns this speech object? If left unset, Yap will use 'this'.
 	 * @param Handle Resulting handle, optionally used for cancelling speech.
 	 * @return 
@@ -77,7 +77,7 @@ protected:
 		FText TitleText,
 		FName DirectedAtID,
 		bool bSkippable,
-		TSubclassOf<UFlowNode_YapDialogue> NodeType,
+		TSubclassOf<UFlowNode_YapDialogue> DialogueType,
 		FYapSpeechHandle& Handle);
 
 	UFUNCTION()

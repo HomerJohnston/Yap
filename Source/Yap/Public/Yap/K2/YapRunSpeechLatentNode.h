@@ -14,7 +14,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FDelayOutputPin);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPSOnAdvancedSpawnPrefabAsyncActionCreatedOutputPin, UObject*, AdvancedSpawnPrefabAsyncAction);
 
 UCLASS()
-class UYapRunSpeechLatentNode : public UBlueprintAsyncActionBase
+class YAP_API UYapRunSpeechLatentNode : public UBlueprintAsyncActionBase
 {
 	GENERATED_BODY()
 
@@ -71,7 +71,7 @@ protected:
 		UObject* SpeechOwner,
 		FName CharacterID,
 		FText DialogueText,
-		UObject* DialogueAudioAsset,
+		UPARAM(meta = (YapPin = "DialogueAudioAsset")) UObject* DialogueAudioAsset,
 		FGameplayTag MoodTag,
 		float SpeechTime,
 		FText TitleText,
@@ -83,5 +83,8 @@ protected:
 	UFUNCTION()
 	void OnSpeechCompleteFunc(UObject* Broadcaster, const FYapSpeechHandle& Handle, EYapSpeechCompleteResult Result);
 
+	UFUNCTION()
+	static TArray<TSoftClassPtr<UObject>> StaticTest();
+	
 	void Activate() override;
 };

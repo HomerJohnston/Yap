@@ -11,7 +11,7 @@
 
 FText UAssetDefinition_YapNodeConfig::GetAssetDisplayName() const
 {
-	return LOCTEXT("YapNodeConfigAssetName", "Yap Node Config");
+	return LOCTEXT("YapNodeConfigAssetName", "Yap Dialogue Type Config");
 }
 
 FLinearColor UAssetDefinition_YapNodeConfig::GetAssetColor() const

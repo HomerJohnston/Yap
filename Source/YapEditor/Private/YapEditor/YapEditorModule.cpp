@@ -6,6 +6,7 @@
 #include "Yap/YapCharacterAsset.h"
 #include "Yap/YapCharacterComponent.h"
 #include "Yap/YapProjectSettings.h"
+#include "YapEditor/YapAudioAssetPinFactory.h"
 #include "YapEditor/YapButtonCommands.h"
 #include "YapEditor/AssetThumbnailRenderers/YapCharacterThumbnailRenderer.h"
 #include "YapEditor/YapEditorStyle.h"
@@ -36,6 +37,11 @@ void FYapEditorModule::StartupModule()
 	REGISTER_PROPERTY_CUSTOMIZATION(FYapCharacterIdentity, FPropertyCustomization_YapCharacterIdentity);
 
 	REGISTER_THUMBNAIL_RENDERER(UYapCharacterAsset, UYapCharacterThumbnailRenderer);
+	
+	// create your factory and shared pointer to it.
+	TSharedPtr<FYapAudioAssetPinFactory> Factory = MakeShareable(new FYapAudioAssetPinFactory());
+	// and now register it.
+	FEdGraphUtilities::RegisterVisualPinFactory(Factory);
 	
 	StartupModuleBase();
 	// FGPGEditorModuleBase implementation END

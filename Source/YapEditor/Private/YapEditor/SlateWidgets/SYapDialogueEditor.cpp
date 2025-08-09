@@ -605,13 +605,12 @@ bool SYapDialogueEditor::OnShouldFilterAsset_AudioAssetWidget(const FAssetData& 
 {
 	const TArray<TSoftClassPtr<UObject>>& Classes = UYapProjectSettings::GetAudioAssetClasses();
 
-	// TODO async loading
-	if (Classes.ContainsByPredicate( [&AssetData] (const TSoftClassPtr<UObject>& Class) { return AssetData.GetClass(EResolveClass::Yes) == Class; } ))
+	if (Classes.Contains(AssetData.GetClass(EResolveClass::Yes)))
 	{
-		return true;
+		return false;
 	}
 
-	return false;	
+	return true;	
 }
 
 EVisibility SYapDialogueEditor::Visibility_AudioAssetErrorState(const TSoftObjectPtr<UObject>* Asset) const

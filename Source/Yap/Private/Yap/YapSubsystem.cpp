@@ -879,7 +879,7 @@ void UYapSubsystem::MarkConversationSpeechAsFragile(const FYapSpeechHandle& Hand
 
 // ------------------------------------------------------------------------------------------------
 
-FYapConversation* UYapSubsystem::GetConversationByOwner(UObject* WorldContext, UObject* Owner)
+FYapConversation* UYapSubsystem::GetConversationByOwner(const UObject* WorldContext, UObject* Owner)
 {
 	UYapSubsystem* Subsystem = Get(WorldContext);
 	
@@ -888,7 +888,7 @@ FYapConversation* UYapSubsystem::GetConversationByOwner(UObject* WorldContext, U
 
 // ------------------------------------------------------------------------------------------------
 
-FYapConversation* UYapSubsystem::GetConversationByHandle(UObject* WorldContext, const FYapConversationHandle& Handle)
+FYapConversation* UYapSubsystem::GetConversationByHandle(const UObject* WorldContext, const FYapConversationHandle& Handle)
 {
 	UYapSubsystem* Subsystem = Get(WorldContext);
 

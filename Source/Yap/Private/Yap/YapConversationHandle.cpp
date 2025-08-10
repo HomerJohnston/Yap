@@ -112,4 +112,9 @@ FYapConversationHandle UYapConversationHandleBFL::ReleaseClosingInterlock(FYapCo
     return Handle;
 }
 
+bool UYapConversationHandleBFL::IsValid(const UObject* WorldContext, const FYapConversationHandle& Handle)
+{
+    return !!UYapSubsystem::GetConversationByHandle(WorldContext, Handle);
+}
+
 // TODO error logging?

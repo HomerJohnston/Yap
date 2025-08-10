@@ -461,10 +461,10 @@ public:
 	
 	// TODO I also hate these things
 	/**  */
-	static FYapConversation* GetConversationByOwner(UObject* WorldContext, UObject* Owner);
+	static FYapConversation* GetConversationByOwner(const UObject* WorldContext, UObject* Owner);
 	
 	/**  */
-	static FYapConversation* GetConversationByHandle(UObject* WorldContext, const FYapConversationHandle& Handle);
+	static FYapConversation* GetConversationByHandle(const UObject* WorldContext, const FYapConversationHandle& Handle);
 
 	/**  
 	static FGameplayTag GetActiveConversationName(UWorld* World);

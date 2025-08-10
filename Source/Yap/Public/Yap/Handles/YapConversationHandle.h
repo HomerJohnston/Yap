@@ -115,4 +115,7 @@ public:
     /** Remove an interlock to allow a "Close Conversation" flow node to finish. When all interlocks are removed it will progress immediately. */
     UFUNCTION(BlueprintCallable, Category = "Yap|ConversationHandle", meta = (DefaultToSelf = "LockObject"))
     static UPARAM(DisplayName = "Handle") FYapConversationHandle ReleaseClosingInterlock(FYapConversationHandle Handle, UObject* LockObject);
+
+    UFUNCTION(BlueprintCallable, DisplayName = "Is Valid Handle", BlueprintPure, Category = "Yap|ConversationHandle", meta = (WorldContext = "WorldContext"))
+    static bool IsValid(const UObject* WorldContext, const FYapConversationHandle& Handle);
 };

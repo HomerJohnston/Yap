@@ -61,8 +61,12 @@ void UFlowNode_YapConversation_Close::FinishNode(UObject* Instigator, FYapConver
 void UFlowNode_YapConversation_Close::FinishNode_Internal()
 {
 	UE_LOG(LogYap, Verbose, TEXT("Conversation closed: %s for owner: %s"), *Conversation.GetTagName().ToString(), *GetFlowAsset()->GetName());
-
-	UYapSubsystem::GetConversationByOwner(this, GetFlowAsset())->OnConversationClosed.RemoveAll(this);
+	
+	if (FYapConversation* ConversationInstance = UYapSubsystem::GetConversationByOwner(this, GetFlowAsset()))
+	{
+		// TODO: Think about this more. This code should basically never run. The subsystem kills the conversation when it closes, so this should just vanish. Should I erase this?
+		ConversationInstance->OnConversationClosed.RemoveAll(this);
+	}
 	
 	TriggerFirstOutput(true);
 }

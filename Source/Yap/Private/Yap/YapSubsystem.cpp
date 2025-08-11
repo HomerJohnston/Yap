@@ -705,6 +705,8 @@ EYapConversationState UYapSubsystem::StartClosingConversation(FYapConversationHa
 		if (ConversationPtr->GetState() == EYapConversationState::Closed)
 		{
 			ConversationQueue.Remove(Handle);
+
+			ActiveSpeechMap.RemoveConversation(Handle);
 			
 			Handle.Invalidate();
 			

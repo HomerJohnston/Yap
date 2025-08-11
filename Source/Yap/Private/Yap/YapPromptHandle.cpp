@@ -45,6 +45,11 @@ void UYapPromptHandleBFL::RunPrompt(UObject* WorldContext, const FYapPromptHandl
 	UYapSubsystem::RunPrompt(WorldContext, Handle);
 }
 
+bool UYapPromptHandleBFL::EqualEqual_YapPromptHandle(const FYapPromptHandle& HandleA, const FYapPromptHandle& HandleB)
+{
+	return HandleA.GetGuid() == HandleB.GetGuid();
+}
+
 /*
 bool UYapPromptHandleBFL::Subscribe(const FYapPromptHandle& Handle, FYapPromptHandleChosen Delegate)
 {

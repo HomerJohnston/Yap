@@ -84,4 +84,7 @@ public:
 	/** After a prompt node is entered it will supply you with prompt handles for each option. Use this to select that prompt and continue the conversation. */
 	UFUNCTION(BlueprintCallable, Category = "Yap|PromptHandle", meta = (WorldContext = "WorldContext"))
 	static void RunPrompt(UObject* WorldContext, const FYapPromptHandle& Handle);
+
+	UFUNCTION(BlueprintPure, meta = (DisplayName = "Equal YapPromptHandle", CompactNodeTitle = "==", Keywords = "== equal"), Category = "Math")
+	static bool EqualEqual_YapPromptHandle(const FYapPromptHandle &HandleA, const FYapPromptHandle &HandleB);
 };

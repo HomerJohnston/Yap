@@ -25,7 +25,7 @@ struct YAP_API FYapPortraitList
 	GENERATED_BODY()
 
 	/** Texture for each mood. Moods are stored as FNames instead of Gameplay Tags for easier handling. */
-	UPROPERTY(EditAnywhere, EditFixedSize, meta=(ReadOnlyKeys, ForceInlineRow))
+	UPROPERTY(EditAnywhere, Category = "Default", EditFixedSize, meta=(ReadOnlyKeys, ForceInlineRow))
 	TMap<FName, TObjectPtr<UTexture2D>> Map;
 };
 

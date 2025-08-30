@@ -58,7 +58,7 @@ struct FYapBitReplacement
 	UPROPERTY(EditAnywhere, Category = "Default")
 	TOptional<FGameplayTag> MoodTag = FGameplayTag::EmptyTag;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Default")
 	FGameplayTag Test = FGameplayTag::EmptyTag;
 	
 	/**  */

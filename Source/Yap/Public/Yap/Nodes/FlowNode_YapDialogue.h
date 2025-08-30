@@ -103,7 +103,7 @@ public:
 	
 protected:
 	/**  */
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Default")
 	TObjectPtr<UYapNodeConfig> Config;
 	
 	/** What type of node we are (talk, prompt). */

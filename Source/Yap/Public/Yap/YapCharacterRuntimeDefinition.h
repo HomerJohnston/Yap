@@ -16,13 +16,13 @@ struct FYapCharacterRuntimeDefinition
 {
 	GENERATED_BODY()
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, Category = "Default", BlueprintReadWrite)
 	FText Name;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, Category = "Default", BlueprintReadWrite)
 	UTexture2D* DefaultPortrait;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, Category = "Default", BlueprintReadWrite)
 	FLinearColor Color;
 
 	void InitializeCharacter(UYapCharacterAsset* Character) const;

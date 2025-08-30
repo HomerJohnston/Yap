@@ -44,11 +44,11 @@ public:
 
 protected:
     /**  */
-    UPROPERTY(EditAnywhere)
+    UPROPERTY(EditAnywhere, Category = "Default")
     FGameplayTag CharacterTag;
 
     /**  */
-    UPROPERTY(EditAnywhere)
+    UPROPERTY(EditAnywhere, Category = "Default")
     TSoftObjectPtr<UObject> CharacterAsset;
 
 public:

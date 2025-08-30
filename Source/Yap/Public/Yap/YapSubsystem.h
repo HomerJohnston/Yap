@@ -228,7 +228,7 @@ struct FYapDialogueNodeClassType
 		}
 	}
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, Category = "Default", BlueprintReadWrite)
 	TSubclassOf<UFlowNode_YapDialogue> NodeType;
 
 	// Implicit conversion... usually works but not everywhere?

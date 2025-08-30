@@ -39,7 +39,7 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Default")
 	FGameplayTag Identity_Tag;
 
-	UPROPERTY(VisibleAnywhere, Transient)
+	UPROPERTY(VisibleAnywhere, Category = "Default", Transient)
 	FName Identity_Auto;
 	
 public:
@@ -86,17 +86,17 @@ protected:
     UPROPERTY(EditAnywhere, Category = "Yap Character")
 	FYapCharacterIdentity Identity;
 
-	/** If set, the character will not be automatically registered to Yap during BeginPlay. */
-	UPROPERTY(EditAnywhere, AdvancedDisplay, Category = "Yap Character")
-	bool bPreventAutoRegisterComponent = false;
-
-	/** If set, the character will not be automatically registered to Yap during BeginPlay. */
-	UPROPERTY(EditAnywhere, AdvancedDisplay, Category = "Yap Character")
-	bool bPreventAutoRegisterCharacterDefinition = false;
-
 	/** When this character speaks, this data will be used for its name, portrait info, etc.; this should normally only be used for dynamic characters (NPCs) and not for project characters. */
 	UPROPERTY(EditAnywhere, Category = "Yap Character")
 	FYapCharacterRuntimeDefinition CharacterDefinition;
+
+	/** If set, the character will not be automatically registered to Yap during BeginPlay. */
+	UPROPERTY(EditAnywhere, Category = "Yap Character", AdvancedDisplay)
+	bool bPreventAutoRegisterComponent = false;
+
+	/** If set, the character will not be automatically registered to Yap during BeginPlay. */
+	UPROPERTY(EditAnywhere, Category = "Yap Character", AdvancedDisplay)
+	bool bPreventAutoRegisterCharacterDefinition = false;
 
 	// STATE
 protected:

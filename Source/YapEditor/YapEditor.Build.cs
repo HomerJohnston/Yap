@@ -4,9 +4,9 @@ public class YapEditor : ModuleRules
 {
     public YapEditor(ReadOnlyTargetRules Target) : base(Target)
     {
-        PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
+        PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-        bUseUnity = false;
+        bUseUnity = true;
         
         PublicDependencyModuleNames.AddRange(
             new string[]

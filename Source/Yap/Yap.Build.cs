@@ -6,9 +6,9 @@ public class Yap : ModuleRules
 {
 	public Yap(ReadOnlyTargetRules Target) : base(Target)
 	{
-		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
-		
-		bUseUnity = false;
+		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+
+		bUseUnity = true;
 		
 		PublicDefinitions.AddRange(
 			new string[] {
@@ -54,7 +54,7 @@ public class Yap : ModuleRules
 			}
 			);
 
-		if (Target.Version.MinorVersion < 5)
+		if (Target.Version.MajorVersion == 5 && Target.Version.MinorVersion < 5)
 		{
 			PrivateDependencyModuleNames.AddRange(
 				new string[]

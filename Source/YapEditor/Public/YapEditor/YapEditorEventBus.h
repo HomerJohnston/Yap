@@ -3,6 +3,9 @@
 
 #pragma once
 
+#include "CoreTypes.h"
+#include "SlateWidgets/SYapGameplayTagTypedPicker.h"
+
 #define LOCTEXT_NAMESPACE "YapEditor"
 
 enum class EYapEventSubscription : uint8
@@ -19,8 +22,6 @@ struct FYapEdEventArg
 	EYapEventSubscription Setting = EYapEventSubscription::Unspecified;
 
 	typename TMemFunPtrType<false, ClassType, void(Args...)>::Type Function;
-
-	
 	
 	void Ignore()
 	{

@@ -13,6 +13,8 @@
 #include "Yap/YapProjectSettings.h"
 #include "YapEditor/YapEditorStyle.h"
 #include "Engine/Texture2D.h"
+#include "Framework/Application/SlateApplication.h"
+#include "Subsystems/AssetEditorSubsystem.h"
 #include "UObject/ObjectSaveContext.h"
 #include "YapEditor/YapDeveloperSettings.h"
 #include "YapEditor/Globals/YapTagHelpers.h"

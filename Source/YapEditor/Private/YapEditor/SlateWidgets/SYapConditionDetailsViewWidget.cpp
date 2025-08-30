@@ -4,6 +4,11 @@
 #include "YapEditor/SlateWidgets/SYapConditionDetailsViewWidget.h"
 
 #include "PropertyCustomizationHelpers.h"
+#include "Modules/ModuleManager.h"
+#include "Widgets/Images/SImage.h"
+#include "Widgets/Input/SButton.h"
+#include "Widgets/Layout/SBox.h"
+#include "Widgets/Layout/SScrollBox.h"
 #include "YapEditor/YapDeveloperSettings.h"
 #include "YapEditor/YapEditorColor.h"
 #include "YapEditor/YapEditorStyle.h"

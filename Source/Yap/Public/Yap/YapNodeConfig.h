@@ -7,7 +7,10 @@
 #include "Yap/Enums/YapTimeMode.h"
 #include "GameplayTagContainer.h"
 #include "GameplayTagFilterHelper.h"
+#include "Fonts/SlateFontInfo.h"
 #include "YapNodeConfig.generated.h"
+
+struct FSlateImageBrush;
 
 #define LOCTEXT_NAMESPACE "YapEditor"
 

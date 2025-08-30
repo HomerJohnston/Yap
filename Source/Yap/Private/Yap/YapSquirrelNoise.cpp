@@ -3,6 +3,9 @@
 // Original by: Guy (Drakynfly) Lundvall. All Rights Reserved.
 
 #include "Yap/YapSquirrelNoise.h"
+
+#include "Engine/Engine.h"
+#include "Engine/World.h"
 #include "Yap/SquirrelNoise5.hpp"
 
 /*
@@ -159,7 +162,7 @@ void UYapSquirrel::PostInitProperties()
 		if (const UWorld* World = GetWorld())
 		{
 			// At runtime, Squirrels should be given random (but still seeded) positions
-			if (World->HasBegunPlay())
+			if (World->HasBegunPlay() && GEngine)
 			{
 				if (UYapSquirrelSubsystem* Subsystem = GEngine->GetEngineSubsystem<UYapSquirrelSubsystem>())
 				{

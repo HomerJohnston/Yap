@@ -3,6 +3,9 @@
 
 #include "YapEditor/SlateWidgets/SYapButtonPopup.h"
 
+#include "Framework/Application/SlateApplication.h"
+#include "Widgets/Input/SButton.h"
+#include "Widgets/Layout/SBox.h"
 #include "YapEditor/YapEditorColor.h"
 #include "YapEditor/YapEditorStyle.h"
 

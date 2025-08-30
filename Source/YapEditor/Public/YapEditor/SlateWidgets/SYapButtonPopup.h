@@ -3,9 +3,16 @@
 
 #pragma once
 
-#define LOCTEXT_NAMESPACE "YapEditor"
 
+#include "Components/HorizontalBox.h"
+#include "Delegates/DelegateCombinations.h"
 #include "YapEditor/YapEditorColor.h"
+#include "Templates/SharedPointer.h"
+#include "Widgets/Input/SMenuAnchor.h"
+
+class SButton;
+
+#define LOCTEXT_NAMESPACE "YapEditor"
 
 DECLARE_DELEGATE(FOnOpened)
 DECLARE_DELEGATE_RetVal(TSharedRef<SWidget>, FPopupContentGetter)

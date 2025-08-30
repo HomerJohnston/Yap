@@ -4,6 +4,8 @@
 #pragma once
 
 #define LOCTEXT_NAMESPACE "YapEditor"
+#include "CoreTypes.h"
+#include "Widgets/SCompoundWidget.h"
 
 class UYapNodeConfig;
 class SFlowGraphNode_YapFragmentWidget;

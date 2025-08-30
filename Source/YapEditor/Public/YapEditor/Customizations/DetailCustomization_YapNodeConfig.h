@@ -4,7 +4,9 @@
 #pragma once
 
 #include "IDetailCustomization.h"
+#include "Fonts/SlateFontInfo.h"
 
+struct FSlateBrush;
 class UYapProjectSettings;
 class SGameplayTagPicker;
 struct FGameplayTag;
@@ -26,10 +28,6 @@ public:
     }
 
 protected:
-    FText GetMoodTags() const;
-
-    const FSlateBrush* TODOBorderImage() const;
-
     void CustomizeDetails(IDetailLayoutBuilder& DetailBuilder) override;
 
     void ProcessCategory(IDetailCategoryBuilder& Category) const;

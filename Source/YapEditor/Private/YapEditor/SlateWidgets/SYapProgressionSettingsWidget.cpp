@@ -3,6 +3,9 @@
 
 #include "YapEditor/SlateWidgets/SYapProgressionSettingsWidget.h"
 
+#include "Widgets/Images/SImage.h"
+#include "Widgets/Input/SButton.h"
+#include "Widgets/Layout/SBox.h"
 #include "Yap/Enums/YapAutoAdvanceFlags.h"
 #include "Yap/Nodes/FlowNode_YapDialogue.h"
 #include "YapEditor/YapEditorColor.h"

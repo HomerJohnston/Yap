@@ -3,14 +3,17 @@
 
 #pragma once
 
+#include "Editor.h"
 #include "Textures/SlateIcon.h"
 #include "GameplayTagContainer.h"
+#include "TickableEditorObject.h"
 #include "Yap/Interfaces/IYapCharacterInterface.h"
 #include "YapEditorSubsystem.generated.h"
 
 class UYapCharacterAsset;
 class FYapInputTracker;
 struct FYapFragment;
+struct FSlateImageBrush;
 
 #define LOCTEXT_NAMESPACE "YapEditor"
 

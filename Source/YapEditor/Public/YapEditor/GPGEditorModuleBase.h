@@ -10,6 +10,10 @@
 #include "AssetToolsModule.h"
 #include "AssetTypeCategories.h"
 
+#if WITH_EDITOR
+#include "PropertyEditorModule.h"
+#endif
+
 class UObject;
 class UThumbnailRenderer;
 class IAssetTypeActions;

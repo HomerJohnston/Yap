@@ -3,6 +3,14 @@
 
 #include "YapEditor/SlateWidgets/SYapActivationCounterWidget.h"
 
+#include "Editor.h"
+#include "Components/VerticalBox.h"
+#include "Framework/SlateDelegates.h"
+#include "Styling/CoreStyle.h"
+#include "Widgets/Input/SEditableText.h"
+#include "Widgets/Layout/SBox.h"
+#include "Widgets/Layout/SSeparator.h"
+#include "Widgets/Text/STextBlock.h"
 #include "YapEditor/YapEditorColor.h"
 
 #define LOCTEXT_NAMESPACE "YapEditor"

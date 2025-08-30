@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "Internationalization/Text.h"
+
 struct FGameplayTag;
 struct FGameplayTagContainer;
 

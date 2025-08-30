@@ -5,8 +5,13 @@
 
 #include "GameplayTagContainer.h"
 #include "SYapHeadingBlock.h"
+#include "Engine/Blueprint.h"
 #include "Filters/SFilterSearchBox.h"
+#include "Framework/Application/SlateApplication.h"
 #include "Widgets/Colors/SColorBlock.h"
+#include "Widgets/Images/SImage.h"
+#include "Widgets/Input/SButton.h"
+#include "Widgets/Layout/SScrollBox.h"
 #include "Yap/YapCharacterStaticDefinition.h"
 #include "Yap/YapProjectSettings.h"
 #include "YapEditor/YapEditorColor.h"

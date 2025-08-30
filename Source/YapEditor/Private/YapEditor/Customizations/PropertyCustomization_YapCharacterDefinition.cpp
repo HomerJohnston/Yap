@@ -5,8 +5,12 @@
 
 #include "DetailWidgetRow.h"
 #include "EditorClassUtils.h"
+#include "Blueprint/BlueprintSupport.h"
+#include "Engine/Blueprint.h"
+#include "Subsystems/AssetEditorSubsystem.h"
 #include "ThumbnailRendering/ThumbnailManager.h"
 #include "Widgets/Colors/SColorBlock.h"
+#include "Widgets/Layout/SBox.h"
 #include "Yap/YapCharacterAsset.h"
 #include "Yap/YapCharacterStaticDefinition.h"
 #include "Yap/YapProjectSettings.h"

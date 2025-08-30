@@ -3,11 +3,9 @@
 
 #include "YapEditor/YapTransactions.h"
 
+#include "Editor.h"
 #include "Editor/TransBuffer.h"
-#include "Nodes/FlowNodeBase.h"
-#include "Yap/YapLog.h"
-#include "YapEditor/GraphNodes/FlowGraphNode_YapBase.h"
-#include "YapEditor/YapEditorLog.h"
+#include "Engine/Engine.h"
 #include "YapEditor/GraphNodes/FlowGraphNode_YapDialogue.h"
 
 #define LOCTEXT_NAMESPACE "YapEditor"

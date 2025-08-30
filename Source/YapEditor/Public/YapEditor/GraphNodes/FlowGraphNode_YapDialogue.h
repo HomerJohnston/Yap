@@ -10,6 +10,7 @@
 class UFlowNode_YapDialogue;
 class UAkAudioEvent;
 class SGraphNode;
+class FUICommandList;
 struct FYapFragment;
 
 #define LOCTEXT_NAMESPACE "YapEditor"

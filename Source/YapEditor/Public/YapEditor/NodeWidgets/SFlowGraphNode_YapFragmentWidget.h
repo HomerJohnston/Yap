@@ -5,9 +5,15 @@
 
 #include "CoreMinimal.h"
 #include "EditorUndoClient.h"
+#include "SCheckBoxList.h"
+#include "Input/Reply.h"
+#include "Layout/Visibility.h"
+#include "Styling/SlateColor.h"
 #include "Yap/Enums/YapTimeMode.h"
 #include "Templates/SharedPointer.h"
 
+class SOverlay;
+class SBox;
 class UYapNodeConfig;
 class IYapCharacterInterface;
 class SYapDialogueEditor;
@@ -28,6 +34,8 @@ struct FFlowPin;
 struct FYapBitReplacement;
 struct FYapFragment;
 struct FGameplayTag;
+class SWidget;
+class SScrollBox;
 
 enum class EYapTimeMode : uint8;
 enum class EYapMissingAudioErrorLevel : uint8;

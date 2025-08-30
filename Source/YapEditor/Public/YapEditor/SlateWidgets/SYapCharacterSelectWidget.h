@@ -3,7 +3,9 @@
 
 #pragma once
 #include "GameplayTagContainer.h"
+#include "Widgets/SCompoundWidget.h"
 
+class SScrollBox;
 struct FGameplayTag;
 struct FYapFragment;
 class UFlowNode_YapDialogue;

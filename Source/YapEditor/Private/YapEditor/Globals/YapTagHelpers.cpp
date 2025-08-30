@@ -6,6 +6,7 @@
 #include "GameplayTagsEditorModule.h"
 #include "GameplayTagsManager.h"
 #include "AssetRegistry/AssetRegistryModule.h"
+#include "Misc/MessageDialog.h"
 #include "Yap/YapLog.h"
 #include "Yap/Globals/YapFileUtilities.h"
 #include "YapEditor/YapEditorSubsystem.h"

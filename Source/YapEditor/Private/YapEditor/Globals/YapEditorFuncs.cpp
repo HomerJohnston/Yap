@@ -7,6 +7,7 @@
 #include "YapEditor/YapDeveloperSettings.h"
 #include "ISettingsModule.h"
 #include "SGameplayTagPicker.h"
+#include "Modules/ModuleManager.h"
 #include "UObject/SavePackage.h"
 #include "Yap/YapProjectSettings.h"
 

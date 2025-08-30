@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "Math/Color.h"
+
 #define HOVER		1.20
 #define PRESS		0.80
 #define SEMITRANS	0.90

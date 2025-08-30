@@ -6,6 +6,7 @@
 #include "DetailWidgetRow.h"
 #include "IDetailChildrenBuilder.h"
 #include "SGameplayTagPicker.h"
+#include "Widgets/Input/SButton.h"
 #include "Yap/YapNodeConfig.h"
 #include "Yap/Globals/YapEditorWarning.h"
 #include "YapEditor/YapEditorColor.h"

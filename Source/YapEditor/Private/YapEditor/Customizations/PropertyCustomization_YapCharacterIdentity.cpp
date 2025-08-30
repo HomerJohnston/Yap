@@ -4,12 +4,12 @@
 #include "YapEditor/Customizations/PropertyCustomization_YapCharacterIdentity.h"
 
 #include "DetailWidgetRow.h"
+#include "Widgets/Text/STextBlock.h"
 #include "Yap/YapCharacterComponent.h"
 #include "Yap/YapLog.h"
-#include "YapEditor/YapEditorLog.h"
 #include "YapEditor/YapTransactions.h"
 #include "YapEditor/SlateWidgets/SYapCharacterIDSelector.h"
-#include "YapEditor/SlateWidgets/SYapGameplayTagTypedPicker.h"
+#include "Editor.h"
 
 #define LOCTEXT_NAMESPACE "YapEditor"
 

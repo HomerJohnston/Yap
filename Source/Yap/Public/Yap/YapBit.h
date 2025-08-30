@@ -7,6 +7,10 @@
 #include "YapText.h"
 #include "Yap/Globals/YapEditorWarning.h"
 
+#if WITH_EDITOR
+#include "Editor.h"
+#endif
+
 #include "YapBit.generated.h"
 
 struct FStreamableHandle;

@@ -3,6 +3,11 @@
 
 #include "YapEditor/SlateWidgets/SYapConditionsScrollBox.h"
 
+#include "Framework/Layout/Overscroll.h"
+#include "Widgets/Images/SImage.h"
+#include "Widgets/Input/SButton.h"
+#include "Widgets/Layout/SBox.h"
+#include "Widgets/Layout/SScrollBox.h"
 #include "YapEditor/YapEditorColor.h"
 #include "Yap/YapCondition.h"
 #include "YapEditor/YapEditorStyle.h"
@@ -12,7 +17,6 @@
 #include "YapEditor/SlateWidgets/SYapConditionDetailsViewWidget.h"
 
 #define LOCTEXT_NAMESPACE "YapEditor"
-
 
 TArray<UYapCondition*>* SYapConditionsScrollBox::GetConditionsArray()
 {

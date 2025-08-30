@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "Internationalization/Text.h"
+
 namespace Yap
 {
 #if WITH_EDITOR

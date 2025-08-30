@@ -3,9 +3,14 @@
 
 #pragma once
 
+#include "EditorUndoClient.h"
 #include "GameplayTagContainer.h"
 #include "IDetailCustomization.h"
+#include "Layout/Visibility.h"
 
+struct FSlateBrush;
+class IPropertyHandleMap;
+class IPropertyHandle;
 class UYapNodeConfig;
 class UFlowNode_YapDialogue;
 class UYapCharacterAsset;

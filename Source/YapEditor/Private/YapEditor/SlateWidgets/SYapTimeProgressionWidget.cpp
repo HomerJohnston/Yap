@@ -5,6 +5,8 @@
 
 #include "YapEditor/SlateWidgets/SYapTimeProgressionWidget.h"
 
+#include "Framework/Application/SlateApplication.h"
+#include "Widgets/Layout/SBox.h"
 #include "Yap/YapFragment.h"
 #include "Yap/Nodes/FlowNode_YapDialogue.h"
 #include "YapEditor/YapEditorColor.h"

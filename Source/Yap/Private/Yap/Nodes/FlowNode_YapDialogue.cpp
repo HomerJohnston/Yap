@@ -16,6 +16,7 @@
 #include "Yap/Enums/YapLoadContext.h"
 #include "Engine/World.h"
 #include "TimerManager.h"
+#include "Engine/Blueprint.h"
 #include "Yap/Enums/YapAutoAdvanceFlags.h"
 #include "Yap/Enums/YapInterruptibleFlags.h"
 

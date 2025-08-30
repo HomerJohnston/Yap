@@ -4,7 +4,9 @@
 #pragma once
 
 #include "Widgets/SCompoundWidget.h"
+#include "YapEditor/NodeWidgets/SFlowGraphNode_YapDialogueWidget.h"
 
+class SOverlay;
 class UFlowNode_YapDialogue;
 struct FYapFragment;
 

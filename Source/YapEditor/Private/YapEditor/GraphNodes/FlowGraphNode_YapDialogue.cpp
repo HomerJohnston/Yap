@@ -3,6 +3,8 @@
 
 #include "YapEditor/GraphNodes/FlowGraphNode_YapDialogue.h"
 
+#include "ToolMenu.h"
+#include "ToolMenuSection.h"
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "AssetRegistry/IAssetRegistry.h"
 #include "Graph/FlowGraphEditor.h"

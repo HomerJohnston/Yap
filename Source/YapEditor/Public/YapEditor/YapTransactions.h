@@ -2,6 +2,8 @@
 // This work is MIT-licensed. Feel free to use it however you wish, within the confines of the MIT license.
 
 #pragma once
+#include "UObject/NameTypes.h"
+#include "UObject/WeakObjectPtr.h"
 
 class UFlowGraphNode_YapBase;
 

@@ -4,6 +4,7 @@
 #include "YapEditor/SlateWidgets/SYapDialogueEditor.h"
 
 #include "PropertyCustomizationHelpers.h"
+#include "Widgets/Input/SButton.h"
 #include "Widgets/Input/SNumericEntryBox.h"
 #include "Widgets/Text/SMultiLineEditableText.h"
 #include "Yap/YapProjectSettings.h"

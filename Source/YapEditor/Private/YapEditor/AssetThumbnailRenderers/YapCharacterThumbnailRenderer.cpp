@@ -5,12 +5,14 @@
 
 #include "CanvasItem.h"
 #include "Engine/Canvas.h"
+#include "Engine/Texture2D.h"
+#include "TextureResource.h"
 #include "Yap/YapCharacterAsset.h"
 #include "Yap/YapProjectSettings.h"
 #include "YapEditor/YapEditorColor.h"
 #include "YapEditor/YapEditorStyle.h"
 
-#define LOCTEXT_NAMESPACE "Yap"
+#define LOCTEXT_NAMESPACE "YapEditor"
 
 void UYapCharacterThumbnailRenderer::GetThumbnailSize(UObject* Object, float Zoom, uint32& OutWidth, uint32& OutHeight) const
 {

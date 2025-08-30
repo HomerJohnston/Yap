@@ -3,11 +3,13 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
 #include "Yap/YapRunningFragment.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
+#include "Templates/SubclassOf.h"
+
 #include "YapBlueprintFunctionLibrary.generated.h"
 
+//class UFlowNode_YapDialogue;
 class UYapCharacterManager;
 class UYapCharacterAsset;
 struct FInstancedStruct;

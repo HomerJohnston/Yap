@@ -4,6 +4,7 @@
 #include "Yap/YapNodeConfig.h"
 
 #include "GameplayTagsManager.h"
+#include "Brushes/SlateImageBrush.h"
 #include "Yap/YapProjectSettings.h"
 #include "Yap/Globals/YapFileUtilities.h"
 

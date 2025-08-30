@@ -4,10 +4,13 @@
 #pragma once
 #include "GameplayTagContainer.h"
 #include "Kismet/BlueprintAsyncActionBase.h"
+#include "Templates/SubclassOf.h"
 #include "Yap/YapDataStructures.h"
 #include "Yap/Handles/YapSpeechHandle.h"
 
 #include "YapRunSpeechLatentNode.generated.h"
+
+class UFlowNode_YapDialogue;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FDelayOutputPin);
 

@@ -3,6 +3,8 @@
 
 #include "YapEditor/YapInputTracker.h"
 
+#include "Input/Events.h"
+
 #define LOCTEXT_NAMESPACE "YapEditor"
 
 FYapInputTracker::FYapInputTracker(UYapEditorSubsystem* InOwner)

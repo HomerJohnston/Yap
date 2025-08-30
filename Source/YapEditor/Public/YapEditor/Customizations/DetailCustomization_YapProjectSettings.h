@@ -4,7 +4,11 @@
 #pragma once
 
 #include "IDetailCustomization.h"
+#include "Fonts/SlateFontInfo.h"
+#include "Input/Reply.h"
 
+struct FSlateBrush;
+class IPropertyHandle;
 class UYapProjectSettings;
 class SGameplayTagPicker;
 struct FGameplayTag;

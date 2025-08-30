@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "YapInterruptibleFlags.generated.h"
+
 UENUM(meta = (Bitflags, UseEnumValuesAsMaskValuesInEditor = "true"))
 enum class EYapInterruptibleFlags : uint8
 {

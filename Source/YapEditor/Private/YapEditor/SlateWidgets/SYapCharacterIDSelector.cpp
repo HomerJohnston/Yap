@@ -2,6 +2,8 @@
 
 #include "GameplayTagsManager.h"
 #include "SGameplayTagPicker.h"
+#include "Widgets/Input/SComboButton.h"
+#include "Widgets/Input/SEditableTextBox.h"
 #include "Yap/Globals/YapEditorWarning.h"
 #include "YapEditor/YapEditorColor.h"
 #include "YapEditor/YapEditorStyle.h"

@@ -5,6 +5,8 @@
 
 #define LOCTEXT_NAMESPACE "YapEditor"
 
+#include "Logging/LogMacros.h"
+
 YAPEDITOR_API DECLARE_LOG_CATEGORY_EXTERN(LogYapEditor, Log, All);
 
 #undef LOCTEXT_NAMESPACE

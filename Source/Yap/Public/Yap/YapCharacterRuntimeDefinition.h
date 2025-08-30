@@ -3,9 +3,13 @@
 
 #pragma once
 
+#include "Math/Color.h"
+#include "Internationalization/Text.h"
+
 #include "YapCharacterRuntimeDefinition.generated.h"
 
 class UYapCharacterAsset;
+class UTexture2D;
 
 USTRUCT(BlueprintType)
 struct FYapCharacterRuntimeDefinition

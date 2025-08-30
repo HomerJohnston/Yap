@@ -3,6 +3,10 @@
 
 #pragma once
 
+#include "Engine/DeveloperSettings.h"
+
+#include "Fonts/SlateFontInfo.h"
+
 #include "YapDeveloperSettings.generated.h"
 
 class UFontFace;

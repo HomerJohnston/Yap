@@ -7,6 +7,8 @@
 #include "Widgets/SCompoundWidget.h"
 #include "Yap/YapCondition.h"
 
+class IStructureDetailsView;
+class IDetailsView;
 class SWidget;
 struct FYapFragment;
 class UFlowNode_YapDialogue;

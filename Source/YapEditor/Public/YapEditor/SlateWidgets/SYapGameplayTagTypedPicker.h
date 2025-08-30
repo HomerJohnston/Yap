@@ -5,6 +5,9 @@
 #include "GameplayTagContainer.h"
 #include "SGameplayTagChip.h"
 
+class SMenuAnchor;
+class SComboButton;
+class SEditableText;
 class SGameplayTagPicker;
 
 enum class EYapGameplayTagTypedPickerResponse : uint8

@@ -5,6 +5,7 @@
 
 #include "Widgets/SCompoundWidget.h"
 
+class SScrollBox;
 class SYapConditionDetailsViewWidget;
 class UFlowNode_YapDialogue;
 class UYapCondition;

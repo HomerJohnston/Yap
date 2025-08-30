@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "Subsystems/GameInstanceSubsystem.h"
+
 #include "YapSpeakerRegister.generated.h"
 
 UCLASS()

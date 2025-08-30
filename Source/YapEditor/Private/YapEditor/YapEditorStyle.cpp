@@ -6,8 +6,11 @@
 #include "YapEditor/YapEditorStyle.h"
 
 #include "ILiveCodingModule.h"
+#include "Framework/Application/SlateApplication.h"
 #include "Interfaces/IPluginManager.h"
+#include "Modules/ModuleManager.h"
 #include "Styling/SlateStyleRegistry.h"
+#include "Styling/StyleColors.h"
 #include "Yap/Globals/YapFileUtilities.h"
 #include "YapEditor/YapDeveloperSettings.h"
 #include "YapEditor/YapEditorColor.h"

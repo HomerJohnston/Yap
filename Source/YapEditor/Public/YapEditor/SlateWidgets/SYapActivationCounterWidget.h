@@ -3,10 +3,12 @@
 
 #pragma once
 
+#include "SYapTextPropertyEditableTextBox.h"
 #include "Widgets/SCompoundWidget.h"
 
 #define LOCTEXT_NAMESPACE "YapEditor"
 
+class SEditableText;
 /**
  * 
  */

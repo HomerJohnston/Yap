@@ -7,6 +7,7 @@
 #include "Graph/Widgets/SFlowGraphNode.h"
 #include "Yap/Nodes/FlowNode_YapDialogue.h"
 
+class SButton;
 class SCanvas;
 class SYapConditionDetailsViewWidget;
 class SVirtualWindow;

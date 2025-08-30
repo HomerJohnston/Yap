@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "Subsystems/EngineSubsystem.h"
 #include "UObject/Object.h"
 
 #include "YapSquirrelNoise.generated.h"

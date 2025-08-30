@@ -4,8 +4,10 @@
 #pragma once
 #include "GameplayTagContainer.h"
 #include "SGameplayTagChip.h"
-#include "YapEditor/Customizations/PropertyCustomization_YapCharacterIdentity.h"
 
+class SEditableTextBox;
+class SComboButton;
+class SMenuAnchor;
 class SGameplayTagPicker;
 
 class SYapCharacterIDSelector : public SCompoundWidget

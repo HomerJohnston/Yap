@@ -3,9 +3,11 @@
 
 #include "Yap/Globals/YapMoodTags.h"
 
+#include "AssetRegistry/AssetData.h"
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Yap/YapNodeBlueprint.h"
 #include "Yap/YapNodeConfig.h"
+#include "UObject/UObjectIterator.h"
 #include "Yap/Nodes/FlowNode_YapDialogue.h"
 
 TArray<UFlowNode_YapDialogue*> Yap::GetYapNodeTypes()

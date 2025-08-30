@@ -5,6 +5,7 @@
 
 #include "ContentBrowserModule.h"
 #include "IContentBrowserSingleton.h"
+#include "Widgets/Layout/SBox.h"
 #include "Yap/YapProjectSettings.h"
 
 TSharedRef<SWidget> SYapAudioAssetGraphPin::GenerateAssetPicker()
@@ -69,8 +70,7 @@ TSharedRef<SWidget> SYapAudioAssetGraphPin::GenerateAssetPicker()
 		}
 	}
 
-	return
-	SNew(SBox)
+	return SNew(SBox)
 	.HeightOverride(300)
 	.WidthOverride(300)
 	[

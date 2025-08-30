@@ -25,6 +25,7 @@
 #include "Widgets/Layout/SLinkedBox.h"
 #include "SSimpleComboButton.h"
 #include "YapEditor/YapTransactions.h"
+#include "Runtime/Launch/Resources/Version.h"
 
 #define LOCTEXT_NAMESPACE "SYapTextPropertyEditableTextBox"
 

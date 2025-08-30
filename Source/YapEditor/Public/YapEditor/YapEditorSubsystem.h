@@ -14,6 +14,7 @@ class UYapCharacterAsset;
 class FYapInputTracker;
 struct FYapFragment;
 struct FSlateImageBrush;
+class IPropertyHandle;
 
 #define LOCTEXT_NAMESPACE "YapEditor"
 

@@ -5,6 +5,7 @@
 
 #include "Styling/SlateStyle.h"
 #include "Delegates/IDelegateInstance.h"
+#include "UObject/StrongObjectPtr.h"
 
 #define LOCTEXT_NAMESPACE "YapEditor"
 

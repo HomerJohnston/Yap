@@ -3,6 +3,10 @@
 
 #pragma once
 
+// The goal here was to build a listview helper that uses structs. I may just delete this eventually rather than build it.
+
+#if 0
+
 #include "Components/ListViewBase.h"
 
 #include "YapStructListView.generated.h"
@@ -21,3 +25,5 @@ public:
     
     //TSharedPtr<SListView<FYapMessageEntry*>> MyListView;
 };
+
+#endif

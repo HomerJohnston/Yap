@@ -242,7 +242,11 @@ void FYapBit::RecalculateAudioTime(TOptional<float>& CachedTime)
 		CachedTime.Reset();
 	}
 }
+#endif
 
+// --------------------------------------------------------------------------------------------
+
+#if WITH_EDITOR
 void FYapBit::ClearAllData()
 {
 	DialogueText.Clear();

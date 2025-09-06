@@ -15,22 +15,94 @@ struct FYapPromptHandle;
 
 #define LOCTEXT_NAMESPACE "Yap"
 
-/** Required class for brokering Yap to your game. Create a child class of this and implement the functions as needed. Then set Yap's project settings to use your class.
- *
- * Do ***NOT*** call Super or Parent function implementations when overriding any functions in this class. */
+// ================================================================================================
+
+/**
+ * Required class for brokering Yap to your game.
+ *   1) Create a child class of this in either C++ or Blueprint, and implement any needed functions.
+ *   2) Go into Yap's Project Settings and set the broker setting to your class.
+ *   3) Do NOT call Super or Parent function implementations when overriding any functions in this class.
+ */
 UCLASS(Blueprintable)
 class YAP_API UYapBroker : public UObject
 {
 	GENERATED_BODY()
+	
+	// ============================================================================================
+	// C++ OVERRIDABLE FUNCTIONS (DO NOT OVERRIDE THESE IF YOU ARE IMPLEMENTING YOUR BROKER WITH C++!)
+	// ============================================================================================
+	
+public:
 
+	// - - - - - GAME FUNCTIONS - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+	/** Use this to do any desired initialization, such as creating a Dialogue UI instance if you aren't creating one already elsewhere. Do NOT call Super. */
+	virtual void Initialize();
+	
+	/** Use this to read your game's user settings (e.g. "Enable Mature Content") and determine if mature language is permitted. Do NOT call Super. */
+	virtual EYapMaturitySetting GetMaturitySetting() const;
+
+	/** Use this to modify speaking time by a scalar multiplier. Does NOT affect anything when fragments are using audio duration. Do NOT call Super. */
+	virtual float GetPlaybackSpeed() const;
+	
+	// - - - - - EDITOR FUNCTIONS - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+	/** Provides a word count estimate of a given piece of FText. A default implementation of this function exists. Do NOT call Super. */
+	virtual int32 CalculateWordCount(const FText& Text) const;
+
+	/** Use this to fully override how your game calculates text time. The default implementation of this function will use your node config setting UYapNodeConfig.DialoguePlayback.TimeSettings.TextWordsPerMinute multiplied by GetPlaybackSpeed from your UYapBroker. Do NOT call Super. */
+	virtual float CalculateTextTime(int32 WordCount, int32 CharCount, const UYapNodeConfig&  NodeConfig) const;
+	
+	/** Override this if you use 3rd party audio (WWise, FMOD). Cast to your audio type and return the duration length in seconds. Do NOT call Super. */
+	virtual float GetAudioAssetDuration(const UObject* AudioAsset) const;
+
+#if WITH_EDITOR
+public:
+	/** Override this if you use 3rd party audio (Wwise, FMOD, etc.). Cast to your audio type and initiate playback in editor. Do NOT call Super. */
+	virtual bool PreviewAudioAsset(const UObject* AudioAsset) const;
+#endif
+	
+	// ============================================================================================
+	// BLUEPRINT OVERRIDABLE FUNCTIONS (DO NOT USE THESE IF YOU ARE IMPLEMENTING YOUR BROKER WITH C++!)
+	// ============================================================================================
+
+protected:
+	
+	// - - - - - GAME FUNCTIONS - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
+	UFUNCTION(BlueprintImplementableEvent, DisplayName = "Initialize", meta = (ToolTip = "Use this to do any desired initialization, such as creating a Dialogue UI instance if you aren't creating one already elsewhere. Do NOT call Parent when overriding.") )
+	void K2_Initialize();
+	
+	UFUNCTION(BlueprintImplementableEvent, DisplayName = "Get Maturity Setting", meta = (ToolTip = "Use this to read your game's user settings (e.g. 'Enable Mature Content' or 'Child Safe' settings) and determine if mature language is permitted."))
+	EYapMaturitySetting K2_GetMaturitySetting() const;
+	
+	UFUNCTION(BlueprintImplementableEvent, DisplayName = "Get Playback Speed", meta = (ToolTip = "Use this to modify speaking time by a scalar multiplier, return 1.0 for no change. Does NOT affect anything when fragments are using audio duration!"))
+	float K2_GetPlaybackSpeed() const;
+	
+	// - - - - - EDITOR FUNCTIONS - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	
+	UFUNCTION(BlueprintImplementableEvent, DisplayName = "Calculate Word Count", meta = (ToolTip = "Use this to override how Yap calculates word counts of text."))
+	int32 K2_CalculateWordCount(const FText& Text) const;
+	
+	UFUNCTION(BlueprintImplementableEvent, DisplayName = "Calculate Word Count", meta = (ToolTip = "Use this to read your game's settings (e.g. text playback speed) and determine the duration a dialogue should run for.\nThe default implementation of this function will use your project setting TextWordsPerMinute multiplied by GetPlaybackSpeed."))
+	float K2_CalculateTextTime(int32 WordCount, int32 CharCount, const UYapNodeConfig* NodeConfig) const;
+	
+	UFUNCTION(BlueprintImplementableEvent, DisplayName = "Get Dialogue Audio Duration", meta = (ToolTip = "Override this if you use 3rd party audio (Wwise, FMOD, etc.). Cast to your audio type and return the duration length in seconds."))
+	float K2_GetAudioAssetDuration(const UObject* AudioAsset) const;
+
+#if WITH_EDITOR
+	UFUNCTION(BlueprintImplementableEvent, DisplayName = "Play Dialogue Audio In Editor", meta = (ToolTip = "Override this if you use 3rd party audio (Wwise, FMOD, etc.). Cast to your audio type and initiate playback in editor."))
+	bool K2_PreviewAudioAsset(const UObject* AudioAsset) const;
+#endif
+	
 #if WITH_EDITOR
 public:
 	bool ImplementsGetWorld() const override { return true; }
 #endif
 	
-	// ================================================================================================
+	// ------------------------------------------------------------------------------------------------
 	// STATE DATA
-	// ================================================================================================
+	// ------------------------------------------------------------------------------------------------
 private:
 	// These will be initialized during BeginPlay and keep track of whether there is a K2 function
 	// implementation to call, if the C++ implementation is not overridden. If the C++ implementation
@@ -55,114 +127,19 @@ private:
 	static bool bWarned_PreviewAudioAsset;
 #endif
 	
-	// ================================================================================================
-	// BLUEPRINT OVERRIDABLE FUNCTIONS
-	// ================================================================================================
-
-protected:
-	
-	// - - - - - GAME FUNCTIONS - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-
-	/** OPTIONAL FUNCTION - Do NOT call Parent when overriding.
-	 * 
-	* Use this to do any desired initialization, such as creating a Dialogue UI instance if you aren't creating one already elsewhere. */
-	UFUNCTION(BlueprintImplementableEvent, DisplayName = "Initialize")
-	void K2_Initialize();
-	
-	/** OPTIONAL FUNCTION - Do NOT call Parent when overriding.
-	 * 
-	 * Use this to read your game's user settings (e.g. "Enable Mature Content") and determine if mature language is permitted. */
-	UFUNCTION(BlueprintImplementableEvent, DisplayName = "Get Maturity Setting")
-	EYapMaturitySetting K2_GetMaturitySetting() const;
-
-	/** OPTIONAL FUNCTION - Do NOT call Parent when overriding.
-	 * 
-	 * Use this to modify speaking time by a scalar multiplier. Does NOT affect anything when fragments are using audio duration! */
-	UFUNCTION(BlueprintImplementableEvent, DisplayName = "Get Playback Speed")
-	float K2_GetPlaybackSpeed() const;
-	
-	// - - - - - EDITOR FUNCTIONS - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-	/** OPTIONAL FUNCTION - Do NOT call Parent when overriding.
-	 * 
-	 * Provides a word count estimate of a given piece of FText. A default implementation of this function exists. */
-	UFUNCTION(BlueprintImplementableEvent, DisplayName = "Calculate Word Count")
-	int32 K2_CalculateWordCount(const FText& Text) const;
-
-	/** OPTIONAL FUNCTION - Do NOT call Super when overriding - rarely needed, overridable through C++ only.
-	 * 
-	 * Use this to read your game's settings (e.g. text playback speed) and determine the duration a dialogue should run for.
-	 * The default implementation of this function will use your project setting TextWordsPerMinute multiplied by GetPlaybackSpeed. */
-	UFUNCTION(BlueprintImplementableEvent, DisplayName = "Calculate Word Count")
-	float K2_CalculateTextTime(int32 WordCount, int32 CharCount, const UYapNodeConfig* NodeConfig) const;
-	
-	/** Overriding this is required if you use 3rd party audio (Wwise, FMOD, etc.) - Do NOT call Parent when overriding.
-	 * 
-	 * Use this to cast to your project's audio type(s) and return their duration length in seconds. */
-	UFUNCTION(BlueprintImplementableEvent, DisplayName = "Get Dialogue Audio Duration")
-	float K2_GetAudioAssetDuration(const UObject* AudioAsset) const;
-
-#if WITH_EDITOR
-	/** Overriding this is required if you use 3rd party audio (Wwise, FMOD, etc.) - Do NOT call Parent when overriding.
-	 * 
-	 * Use this to cast to your project's audio type(s) and initiate playback in editor. */
-	UFUNCTION(BlueprintImplementableEvent, DisplayName = "Play Dialogue Audio In Editor")
-	bool K2_PreviewAudioAsset(const UObject* AudioAsset) const;
-#endif
-	
-	// ============================================================================================
-	// C++ OVERRIDABLE FUNCTIONS (DO NOT OVERRIDE THESE IF YOU ARE USING A BLUEPRINT BROKER!)
-	// ============================================================================================
-	
-public:
-
-	// - - - - - GAME FUNCTIONS - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-
-	/** OPTIONAL FUNCTION - Do NOT call Super when overriding.
-	 * Use this to do any desired initialization, such as creating a Dialogue UI instance if you aren't creating one already elsewhere. */
-	virtual void Initialize();
-	
-	/** OPTIONAL FUNCTION - Do NOT call Super when overriding.
-	 * Use this to read your game's user settings (e.g. "Enable Mature Content") and determine if mature language is permitted. */
-	virtual EYapMaturitySetting GetMaturitySetting() const;
-
-	/** OPTIONAL FUNCTION - Do NOT call Super when overriding.
-	 * Use this to modify speaking time by a scalar multiplier. Does NOT affect anything when fragments are using audio duration! */
-	virtual float GetPlaybackSpeed() const;
-	
-	// - - - - - EDITOR FUNCTIONS - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-	/** OPTIONAL FUNCTION - Do NOT call Super when overriding.
-	 * Provides a word count estimate of a given piece of FText. A default implementation of this function exists. */
-	virtual int32 CalculateWordCount(const FText& Text) const;
-
-	/** OPTIONAL FUNCTION - Do NOT call Super when overriding - rarely needed, overridable through C++ only.
-	 * Use this to read your game's settings (e.g. text playback speed) and determine the duration a dialogue should run for.
-	 * The default implementation of this function will use your project setting TextWordsPerMinute multiplied by GetPlaybackSpeed. */
-	virtual float CalculateTextTime(int32 WordCount, int32 CharCount, const UYapNodeConfig&  NodeConfig) const;
-	
-	/** Overriding this is required for 3rd party audio (Wwise, FMOD, etc.) - Do NOT call Super when overriding.
-	 * Use this to cast to your project's audio type(s) and return their duration length in seconds. */
-	virtual float GetAudioAssetDuration(const UObject* AudioAsset) const;
-
-#if WITH_EDITOR
-public:
-	/** Overriding this is required for 3rd party audio (Wwise, FMOD, etc.) - Do NOT call Super when overriding.
-	 * Use this to cast to your project's audio type(s) and initiate playback in editor. */
-	virtual bool PreviewAudioAsset(const UObject* AudioAsset) const;
-
-	FString GenerateDialogueAudioID(const UFlowNode_YapDialogue* InNode) const;
-
-private:
-	virtual FString GenerateRandomDialogueAudioID() const;
-	
-#endif
-	
 	// ============================================================================================
 	// INTERNAL FUNCTIONS (USED BY YAP)
 	// ============================================================================================
 public:
 	void Initialize_Internal();
+
+#if WITH_EDITOR
+public:
+	FString GenerateDialogueAudioID(const UFlowNode_YapDialogue* InNode) const;
+ 
+private:
+	virtual FString GenerateRandomDialogueAudioID() const;
+#endif
 	
 #if WITH_EDITOR
 public:

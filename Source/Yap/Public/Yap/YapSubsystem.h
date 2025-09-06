@@ -29,6 +29,8 @@ class UYapCharacterComponent;
 class UYapSquirrel;
 enum class EYapMaturitySetting : uint8;
 
+// ================================================================================================
+
 UDELEGATE()
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FYapPromptChosen, UObject*, Instigator, FYapPromptHandle, Handle);
 
@@ -37,6 +39,8 @@ DECLARE_DYNAMIC_DELEGATE_ThreeParams(FYapSpeechEventHandler, UObject*, Instigato
 
 UDELEGATE()
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FYapSpeechEvent, UObject*, Instigator, FYapSpeechHandle, Handle, EYapSpeechCompleteResult, Result);
+
+// ================================================================================================
 
 USTRUCT()
 struct FYapSpeechFinishDelegateContainer
@@ -80,6 +84,8 @@ struct FYapSpeechHandlesArray
 	TArray<FYapSpeechHandle> Handles;
 };
 
+// ================================================================================================
+
 USTRUCT()
 struct FYap__ActiveSpeechContainer
 {
@@ -101,34 +107,13 @@ struct FYap__ActiveSpeechContainer
 	FYapConversationHandle ConversationHandle;
 };
 
-/*
-USTRUCT()
-struct FYapConversationTestMap
-{
-	GENERATED_BODY()
-
-	// ----------------------------------------------
-
-	TMap<FYapConversationHandle, FYapConversation> Conversations;
-
-	TMap<TObjectPtr<UObject>, FYapConversationHandle> HandlesByOwner;
-
-	TMap<FName, FYapConversationHandle> HandlesByName;
-
-	// ----------------------------------------------
-
-	const FYapConversationHandle& AddConversation(UObject* Owner, FName Name);
-
-	FYapConversation* FindConversation(UObject* Owner, FName Name);
-};
-*/
+// ================================================================================================
 
 USTRUCT()
 struct FYap__ActiveSpeechMap
 {
 	GENERATED_BODY()
 
-// ----------------------------------------------
 // ----------------------------------------------
 private:
 	UPROPERTY(Transient)
@@ -140,15 +125,15 @@ private:
 	UPROPERTY(Transient)
 	TMap<FName, FYapSpeechHandlesArray> ContainersBySpeakerID;
 
-// ----------
+// ----------------------------------------------
 public:
-	FYap__ActiveSpeechContainer* AddSpeech(FYapSpeechHandle Handle, FName SpeakerID, UObject* SpeechOwner, UObject* ConversationOwner);
+	FYap__ActiveSpeechContainer* AddSpeech(const FYapSpeechHandle& Handle, const FName SpeakerID, UObject* SpeechOwner, UObject* ConversationOwner);
 
 	void RemoveSpeech(const FYapSpeechHandle& Handle);
 
-	void BindToSpeechFinish(const FYapSpeechHandle& Handle, FYapSpeechEventDelegate Delegate);
+	void BindToSpeechFinish(const FYapSpeechHandle& Handle, const FYapSpeechEventDelegate& Delegate);
 	
-	void UnbindToSpeechFinish(const FYapSpeechHandle& Handle, FYapSpeechEventDelegate Delegate);
+	void UnbindToSpeechFinish(const FYapSpeechHandle& Handle, const FYapSpeechEventDelegate& Delegate);
 
 	void SetTimer(const FYapSpeechHandle& Handle, FTimerHandle TimerHandle);
 	
@@ -166,10 +151,10 @@ public:
 
 	FYapConversationHandle FindSpeechConversationHandle(const FYapSpeechHandle& Handle);
 
-	bool IsSpeechRunning(const FYapSpeechHandle& Handle);
+	bool IsSpeechRunning(const FYapSpeechHandle& Handle) const;
 	
 // ----------------------------------------------
-// ----------------------------------------------
+	
 private:
 	UPROPERTY(Transient)
 	TMap<FYapConversationHandle, FYapConversation> Conversations;
@@ -177,9 +162,10 @@ private:
 	UPROPERTY(Transient)
 	TMap<TObjectPtr<UObject>, FYapConversationHandle> ConversationsByOwner;
 	
-// ----------
+// ----------------------------------------------
+	
 public:
-	FYapConversation& AddConversation(FName ConversationName, UObject* ConversationOwner, FYapConversationHandle& ConversationHandle);
+	FYapConversation& AddConversation(const FName ConversationName, UObject* ConversationOwner, FYapConversationHandle& ConversationHandle);
 
 	void RemoveConversation(FYapConversationHandle ConversationHandle);
 	
@@ -307,9 +293,9 @@ protected:
 	static bool bGetGameMaturitySettingWarningIssued;
 
 public:
-	static void BindToSpeechFinish(UObject* WorldContextObject, FYapSpeechHandle Handle, FYapSpeechEventDelegate Delegate);
+	static void BindToSpeechFinish(const UObject* WorldContextObject, const FYapSpeechHandle& Handle, const FYapSpeechEventDelegate& Delegate);
 	
-	static void UnbindToSpeechFinish(UObject* WorldContextObject, FYapSpeechHandle Handle, FYapSpeechEventDelegate Delegate);
+	static void UnbindToSpeechFinish(const UObject* WorldContextObject, const FYapSpeechHandle& Handle, const FYapSpeechEventDelegate& Delegate);
 
 	UPROPERTY(Transient)
 	FYap__ActiveSpeechMap ActiveSpeechMap;
@@ -328,46 +314,41 @@ public:
 	UPROPERTY(Transient, Instanced)
 	TObjectPtr<UYapCharacterManager> CharacterManager;
 	
-public:
-	UYapSquirrel& GetNoiseGenerator() { return *NoiseGenerator; }
+	UYapSquirrel& GetNoiseGenerator() const { return *NoiseGenerator; }
 
-	static UYapCharacterManager& GetCharacterManager(UObject* WorldContextObject);
+	static UYapCharacterManager& GetCharacterManager(const UObject* WorldContextObject);
 	
-	/*
-	UPROPERTY(BlueprintAssignable, Transient)
-	FYapSpeechEvent OnSkipAction;
-	*/
 	// =========================================
 	// PUBLIC API - Your game should use these
 	// =========================================
+
 public:
-	
 	/** Register a conversation handler for a node type. Nullptr will use the default yap node. */
-	static void RegisterConversationHandler(UObject* NewHandler, FYapDialogueNodeClassType NodeType);
+	static void RegisterConversationHandler(UObject* NewHandler, const FYapDialogueNodeClassType& NodeType);
 
 	/** Unregister a conversation handler for a node type. Nullptr will use the default yap node. */
-	static void UnregisterConversationHandler(UObject* HandlerToRemove, FYapDialogueNodeClassType NodeType);
+	static void UnregisterConversationHandler(UObject* HandlerToRemove, const FYapDialogueNodeClassType& NodeType);
 	
 	/**  */
 	//static void UnregisterConversationHandlerAllTypes(UObject* HandlerToRemove);
 	
 	/** Register a free speech handler for a node type. Nullptr will use the default yap node. */
-	static void RegisterFreeSpeechHandler(UObject* NewHandler, FYapDialogueNodeClassType NodeType);
+	static void RegisterFreeSpeechHandler(UObject* NewHandler, const FYapDialogueNodeClassType& NodeType);
 
 	/** Unregister a free speech handler for a node type. Nullptr will use the default yap node.*/
-	static void UnregisterFreeSpeechHandler(UObject* HandlerToRemove, FYapDialogueNodeClassType NodeType);
+	static void UnregisterFreeSpeechHandler(UObject* HandlerToRemove, const FYapDialogueNodeClassType& NodeType);
 
 	/**  */
 	//static void UnregisterFreeSpeechHandlerAllTypes(UObject* HandlerToRemove);
 
 	/** Given a character identity tag, attempt to find the character component in the world. */
-	static UYapCharacterComponent* FindCharacterComponent(UWorld* World, FName CharacterName);
+	static UYapCharacterComponent* FindCharacterComponent(const UWorld* World, const FName CharacterName);
 
 	// =========================================
 	// YAP API - These are called by Yap classes
 	// =========================================
-public:
 
+public:
 	static UYapSubsystem* Get(const UObject* WorldContext)
 	{
 		if (IsValid(WorldContext))
@@ -397,9 +378,9 @@ public:
 	static const UYapBroker& GetBroker_Editor();
 #endif
 	
-	static UYapBroker& GetBroker(UObject* WorldContext);
+	static UYapBroker& GetBroker(const UObject* WorldContext);
 	
-	static EYapMaturitySetting GetCurrentMaturitySetting(UWorld* World);
+	static EYapMaturitySetting GetCurrentMaturitySetting(const UWorld* World);
 
 	/**  */
 	FYapFragment* FindTaggedFragment(const FGameplayTag& FragmentTag);
@@ -415,9 +396,6 @@ public:
 	// Main close conversation function
 	EYapConversationState CloseConversation(FYapConversationHandle& Handle);
 	
-	// Exists primarily to be called by the Close Conversation flow node (with a conversation name)
-	EYapConversationState CloseConversation(const FGameplayTag& ConversationName);
-
 	// Exists primarily to be called by the Close Conversation flow node (with an unset conversation name)
 	EYapConversationState CloseConversation(const UObject* Owner);
 	

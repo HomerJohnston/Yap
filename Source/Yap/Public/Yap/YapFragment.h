@@ -39,22 +39,6 @@ enum class EYapFragmentRunState : uint8
 
 // ================================================================================================
 
-UENUM()
-enum class EYapFragmentEntryStateFlags : uint8
-{
-	NeverRan =	0,
-	Failed =	1 << 0,
-	Success =	1 << 1,
-	Skipped =	1 << 2,
-};
-
-inline EYapFragmentEntryStateFlags operator|(EYapFragmentEntryStateFlags Left, EYapFragmentEntryStateFlags Right)
-{
-	return static_cast<EYapFragmentEntryStateFlags>(static_cast<uint8>(Left) | static_cast<uint8>(Right));
-}
-
-// ================================================================================================
-
 /**
  * Fragments contain all of the actual data and settings required for a segment of speech to run.
  * 
@@ -172,9 +156,6 @@ protected:
 	UPROPERTY(Transient)
 	EYapFragmentRunState RunState = EYapFragmentRunState::Idle;
 
-	UPROPERTY(Transient)
-	EYapFragmentEntryStateFlags LastEntryState = EYapFragmentEntryStateFlags::NeverRan;
-
 	/** When was the current running fragment started? */
 	UPROPERTY(Transient)
 	double StartTime = -1;
@@ -249,10 +230,6 @@ public:
 	void SetRunState(EYapFragmentRunState NewState) { RunState = NewState; }
 	
 	EYapFragmentRunState GetRunState() const { return RunState; }
-
-	void SetEntryState(EYapFragmentEntryStateFlags NewStateFlags) { LastEntryState = (EYapFragmentEntryStateFlags)NewStateFlags; }
-	
-	EYapFragmentEntryStateFlags GetLastEntryState() const { return LastEntryState; }
 	
 	int32 GetActivationLimit() const { return ActivationLimit; }
 

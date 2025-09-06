@@ -718,7 +718,6 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 		UE_LOG(LogYap, VeryVerbose, TEXT("FAILED - FragmentCanRun returned false"));
 		Fragment.SetStartTime(-1.0);
 		Fragment.SetEndTime(-1.0);
-		Fragment.SetEntryState(EYapFragmentEntryStateFlags::Failed);
 		return false;
 	}
 
@@ -826,7 +825,6 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 	SpeakingFragments.Add(FocusedSpeechHandle);
 
 	Fragment.SetStartTime(GetWorld()->GetTimeSeconds());
-	Fragment.SetEntryState(EYapFragmentEntryStateFlags::Success);
 	Fragment.IncrementActivations();
 	
 	Subsystem->RunSpeech(Data, GetClass(), FocusedSpeechHandle);

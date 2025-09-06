@@ -23,7 +23,11 @@ class UYapNodeConfig;
 
 #define LOCTEXT_NAMESPACE "Yap"
 
-/** A 'Bit' is a data container of actual dialogue information to be spoken. Each Fragment contains two bits - one for normal mature dialogue, and one for child-safe dialogue. */
+// ================================================================================================
+
+/*
+ * A 'Bit' is a data container of actual dialogue information to be spoken. Each Fragment contains two bits - one for normal mature dialogue, and one for child-safe dialogue.
+ */
 USTRUCT(BlueprintType)
 struct YAP_API FYapBit
 {
@@ -130,10 +134,10 @@ protected:
 	/** Gets the current time of the audio asset. */
 	TOptional<float> GetAudioTime(UObject* WorldContext, EYapLoadContext LoadContext) const;
 
-#if WITH_EDITOR
 	// --------------------------------------------------------------------------------------------
 	// EDITOR API
 	// --------------------------------------------------------------------------------------------
+#if WITH_EDITOR
 public:
 
 	void SetTitleText(const FText& NewText);
@@ -150,6 +154,7 @@ private:
 	void RecalculateAudioTime(TOptional<float>& CachedTime);
 
 	void ClearAllData();
+	
 #endif
 };
 
@@ -182,5 +187,7 @@ const T* FYapBit::GetAudioAsset() const
 
 	return AudioAsset.LoadSynchronous();
 }
+
+// ================================================================================================
 
 #undef LOCTEXT_NAMESPACE

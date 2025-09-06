@@ -22,8 +22,6 @@ void FYapText::Set(const FText& InText)
 #if WITH_EDITOR
 void FYapText::UpdateInternalWordCount()
 {
-	int32 NewWordCount = -1;
-
 	if (Text.IsEmptyOrWhitespace())
 	{
 		WordCount = 0;
@@ -32,7 +30,7 @@ void FYapText::UpdateInternalWordCount()
 	
 	const UYapBroker& Broker = UYapSubsystem::GetBroker_Editor();
 
-	NewWordCount = Broker.CalculateWordCount(Text);
+	const int32 NewWordCount = Broker.CalculateWordCount(Text);
 
 	if (NewWordCount < 0)
 	{
@@ -41,7 +39,9 @@ void FYapText::UpdateInternalWordCount()
 
 	WordCount = NewWordCount;
 }
+#endif
 
+#if WITH_EDITOR
 void FYapText::Clear()
 {
 	Text = FText::GetEmpty();

@@ -7,11 +7,19 @@
 
 #define LOCTEXT_NAMESPACE "Yap"
 
+// ================================================================================================
+
+/**
+ * This is a simple wrapper for FText so that it can include a cached word count.
+ */
 USTRUCT(BlueprintType)
 struct YAP_API FYapText
 {
 #if WITH_EDITOR
 	friend class SFlowGraphNode_YapFragmentWidget;
+	friend class FYapEditableTextPropertyHandle;
+	friend struct FYapBit;
+	
 #endif
 	
 	GENERATED_BODY()
@@ -20,6 +28,7 @@ struct YAP_API FYapText
 	// SETTINGS
 	// --------------------------------------------------------------------------------------------
 private:
+	
     UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess), Category = "Default")
 	FText Text;
 
@@ -36,31 +45,33 @@ public:
 	int32 GetWordCount() const { return WordCount; }
 
 	// --------------------------------------------------------------------------------------------
-	// EDITOR API
+	// INTERNAL
 	// --------------------------------------------------------------------------------------------
-public:
 #if WITH_EDITOR
-	void Set(const FText& InText);
-
-	void UpdateInternalWordCount();
-
-	void Clear();
-#endif
-
+public:
+	
 	void operator=(const FYapText& Other)
 	{
 		Text = Other.Text;
 		WordCount = Other.WordCount;
 	}
 	
+protected:
+	
+	void Set(const FText& InText);
+
+	void UpdateInternalWordCount();
+
+	void Clear();
+
 	void operator=(const FText& NewText)
 	{
-#if WITH_EDITOR
 		Set(NewText);
-#else
-		checkNoEntry() // Make sure I don't try to use this in any shipping code
-#endif
 	}
+#endif
+
 };
+
+// ================================================================================================
 
 #undef LOCTEXT_NAMESPACE

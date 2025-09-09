@@ -3,10 +3,11 @@
 
 #pragma once
 
-#include "Yap/Enums/YapMissingAudioErrorLevel.h"
+#include "Yap/Enums/YapAudioPriority.h"
 #include "Yap/Enums/YapTimeMode.h"
 #include "GameplayTagContainer.h"
 #include "GameplayTagFilterHelper.h"
+#include "Editor/YapAudioIDFormat.h"
 #include "Fonts/SlateFontInfo.h"
 #include "YapNodeConfig.generated.h"
 
@@ -86,20 +87,37 @@ struct FYapNodeConfigGroup_Audio
 	UPROPERTY(EditAnywhere, Category = "Default")
 	bool bDisableAudio = false;
 	
+	// TODO make errors fail packaging
+	/** Influences whether audio is required or not. Causes appropriate levels of error logging and/or highlights on unassigned nodes. */ 
+	UPROPERTY(EditAnywhere, Category = "Default", meta = (EditCondition = "!bDisableAudio", EditConditionHides))
+	EYapAudioPriority AudioPriority = EYapAudioPriority::Preferred;
+	
 #if WITH_EDITORONLY_DATA
 	/** Highest folder containing flow assets when auto-assigning audio to dialogue. Expand for more info...*/
 	UPROPERTY(EditAnywhere, Category = "Default", DisplayName = "Flows Root Folder",  meta = (EditCondition = "!bDisableAudio", EditConditionHides))
 	FDirectoryPath FlowAssetsRootFolder;
 #endif
 
-	// TODO make errors fail packaging
-	/** Controls how missing audio fields are handled. */ 
-	UPROPERTY(EditAnywhere, Category = "Default", DisplayName = "Missing Audio Handling", meta = (EditCondition = "!bDisableAudio", EditConditionHides))
-	EYapMissingAudioErrorLevel MissingAudioErrorLevel = EYapMissingAudioErrorLevel::Warning;
+
+	
 	
 	/** Optionally hide the audio ID tag. */
 	UPROPERTY(EditAnywhere, Category = "Default", meta = (EditCondition = "!bDisableAudio", EditConditionHides))
 	bool bHideAudioID = false;
+
+#if WITH_EDITORONLY_DATA
+	/** Enter a pattern if you want to override the default project setting.
+	 * 
+	 * *   random capitalized letter (**** becomes JAHX)
+	 * ?   random alphanumeric character (???? becomes Z4P1)
+	 * #   incremental fragment number (#### becomes 0001, 0002, 0003...) */
+	UPROPERTY(Config, EditAnywhere, Category = "Editor", meta = (EditCondition = "!bDisableAudio", EditConditionHides))
+	TOptional<FYapAudioIDFormat> AudioIDFormat;
+
+	/** Enter a pattern if you want to override the default project setting. */ // TODO
+	UPROPERTY(Config, EditAnywhere, Category = "Editor", DisplayName = "Illegal Audio ID Characters", meta = (EditCondition = "!bDisableAudio", EditConditionHides))
+	TOptional<FString> IllegalAudioIDCharacters;
+#endif
 };
 
 // ================================================================================================
@@ -111,7 +129,7 @@ struct FYapNodeConfigGroup_DialoguePlaybackTime
 	
 	/** Time mode to use by default. */
 	UPROPERTY(EditAnywhere, Category = "Default")
-	EYapTimeMode DefaultTimeModeSetting = EYapTimeMode::AudioTime;
+	EYapTimeMode DefaultTimeModeSetting = EYapTimeMode::AudioTime_TextFallback;
 
 	/** After each dialogue is finished being spoken, a brief extra pause can be inserted before moving onto the next node. This is the default value. Can be overridden by individual fragments. */
 	UPROPERTY(EditAnywhere, Category = "Default", meta = (UIMin = 0.0, UIMax = 5.0, Delta = 0.01))
@@ -156,11 +174,11 @@ struct FYapNodeConfigGroup_DialoguePlayback
 	bool bPermitOverlappingSpeech = false;
 	
 	/** Controls if running speech can be interrupted (forcefully cancelled or advanced). */
-	UPROPERTY(EditAnywhere, Category = "Default", meta = (Bitmask, BitmaskEnum = "/Script/Yap.EYapInterruptibleFlags"))
+	UPROPERTY(EditAnywhere, Category = "Default", DisplayName = "Allow Interrupt In", meta = (Bitmask, BitmaskEnum = "/Script/Yap.EYapInterruptibleFlags"))
 	uint8 SpeechInterruptibleFlags = 1 << 0 | 1 << 1;
 	
 	/** Controls if dialogue automatically advances (only applicable if it has a time duration set). */
-	UPROPERTY(EditAnywhere, Category = "Default", meta = (Bitmask, BitmaskEnum = "/Script/Yap.EYapAutoAdvanceFlags"))
+	UPROPERTY(EditAnywhere, Category = "Default", DisplayName = "Auto Advance In", meta = (Bitmask, BitmaskEnum = "/Script/Yap.EYapAutoAdvanceFlags"))
 	uint8 AutoAdvanceFlags = 1 << 0 | 1 << 1;
 
 	/** If set, "Select Random" sequencing mode will not attempt to prevent selecting the same fragment on consecutive runs. Note that Yap will still permit selecting the same fragment when there is only one valid runnable fragment. */
@@ -336,7 +354,8 @@ public:
 
 	EYapTimeMode GetDefaultTimeModeSetting() const { return DialoguePlayback.TimeSettings.DefaultTimeModeSetting; }
 
-	EYapMissingAudioErrorLevel GetMissingAudioErrorLevel() const { return Audio.MissingAudioErrorLevel; }
+	// TODO get rid of this
+	EYapAudioPriority GetMissingAudioErrorLevel() const { return Audio.AudioPriority; }
 	
 	EYapAutoAdvanceFlags GetAutoAdvanceFlags() const { return (EYapAutoAdvanceFlags)DialoguePlayback.AutoAdvanceFlags; }
 
@@ -381,6 +400,7 @@ public:
 	
 	bool GetHideTitleTextOnPromptNodes() const { return Graph.bHideTitleTextOnPromptNodes; }
 #endif
+	
 	bool GetUsesTitleText(EYapDialogueNodeType NodeType) const;
 	
 	bool GetUsesSpeaker() const { return !General.bDisableSpeaker; }
@@ -393,7 +413,11 @@ public:
 
 	bool GetHideAudioID() const { return !Audio.bDisableAudio && Audio.bHideAudioID; }
 
-	int32 GetTextWordsPerMinute() { return DialoguePlayback.TimeSettings.TextWordsPerMinute; }
+#if WITH_EDITORONLY_DATA
+	const FYapAudioIDFormat& GetAudioIDFormat() const;
+#endif
+	
+    int32 GetTextWordsPerMinute() { return DialoguePlayback.TimeSettings.TextWordsPerMinute; }
 
 	bool GetUsesMoodTags() const { return !MoodTags.bDisableMoodTags; }
 

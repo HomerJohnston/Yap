@@ -245,7 +245,9 @@ protected:
 	bool CanSkip(FYapSpeechHandle Handle) const;
 
 public:
-	FString GetAudioID() const { return AudioID; }
+	const FString& GetAudioIDRoot() const { return AudioID; }
+	
+	FString GetAudioID(uint8 FragmentIndex) const;
 
 protected:
 	bool CheckActivationLimits() const;
@@ -369,9 +371,6 @@ protected:
 	void SetInactive();
 
 	/** Fragment access */
-public:
-	TOptional<float> GetSpeechTime(uint8 FragmentIndex) const;
-
 #if WITH_EDITOR
 	TOptional<float> GetSpeechTime(uint8 FragmentIndex, EYapMaturitySetting Maturity, EYapLoadContext LoadContext) const;
 #endif
@@ -387,6 +386,8 @@ private:
 	
 	void RemoveFragment(int32 Index);
 
+	void InsertFragment(const FYapFragment& NewFragment, int32 InsertionIndex);
+	
 	FText GetNodeTitle() const override;
 	
 	bool CanUserAddInput() const override { return false; }
@@ -409,10 +410,14 @@ private:
 
 	void CycleFragmentSequencingMode();
 	
-	void DeleteFragmentByIndex(int16 DeleteIndex);
-	
-	void UpdateFragmentIndices();
+	void DeleteFragmentByIndex(int32 DeleteIndex);
 
+	void UpdateFragments( TArray<TFunction<void(UFlowNode_YapDialogue*, FYapFragment&, int32)>> Funcs );
+	
+	static void UpdateFragmentIndices(UFlowNode_YapDialogue* Node, FYapFragment& Fragment, int32 Index);
+
+	void UpdateFragmentAudioIDs();
+	
 	void SwapFragments(uint8 IndexA, uint8 IndexB);
 	
 public:

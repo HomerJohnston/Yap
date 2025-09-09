@@ -95,8 +95,8 @@ protected:
 	FName FragmentID;
 
 	/**  */
-	UPROPERTY()
-	FName AudioID;
+	UPROPERTY(EditAnywhere)
+	int32 AudioID = -1;
 	
 	/** Padding is idle time to wait after the fragment finishes running. An unset value will use project defaults. */
 	UPROPERTY()
@@ -286,7 +286,7 @@ public:
 
 	const FName& GetFragmentID() const { return FragmentID; } 
 
-	const FName& GetAudioID() const { return AudioID; }
+	const int32& GetAudioID() const { return AudioID; }
 	
 	// TODO - want to design a better system for this.
 	//void ReplaceBit(EYapMaturitySetting MaturitySetting, const FYapBitReplacement& ReplacementBit);
@@ -329,7 +329,11 @@ public:
 	
 	bool IsTimeModeNone() const;
 
-	bool HasAudio() const;
+	bool HasAnyAudio() const;
+	
+	bool HasMatureAudio() const;
+	
+	bool HasChildSafeAudio() const;
 
 	bool HasData() const;
 
@@ -343,6 +347,8 @@ public:
 	
 	void SetPaddingToNextFragment(float NewValue) { Padding = NewValue; }
 
+	void SetAudioID(int32 NewID) { AudioID = NewID; };
+	
 	TArray<TObjectPtr<UYapCondition>>& GetConditionsMutable() { return Conditions; }
 
 	void ResetGUID() { Guid = FGuid::NewGuid(); }

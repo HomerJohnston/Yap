@@ -12,10 +12,10 @@ enum class EYapTimeMode : uint8
 	Default UMETA(Hidden),
 	/** Dialogue will not have any time settings. Conversation dialogue must be manually advanced, and free speech must be manually cancelled, by your own code. */
 	None,
-	/** Dialogue will automatically progress after an automatically determined time, determined by the selected audio asset. */
-	AudioTime,
-	/** Dialogue will automatically progress after an automatically determined time, see project settings for Words Per Minute. */
+	/** Dialogue will use audio asset time. If an audio asset is not available, Yap will silently fallback to text time. Use this if you have a mixture of speech with and without audio. */
+	AudioTime_TextFallback,
+	/** Dialogue will calculate time based on the text. Use this if you do not intend to have any audio. */
 	TextTime,
-	/** Dialogue will automatically progress after a set time (default value will be zero). */
+	/** Dialogue will automatically progress after a fixed time. This requires you to set a time for every fragment manually. */
 	ManualTime,
 };

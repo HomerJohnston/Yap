@@ -60,6 +60,12 @@ public:
 public:
 	/** Override this if you use 3rd party audio (Wwise, FMOD, etc.). Cast to your audio type and initiate playback in editor. Do NOT call Super. */
 	virtual bool PreviewAudioAsset(const UObject* AudioAsset) const;
+
+	/** For a single node, generate a new ID */
+	virtual FString GetNewNodeID(const FYapAudioIDFormat& IDFormat, const TSet<FString>& ExistingNodeIDs) const;
+
+	/** For a whole node, generate fragment index IDs for all fragments. Return success/fail as true/false. */
+	bool GetFragmentIDs(const FYapAudioIDFormat& IDFormat, TArray<int32>& ExistingFragmentIDs) const;
 #endif
 	
 	// ============================================================================================
@@ -70,7 +76,7 @@ protected:
 	
 	// - - - - - GAME FUNCTIONS - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
-	UFUNCTION(BlueprintImplementableEvent, DisplayName = "Initialize", meta = (ToolTip = "Use this to do any desired initialization, such as creating a Dialogue UI instance if you aren't creating one already elsewhere. Do NOT call Parent when overriding.") )
+	UFUNCTION(BlueprintImplementableEvent, DisplayName = "Initialize", meta = (ToolTip = "Use this to do any desired initialization, such as creating a Dialogue UI instance if you aren't creating one already elsewhere.") )
 	void K2_Initialize();
 	
 	UFUNCTION(BlueprintImplementableEvent, DisplayName = "Get Maturity Setting", meta = (ToolTip = "Use this to read your game's user settings (e.g. 'Enable Mature Content' or 'Child Safe' settings) and determine if mature language is permitted."))
@@ -93,8 +99,18 @@ protected:
 #if WITH_EDITOR
 	UFUNCTION(BlueprintImplementableEvent, DisplayName = "Play Dialogue Audio In Editor", meta = (ToolTip = "Override this if you use 3rd party audio (Wwise, FMOD, etc.). Cast to your audio type and initiate playback in editor."))
 	bool K2_PreviewAudioAsset(const UObject* AudioAsset) const;
+
+	UFUNCTION(BlueprintImplementableEvent, DisplayName = "Get New Node ID", meta = (ToolTip = "Override this if you want to change the default interpretation of the Audio ID Format."))
+	FString K2_GetNewNodeID(const FYapAudioIDFormat& IDFormat, const TSet<FString>& ExistingNodeIDs) const;
+
+	UFUNCTION(BlueprintImplementableEvent, DisplayName = "Get Fragment ID", meta = (ToolTip = "Override this if you want to change the default interpretation of the Audio ID Format. Return success status."))
+	bool K2_GetFragmentIDs(const FYapAudioIDFormat& IDFormat, UPARAM(ref) TArray<int32>& ExistingFragmentIDs) const;
 #endif
 	
+	// ============================================================================================
+	// INTERNAL YAP FUNCTIONS
+	// ============================================================================================
+		
 #if WITH_EDITOR
 public:
 	bool ImplementsGetWorld() const override { return true; }
@@ -104,21 +120,19 @@ public:
 	// STATE DATA
 	// ------------------------------------------------------------------------------------------------
 private:
-	// These will be initialized during BeginPlay and keep track of whether there is a K2 function
-	// implementation to call, if the C++ implementation is not overridden. If the C++ implementation
-	// is overridden, it will supersede. This is "backwards" compared to normal BNE's but if you're
-	// overriding this class in C++ you won't want to override further in BP.
+	// These will be initialized during BeginPlay and keep track of whether there is a K2 function implementation to call, if the C++ implementation is not overridden. If the C++ implementation
+	// is overridden, it will supersede. This is "backwards" compared to normal BNE's but if you're overriding this class in C++ you won't want to override further in BP.
 	static TOptional<bool> bImplemented_Initialize;
 	static TOptional<bool> bImplemented_GetMaturitySetting;
 	static TOptional<bool> bImplemented_GetPlaybackSpeed;
 	static TOptional<bool> bImplemented_GetAudioAssetDuration;
 #if WITH_EDITOR
 	static TOptional<bool> bImplemented_PreviewAudioAsset;
+	static TOptional<bool> bImplemented_GetNewNodeID;
+	static TOptional<bool> bImplemented_GetFragmentIDs;
 #endif
 	
-	// Some of these functions may be ran on tick by the editor or during play.
-	// We want to log errors, but not spam the log on tick, only on the first occurrence.
-	// I also want to make sure the errors log each time PIE runs, not just once.
+	// Some of these functions may be ran on tick by the editor or during play. We want to log errors, but not spam the log on tick, only on the first occurrence. I also want to make sure the errors log each time PIE runs, not just once.
 	static bool bWarned_Initialize;
 	static bool bWarned_GetMaturitySetting;
 	static bool bWarned_GetPlaybackSpeed;
@@ -127,26 +141,41 @@ private:
 	static bool bWarned_PreviewAudioAsset;
 #endif
 	
-	// ============================================================================================
-	// INTERNAL FUNCTIONS (USED BY YAP)
-	// ============================================================================================
 public:
-	void Initialize_Internal();
+	void BeginPlay();
 
+	static UYapBroker& Get(const UObject* WorldContext);
+
+#if WITH_EDITOR
+	static UYapBroker& GetInEditor();
+#endif
+	
 #if WITH_EDITOR
 public:
 	FString GenerateDialogueAudioID(const UFlowNode_YapDialogue* InNode) const;
- 
+
+	void UpdateNodeFragmentIDs(UFlowNode_YapDialogue* InNode) const;
 private:
 	virtual FString GenerateRandomDialogueAudioID() const;
 #endif
 	
 #if WITH_EDITOR
 public:
-
 	bool PreviewAudioAsset_Internal(const UObject* AudioAsset) const;
 	
 	bool ImplementsPreviewAudioAsset_Internal() const;
+
+private:
+	int32 CalculateWordCount_DefaultImpl(const FText& Text) const;
+	
+	FString GetNewNodeID_DefaultImpl(const FYapAudioIDFormat& IDFormat, const TSet<FString>& ExistingNodeIDs) const;
+
+	bool GetFragmentIDs_Internal(const FYapAudioIDFormat& IDFormat, TArray<int32>& ExistingFragmentIDs) const;
+
+	bool DevelopMissingIDs(TArray<int32>& ExistingFragmentIDInts, const FYapAudioIDFormat& IDFormat) const;
+
+	bool FillInIDSpan(TArray<int32>& ExistingFragmentIDInts, int32 Start, int32 End, int32 LastValidID, int32 NextValidID, const FYapAudioIDFormat& IDFormat) const;
+	
 #endif
 
 	// Thank you to Blue Man for this thing
@@ -156,7 +185,7 @@ public:
 		using Type = std::invoke_result_t<TFunction, UYapBroker, TArgs...>;
 	};
 
-	// non-const variant
+	// The purpose of this macro is to call a generic function and simultaneously log warnings for unimplemented functions. It's kind of badly designed
 	template<auto TFunction, typename ...TArgs>
 	auto CallK2Function(FString FunctionName, TOptional<bool>& bImplemented, bool& bWarned, bool bLogWarnings, TArgs&&... Args) -> typename TResolveFunctionReturn<decltype(TFunction), TArgs...>::Type
 	{

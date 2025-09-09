@@ -194,6 +194,7 @@ void FYapEditorStyle::Initialize_Internal()
 	YAP_DEFINE_FONT(Font_CharacterName,		"Bold",		12);
 	YAP_DEFINE_FONT(Font_CharacterTag,		"Italic",	9);
 	YAP_DEFINE_FONT(Font_CharacterMoodRootHeading,		"Bold",	10);
+	YAP_DEFINE_FONT(Font_AudioID,			"Bold",		9);
 	
 	YAP_LOAD_FONT(Font_OpenSans_Regular, "Fonts/OpenSans-Regular.ttf", 10);
 	YAP_LOAD_FONT(Font_NotoSans_Regular, "Fonts/NotoSans-Regular.ttf", 10);
@@ -240,7 +241,7 @@ void FYapEditorStyle::Initialize_Internal()
 	YAP_DEFINE_BRUSH(FSlateVectorImageBrush,	Icon_Switch_On,					"Icon_Switch_On", ".svg",				FVector2f(16, 16));
 	YAP_DEFINE_BRUSH(FSlateVectorImageBrush,	Icon_Switch_Off,				"Icon_Switch_Off", ".svg",				FVector2f(16, 16));
 	
-	YAP_DEFINE_BRUSH(FSlateBoxBrush,			Icon_IDTag,						"Icon_IDTag", ".png",					FMargin(0.5, 0.5, 0.0, 0.0));
+	YAP_DEFINE_BRUSH(FSlateBoxBrush,			Icon_IDTag,						"Icon_IDTag", ".png",					FMargin(0.5, 0.5, 0.5, 0.5));
 	
 	YAP_DEFINE_BRUSH(FSlateVectorImageBrush,	Icon_Random,					"Icon_Random", ".svg",					FVector2f(32, 32));
 	YAP_DEFINE_BRUSH(FSlateVectorImageBrush,	Icon_Circle_Alert,				"Icon_Circle_Alert", ".svg",			FVector2f(16, 16));
@@ -511,6 +512,11 @@ void FYapEditorStyle::Initialize_Internal()
 	YAP_DEFINE_STYLE(FTextBlockStyle, TextBlockStyle_CharacterTag, GetParentStyle()->GetWidgetStyle<FTextBlockStyle>("NormalText"),
 		.SetFont(Font_CharacterTag)
 		.SetColorAndOpacity(FSlateColor::UseSubduedForeground())
+	);
+	
+	YAP_DEFINE_STYLE(FTextBlockStyle, TextBlockStyle_AudioID, GetParentStyle()->GetWidgetStyle<FTextBlockStyle>("BoldText"),
+		.SetFont(Font_AudioID)
+		.SetColorAndOpacity(FSlateColor::UseForeground())
 	);
 	
 	// ============================================================================================

@@ -45,6 +45,10 @@ public:
 
 	void RecalculateTextOnAllFragments();
 
+	void RegenerateNodeAudioID();
+
+	void RegenerateAudioIDsOnAllFragments();
+
 	void AutoAssignAudioOnAllNodes();
 	
 	void AutoAssignAudioOnAllFragments();

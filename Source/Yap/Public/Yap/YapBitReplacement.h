@@ -63,7 +63,7 @@ struct FYapBitReplacement
 	
 	/**  */
 	UPROPERTY(EditAnywhere, Category = "Default")
-	TOptional<EYapTimeMode> TimeMode = EYapTimeMode::AudioTime;
+	TOptional<EYapTimeMode> TimeMode = EYapTimeMode::AudioTime_TextFallback;
 
 	/**  */
 	UPROPERTY(EditAnywhere, Category = "Default")

@@ -8,7 +8,7 @@
 #include "Yap/YapStreamableManager.h"
 #include "Yap/YapSubsystem.h"
 #include "Yap/Enums/YapLoadContext.h"
-#include "Yap/Enums/YapMissingAudioErrorLevel.h"
+#include "Yap/Enums/YapAudioPriority.h"
 
 #include "Yap/Nodes/FlowNode_YapDialogue.h"
 #include "Engine/Blueprint.h"
@@ -371,25 +371,12 @@ EYapTimeMode FYapFragment::GetTimeMode(UWorld* World, EYapMaturitySetting Maturi
 {
 	EYapTimeMode EffectiveTimeMode = (TimeMode == EYapTimeMode::Default) ? NodeConfig.GetDefaultTimeModeSetting() : TimeMode;
 
-	if (EffectiveTimeMode == EYapTimeMode::AudioTime)
+	// If audio mode is selected and there is no audio, fallback to text mode  
+	if (EffectiveTimeMode == EYapTimeMode::AudioTime_TextFallback)
 	{
 		if (!GetBit(World, MaturitySetting).HasAudioAsset())
 		{
-			EYapMissingAudioErrorLevel MissingAudioBehavior = NodeConfig.GetMissingAudioErrorLevel();
-			
-			if (MissingAudioBehavior == EYapMissingAudioErrorLevel::Error)
-			{
-				// Help force developers to notice and assign missing audio assets, by hindering or preventing dialogue progression
-				EffectiveTimeMode = EYapTimeMode::None;
-			}
-			else if (MissingAudioBehavior == EYapMissingAudioErrorLevel::Warning)
-			{
-				EffectiveTimeMode = EYapTimeMode::TextTime;
-			}
-			else
-			{
-				EffectiveTimeMode = EYapTimeMode::TextTime;
-			}
+			EffectiveTimeMode = EYapTimeMode::TextTime;
 		}
 	}
 
@@ -401,9 +388,19 @@ bool FYapFragment::IsTimeModeNone() const
 	return TimeMode == EYapTimeMode::None;
 }
 
-bool FYapFragment::HasAudio() const
+bool FYapFragment::HasAnyAudio() const
 {
 	return MatureBit.HasAudioAsset() || ChildSafeBit.HasAudioAsset();
+}
+
+bool FYapFragment::HasMatureAudio() const
+{
+	return MatureBit.HasAudioAsset();
+}
+
+bool FYapFragment::HasChildSafeAudio() const
+{
+	return ChildSafeBit.HasAudioAsset();
 }
 
 bool FYapFragment::HasData() const

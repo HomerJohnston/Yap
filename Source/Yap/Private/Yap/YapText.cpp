@@ -28,7 +28,7 @@ void FYapText::UpdateInternalWordCount()
 		return;
 	}
 	
-	const UYapBroker& Broker = UYapSubsystem::GetBroker_Editor();
+	const UYapBroker& Broker = UYapBroker::GetInEditor();
 
 	const int32 NewWordCount = Broker.CalculateWordCount(Text);
 

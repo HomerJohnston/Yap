@@ -19,7 +19,9 @@ class YAPEDITOR_API FYapDialogueNodeCommands : public TCommands<FYapDialogueNode
 public:
 	FYapDialogueNodeCommands();
 
-	TSharedPtr<FUICommandInfo> RecalculateText;
+	TSharedPtr<FUICommandInfo> RecalculateFragmentTextLengths;
+	TSharedPtr<FUICommandInfo> RegenerateNodeAudioID;
+	TSharedPtr<FUICommandInfo> RegenerateFragmentAudioIDs;
 	TSharedPtr<FUICommandInfo> AutoAssignAudio;
 	TSharedPtr<FUICommandInfo> AutoAssignAudioOnAll;
 

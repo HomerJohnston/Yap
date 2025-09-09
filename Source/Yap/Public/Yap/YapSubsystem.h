@@ -373,12 +373,8 @@ public:
 	
 	static bool IsSpeechInConversation(const UObject* WorldContext, const FYapSpeechHandle& Handle);
 
-public:
-#if WITH_EDITOR
-	static const UYapBroker& GetBroker_Editor();
-#endif
-	
-	static UYapBroker& GetBroker(const UObject* WorldContext);
+public:	
+	UYapBroker& GetBroker();
 	
 	static EYapMaturitySetting GetCurrentMaturitySetting(const UWorld* World);
 

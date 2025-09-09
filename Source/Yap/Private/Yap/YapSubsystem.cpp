@@ -462,6 +462,7 @@ bool UYapSubsystem::IsSpeechInConversation(const UObject* WorldContext, const FY
 	return false;
 }
 
+/*
 #if WITH_EDITOR
 const UYapBroker& UYapSubsystem::GetBroker_Editor()
 {
@@ -477,19 +478,18 @@ const UYapBroker& UYapSubsystem::GetBroker_Editor()
 	return *BrokerClass.GetDefaultObject();
 }
 #endif
+*/
 
-UYapBroker& UYapSubsystem::GetBroker(const UObject* WorldContext)
+UYapBroker& UYapSubsystem::GetBroker()
 {
-	UYapSubsystem* Instance = Get(WorldContext);
-	
-	if (!IsValid(Instance->Broker))
+	if (!IsValid(Broker))
 	{
 		TSubclassOf<UYapBroker> BrokerClass = UYapProjectSettings::GetBrokerClass();
 		
-		Instance->Broker = NewObject<UYapBroker>(Instance, BrokerClass);
+		Broker = NewObject<UYapBroker>(this, BrokerClass);
 	}
 
-	return *Instance->Broker;
+	return *Broker;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -501,7 +501,7 @@ EYapMaturitySetting UYapSubsystem::GetCurrentMaturitySetting(const UWorld* World
 		return EYapMaturitySetting::Mature;
 	}
 	
-	const UYapBroker& Broker = GetBroker(World);
+	const UYapBroker& Broker = UYapBroker::Get(World);
 
 	EYapMaturitySetting MaturitySetting = Broker.GetMaturitySetting();
 
@@ -1218,7 +1218,7 @@ void UYapSubsystem::OnWorldBeginPlay(UWorld& InWorld)
 {
 	if (IsValid(Broker))
 	{
-		Broker->Initialize_Internal();
+		Broker->BeginPlay();
 	}
 }
 

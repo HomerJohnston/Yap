@@ -300,7 +300,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapDialogueWidget::CreateTitleWidget(TSharedP
 
 	Row->AddSlot()
 	.HAlign(HAlign_Right)
-	.Padding(2,0,7,0)
+	.Padding(2, 0, 11, 0)
 	.AutoWidth()
 	.VAlign(VAlign_Fill)
 	[

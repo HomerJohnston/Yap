@@ -38,7 +38,7 @@ class SWidget;
 class SScrollBox;
 
 enum class EYapTimeMode : uint8;
-enum class EYapMissingAudioErrorLevel : uint8;
+enum class EYapAudioPriority : uint8;
 enum class EYapErrorLevel : uint8;
 enum class EYapMaturitySetting : uint8;
 enum class EYapTextType : uint8;

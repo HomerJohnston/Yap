@@ -7,6 +7,7 @@
 #include "GameplayTagContainer.h"
 #include "YapCharacterStaticDefinition.h"
 #include "YapNodeConfig.h"
+#include "Editor/YapAudioIDFormat.h"
 #include "Yap/YapBroker.h"
 #include "Yap/GameplayTagFilterHelper.h"
 
@@ -16,7 +17,7 @@ class UYapBroker;
 class UTexture2D;
 enum class EYapDialogueProgressionFlags : uint8;
 enum class EYapMaturitySetting : uint8;
-enum class EYapMissingAudioErrorLevel : uint8;
+enum class EYapAudioPriority : uint8;
 
 #define LOCTEXT_NAMESPACE "Yap"
 
@@ -75,6 +76,21 @@ protected:
 	UPROPERTY(Config, EditAnywhere, Category = "Editor")
 	bool bPreventCachingAudioLength = false;
 
+	/** Can be overridden by individual node configs. Uses a simple parser:
+	 * 
+	 * *   random capitalized letter (**** becomes JAHX)
+	 * ?   random alphanumeric character (???? becomes Z4P1)
+	 * #   incremental fragment number (#### becomes 0001, 0002, 0003...)
+	 *
+	 * The default pattern will generate audio IDs like: JSU-010, JSU-020, JSU-030, JSU-040 */
+	UPROPERTY(Config, EditAnywhere, Category = "Editor")
+	FYapAudioIDFormat DefaultAudioIDFormat;
+	
+	/** Characters will not be used during random audio ID generation. Default settings preclude letter I and letter O to avoid confusion with numbers. */
+	UPROPERTY(Config, EditAnywhere, Category = "Editor", DisplayName = "Illegal Audio ID Characters")
+	FString IllegalAudioIDCharacters = TEXT("IO");
+
+	
 	/** This is used when setting AutoAdvanceToPromptNodes is enabled; the graph will attempt to search through these nodes for Prompt nodes. */
 	//UPROPERTY(Config, EditAnywhere, Category = "Editor")
 	//TArray<TSubclassOf<UFlowNode>> PassThroughNodeTypes;
@@ -167,6 +183,10 @@ public:
 	static bool CacheFragmentWordCountAutomatically() { return !Get().bPreventCachingWordCount; }
 	
 	static bool CacheFragmentAudioLengthAutomatically() { return !Get().bPreventCachingAudioLength; }
+
+	static const FYapAudioIDFormat& GetDefaultAudioIDFormat() { return Get().DefaultAudioIDFormat; }
+
+	static const FString& GetIllegalAudioIDCharacters() { return Get().IllegalAudioIDCharacters; }
 	
 	static const TSoftObjectPtr<UTexture2D> GetDefaultPortraitTextureAsset() { return Get().DefaultPortraitTexture; };
 
@@ -190,11 +210,10 @@ public:
 public:
 	
 protected:
-	void OnGetCategoriesMetaFromPropertyHandle(TSharedPtr<IPropertyHandle> PropertyHandle, FString& MetaString) const;
-
 	void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
 #endif
-	
+
+protected:
 	void PostInitProperties() override;
 	
 	void ProcessCharacterArray(bool bUpdateMap);

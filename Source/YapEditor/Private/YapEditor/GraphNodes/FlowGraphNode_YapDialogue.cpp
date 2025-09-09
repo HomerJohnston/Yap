@@ -37,7 +37,9 @@ TSharedPtr<SGraphNode> UFlowGraphNode_YapDialogue::CreateVisualWidget()
 	FYapDialogueNodeCommands::Register();
 
 	Commands = MakeShared<FUICommandList>();
-	Commands->MapAction(FYapDialogueNodeCommands::Get().RecalculateText, FExecuteAction::CreateUObject(this, &UFlowGraphNode_YapDialogue::RecalculateTextOnAllFragments));
+	Commands->MapAction(FYapDialogueNodeCommands::Get().RecalculateFragmentTextLengths, FExecuteAction::CreateUObject(this, &UFlowGraphNode_YapDialogue::RecalculateTextOnAllFragments));
+	Commands->MapAction(FYapDialogueNodeCommands::Get().RegenerateNodeAudioID, FExecuteAction::CreateUObject(this, &UFlowGraphNode_YapDialogue::RegenerateNodeAudioID));
+	Commands->MapAction(FYapDialogueNodeCommands::Get().RegenerateFragmentAudioIDs, FExecuteAction::CreateUObject(this, &UFlowGraphNode_YapDialogue::RegenerateAudioIDsOnAllFragments));
 	Commands->MapAction(FYapDialogueNodeCommands::Get().AutoAssignAudio, FExecuteAction::CreateUObject(this, &UFlowGraphNode_YapDialogue::AutoAssignAudioOnAllFragments));
 	Commands->MapAction(FYapDialogueNodeCommands::Get().AutoAssignAudioOnAll, FExecuteAction::CreateUObject(this, &UFlowGraphNode_YapDialogue::AutoAssignAudioOnAllNodes));
 	return SNew(SFlowGraphNode_YapDialogueWidget, this);
@@ -115,7 +117,9 @@ void UFlowGraphNode_YapDialogue::GetNodeContextMenuActions(class UToolMenu* Menu
 
 	{
 		FToolMenuSection& Section = Menu->AddSection("Yap", LOCTEXT("Yap", "Yap"));
-		Section.AddMenuEntryWithCommandList(DialogeNodeCommands.RecalculateText, Commands);
+		Section.AddMenuEntryWithCommandList(DialogeNodeCommands.RecalculateFragmentTextLengths, Commands);
+		Section.AddMenuEntryWithCommandList(DialogeNodeCommands.RegenerateNodeAudioID, Commands);
+		Section.AddMenuEntryWithCommandList(DialogeNodeCommands.RegenerateFragmentAudioIDs, Commands);
 		Section.AddMenuEntryWithCommandList(DialogeNodeCommands.AutoAssignAudio, Commands);
 		Section.AddMenuEntryWithCommandList(DialogeNodeCommands.AutoAssignAudioOnAll, Commands);
 	}
@@ -131,10 +135,10 @@ void UFlowGraphNode_YapDialogue::RecalculateTextOnAllFragments()
 	{
 		if (UFlowGraphNode_YapDialogue* DialogeGraphNode = Cast<UFlowGraphNode_YapDialogue>(Node))
 		{
-			UFlowNode_YapDialogue* DialogueNode2 = DialogeGraphNode->GetYapDialogueNode();
-			DialogueNode2->Modify();
+			UFlowNode_YapDialogue* DialogueNode = DialogeGraphNode->GetYapDialogueNode();
+			DialogueNode->Modify();
 
-			for (FYapFragment& Fragment : DialogueNode2->GetFragmentsMutable())
+			for (FYapFragment& Fragment : DialogueNode->GetFragmentsMutable())
 			{
 				// TODO
 				// Fragment.GetBitMutable().RecacheSpeakingTime();
@@ -143,17 +147,51 @@ void UFlowGraphNode_YapDialogue::RecalculateTextOnAllFragments()
 	}
 }
 
+void UFlowGraphNode_YapDialogue::RegenerateNodeAudioID()
+{
+	FGraphPanelSelectionSet Nodes = FFlowGraphUtils::GetFlowGraphEditor(GetGraph())->GetSelectedNodes();
+	
+	// TODO message dialog asking if you want to forcefully apply the pattern even if audio has been assigned
+	FYapScopedTransaction Transaction(NAME_None, LOCTEXT("", ""), GetFlowAsset());
+
+	for (UObject* Node : Nodes)
+	{
+		if (UFlowGraphNode_YapDialogue* DialogeGraphNode = Cast<UFlowGraphNode_YapDialogue>(Node))
+		{
+			DialogeGraphNode->RandomizeAudioID();
+		}
+	}
+}
+
+void UFlowGraphNode_YapDialogue::RegenerateAudioIDsOnAllFragments()
+{
+	FGraphPanelSelectionSet Nodes = FFlowGraphUtils::GetFlowGraphEditor(GetGraph())->GetSelectedNodes();
+	
+	// TODO message dialog asking if you want to forcefully apply the pattern even if audio has been assigned
+	FYapScopedTransaction Transaction(NAME_None, LOCTEXT("", ""), GetFlowAsset());
+
+	for (UObject* Node : Nodes)
+	{
+		if (UFlowGraphNode_YapDialogue* DialogeGraphNode = Cast<UFlowGraphNode_YapDialogue>(Node))
+		{
+			UFlowNode_YapDialogue* DialogueNode = DialogeGraphNode->GetYapDialogueNode();
+			DialogueNode->Modify();
+			DialogueNode->UpdateFragmentAudioIDs();
+		}
+	}
+}
+
 void UFlowGraphNode_YapDialogue::AutoAssignAudioOnAllNodes()
 {
 	{
 		FYapTransactions::BeginModify(INVTEXT("TODO"), GetFlowAsset());
-
 		{
 			TArray<UFlowGraphNode_YapDialogue*> Nodes;
 			GetFlowAsset()->GetGraph()->GetNodesOfClass(Nodes);
 
 			for (UFlowGraphNode_YapDialogue* Node : Nodes)
 			{
+				Node->Modify();
 				Node->AutoAssignAudioOnAllFragments();
 			}
 		}
@@ -195,7 +233,7 @@ void UFlowGraphNode_YapDialogue::AutoAssignAudioOnAllFragments()
 	
 	for (uint8 FragmentIndex = 0; FragmentIndex < GetYapDialogueNode()->GetNumFragments(); ++FragmentIndex)
 	{
-		int32 AudioIDLen = GetYapDialogueNode()->GetAudioID().Len();
+		int32 AudioIDLen = GetYapDialogueNode()->GetAudioIDRoot().Len();
 		int32 FragmentIDLen = 3; // TODO magic number move this to project settings or some other constant
 	
 		FYapFragment& Fragment = GetYapDialogueNode()->Fragments[FragmentIndex];
@@ -204,7 +242,7 @@ void UFlowGraphNode_YapDialogue::AutoAssignAudioOnAllFragments()
 		Args.UseGrouping = false;
 		Args.MinimumIntegralDigits = 3; // TODO magic number move this to project settings or some other constant
 		
-		FString AudioID = GetYapDialogueNode()->GetAudioID() + "-" + (FText::AsNumber(FragmentIndex, &Args)).ToString(); // TODO build some way for users to define their own sequencing. Maybe move this to a default in the Broker?
+		FString AudioID = GetYapDialogueNode()->GetAudioIDRoot() + "-" + (FText::AsNumber(FragmentIndex, &Args)).ToString(); // TODO build some way for users to define their own sequencing. Maybe move this to a default in the Broker?
 
 		TArray<FAssetData>* CandidateAudioAssets = AudioAssetsByAudioID.Find(AudioID);
 
@@ -257,6 +295,8 @@ void UFlowGraphNode_YapDialogue::PostPlacedNewNode()
 	Super::PostPlacedNewNode();
 	
 	RandomizeAudioID();
+
+	GetYapDialogueNode()->UpdateFragmentAudioIDs();
 }
 
 void UFlowGraphNode_YapDialogue::PostPasteNode()
@@ -270,19 +310,14 @@ void UFlowGraphNode_YapDialogue::PostPasteNode()
 }
 
 void UFlowGraphNode_YapDialogue::RandomizeAudioID()
-{
-	if (IsTemplate())
+{	
+	if (UFlowNode_YapDialogue* DialogueNode = GetYapDialogueNode())// && TODO UYapProjectSettings::GetGenerateDialogueNodeTags()*/)
 	{
-		return;
-	}
-	
-	if (!GetYapDialogueNode()->GetDialogueID().IsValid() && true /* // TODO UYapProjectSettings::GetGenerateDialogueNodeTags()*/)
-	{
-		const UYapBroker& Broker = UYapSubsystem::GetBroker_Editor();
+		const UYapBroker& Broker = UYapBroker::GetInEditor();
 
-		FString Tag = Broker.GenerateDialogueAudioID(GetYapDialogueNode());
+		FString Tag = Broker.GenerateDialogueAudioID(DialogueNode);
 
-		GetYapDialogueNode()->AudioID = Tag;
+		DialogueNode->AudioID = Tag;
 	}
 }
 
@@ -294,6 +329,11 @@ void UFlowGraphNode_YapDialogue::AddFragment(int32 InsertionIndex)
 		return;
 	}
 
+	UFlowNode_YapDialogue* Node = GetYapDialogueNode();
+	
+	FYapScopedTransaction Transaction(NAME_None, LOCTEXT("", ""), Node);
+	Node->Modify();
+	
 	if (InsertionIndex == INDEX_NONE)
 	{
 		InsertionIndex = GetYapDialogueNode()->Fragments.Num();
@@ -309,11 +349,7 @@ void UFlowGraphNode_YapDialogue::AddFragment(int32 InsertionIndex)
 		NewFragment.SetMoodTag(PreviousFragment.GetMoodTag());
 	}
 
-	GetYapDialogueNode()->Fragments.Insert(NewFragment, InsertionIndex);
-
-	GetYapDialogueNode()->UpdateFragmentIndices();
-
-	(void)GetYapDialogueNode()->OnReconstructionRequested.ExecuteIfBound();
+	Node->InsertFragment(NewFragment, InsertionIndex);
 }
 
 void UFlowGraphNode_YapDialogue::GatherAllAudioAssets(TArray<FAssetData>& AllAudioAssets)
@@ -344,7 +380,7 @@ void UFlowGraphNode_YapDialogue::GroupAudioAssetsByTags(TMap<FString, TArray<FAs
 	
 	GatherAllAudioAssets(AllAudioAssets);
 	
-	int32 AudioIDLen = GetYapDialogueNode()->GetAudioID().Len();
+	int32 AudioIDLen = GetYapDialogueNode()->GetAudioIDRoot().Len();
 	int32 FragmentIDLen = 3; // TODO magic number move this to project settings or some other constant
 	
 	// Matches AAA-555, and allows for the start or end to be 'end of string' or a 'non-alphanumeric' character

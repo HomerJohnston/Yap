@@ -16,6 +16,7 @@
 #include "Yap/Enums/YapLoadContext.h"
 #include "Engine/World.h"
 #include "TimerManager.h"
+#include "Algo/ForEach.h"
 #include "Engine/Blueprint.h"
 #include "Yap/Enums/YapAutoAdvanceFlags.h"
 #include "Yap/Enums/YapInterruptibleFlags.h"
@@ -48,9 +49,6 @@ UFlowNode_YapDialogue::UFlowNode_YapDialogue()
 	OutputPins = {};
 
 #if WITH_EDITOR
-	// TODO use the subsystem to manage crap like this
-	//UYapProjectSettings::RegisterTagFilter(this, GET_MEMBER_NAME_CHECKED(ThisClass, DialogueTag), EYap_TagFilter::Prompts);
-	
 	if (IsTemplate())
 	{
 		UGameplayTagsManager::Get().OnFilterGameplayTagChildren.AddUObject(this, &ThisClass::OnFilterGameplayTagChildren);
@@ -199,18 +197,6 @@ void UFlowNode_YapDialogue::SetActive()
 void UFlowNode_YapDialogue::SetInactive()
 {
 	return;
-}
-
-TOptional<float> UFlowNode_YapDialogue::GetSpeechTime(uint8 FragmentIndex) const
-{
-	if (!GetWorld())
-	{
-		return NullOpt;
-	}
-	
-	const FYapFragment& Fragment = GetFragment(FragmentIndex);
-
-	return Fragment.GetSpeechTime(GetWorld(), GetNodeConfig());
 }
 
 #if WITH_EDITOR
@@ -438,6 +424,8 @@ const UYapNodeConfig& UFlowNode_YapDialogue::GetNodeConfig() const
 	return *ConfigAsset.LoadSynchronous();
 }
 
+// ------------------------------------------------------------------------------------------------
+
 const FYapFragment& UFlowNode_YapDialogue::GetFragment(uint8 FragmentIndex) const
 {
 	check(Fragments.IsValidIndex(FragmentIndex));
@@ -462,6 +450,8 @@ bool UFlowNode_YapDialogue::GetInterruptible(bool bInConversation) const
 		return ((Flags & EYapInterruptibleFlags::FreeSpeech) == EYapInterruptibleFlags::FreeSpeech);			
 	}
 }
+
+// ------------------------------------------------------------------------------------------------
 
 bool UFlowNode_YapDialogue::GetNodeAutoAdvance(bool bInConversation) const
 {
@@ -1290,6 +1280,20 @@ void UFlowNode_YapDialogue::RemoveFragment(int32 Index)
 }
 #endif
 
+#if WITH_EDITOR
+void UFlowNode_YapDialogue::InsertFragment(const FYapFragment& NewFragment, int32 InsertionIndex)
+{
+	Fragments.Insert(NewFragment, InsertionIndex);
+
+	UpdateFragments(
+	{
+		UpdateFragmentIndices,
+	});
+	
+	UpdateFragmentAudioIDs();
+}
+#endif
+
 // ------------------------------------------------------------------------------------------------
 
 #if WITH_EDITOR
@@ -1435,7 +1439,7 @@ void UFlowNode_YapDialogue::CycleFragmentSequencingMode()
 // ------------------------------------------------------------------------------------------------
 
 #if WITH_EDITOR
-void UFlowNode_YapDialogue::DeleteFragmentByIndex(int16 DeleteIndex)
+void UFlowNode_YapDialogue::DeleteFragmentByIndex(int32 DeleteIndex)
 {
 	if (!Fragments.IsValidIndex(DeleteIndex))
 	{
@@ -1444,22 +1448,88 @@ void UFlowNode_YapDialogue::DeleteFragmentByIndex(int16 DeleteIndex)
 
 	Fragments.RemoveAt(DeleteIndex);
 
-	UpdateFragmentIndices();
-	
-	(void)OnReconstructionRequested.ExecuteIfBound();
+	UpdateFragments( { UpdateFragmentIndices} );
+
+	UpdateFragmentAudioIDs();
+}
+#endif
+
+#if WITH_EDITOR
+void UFlowNode_YapDialogue::UpdateFragments(TArray<TFunction<void(UFlowNode_YapDialogue*, FYapFragment&, int32)>> Funcs)
+{
+	for (int i = 0; i < Fragments.Num(); ++i)
+	{
+		FYapFragment& Fragment = Fragments[i];
+		
+		for (auto& Func : Funcs)
+		{
+			Func(this, Fragment, i);
+		}
+	}
+
+	ForceReconstruction();
 }
 #endif
 
 // ------------------------------------------------------------------------------------------------
 
 #if WITH_EDITOR
-void UFlowNode_YapDialogue::UpdateFragmentIndices()
+void UFlowNode_YapDialogue::UpdateFragmentIndices(UFlowNode_YapDialogue* Node, FYapFragment& Fragment, int32 Index)
 {
-	for (int i = 0; i < Fragments.Num(); ++i)
-	{
-		Fragments[i].SetIndexInDialogue(i);
-	}
+	Fragment.SetIndexInDialogue(Index);
 }
+#endif
+
+// ------------------------------------------------------------------------------------------------
+
+#if WITH_EDITOR
+void UFlowNode_YapDialogue::UpdateFragmentAudioIDs()
+{
+	UYapBroker::GetInEditor().UpdateNodeFragmentIDs(this);
+	
+/*
+	TArray<TCHAR> IllegalChars = Node->GetNodeConfig().GetIllegalAudioIDCharacters().GetCharArray();
+
+	TArray<char> AlphaNumerics {'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'};
+	TArray<TCHAR> Alphas {'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'};
+
+	for (int i = 0; i < IllegalChars.Num(); ++i)
+	{
+		AlphaNumerics.Remove(IllegalChars[i]);
+		Alphas.Remove(IllegalChars[i]);
+	}
+
+	for (int i = 0; i < Pattern.Len(); ++i)
+	{
+		const TCHAR& Char = Pattern[i];
+
+		switch (Char)
+		{
+			case '*':
+			{
+				Pattern[i] = Alphas[FMath::RandHelper(Alphas.Num())];
+				break;
+			}
+			case '?':
+			{
+				Pattern[i] = AlphaNumerics[FMath::RandHelper(AlphaNumerics.Num())];
+			}
+			default:
+			{
+				
+			}
+		}
+	}
+
+	Fragment.SetAudioID(Pattern);
+	*/
+}
+#endif
+
+// ------------------------------------------------------------------------------------------------
+
+#if WITH_EDITOR
+
 #endif
 
 // ------------------------------------------------------------------------------------------------
@@ -1467,11 +1537,20 @@ void UFlowNode_YapDialogue::UpdateFragmentIndices()
 #if WITH_EDITOR
 void UFlowNode_YapDialogue::SwapFragments(uint8 IndexA, uint8 IndexB)
 {
+	if (!Fragments.IsValidIndex(IndexA) || !Fragments.IsValidIndex(IndexB))
+	{
+		UE_LOG(LogYap, Error, TEXT("Could not swap fragments [%i] and [%i]! Unknown error."), IndexA, IndexB);
+		return;
+	}
+	
 	Fragments.Swap(IndexA, IndexB);
 
-	UpdateFragmentIndices();
+	UpdateFragments(
+	{
+		UpdateFragmentIndices,
+	});
 
-	(void)OnReconstructionRequested.ExecuteIfBound();
+	//UpdateFragmentAudioIDs();
 }
 #endif
 
@@ -1534,6 +1613,13 @@ void UFlowNode_YapDialogue::OnFilterGameplayTagChildren(const FString& String, T
 #endif
 
 // ------------------------------------------------------------------------------------------------
+
+FString UFlowNode_YapDialogue::GetAudioID(uint8 FragmentIndex) const
+{
+	const FYapAudioIDFormat& AudioIDFormat = GetNodeConfig().GetAudioIDFormat();
+	
+	return GetAudioIDRoot() + AudioIDFormat.Separator + AudioIDFormat.ParseFragmentID(GetFragmentByIndex(FragmentIndex).GetAudioID());
+}
 
 bool UFlowNode_YapDialogue::CheckActivationLimits() const
 {

@@ -17,7 +17,7 @@
 #include "Yap/YapProjectSettings.h"
 #include "YapEditor/YapTransactions.h"
 #include "YapEditor/YapEditorStyle.h"
-#include "Yap/Enums/YapMissingAudioErrorLevel.h"
+#include "Yap/Enums/YapAudioPriority.h"
 #include "Yap/Nodes/FlowNode_YapDialogue.h"
 #include "YapEditor/NodeWidgets/SFlowGraphNode_YapDialogueWidget.h"
 #include "Yap/YapBitReplacement.h"
@@ -52,46 +52,18 @@ TMap<EYapTimeMode, FLinearColor> SFlowGraphNode_YapFragmentWidget::TimeModeButto
 	{
 	{ EYapTimeMode::None, YapColor::Red },
 	{ EYapTimeMode::Default, YapColor::LightGray },
-	{ EYapTimeMode::AudioTime, YapColor::Cyan },
+	{ EYapTimeMode::AudioTime_TextFallback, YapColor::Cyan },
 	{ EYapTimeMode::TextTime, YapColor::LightBlue },
 	{ EYapTimeMode::ManualTime, YapColor::Orange },
 };
 
 #define LOCTEXT_NAMESPACE "YapEditor"
 
-// TODO code duplication with UFlowGraphNode_YapDialogue::AutoAssignAudioOnAllFragments()
-bool CheckAudioAssetUsesAudioID(const UFlowNode_YapDialogue* Node, int32 FragmentIndex, TSoftObjectPtr<UObject> Asset, bool& bCorrectMatch)
+bool AudioAssetMatchesAudioID(const UFlowNode_YapDialogue* Node, int32 FragmentIndex, TSoftObjectPtr<UObject> Asset)
 {
-	int32 AudioIDLen = Node->GetAudioID().Len();
-	int32 FragmentIDLen = 3; // TODO magic number move this to project settings or some other constant
-	
-	// TODO make the naming pattern a project setting
-	FRegexPattern RegexActual(FString::Format(TEXT("[a-zA-Z]{{0}}-\\d{{1}}"), {AudioIDLen, FragmentIDLen}));
-	FRegexMatcher RegexMatcher(RegexActual, *Asset.ToString());
+	FString AudioID = Node->GetAudioID(FragmentIndex);
 
-	if (RegexMatcher.FindNext())
-	{
-		FString ID = RegexMatcher.GetCaptureGroup(0);
-
-		FString AudioID = ID.LeftChop(FragmentIDLen + 1); // TODO lots of duplicated code running around, centralize it all so this mechanism is consistent everywhere
-				
-		int32 IDInt = FCString::Atoi(*ID.RightChop(AudioIDLen + 1));
-
-		if (AudioID == Node->GetAudioID() && IDInt == FragmentIndex)
-		{
-			bCorrectMatch = true;
-		}
-		else
-		{
-			bCorrectMatch = false;
-		}
-
-		// This audio asset name contains an Audio ID (meaning it has AAA-000 somewhere in the asset name)
-		return true;
-	}
-
-	// This audio asset does not contain an Audio ID (it's just a random name)
-	return false;
+	return Asset.ToString().Contains(AudioID, ESearchCase::IgnoreCase);
 }
 
 SLATE_IMPLEMENT_WIDGET(SFlowGraphNode_YapFragmentWidget)
@@ -376,9 +348,9 @@ FReply SFlowGraphNode_YapFragmentWidget::OnClicked_AudioPreviewWidget(const TSof
 		return FReply::Handled();
 	}
 
-	const UYapBroker& Broker = UYapSubsystem::GetBroker_Editor();
+	const UYapBroker& Broker = UYapBroker::GetInEditor();
 
-	(void)Broker.PreviewAudioAsset(Object->LoadSynchronous());
+	Broker.PreviewAudioAsset(Object->LoadSynchronous());
 
 	return FReply::Handled();
 }
@@ -864,12 +836,12 @@ void SFlowGraphNode_YapFragmentWidget::OnValueCommitted_ManualTime(float NewValu
 
 EVisibility SFlowGraphNode_YapFragmentWidget::Visibility_AudioSettingsButton() const
 {
-	if (GetNodeConfig().GetMissingAudioErrorLevel() != EYapMissingAudioErrorLevel::OK)
+	if (GetNodeConfig().GetMissingAudioErrorLevel() != EYapAudioPriority::Optional)
 	{
 		return EVisibility::Visible;
 	}
 
-	if (GetFragment().HasAudio())
+	if (GetFragment().HasAnyAudio())
 	{
 		return EVisibility::Visible;
 	}
@@ -889,7 +861,7 @@ EVisibility SFlowGraphNode_YapFragmentWidget::Visibility_DialogueErrorState() co
 	
 	if (MatureBit.HasDialogueText() != ChildSafeBit.HasDialogueText())
 	{
-		return EVisibility::Visible;
+		return EVisibility::HitTestInvisible;
 	}
 
 	return EVisibility::Collapsed;
@@ -898,47 +870,36 @@ EVisibility SFlowGraphNode_YapFragmentWidget::Visibility_DialogueErrorState() co
 FSlateColor SFlowGraphNode_YapFragmentWidget::ColorAndOpacity_AudioIDText() const
 {
 	const TSoftObjectPtr<UObject>& MatureAudioAsset = GetFragment().GetMatureBit().AudioAsset;
-	const TSoftObjectPtr<UObject>& SafeAudioAsset = GetFragment().GetChildSafeBit().AudioAsset;
+	const TSoftObjectPtr<UObject>& ChildSafeAudioAsset = GetFragment().GetChildSafeBit().AudioAsset;
 
 	bool bNeedsChildSafeAudio = NeedsChildSafeData();
 
-	const FLinearColor Error = YapColor::Red;
-	const FLinearColor NoAudio = YapColor::White;
-	const FLinearColor AllGood = YapColor::DarkGray;
+	const FLinearColor Error = YapColor::OrangeRed;
+	const FLinearColor NoAudio = YapColor::Gray;
+	const FLinearColor AllGood = YapColor::White;
 
 	FLinearColor Color = AllGood;
-	
-	if (MatureAudioAsset.IsNull())
-	{
-		Color = NoAudio;
-	}
-	else if (SafeAudioAsset.IsNull() && bNeedsChildSafeAudio)
+
+	bool bHasMatureAudio = GetDialogueNode()->GetFragment(FragmentIndex).HasMatureAudio();
+	bool bHasChildSafeAudio = GetDialogueNode()->GetFragment(FragmentIndex).HasChildSafeAudio();
+	bool bCorrectMatureAudioID = AudioAssetMatchesAudioID(GetDialogueNode(), FragmentIndex, MatureAudioAsset);
+	bool bCorrectChildSafeAudioID = AudioAssetMatchesAudioID(GetDialogueNode(), FragmentIndex, ChildSafeAudioAsset);
+
+	if (bHasChildSafeAudio && !bCorrectChildSafeAudioID)
 	{
 		Color = Error;
 	}
-	else if (!MatureAudioAsset.IsNull())
+	else if (bHasMatureAudio && !bCorrectMatureAudioID)
 	{
-		bool bCorrectMatch = false;
-		bool bAssetUsesAudioID = CheckAudioAssetUsesAudioID(GetDialogueNode(), FragmentIndex, MatureAudioAsset, bCorrectMatch);
-
-		if (!bAssetUsesAudioID)
-		{
-			Color = YapColor::LightBlue;
-		}
-		else if (bAssetUsesAudioID && !bCorrectMatch)
-		{
-			Color = Error;
-		}
+		Color = Error;
 	}
-	else if (!SafeAudioAsset.IsNull() && bNeedsChildSafeAudio)
+	else if (bNeedsChildSafeAudio && !bHasChildSafeAudio)
 	{
-		bool bCorrectMatch = false;
-		bool bAssetUsesAudioID = CheckAudioAssetUsesAudioID(GetDialogueNode(), FragmentIndex, SafeAudioAsset, bCorrectMatch);
-
-		if (!bAssetUsesAudioID || !bCorrectMatch)
-		{
-			Color = Error;
-		}
+		Color = NoAudio;
+	}
+	else if (!bHasMatureAudio)
+	{
+		Color = NoAudio;
 	}
 	
 	if (AudioIDButton.IsValid() && AudioIDButton->IsHovered())
@@ -951,9 +912,7 @@ FSlateColor SFlowGraphNode_YapFragmentWidget::ColorAndOpacity_AudioIDText() cons
 
 FText SFlowGraphNode_YapFragmentWidget::Text_AudioIDLabel() const
 {
-	//GetFragment().GetAudioID();
-
-	return FText::GetEmpty();
+	return FText::FromString(GetDialogueNode()->GetAudioID(FragmentIndex));
 }
 
 EVisibility SFlowGraphNode_YapFragmentWidget::Visibility_TimeProgressionWidget() const
@@ -1072,7 +1031,7 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateDialogueDisplayWidge
 	Overlay->AddSlot()
 	.VAlign(VAlign_Bottom)
 	.HAlign(HAlign_Right)
-	.Padding(0)
+	.Padding(0, 0, -2, -2)
 	[
 		SAssignNew(AudioIDButton, SButton)
 		.ButtonStyle(FYapEditorStyle::Get(), YapStyles.ButtonStyle_SimpleYapButton)
@@ -1090,24 +1049,23 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateDialogueDisplayWidge
 			return FText::FromString(Bit.AudioAsset.GetAssetName());
 		})
 		[
-			SNew(SBorder)
-			.Visibility_Lambda( [this] () { return GetNodeConfig().GetHideAudioID() ? EVisibility::Collapsed : EVisibility::Visible; } )
-			.BorderImage(FYapEditorStyle::GetImageBrush(YapBrushes.Icon_IDTag))
-			.BorderBackgroundColor(this, &ThisClass::ColorAndOpacity_AudioIDButton)
-			.Padding(4, 2, 4, 2)
+			SNew(SBox)
+			.MinDesiredWidth(28)
+			.MinDesiredHeight(20)
 			[
-				SNew(STextBlock)
-				.ColorAndOpacity(this, &ThisClass::ColorAndOpacity_AudioIDText)
-				.SimpleTextMode(true)
-				.Text(this, &ThisClass::Text_AudioIDLabel)/* [FragmentIndexText, DialogueNode] ()
-				{
-					if (DialogueNode.IsValid())
-					{
-						return FText::AsCultureInvariant(DialogueNode->GetAudioID() + "-" + FragmentIndexText);
-					}
-
-					return INVTEXT("");
-				} )*/
+				SNew(SBorder)
+				.Visibility_Lambda( [this] () { return GetNodeConfig().Audio.bDisableAudio ? EVisibility::Collapsed : EVisibility::Visible; } )
+				.BorderImage(FYapEditorStyle::GetImageBrush(YapBrushes.Icon_IDTag))
+				.BorderBackgroundColor(this, &ThisClass::ColorAndOpacity_AudioIDButton)
+				.Padding(5, 3, 5, 3)
+				[
+					SNew(STextBlock)
+					.Visibility_Lambda( [this] () { return GetNodeConfig().GetHideAudioID() ? EVisibility::Collapsed : EVisibility::Visible; } )
+					.ColorAndOpacity(this, &ThisClass::ColorAndOpacity_AudioIDText)
+					.SimpleTextMode(true)
+					.TextStyle(FYapEditorStyle::Get(), YapStyles.TextBlockStyle_AudioID)
+					.Text(this, &ThisClass::Text_AudioIDLabel)
+				]
 			]
 		]
 	];
@@ -2052,26 +2010,39 @@ FSlateColor SFlowGraphNode_YapFragmentWidget::ColorAndOpacity_AudioIDButton() co
 {
 	FLinearColor Color = YapColor::White;
 
+	const FLinearColor Error = YapColor::Red;
+	const FLinearColor Warning = YapColor::Orange;
+	const FLinearColor AllGood_NoAudio = YapColor::DarkGray;
+	const FLinearColor AllGood = YapColor::Black;
+	
 	switch (GetFragmentAudioErrorLevel())
 	{
 		case EYapErrorLevel::OK:
 		{
-			Color = YapColor::Noir;
+			if (GetFragment().HasAnyAudio())
+			{
+				Color = AllGood;
+			}
+			else
+			{
+				Color = AllGood_NoAudio;
+			}
 			break;
 		}
 		case EYapErrorLevel::Warning:
 		{
-			Color = YapColor::Red;
+			Color = Warning;
 			break;
 		}
 		case EYapErrorLevel::Error:
 		{
-			Color = YapColor::Red;
+			Color = Error;
+			Color.A = 1.5f;
 			break;
 		}
 		case EYapErrorLevel::Unknown:
 		{
-			Color = YapColor::Error;
+			Color = Error;
 			break;
 		}
 	}
@@ -2080,13 +2051,13 @@ FSlateColor SFlowGraphNode_YapFragmentWidget::ColorAndOpacity_AudioIDButton() co
 
 	if (AudioIDButton.IsValid() && AudioIDButton->IsHovered())
 	{
-		Color /= YapColor::LightGray;
+		
 	}
 	else
 	{
-		Color *= YapColor::LightGray;
+		Color.A *= 0.5f;
 	}
-	
+
 	return Color;
 }
 
@@ -2166,7 +2137,7 @@ EYapErrorLevel SFlowGraphNode_YapFragmentWidget::GetAudioAssetErrorLevel(const T
 				UE_LOG(LogYapEditor, Warning, TEXT("Synchronously loading audio asset class"));
 			}
 			
-			return Asset->IsA(Class.LoadSynchronous()); // TODO verify this works?
+			return Asset->IsA(Class.LoadSynchronous());
 		}))
 		{
 			return EYapErrorLevel::OK;
@@ -2177,31 +2148,24 @@ EYapErrorLevel SFlowGraphNode_YapFragmentWidget::GetAudioAssetErrorLevel(const T
 		}
 	}
 
-	EYapMissingAudioErrorLevel MissingAudioBehavior = GetNodeConfig().GetMissingAudioErrorLevel();
-
-	EYapTimeMode TimeModeSetting = GetFragment().GetTimeModeSetting();
-	
-	// We don't have any audio asset set. If the dialogue is set to use audio time but does NOT have an audio asset, we either indicate an error (prevent packaging) or indicate a warning (allow packaging) 
-	if ((TimeModeSetting == EYapTimeMode::AudioTime) || (TimeModeSetting == EYapTimeMode::Default && GetNodeConfig().GetDefaultTimeModeSetting() == EYapTimeMode::AudioTime))
+	// We don't have an asset. Panic! Maybe?
+	switch (GetNodeConfig().Audio.AudioPriority)
 	{
-		switch (MissingAudioBehavior)
+		case EYapAudioPriority::Forced:
 		{
-			case EYapMissingAudioErrorLevel::OK:
-			{
-				return EYapErrorLevel::OK;
-			}
-			case EYapMissingAudioErrorLevel::Warning:
-			{
-				return EYapErrorLevel::Warning;
-			}
-			case EYapMissingAudioErrorLevel::Error:
-			{
-				return EYapErrorLevel::Error;
-			}
+			return EYapErrorLevel::Error;
+		}
+		case EYapAudioPriority::Preferred:
+		{
+			return EYapErrorLevel::Warning;
+		}
+		case EYapAudioPriority::Optional:
+		{
+			return EYapErrorLevel::OK;
 		}
 	}
 
-	return EYapErrorLevel::OK;
+	return EYapErrorLevel::Unknown;
 }
 
 // ================================================================================================

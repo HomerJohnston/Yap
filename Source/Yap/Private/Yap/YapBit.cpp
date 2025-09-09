@@ -40,14 +40,14 @@ TOptional<float> FYapBit::GetSpeechTime(UWorld* World, EYapTimeMode TimeMode, EY
 	
 	switch (TimeMode)
 	{
+		case EYapTimeMode::AudioTime_TextFallback:
+		{
+			Time = GetAudioTime(World, LoadContext);
+			break;
+		}
 		case EYapTimeMode::ManualTime:
 		{
 			Time = ManualTime;
-			break;
-		}
-		case EYapTimeMode::AudioTime:
-		{
-			Time = GetAudioTime(World, LoadContext);
 			break;
 		}
 		case EYapTimeMode::TextTime:
@@ -134,7 +134,7 @@ TOptional<float> FYapBit::GetAudioTime(UObject* WorldContext, EYapLoadContext Lo
 	}
 
 #if WITH_EDITOR
-	const UYapBroker& Broker = UYapSubsystem::GetBroker_Editor(); 
+	const UYapBroker& Broker = UYapBroker::GetInEditor(); 
 #else
 	const UYapBroker& Broker = UYapSubsystem::GetBroker(WorldContext); 
 #endif
@@ -201,7 +201,7 @@ void FYapBit::RecalculateTextWordCount(FText& Text, float& CachedWordCount)
 
 	if (UYapProjectSettings::CacheFragmentWordCountAutomatically())
 	{
-		const UYapBroker& Broker = UYapSubsystem::GetBroker_Editor();
+		const UYapBroker& Broker = UYapBroker::GetInEditor();
 
 		WordCount = Broker.CalculateWordCount(Text);
 	}
@@ -229,7 +229,7 @@ void FYapBit::SetDialogueAudioAsset(UObject* NewAudio)
 #if WITH_EDITOR
 void FYapBit::RecalculateAudioTime(TOptional<float>& CachedTime)
 {
-	const UYapBroker& Broker = UYapSubsystem::GetBroker_Editor();
+	const UYapBroker& Broker = UYapBroker::GetInEditor();
 	
 	float NewCachedTime = Broker.GetAudioAssetDuration(AudioAsset.LoadSynchronous());
 

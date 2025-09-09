@@ -152,6 +152,7 @@ struct FYapStyles
 	FName TextBlockStyle_TitleText;
 	FName TextBlockStyle_CharacterName;
 	FName TextBlockStyle_CharacterTag;
+	FName TextBlockStyle_AudioID;
 };
 
 struct FYapFonts
@@ -168,6 +169,7 @@ struct FYapFonts
 	FSlateFontInfo Font_CharacterName;
 	FSlateFontInfo Font_CharacterTag;
 	FSlateFontInfo Font_CharacterMoodRootHeading;
+	FSlateFontInfo Font_AudioID;
 
 	FSlateFontInfo Font_OpenSans_Regular;
 	FSlateFontInfo Font_NotoSans_Regular;

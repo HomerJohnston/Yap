@@ -30,7 +30,7 @@ TMap<EYapTimeMode, FLinearColor> SYapDialogueEditor::TimeModeButtonColors =
 	{
 	{ EYapTimeMode::None, YapColor::Red },
 	{ EYapTimeMode::Default, YapColor::Green },
-	{ EYapTimeMode::AudioTime, YapColor::Cyan },
+	{ EYapTimeMode::AudioTime_TextFallback, YapColor::Cyan },
 	{ EYapTimeMode::TextTime, YapColor::LightBlue },
 	{ EYapTimeMode::ManualTime, YapColor::Orange },
 };
@@ -354,7 +354,7 @@ TSharedRef<SWidget> SYapDialogueEditor::BuildTimeSettings_SingleSide(float Width
 		.Padding(0, 2, 0, 2)
 		.AutoHeight()
 		[
-			MakeTimeSettingRow(EYapTimeMode::AudioTime, MaturitySetting)
+			MakeTimeSettingRow(EYapTimeMode::AudioTime_TextFallback, MaturitySetting)
 		]
 		+ SVerticalBox::Slot()
 		.Padding(0, 2, 0, 2)
@@ -718,7 +718,7 @@ TSharedRef<SWidget> SYapDialogueEditor::MakeTimeSettingRow(EYapTimeMode TimeMode
 			},
 		},
 		{
-			EYapTimeMode::AudioTime,
+			EYapTimeMode::AudioTime_TextFallback,
 			{
 				LOCTEXT("DialogueTimeMode_Audio_Label", "Use Audio Time"),
 				LOCTEXT("DialogueTimeMode_Audio_ToolTip", "Use a time read from the audio asset"),
@@ -884,7 +884,7 @@ FReply SYapDialogueEditor::OnClicked_AudioPreviewWidget(const TSoftObjectPtr<UOb
 		return FReply::Handled();
 	}
 
-	const UYapBroker& Broker = UYapSubsystem::GetBroker_Editor();
+	const UYapBroker& Broker = UYapBroker::GetInEditor();
 
 	(void)Broker.PreviewAudioAsset(Object->LoadSynchronous());
 	
@@ -922,24 +922,24 @@ EYapErrorLevel SYapDialogueEditor::GetAudioAssetErrorLevel(const TSoftObjectPtr<
 		}
 	}
 
-	EYapMissingAudioErrorLevel MissingAudioBehavior = GetNodeConfig().GetMissingAudioErrorLevel();
+	EYapAudioPriority MissingAudioBehavior = GetNodeConfig().GetMissingAudioErrorLevel();
 
 	EYapTimeMode TimeModeSetting = GetFragment().GetTimeModeSetting();
 	
 	// We don't have any audio asset set. If the dialogue is set to use audio time but does NOT have an audio asset, we either indicate an error (prevent packaging) or indicate a warning (allow packaging) 
-	if ((TimeModeSetting == EYapTimeMode::AudioTime) || (TimeModeSetting == EYapTimeMode::Default && GetNodeConfig().GetDefaultTimeModeSetting() == EYapTimeMode::AudioTime))
+	if ((TimeModeSetting == EYapTimeMode::AudioTime_TextFallback) || (TimeModeSetting == EYapTimeMode::Default && GetNodeConfig().GetDefaultTimeModeSetting() == EYapTimeMode::AudioTime_TextFallback))
 	{
 		switch (MissingAudioBehavior)
 		{
-			case EYapMissingAudioErrorLevel::OK:
+			case EYapAudioPriority::Optional:
 			{
 				return EYapErrorLevel::OK;
 			}
-			case EYapMissingAudioErrorLevel::Warning:
+			case EYapAudioPriority::Preferred:
 			{
 				return EYapErrorLevel::Warning;
 			}
-			case EYapMissingAudioErrorLevel::Error:
+			case EYapAudioPriority::Forced:
 			{
 				return EYapErrorLevel::Error;
 			}

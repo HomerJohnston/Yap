@@ -3,6 +3,9 @@
 
 #pragma once
 
+#include "CoreTypes.h"
+#include "UObject/ObjectMacros.h"
+
 UENUM()
 enum class EYapWarnings : uint8
 {

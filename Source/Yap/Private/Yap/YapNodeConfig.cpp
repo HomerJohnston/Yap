@@ -194,6 +194,13 @@ bool UYapNodeConfig::GetUsesTitleText(EYapDialogueNodeType NodeType) const
     return !Graph.bShowTitleTextOnTalkNodes;
 }
 
+#if WITH_EDITORONLY_DATA
+const FYapAudioIDFormat& UYapNodeConfig::GetAudioIDFormat() const
+{
+    return Audio.AudioIDFormat.IsSet() ? Audio.AudioIDFormat.GetValue() : UYapProjectSettings::GetDefaultAudioIDFormat();
+}
+#endif
+
 TArray<FString>& UYapNodeConfig::GetDefaultMoodTags()
 {
     static TArray<FString> Tags

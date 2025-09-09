@@ -41,35 +41,6 @@ TSharedRef<SWidget> SYapAudioAssetGraphPin::GenerateAssetPicker()
 		AssetPickerConfig.Filter.ClassPaths.Add(AllowedClass->GetClassPathName());
 	}
 	
-	// Check with the node to see if there is any "AllowClasses" or "DisallowedClasses" metadata for the pin
-	FString AllowedClassesFilterString = GraphPinObj->GetOwningNode()->GetPinMetaData(GraphPinObj->PinName, FName(TEXT("AllowedClasses")));
-	if( !AllowedClassesFilterString.IsEmpty() )
-	{
-		// Clear out the allowed class names and have the pin's metadata override.
-		AssetPickerConfig.Filter.ClassPaths.Empty();
-
-		// Parse and add the classes from the metadata
-		TArray<FString> AllowedClassesFilterNames;
-		AllowedClassesFilterString.ParseIntoArrayWS(AllowedClassesFilterNames, TEXT(","), true);
-		for(const FString& AllowedClassesFilterName : AllowedClassesFilterNames)
-		{
-			ensureAlwaysMsgf(!FPackageName::IsShortPackageName(AllowedClassesFilterName), TEXT("Short class names are not supported as AllowedClasses on pin \"%s\": class \"%s\""), *GraphPinObj->PinName.ToString(), *AllowedClassesFilterName);
-			AssetPickerConfig.Filter.ClassPaths.Add(FTopLevelAssetPath(AllowedClassesFilterName));
-		}
-	}
-
-	FString DisallowedClassesFilterString = GraphPinObj->GetOwningNode()->GetPinMetaData(GraphPinObj->PinName, FName(TEXT("DisallowedClasses")));
-	if(!DisallowedClassesFilterString.IsEmpty())
-	{
-		TArray<FString> DisallowedClassesFilterNames;
-		DisallowedClassesFilterString.ParseIntoArrayWS(DisallowedClassesFilterNames, TEXT(","), true);
-		for(const FString& DisallowedClassesFilterName : DisallowedClassesFilterNames)
-		{
-			ensureAlwaysMsgf(!FPackageName::IsShortPackageName(DisallowedClassesFilterName), TEXT("Short class names are not supported as DisallowedClasses on pin \"%s\": class \"%s\""), *GraphPinObj->PinName.ToString(), *DisallowedClassesFilterName);
-			AssetPickerConfig.Filter.RecursiveClassPathsExclusionSet.Add(FTopLevelAssetPath(DisallowedClassesFilterName));
-		}
-	}
-
 	return SNew(SBox)
 	.HeightOverride(300)
 	.WidthOverride(300)

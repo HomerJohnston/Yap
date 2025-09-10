@@ -306,7 +306,7 @@ protected:
 	bool					OnShouldFilterAsset_AudioAssetWidget(const FAssetData& AssetData) const;
 	EVisibility				Visibility_AudioAssetErrorState(const TSoftObjectPtr<UObject>* Asset) const;
 
-	FSlateColor				ColorAndOpacity_AudioIDButton() const;
+	FSlateColor				ColorAndOpacity_AudioIDErrorIndicator() const;
 	EYapErrorLevel			GetFragmentAudioErrorLevel() const;
 
 	FSlateColor				ColorAndOpacity_AudioAssetErrorState(const TSoftObjectPtr<UObject>* Asset) const;

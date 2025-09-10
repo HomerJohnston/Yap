@@ -875,7 +875,7 @@ FSlateColor SFlowGraphNode_YapFragmentWidget::ColorAndOpacity_AudioIDText() cons
 	bool bNeedsChildSafeAudio = NeedsChildSafeData();
 
 	const FLinearColor Error = YapColor::OrangeRed;
-	const FLinearColor NoAudio = YapColor::Gray;
+	const FLinearColor NoAudio = YapColor::Black;
 	const FLinearColor AllGood = YapColor::White;
 
 	FLinearColor Color = AllGood;
@@ -1031,9 +1031,10 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateDialogueDisplayWidge
 	Overlay->AddSlot()
 	.VAlign(VAlign_Bottom)
 	.HAlign(HAlign_Right)
-	.Padding(0, 0, -2, -2)
+	.Padding(0, 0, -3, -2)
 	[
 		SAssignNew(AudioIDButton, SButton)
+		.Visibility_Lambda( [this] () { return GetNodeConfig().Audio.bDisableAudio ? EVisibility::Collapsed : EVisibility::Visible; } )
 		.ButtonStyle(FYapEditorStyle::Get(), YapStyles.ButtonStyle_SimpleYapButton)
 		.OnClicked_Lambda( [&Bit, this] () { return OnClicked_AudioPreviewWidget(&Bit.AudioAsset); } )
 		.ContentPadding(0)
@@ -1053,18 +1054,50 @@ TSharedRef<SWidget> SFlowGraphNode_YapFragmentWidget::CreateDialogueDisplayWidge
 			.MinDesiredWidth(28)
 			.MinDesiredHeight(20)
 			[
-				SNew(SBorder)
-				.Visibility_Lambda( [this] () { return GetNodeConfig().Audio.bDisableAudio ? EVisibility::Collapsed : EVisibility::Visible; } )
-				.BorderImage(FYapEditorStyle::GetImageBrush(YapBrushes.Icon_IDTag))
-				.BorderBackgroundColor(this, &ThisClass::ColorAndOpacity_AudioIDButton)
-				.Padding(5, 3, 5, 3)
+				SNew(SOverlay)
+				+ SOverlay::Slot()
 				[
-					SNew(STextBlock)
-					.Visibility_Lambda( [this] () { return GetNodeConfig().GetHideAudioID() ? EVisibility::Collapsed : EVisibility::Visible; } )
-					.ColorAndOpacity(this, &ThisClass::ColorAndOpacity_AudioIDText)
-					.SimpleTextMode(true)
-					.TextStyle(FYapEditorStyle::Get(), YapStyles.TextBlockStyle_AudioID)
-					.Text(this, &ThisClass::Text_AudioIDLabel)
+					SNew(SBorder)
+					.BorderImage(FYapEditorStyle::GetImageBrush(YapBrushes.Icon_IDTag))
+					.BorderBackgroundColor(YapColor::DarkGray)
+					.Padding(5, 3, 5, 3)
+					[
+						SNew(STextBlock)
+						.ColorAndOpacity(this, &ThisClass::ColorAndOpacity_AudioIDText)
+						.SimpleTextMode(true)
+						.Text(this, &ThisClass::Text_AudioIDLabel)
+					]
+				]
+				+ SOverlay::Slot()
+				.HAlign(HAlign_Left)
+				.VAlign(VAlign_Center)
+				.Padding(-12, 0)
+				[
+					SNew(SBox)
+					.Visibility_Lambda( [this] () { return GetFragmentAudioErrorLevel() > EYapErrorLevel::OK ? EVisibility::Visible : EVisibility::Collapsed; } )
+					.WidthOverride(16)
+					.HeightOverride(16)
+					.HAlign(HAlign_Center)
+					.VAlign(VAlign_Center)
+					[
+						SNew(SOverlay)
+						+ SOverlay::Slot()
+						.HAlign(HAlign_Center)
+						.VAlign(VAlign_Center)
+						[
+							SNew(SImage)
+							.Image(FYapEditorStyle::GetImageBrush(YapBrushes.Icon_FilledCircle))
+							.ColorAndOpacity(this, &ThisClass::ColorAndOpacity_AudioIDErrorIndicator)
+						]
+						+ SOverlay::Slot()
+						.HAlign(HAlign_Center)
+						.VAlign(VAlign_Center)
+						[ 
+							SNew(STextBlock)
+							.Text(INVTEXT("!"))
+							.ColorAndOpacity(YapColor::White)
+						]
+					]
 				]
 			]
 		]
@@ -2006,7 +2039,7 @@ EVisibility SFlowGraphNode_YapFragmentWidget::Visibility_AudioAssetErrorState(co
 	return EVisibility::Hidden;
 }
 
-FSlateColor SFlowGraphNode_YapFragmentWidget::ColorAndOpacity_AudioIDButton() const
+FSlateColor SFlowGraphNode_YapFragmentWidget::ColorAndOpacity_AudioIDErrorIndicator() const
 {
 	FLinearColor Color = YapColor::White;
 
@@ -2046,18 +2079,7 @@ FSlateColor SFlowGraphNode_YapFragmentWidget::ColorAndOpacity_AudioIDButton() co
 			break;
 		}
 	}
-
-	Color = YapColor::Desaturate(Color, 0.4f);
-
-	if (AudioIDButton.IsValid() && AudioIDButton->IsHovered())
-	{
-		
-	}
-	else
-	{
-		Color.A *= 0.5f;
-	}
-
+	
 	return Color;
 }
 

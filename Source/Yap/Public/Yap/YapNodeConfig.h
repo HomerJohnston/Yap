@@ -98,13 +98,6 @@ struct FYapNodeConfigGroup_Audio
 	FDirectoryPath FlowAssetsRootFolder;
 #endif
 
-
-	
-	
-	/** Optionally hide the audio ID tag. */
-	UPROPERTY(EditAnywhere, Category = "Default", meta = (EditCondition = "!bDisableAudio", EditConditionHides))
-	bool bHideAudioID = false;
-
 #if WITH_EDITORONLY_DATA
 	/** Enter a pattern if you want to override the default project setting.
 	 * 
@@ -410,8 +403,6 @@ public:
 	bool GetUsesChildSafe() const { return !General.bDisableChildSafe; }
 
 	bool GetUsesAudioAsset() const { return !Audio.bDisableAudio; }
-
-	bool GetHideAudioID() const { return !Audio.bDisableAudio && Audio.bHideAudioID; }
 
 #if WITH_EDITORONLY_DATA
 	const FYapAudioIDFormat& GetAudioIDFormat() const;

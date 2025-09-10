@@ -136,12 +136,15 @@ float UYapBroker::GetAudioAssetDuration(const UObject* AudioAsset) const
 		for (int32 i = 0; i < AudioAssetClasses.Num(); ++i)
 		{
 			const TSoftClassPtr<UObject>& Class = AudioAssetClasses[i];
-			
-			ProjectAudioClassesString += Class->GetName();
 
-			if (i < AudioAssetClasses.Num() - 1)
+			if (Class.IsValid())
 			{
-				ProjectAudioClassesString += ", ";
+				ProjectAudioClassesString += Class->GetName();
+
+				if (i < AudioAssetClasses.Num() - 1)
+				{
+					ProjectAudioClassesString += ", ";
+				}	
 			}
 		}
 		

@@ -10,12 +10,6 @@ public class Yap : ModuleRules
 
 		bUseUnity = true;
 		
-		PublicDefinitions.AddRange(
-			new string[] {
-				"YAP_USE_WWISE=1"
-			}
-		);
-		
 		PublicIncludePaths.AddRange(
 			new string[] {
 				// ... add public include paths required here ...

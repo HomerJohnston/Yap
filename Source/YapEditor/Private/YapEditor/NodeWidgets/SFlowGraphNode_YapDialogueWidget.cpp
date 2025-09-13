@@ -512,6 +512,11 @@ FReply SFlowGraphNode_YapDialogueWidget::OnClicked_TogglePlayerPrompt()
 		// Get all output pins of this node and iterate them
 		for (UEdGraphPin* Pin : FlowGraphNode_YapDialogue->OutputPins)
 		{
+			if (Pin->PinName == UFlowNode_YapDialogue::BypassPinName)
+			{
+				continue;
+			}
+			
 			if (Pin->HasAnyConnections())
 			{
 				bHasOutputConnections = true;

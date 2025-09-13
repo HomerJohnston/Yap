@@ -1673,7 +1673,10 @@ bool UFlowNode_YapDialogue::ToggleNodeType(bool bHasOutputConnections)
 	// If the node config isn't valid, do nothing
 	if (AllowableNodeTypes == 0)
 	{
-		UE_LOG(LogYap, Error, TEXT("%s: Cannot toggle node type - node config is invalid!"), *GetName());
+		Yap::Editor::PostNotificationInfo_Warning(
+			LOCTEXT("ToggleNodeTypeConfigError_Title", "Cannot Change Node Type"),
+			LOCTEXT("ToggleNodeTypeConfigError_Desc", "Check Yap Node Config for this node type - no valid allowable node types?"));
+			
 		return false;
 	}
 
@@ -1682,7 +1685,11 @@ bool UFlowNode_YapDialogue::ToggleNodeType(bool bHasOutputConnections)
 	{
 		if (GetNodeType() == EYapDialogueNodeType::PlayerPrompt)
 		{
-			// Do nothing
+			Yap::Editor::PostNotificationInfo_Warning(
+				LOCTEXT("ToggleNodeTypeError_Title", "Cannot Change Node Type"),
+				LOCTEXT("ToggleNodeTypeError_Desc", "You must disconnect outputs before you can change the node type."));
+			
+			return false;
 		}
 		else if (GetNodeType() == EYapDialogueNodeType::TalkAndAdvance)
 		{
@@ -1696,6 +1703,10 @@ bool UFlowNode_YapDialogue::ToggleNodeType(bool bHasOutputConnections)
 
 	if (AllowableNodeTypes == 0)
 	{
+		Yap::Editor::PostNotificationInfo_Warning(
+			LOCTEXT("ToggleNodeTypeError_Title", "Cannot Change Node Type"),
+			LOCTEXT("ToggleNodeTypeError_Desc", "You must disconnect outputs before you can change the node type."));
+			
 		return false;
 	}
 	

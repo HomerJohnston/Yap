@@ -35,7 +35,7 @@ UFlowNode_YapDialogue::UFlowNode_YapDialogue()
 
 	NodeStyle = EFlowNodeStyle::Custom;
 #endif
-
+	
 	DialogueNodeType = EYapDialogueNodeType::Talk;
 	
 	NodeActivationLimit = 0;
@@ -328,6 +328,12 @@ void UFlowNode_YapDialogue::ExecuteInput(const FName& PinName)
 		}
 		else
 		{
+#if !UE_BUILD_SHIPPING
+			if (!Connections.Contains(BypassPinName))
+			{
+				UE_LOG(LogYap, Error, TEXT("Tried to trigger bypass pin, but it was not connected!"));
+			}
+#endif
 			TriggerOutput(BypassPinName, true, EFlowPinActivationType::Default);
 		}
 	}
@@ -540,6 +546,12 @@ bool UFlowNode_YapDialogue::TryBroadcastPrompts()
 
 	const FYapConversation* Conversation = Subsystem->GetConversationByOwner(this, GetFlowAsset()); 
 
+	if (!Conversation)
+	{
+		UE_LOG(LogYap, Warning, TEXT("Tried to broadcast prompt options but there was no active conversation!"));
+		return false;
+	}
+	
 	FYapPromptHandle LastHandle;
 	
  	for (uint8 i = 0; i < Fragments.Num(); ++i)
@@ -1121,6 +1133,12 @@ void UFlowNode_YapDialogue::TriggerSpeechEndPin(uint8 FragmentIndex)
 
 bool UFlowNode_YapDialogue::IsBypassPinRequired() const
 {
+	// If it's a prompt node, enable the bypass -- it will be used if the node is entered without an active conversation
+	if (GetNodeType() == EYapDialogueNodeType::PlayerPrompt)
+	{
+		return true;
+	}
+	
 	// If there are any conditions, we will need a bypass node in case all conditions are false
 	if (Conditions.Num() > 0 || GetNodeActivationLimit() > 0)
 	{

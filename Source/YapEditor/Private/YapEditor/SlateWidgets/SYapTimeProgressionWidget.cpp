@@ -41,6 +41,8 @@ void SYapTimeProgressionWidget::Construct(const FArguments& InArgs)
 
 	PlaybackTimeAtt = InArgs._PlaybackTime;
 
+	OwnerFragmentWidget = InArgs._OwnerFragmentWidget;
+	
 	ChildSlot
 	.Padding(0, -64, 0, 6)
 	.HAlign(HAlign_Center)
@@ -228,6 +230,8 @@ FReply SYapTimeProgressionWidget::OnMouseButtonDown(const FGeometry& MyGeometry,
 
 		ShowTimeDisplayBox();
 
+		MaturitySetting = OwnerFragmentWidget.Pin()->GetDisplayMaturitySetting();
+		
 		return FReply::Handled().CaptureMouse(SharedThis(this));
 	}
 
@@ -279,7 +283,7 @@ FReply SYapTimeProgressionWidget::OnMouseMove(const FGeometry& MyGeometry, const
 
 		FYapFragment& Fragment = DialogueNode.Get()->GetFragmentMutableByIndex(FragmentIndex);
 
-		float PaddingValue = Fragment.GetPaddingValue(DialogueNode.Get()->GetWorld(), DialogueNode.Get()->GetNodeConfig());
+		float PaddingValue = Fragment.GetPaddingValue(DialogueNode.Get()->GetWorld(), MaturitySetting, DialogueNode.Get()->GetNodeConfig());
 		
 		Fragment.SetPaddingToNextFragment(PaddingValue + Delta);
 		

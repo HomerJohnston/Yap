@@ -375,8 +375,8 @@ protected:
 	TOptional<float> GetSpeechTime(uint8 FragmentIndex, EYapMaturitySetting Maturity, EYapLoadContext LoadContext) const;
 #endif
 	
-	float GetPadding(uint8 FragmentIndex) const;
-	
+	float GetPadding(uint8 FragmentIndex, EYapMaturitySetting MaturitySetting) const;
+
 #if WITH_EDITOR
 public:
 	TArray<FYapFragment>& GetFragmentsMutable();

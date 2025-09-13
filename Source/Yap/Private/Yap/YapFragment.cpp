@@ -197,9 +197,9 @@ const FYapBit& FYapFragment::GetBit(UWorld* World, EYapMaturitySetting MaturityS
 	return MatureBit;
 }
 
-TOptional<float> FYapFragment::GetSpeechTime(UWorld* World, const UYapNodeConfig& NodeConfig) const
+TOptional<float> FYapFragment::GetSpeechTime(UWorld* World, EYapMaturitySetting MaturitySetting, const UYapNodeConfig& NodeConfig) const
 {
-	return GetSpeechTime(World, UYapSubsystem::GetCurrentMaturitySetting(World), EYapLoadContext::Sync, NodeConfig);
+	return GetSpeechTime(World, MaturitySetting, EYapLoadContext::Sync, NodeConfig);
 }
 
 bool FYapFragment::IsAwaitingManualAdvance() const
@@ -229,7 +229,7 @@ TOptional<float> FYapFragment::GetSpeechTime(UWorld* World, EYapMaturitySetting 
 	return GetBit(World, MaturitySetting).GetSpeechTime(World, EffectiveTimeMode, LoadContext, NodeConfig);
 }
 
-float FYapFragment::GetPaddingValue(UWorld* World, const UYapNodeConfig& NodeConfig) const
+float FYapFragment::GetPaddingValue(UWorld* World, EYapMaturitySetting MaturitySetting, const UYapNodeConfig& NodeConfig) const
 {	
 	if (IsTimeModeNone())
 	{
@@ -240,7 +240,7 @@ float FYapFragment::GetPaddingValue(UWorld* World, const UYapNodeConfig& NodeCon
 	{
 		float RawPadding = Padding.GetValue();
 		
-		TOptional<float> SpeechTime = GetSpeechTime(World, NodeConfig);
+		TOptional<float> SpeechTime = GetSpeechTime(World, MaturitySetting, NodeConfig);
 
 		return FMath::Max(-SpeechTime.Get(0.0f), RawPadding);
 	}
@@ -248,22 +248,22 @@ float FYapFragment::GetPaddingValue(UWorld* World, const UYapNodeConfig& NodeCon
 	return NodeConfig.GetDefaultFragmentPaddingTime();
 }
 
-bool FYapFragment::GetUsesPadding(UWorld* World, const UYapNodeConfig& NodeConfig) const
+bool FYapFragment::GetUsesPadding(UWorld* World, EYapMaturitySetting MaturitySetting, const UYapNodeConfig& NodeConfig) const
 {
-	float PaddingValue = GetPaddingValue(World, NodeConfig);
+	float PaddingValue = GetPaddingValue(World, MaturitySetting, NodeConfig);
 	
 	return !FMath::IsNearlyZero(PaddingValue);
 }
 
-float FYapFragment::GetProgressionTime(UWorld* World, const UYapNodeConfig& NodeConfig) const
+float FYapFragment::GetProgressionTime(UWorld* World, EYapMaturitySetting MaturitySetting, const UYapNodeConfig& NodeConfig) const
 {
-	float SpeechTime = GetSpeechTime(World, NodeConfig).Get(0.0f);
+	float SpeechTime = GetSpeechTime(World, MaturitySetting, NodeConfig).Get(0.0f);
 	
 	float PaddingTime;
 	
 	if (Padding.IsSet())
 	{
-		PaddingTime = GetPaddingValue(World, NodeConfig);
+		PaddingTime = GetPaddingValue(World, MaturitySetting, NodeConfig);
 	}
 	else
 	{

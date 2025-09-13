@@ -17,7 +17,6 @@ struct FYapFragment;
  */
 class SYapTimeProgressionWidget : public SCompoundWidget//, public TSharedFromThis<SYapTimeProgressionWidget>
 {
-	
 	SLATE_DECLARE_WIDGET_API(SYapTimeProgressionWidget, SCompoundWidget, YAPEDITOR_API)
 	
 public:
@@ -27,6 +26,7 @@ public:
 	{}
 		SLATE_ARGUMENT(UFlowNode_YapDialogue*, DialogueNode)
 		SLATE_ARGUMENT(int32, FragmentIndex)
+		SLATE_ARGUMENT(TSharedPtr<SFlowGraphNode_YapFragmentWidget>, OwnerFragmentWidget)
 	
 		SLATE_ATTRIBUTE(FLinearColor, BarColor)
 		SLATE_ATTRIBUTE(bool, PaddingIsSet)
@@ -48,6 +48,7 @@ public:
 	SYapTimeProgressionWidget();
 
 	TWeakObjectPtr<UFlowNode_YapDialogue> DialogueNode;
+	TWeakPtr<SFlowGraphNode_YapFragmentWidget> OwnerFragmentWidget;
 	int32 FragmentIndex = INDEX_NONE;
 	
 	TAttribute<FLinearColor> BarColorAtt;
@@ -62,6 +63,9 @@ public:
 	TAttribute<TOptional<float>> PlaybackTimeAtt;
 
 	bool bIsAdjusting = false;
+
+	EYapMaturitySetting MaturitySetting;
+	
 	bool bTimeDisplayBoxActive = false;
 	
 	TSharedPtr<SOverlay> TimeDisplayBox;

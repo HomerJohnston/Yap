@@ -255,7 +255,7 @@ public:
 
 	FYapBit& GetChildSafeBitMutable() { return ChildSafeBit; }
 
-	TOptional<float> GetSpeechTime(UWorld* World, const UYapNodeConfig& NodeConfig) const;
+	TOptional<float> GetSpeechTime(UWorld* World, EYapMaturitySetting MaturitySetting, const UYapNodeConfig& NodeConfig) const;
 
 	double GetStartTime() const { return StartTime; }
 
@@ -276,11 +276,11 @@ public:
 public:
 	TOptional<float> GetPaddingSetting() const { return Padding; };
 	
-	float GetPaddingValue(UWorld* World, const UYapNodeConfig& NodeConfig) const;
+	float GetPaddingValue(UWorld* World, EYapMaturitySetting MaturitySetting, const UYapNodeConfig& NodeConfig) const;
 
-	bool GetUsesPadding(UWorld* World, const UYapNodeConfig& NodeConfig) const;
+	bool GetUsesPadding(UWorld* World, EYapMaturitySetting MaturitySetting, const UYapNodeConfig& NodeConfig) const;
 
-	float GetProgressionTime(UWorld* World, const UYapNodeConfig& NodeConfig) const;
+	float GetProgressionTime(UWorld* World, EYapMaturitySetting MaturitySetting, const UYapNodeConfig& NodeConfig) const;
 	
 	void IncrementActivations();
 

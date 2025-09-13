@@ -330,8 +330,10 @@ protected:
 	FYapFragment& GetFragmentMutable() const;
 	
 	// ------------
+public:
 	EYapMaturitySetting GetDisplayMaturitySetting() const;
-	
+
+protected:
 	bool NeedsChildSafeData() const;
 
 	bool HasAnyChildSafeData() const;

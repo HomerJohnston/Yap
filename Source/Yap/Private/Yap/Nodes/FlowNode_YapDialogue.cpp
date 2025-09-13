@@ -208,7 +208,7 @@ TOptional<float> UFlowNode_YapDialogue::GetSpeechTime(uint8 FragmentIndex, EYapM
 }
 #endif
 
-float UFlowNode_YapDialogue::GetPadding(uint8 FragmentIndex) const
+float UFlowNode_YapDialogue::GetPadding(uint8 FragmentIndex, EYapMaturitySetting MaturitySetting) const
 {
 	/*
 	if (GetNodeType() == EYapDialogueNodeType::TalkAndAdvance)
@@ -219,7 +219,7 @@ float UFlowNode_YapDialogue::GetPadding(uint8 FragmentIndex) const
 	
 	const FYapFragment& Fragment = GetFragment(FragmentIndex);
 
-	float Value = Fragment.GetPaddingValue(GetWorld(), GetNodeConfig());
+	float Value = Fragment.GetPaddingValue(GetWorld(), MaturitySetting, GetNodeConfig());
 
 	return Value;
 }
@@ -731,7 +731,9 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 	const FYapBit& Bit = Fragment.GetBit(GetWorld());
 	const UYapNodeConfig& ActiveConfig = GetNodeConfig();
 
-	TOptional<float> SpeechTime = Fragment.GetSpeechTime(GetWorld(), ActiveConfig);
+	EYapMaturitySetting MaturitySetting = UYapBroker::Get(this).GetMaturitySetting();
+	
+	TOptional<float> SpeechTime = Fragment.GetSpeechTime(GetWorld(), MaturitySetting, ActiveConfig);
 
 	float EffectiveTime = 0.0f;
 	
@@ -758,9 +760,9 @@ bool UFlowNode_YapDialogue::RunFragment(uint8 FragmentIndex)
 
 	float PaddingTime = 0;
 
-	if (Fragment.GetUsesPadding(GetWorld(), ActiveConfig))
+	if (Fragment.GetUsesPadding(GetWorld(), MaturitySetting, ActiveConfig))
 	{
-		PaddingTime = Fragment.GetProgressionTime(GetWorld(), ActiveConfig);
+		PaddingTime = Fragment.GetProgressionTime(GetWorld(), MaturitySetting, ActiveConfig);
 		
 		if (GetNodeType() == EYapDialogueNodeType::TalkAndAdvance)
 		{

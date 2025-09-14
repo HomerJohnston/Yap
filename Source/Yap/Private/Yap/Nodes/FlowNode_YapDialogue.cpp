@@ -1634,12 +1634,16 @@ void UFlowNode_YapDialogue::OnFilterGameplayTagChildren(const FString& String, T
 
 // ------------------------------------------------------------------------------------------------
 
+#if WITH_EDITOR
 FString UFlowNode_YapDialogue::GetAudioID(uint8 FragmentIndex) const
 {
 	const FYapAudioIDFormat& AudioIDFormat = GetNodeConfig().GetAudioIDFormat();
 	
 	return GetAudioIDRoot() + AudioIDFormat.Separator + AudioIDFormat.ParseFragmentID(GetFragmentByIndex(FragmentIndex).GetAudioID());
 }
+#endif
+
+// ------------------------------------------------------------------------------------------------
 
 bool UFlowNode_YapDialogue::CheckActivationLimits() const
 {

@@ -244,11 +244,13 @@ public:
 protected:
 	bool CanSkip(FYapSpeechHandle Handle) const;
 
+#if WITH_EDITOR
 public:
 	const FString& GetAudioIDRoot() const { return AudioID; }
 	
 	FString GetAudioID(uint8 FragmentIndex) const;
-
+#endif
+	
 protected:
 	bool CheckActivationLimits() const;
 

@@ -5,8 +5,6 @@
 
 #include "YapAudioIDFormat.generated.h"
 
-#if WITH_EDITORONLY_DATA
-
 USTRUCT(BlueprintType)
 struct FYapAudioIDFormat
 {
@@ -29,5 +27,3 @@ struct FYapAudioIDFormat
 	
 	FString ParseFragmentID(int32 FragmentID) const;
 };
-
-#endif

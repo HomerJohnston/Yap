@@ -76,6 +76,7 @@ protected:
 	UPROPERTY(Config, EditAnywhere, Category = "Editor")
 	bool bPreventCachingAudioLength = false;
 
+#if WITH_EDITORONLY_DATA
 	/** Can be overridden by individual node configs. Uses a simple parser:
 	 * 
 	 * *   random capitalized letter (**** becomes JAHX)
@@ -85,6 +86,7 @@ protected:
 	 * The default pattern will generate audio IDs like: JSU-010, JSU-020, JSU-030, JSU-040 */
 	UPROPERTY(Config, EditAnywhere, Category = "Editor")
 	FYapAudioIDFormat DefaultAudioIDFormat;
+#endif
 	
 	/** Characters will not be used during random audio ID generation. Default settings preclude letter I and letter O to avoid confusion with numbers. */
 	UPROPERTY(Config, EditAnywhere, Category = "Editor", DisplayName = "Illegal Audio ID Characters")
@@ -184,8 +186,10 @@ public:
 	
 	static bool CacheFragmentAudioLengthAutomatically() { return !Get().bPreventCachingAudioLength; }
 
+#if WITH_EDITOR
 	static const FYapAudioIDFormat& GetDefaultAudioIDFormat() { return Get().DefaultAudioIDFormat; }
-
+#endif
+	
 	static const FString& GetIllegalAudioIDCharacters() { return Get().IllegalAudioIDCharacters; }
 	
 	static const TSoftObjectPtr<UTexture2D> GetDefaultPortraitTextureAsset() { return Get().DefaultPortraitTexture; };

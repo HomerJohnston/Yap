@@ -504,7 +504,6 @@ bool UYapBroker::ImplementsPreviewAudioAsset_Internal() const
 
 // ------------------------------------------------------------------------------------------------
 
-#if WITH_EDITOR
 int32 UYapBroker::CalculateWordCount_DefaultImpl(const FText& Text) const
 {
 	// Utility to count the number of words within a string (we use a line-break iterator to avoid counting the whitespace between the words)
@@ -532,7 +531,6 @@ int32 UYapBroker::CalculateWordCount_DefaultImpl(const FText& Text) const
 
 	return CountWords(Text.ToString());
 }
-#endif
 
 // ------------------------------------------------------------------------------------------------
 

@@ -96,7 +96,6 @@ protected:
 	UFUNCTION(BlueprintImplementableEvent, DisplayName = "Get Dialogue Audio Duration", meta = (ToolTip = "Override this if you use 3rd party audio (Wwise, FMOD, etc.). Cast to your audio type and return the duration length in seconds."))
 	float K2_GetAudioAssetDuration(const UObject* AudioAsset) const;
 
-#if WITH_EDITOR
 	UFUNCTION(BlueprintImplementableEvent, DisplayName = "Play Dialogue Audio In Editor", meta = (ToolTip = "Override this if you use 3rd party audio (Wwise, FMOD, etc.). Cast to your audio type and initiate playback in editor."))
 	bool K2_PreviewAudioAsset(const UObject* AudioAsset) const;
 
@@ -105,7 +104,6 @@ protected:
 
 	UFUNCTION(BlueprintImplementableEvent, DisplayName = "Get Fragment ID", meta = (ToolTip = "Override this if you want to change the default interpretation of the Audio ID Format. Return success status."))
 	bool K2_GetFragmentIDs(const FYapAudioIDFormat& IDFormat, UPARAM(ref) TArray<int32>& ExistingFragmentIDs) const;
-#endif
 	
 	// ============================================================================================
 	// INTERNAL YAP FUNCTIONS
@@ -166,8 +164,6 @@ public:
 	bool ImplementsPreviewAudioAsset_Internal() const;
 
 private:
-	int32 CalculateWordCount_DefaultImpl(const FText& Text) const;
-	
 	FString GetNewNodeID_DefaultImpl(const FYapAudioIDFormat& IDFormat, const TSet<FString>& ExistingNodeIDs) const;
 
 	bool GetFragmentIDs_Internal(const FYapAudioIDFormat& IDFormat, TArray<int32>& ExistingFragmentIDs) const;
@@ -178,6 +174,9 @@ private:
 	
 #endif
 
+private:
+	int32 CalculateWordCount_DefaultImpl(const FText& Text) const;
+	
 	// Thank you to Blue Man for this thing
 	template<typename TFunction, typename... TArgs>
 	struct TResolveFunctionReturn

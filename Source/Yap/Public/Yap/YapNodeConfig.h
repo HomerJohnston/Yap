@@ -420,7 +420,7 @@ public:
 
 #if WITH_EDITOR
 protected:
-	static TMap<FGameplayTag, TUniquePtr<FSlateImageBrush>> MoodTagIconBrushes;
+	static TMap<TSoftObjectPtr<UYapNodeConfig>, TMap<FGameplayTag, TUniquePtr<FSlateImageBrush>>> MoodTagIconBrushes;
 	
 	static TUniquePtr<FSlateImageBrush> NullMoodTagIconBrush;
 	
@@ -431,7 +431,7 @@ public:
 
     void RebuildMoodTagIcons();
 
-	void BuildIcon(const FGameplayTag& MoodTag);
+	void BuildIcon( TMap<FGameplayTag, TUniquePtr<FSlateImageBrush>>* Map, const FGameplayTag& MoodTag);
 	
     FString GetMoodTagIconPath(FGameplayTag Key, FString FileExtension) const;
 

@@ -11,7 +11,7 @@
 #define LOCTEXT_NAMESPACE "YapEditor"
 
 #if WITH_EDITOR
-TMap<FGameplayTag, TUniquePtr<FSlateImageBrush>> UYapNodeConfig::MoodTagIconBrushes;
+TMap<TSoftObjectPtr<UYapNodeConfig>, TMap<FGameplayTag, TUniquePtr<FSlateImageBrush>>> UYapNodeConfig::MoodTagIconBrushes;
 TUniquePtr<FSlateImageBrush> UYapNodeConfig::NullMoodTagIconBrush;
 #endif
 
@@ -56,20 +56,35 @@ void UYapNodeConfig::PostLoad()
 #if WITH_EDITOR
 void UYapNodeConfig::RebuildMoodTagIcons()
 {
+    if (IsTemplate())
+    {
+        return;
+    }
+    
     FGameplayTagContainer AllMoodTags = MoodTags.GetAllMoodTags();
-    MoodTagIconBrushes.Empty(AllMoodTags.Num() + 1);
+
+    TMap<FGameplayTag, TUniquePtr<FSlateImageBrush>>* Map = MoodTagIconBrushes.Find(this);
+
+    if (Map)
+    {
+        Map->Empty(AllMoodTags.Num() + 1);
+    }
+    else
+    {
+        Map = &MoodTagIconBrushes.Add(this, {});
+    }
 
     for (const FGameplayTag& MoodTag : AllMoodTags)
     {
-        BuildIcon(MoodTag);
+        BuildIcon(Map, MoodTag);
     }
 
-    BuildIcon(FGameplayTag::EmptyTag);
+    BuildIcon(Map, FGameplayTag::EmptyTag);
 }
 #endif
 
 #if WITH_EDITOR
-void UYapNodeConfig::BuildIcon(const FGameplayTag& MoodTag)
+void UYapNodeConfig::BuildIcon( TMap<FGameplayTag, TUniquePtr<FSlateImageBrush>>* Map, const FGameplayTag& MoodTag)
 {
     TSharedPtr<FSlateImageBrush> ImageBrush = nullptr;
 
@@ -80,7 +95,7 @@ void UYapNodeConfig::BuildIcon(const FGameplayTag& MoodTag)
         {
             UE_LOG(LogYap, Display, TEXT("Loading Mood Tag Icon: %s"), *IconPath);
 
-            MoodTagIconBrushes.Add(MoodTag, MakeUnique<FSlateVectorImageBrush>(IconPath, FVector2f(16, 16), FLinearColor::White));
+            Map->Add(MoodTag, MakeUnique<FSlateVectorImageBrush>(IconPath, FVector2f(16, 16), FLinearColor::White));
             return;
         }
     }
@@ -92,7 +107,7 @@ void UYapNodeConfig::BuildIcon(const FGameplayTag& MoodTag)
         {
             UE_LOG(LogYap, Display, TEXT("Loading Mood Tag Icon: %s"), *IconPath);
 
-            MoodTagIconBrushes.Add(MoodTag, MakeUnique<FSlateImageBrush>(IconPath, FVector2f(16, 16), FLinearColor::White));
+            Map->Add(MoodTag, MakeUnique<FSlateImageBrush>(IconPath, FVector2f(16, 16), FLinearColor::White));
             return;
         }
     }
@@ -130,15 +145,18 @@ FString UYapNodeConfig::GetMoodTagIconPath(FGameplayTag Key, FString FileExtensi
 #if WITH_EDITOR
 FSlateImageBrush* UYapNodeConfig::GetMoodTagIcon(FGameplayTag MoodTag) const
 {
-    
+    TMap<FGameplayTag, TUniquePtr<FSlateImageBrush>>* Map = MoodTagIconBrushes.Find(this);
 
-    if (const TUniquePtr<FSlateImageBrush>* Brush = MoodTagIconBrushes.Find(MoodTag))
+    if (Map)
     {
-        FSlateImageBrush* Ptr = Brush->Get();
+        if (const TUniquePtr<FSlateImageBrush>* Brush = Map->Find(MoodTag))
+        {
+            FSlateImageBrush* Ptr = Brush->Get();
         
-        return Ptr;
+            return Ptr;
+        }
     }
-
+    
     return NullMoodTagIconBrush.Get();
 }
 #endif
@@ -146,9 +164,15 @@ FSlateImageBrush* UYapNodeConfig::GetMoodTagIcon(FGameplayTag MoodTag) const
 #if WITH_EDITOR
 const FSlateBrush* UYapNodeConfig::GetMoodTagBrush(FGameplayTag Name) const
 {
-    const TUniquePtr<FSlateImageBrush>* Brush = MoodTagIconBrushes.Find(Name);
+    TMap<FGameplayTag, TUniquePtr<FSlateImageBrush>>* Map = MoodTagIconBrushes.Find(this);
 
-    return Brush ? Brush->Get() : NullMoodTagIconBrush.Get();
+    if (Map)
+    {
+        const TUniquePtr<FSlateImageBrush>* Brush = Map->Find(Name);
+        return Brush ? Brush->Get() : NullMoodTagIconBrush.Get();
+    }
+
+    return NullMoodTagIconBrush.Get();    
 }
 #endif
 

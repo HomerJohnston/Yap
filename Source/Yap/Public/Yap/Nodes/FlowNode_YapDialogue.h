@@ -421,13 +421,11 @@ private:
 public:
 	const FName& GetDialogueID() const { return DialogueID; }
 	
-	void OnFilterGameplayTagChildren(const FString& String, TSharedPtr<FGameplayTagNode>& GameplayTagNode, bool& bArg) const;
-	
 	void ForceReconstruction();
 
 	void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 	
-	void PostEditImport() override;
+	virtual void PostEditImport() override;
 	
 	virtual bool CanRefreshContextPinsDuringLoad() const { return true; }
 	

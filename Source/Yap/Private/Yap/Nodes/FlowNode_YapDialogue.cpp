@@ -47,13 +47,6 @@ UFlowNode_YapDialogue::UFlowNode_YapDialogue()
 
 	// The node will only have certain context-outputs which depend on the node type. 
 	OutputPins = {};
-
-#if WITH_EDITOR
-	if (IsTemplate())
-	{
-		UGameplayTagsManager::Get().OnFilterGameplayTagChildren.AddUObject(this, &ThisClass::OnFilterGameplayTagChildren);
-	}
-#endif
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -1600,38 +1593,6 @@ FString UFlowNode_YapDialogue::GetNodeDescription() const
 // ------------------------------------------------------------------------------------------------
 
 #if WITH_EDITOR
-void UFlowNode_YapDialogue::OnFilterGameplayTagChildren(const FString& String, TSharedPtr<FGameplayTagNode>& GameplayTagNode, bool& bArg) const
-{
-	if (GameplayTagNode == nullptr)
-	{
-		bArg = false;
-		return;
-	}
-
-	TSharedPtr<FGameplayTagNode> ParentTagNode = GameplayTagNode->GetParentTagNode();
-
-	if (ParentTagNode == nullptr)
-	{
-		bArg = false;
-		return;
-	}
-	
-	const FGameplayTagContainer& ParentTagContainer = ParentTagNode->GetSingleTagContainer();
-
-	/*
-	if (ParentTagContainer.HasTagExact(GetNodeConfig().GetDialogueTagsParent()))
-	{
-		bArg = true;
-	}
-	*/
-	
-	bArg = false;
-}
-#endif
-
-// ------------------------------------------------------------------------------------------------
-
-#if WITH_EDITOR
 FString UFlowNode_YapDialogue::GetAudioID(uint8 FragmentIndex) const
 {
 	const FYapAudioIDFormat& AudioIDFormat = GetNodeConfig().GetAudioIDFormat();
@@ -1644,8 +1605,6 @@ FString UFlowNode_YapDialogue::GetAudioID(uint8 FragmentIndex) const
 
 bool UFlowNode_YapDialogue::CheckActivationLimits() const
 {
-	bool bCanRunAnything = true;
-	
 	// Make sure entire node has not hit limits
 	if (GetNodeActivationLimit() > 0 && GetNodeActivationCount() >= GetNodeActivationLimit())
 	{
@@ -1769,14 +1728,6 @@ void UFlowNode_YapDialogue::ForceReconstruction()
 void UFlowNode_YapDialogue::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
 	Super::PostEditChangeProperty(PropertyChangedEvent);
-
-	const FName FragmentsPropertyName = GET_MEMBER_NAME_CHECKED(ThisClass, Fragments);
-
-	if (PropertyChangedEvent.Property->GetFName() == FragmentsPropertyName)
-	{
-		OnReconstructionRequested.ExecuteIfBound();
-		UpdateFragmentAudioIDs();
-	}
 }
 #endif
 

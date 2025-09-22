@@ -70,11 +70,13 @@ TSharedPtr<FSlateImageBrush> UYapEditorSubsystem::GetCharacterPortraitBrush(cons
 
 void UYapEditorSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
-	if (UGameplayTagsManager::Get().FindTagSource("YapGameplayTags.ini") == nullptr)
+	UGameplayTagsManager& GameplayTagsManager = UGameplayTagsManager::Get();
+
+	if (GameplayTagsManager.FindTagSource("YapGameplayTags.ini") == nullptr)
 	{
 		IGameplayTagsEditorModule::Get().AddNewGameplayTagSource("YapGameplayTags.ini");
 	}
-
+	
 	// TODO -- this does NOT work! Keep it hidden until I can figure out why. For some reason FSlateSVGRasterizer will NOT attempt to load a file that didn't exist on startup?
 	// Also see: FDetailCustomization_YapProjectSetting for hidden/disabled button to run UpdateMoodTagBrushes().
 	//UGameplayTagsManager::Get().OnEditorRefreshGameplayTagTree.AddUObject(this, &UYapEditorSubsystem::UpdateMoodTagBrushesIfRequired);

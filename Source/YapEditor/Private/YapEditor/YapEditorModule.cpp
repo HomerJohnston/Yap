@@ -4,6 +4,7 @@
 #include "YapEditor/YapEditorModule.h"
 
 #include "ToolMenus.h"
+#include "Framework/Application/SlateApplication.h"
 #include "Yap/YapCharacterAsset.h"
 #include "Yap/YapCharacterComponent.h"
 #include "Yap/YapProjectSettings.h"

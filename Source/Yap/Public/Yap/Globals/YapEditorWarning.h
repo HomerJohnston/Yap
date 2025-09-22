@@ -10,6 +10,7 @@ namespace Yap
 #if WITH_EDITOR
 	namespace Editor
 	{
+		YAP_API void PostNotificationInfo_Info(FText Title, FText Description, float Duration = 6.0f);
 		YAP_API void PostNotificationInfo_Warning(FText Title, FText Description, float Duration = 6.0f);
 	}
 #endif

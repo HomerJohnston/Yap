@@ -20,6 +20,7 @@ FDelegateHandle FYapEditorStyle::OnPatchCompleteHandle;
 
 FYapFonts YapFonts;
 FYapBrushes YapBrushes;
+FYapIcons YapIcons;
 FYapStyles YapStyles;
 
 #define YAP_QUOTE(X) #X
@@ -554,6 +555,7 @@ void FYapEditorStyle::Initialize_Internal()
 		.SetEnableFillAnimation(false)
 	);
 
+	YapIcons.FunctionButton = FSlateIcon(GetStyleSetName(), "YapEditor.PluginAction", NAME_None, NAME_None);
 	StyleInstance->Set("YapEditor.PluginAction", new FSlateVectorImageBrush(StyleInstance->RootToContentDir(L"YapProjectSettings", TEXT(".svg")), CoreStyleConstants::Icon20x20));
 }
 

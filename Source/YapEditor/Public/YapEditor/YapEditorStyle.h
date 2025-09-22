@@ -107,6 +107,11 @@ struct FYapBrushes
 	FName Test; // TODO remove this eventually. This is just a placeholder for testing syntax in the .cpp file.
 };
 
+struct FYapIcons
+{
+	FSlateIcon FunctionButton;
+};
+
 struct FYapStyles
 {
 	// Existing Unreal Editor styles for style consistency
@@ -181,6 +186,7 @@ struct FYapFonts
 
 extern FYapFonts YapFonts;
 extern FYapBrushes YapBrushes;
+extern FYapIcons YapIcons;
 extern FYapStyles YapStyles;
 
 class FYapEditorStyle

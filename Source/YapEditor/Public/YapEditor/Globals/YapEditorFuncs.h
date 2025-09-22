@@ -20,6 +20,8 @@ namespace Yap::EditorFuncs
 	
 	void OpenProjectSettings();
 
+	void PostNotificationInfo_Info(FText Title, FText Description, float Duration = 6.0f);
+	
 	void PostNotificationInfo_Warning(FText Title, FText Description, float Duration = 6.0f);
 
 	bool SaveAsset(UObject* Asset);

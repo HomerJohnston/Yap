@@ -12,6 +12,7 @@
 
 #if WITH_EDITOR
 TMap<TSoftObjectPtr<UYapNodeConfig>, TMap<FGameplayTag, TUniquePtr<FSlateImageBrush>>> UYapNodeConfig::MoodTagIconBrushes;
+TSet<TSoftObjectPtr<UYapNodeConfig>> UYapNodeConfig::MoodTagIconsBuilt;
 TUniquePtr<FSlateImageBrush> UYapNodeConfig::NullMoodTagIconBrush;
 #endif
 
@@ -48,18 +49,18 @@ UYapNodeConfig::UYapNodeConfig()
 void UYapNodeConfig::PostLoad()
 {
     Super::PostLoad();
-    
-    RebuildMoodTagIcons();
 }
 #endif
 
 #if WITH_EDITOR
 void UYapNodeConfig::RebuildMoodTagIcons()
 {
+    /*
     if (IsTemplate())
     {
         return;
     }
+    */
     
     FGameplayTagContainer AllMoodTags = MoodTags.GetAllMoodTags();
 
@@ -80,6 +81,8 @@ void UYapNodeConfig::RebuildMoodTagIcons()
     }
 
     BuildIcon(Map, FGameplayTag::EmptyTag);
+    
+    MoodTagIconsBuilt.Add(this);
 }
 #endif
 
@@ -145,6 +148,11 @@ FString UYapNodeConfig::GetMoodTagIconPath(FGameplayTag Key, FString FileExtensi
 #if WITH_EDITOR
 FSlateImageBrush* UYapNodeConfig::GetMoodTagIcon(FGameplayTag MoodTag) const
 {
+    if (!MoodTagIconsBuilt.Contains(this))
+    {
+        const_cast<UYapNodeConfig*>(this)->RebuildMoodTagIcons();
+    }
+    
     TMap<FGameplayTag, TUniquePtr<FSlateImageBrush>>* Map = MoodTagIconBrushes.Find(this);
 
     if (Map)

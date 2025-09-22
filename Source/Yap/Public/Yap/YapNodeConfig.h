@@ -421,10 +421,13 @@ public:
 #if WITH_EDITOR
 protected:
 	static TMap<TSoftObjectPtr<UYapNodeConfig>, TMap<FGameplayTag, TUniquePtr<FSlateImageBrush>>> MoodTagIconBrushes;
+	static TSet<TSoftObjectPtr<UYapNodeConfig>> MoodTagIconsBuilt;
 	
 	static TUniquePtr<FSlateImageBrush> NullMoodTagIconBrush;
 	
 public:
+	static void FlushMoodTagIconBrushes() { MoodTagIconsBuilt.Empty(); };
+	
 	const FDirectoryPath& GetMoodTagEditorIconsPath() const { return MoodTags.EditorIconsPath; };
 	
 	void PostLoad() override;

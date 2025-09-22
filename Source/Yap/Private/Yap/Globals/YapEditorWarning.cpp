@@ -7,6 +7,17 @@
 #include "Widgets/Notifications/SNotificationList.h"
 
 #if WITH_EDITOR
+void Yap::Editor::PostNotificationInfo_Info(FText Title, FText Description, float Duration)
+{
+	FNotificationInfo NotificationInfo(Title);
+	NotificationInfo.ExpireDuration = Duration;
+	NotificationInfo.Image = FAppStyle::GetBrush("Icons.Info");
+	NotificationInfo.SubText = Description;
+	FSlateNotificationManager::Get().AddNotification(NotificationInfo);
+}
+#endif
+
+#if WITH_EDITOR
 void Yap::Editor::PostNotificationInfo_Warning(FText Title, FText Description, float Duration)
 {
 	FNotificationInfo NotificationInfo(Title);

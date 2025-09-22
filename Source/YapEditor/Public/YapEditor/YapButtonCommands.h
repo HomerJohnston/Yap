@@ -11,12 +11,13 @@ class FYapButtonCommands : public TCommands<FYapButtonCommands>
 public:
 
     FYapButtonCommands()
-        : TCommands(TEXT("YapEditor"), NSLOCTEXT("Contexts", "YapEditor", "Yap Project Settings"), NAME_None, FYapEditorStyle::GetStyleSetName())
+        : TCommands(TEXT("YapEditor"), NSLOCTEXT("Contexts", "YapEditor", "Yap Editor Commands"), NAME_None, FYapEditorStyle::GetStyleSetName())
     {
         
     }
 
     void RegisterCommands() override;
 
-    TSharedPtr<FUICommandInfo> PluginAction;
+    TSharedPtr<FUICommandInfo> OpenYapProjectSettingsAction;
+    TSharedPtr<FUICommandInfo> RebuildMoodTags;
 };

@@ -7,7 +7,8 @@
 
 void FYapButtonCommands::RegisterCommands()
 {
-    UI_COMMAND(PluginAction, "YapEditor", "Open Yap Project Settings", EUserInterfaceActionType::Button, FInputChord());
+    UI_COMMAND(OpenYapProjectSettingsAction, "Yap Project Settings", "Open Yap Project Settings", EUserInterfaceActionType::Button, FInputChord());
+    UI_COMMAND(RebuildMoodTags, "Refresh Mood Tag Icons", "Flushes & Reloads Mood Tag Icons", EUserInterfaceActionType::Button, FInputChord());
 }
 
 #undef LOCTEXT_NAMESPACE

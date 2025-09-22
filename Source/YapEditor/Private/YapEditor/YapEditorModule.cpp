@@ -56,10 +56,17 @@ void FYapEditorModule::StartupModule()
 	PluginCommands = MakeShareable(new FUICommandList);
 	
 	PluginCommands->MapAction(
-		FYapButtonCommands::Get().PluginAction,
+		FYapButtonCommands::Get().OpenYapProjectSettingsAction,
 		FExecuteAction::CreateRaw(this, &FYapEditorModule::OpenYapProjectSettings),
 		FCanExecuteAction());
 
+	YapComboActions = MakeShareable(new FUICommandList);
+
+	YapComboActions->MapAction(
+		FYapButtonCommands::Get().RebuildMoodTags,
+		FExecuteAction::CreateRaw(this, &FYapEditorModule::FlushMoodTagIcons),
+		FCanExecuteAction());
+	
 	UToolMenus::RegisterStartupCallback(FSimpleMulticastDelegate::FDelegate::CreateRaw(this, &FYapEditorModule::RegisterMenus));
 }
 
@@ -75,15 +82,64 @@ void FYapEditorModule::OpenYapProjectSettings()
 	Yap::EditorFuncs::OpenProjectSettings();
 }
 
+void FYapEditorModule::FlushMoodTagIcons()
+{
+	UYapNodeConfig::FlushMoodTagIconBrushes();
+
+	FSlateApplication::Get().GetRenderer()->ReloadTextureResources();
+	
+	Yap::EditorFuncs::PostNotificationInfo_Info(LOCTEXT("RefreshMoodTagsNotification_Title", "Mood Tag Icons"), LOCTEXT("RefreshMoodTagsNotification_Description", "Refresh complete. You may need to reopen or refresh any open assets."));
+}
+
 void FYapEditorModule::RegisterMenus()
 {
 	FToolMenuOwnerScoped OwnerScoped(this);
 
 	UToolMenu* ToolbarMenu = UToolMenus::Get()->ExtendMenu("LevelEditor.LevelEditorToolBar.PlayToolBar");
-	FToolMenuSection& Section = ToolbarMenu->FindOrAddSection("PluginTools");
-	FToolMenuEntry& Entry = Section.AddEntry(FToolMenuEntry::InitToolBarButton(FYapButtonCommands::Get().PluginAction));
+	FToolMenuSection& Section = ToolbarMenu->FindOrAddSection("Yap");
+	
+	FToolMenuEntry& Entry1 = Section.AddEntry(FToolMenuEntry::InitToolBarButton(FYapButtonCommands::Get().OpenYapProjectSettingsAction));
+	Entry1.StyleNameOverride = FName("Toolbar.BackplateLeft");
+	Entry1.Icon = YapIcons.FunctionButton;
+	
+	FUIAction YapOptionsMenuAction;
+	
+	FNewToolMenuChoice YapOptionsComboEntry = FOnGetContent::CreateStatic(&GenerateYapComboMenuContent, YapComboActions.ToSharedRef());
+	
+	FToolMenuEntry& Entry2 = Section.AddEntry(FToolMenuEntry::InitComboButton("YapComboButton", YapOptionsMenuAction, YapOptionsComboEntry, INVTEXT(""), LOCTEXT("YapComboButton_ToolTipText", "Yap Functions")));
+	Entry2.StyleNameOverride = FName("Toolbar.BackplateRightCombo");
+	
+	Entry1.SetCommandList(PluginCommands);
+}
 
-	Entry.SetCommandList(PluginCommands);
+TSharedRef<SWidget> FYapEditorModule::GenerateYapComboMenuContent(TSharedRef<FUICommandList> InCommandList)
+{
+	static const FName MenuName("Yap.EditorCommands");
+
+	if (!UToolMenus::Get()->IsMenuRegistered(MenuName))
+	{
+		UToolMenu* Menu = UToolMenus::Get()->RegisterMenu(MenuName);
+
+		struct FLocal
+		{
+			static void AddMenuEntry(FToolMenuSection& Section)
+			{
+				
+			}
+		};
+		
+		{
+			FToolMenuSection& Section = Menu->AddSection("YapFunctions", INVTEXT("Functions"));
+			Section.AddMenuEntry(FYapButtonCommands::Get().RebuildMoodTags);
+		}
+	}
+
+	
+	TSharedPtr<FExtender> MenuExtender = MakeShareable(new FExtender);
+	
+	FToolMenuContext MenuContext(InCommandList, MenuExtender);
+	
+	return UToolMenus::Get()->GenerateWidget(MenuName, MenuContext);
 }
 
 IMPLEMENT_MODULE(FYapEditorModule, YapEditor)

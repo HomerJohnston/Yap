@@ -68,6 +68,11 @@ void Yap::EditorFuncs::OpenProjectSettings()
 	}
 }
 
+void Yap::EditorFuncs::PostNotificationInfo_Info(FText Title, FText Description, float Duration)
+{
+	Yap::Editor::PostNotificationInfo_Info(Title, Description, Duration);
+}
+
 void Yap::EditorFuncs::PostNotificationInfo_Warning(FText Title, FText Description, float Duration)
 {
 	Yap::Editor::PostNotificationInfo_Warning(Title, Description, Duration);

@@ -30,12 +30,18 @@ public:
 
 public:
     void OpenYapProjectSettings();
+
+    void FlushMoodTagIcons();
     
 private:
     void RegisterMenus();
 
+    static TSharedRef< SWidget > GenerateYapComboMenuContent( TSharedRef<FUICommandList> InCommandList );
+    
 private:
     TSharedPtr<FUICommandList> PluginCommands;
+
+    TSharedPtr<FUICommandList> YapComboActions;
 };
 
 #undef LOCTEXT_NAMESPACE

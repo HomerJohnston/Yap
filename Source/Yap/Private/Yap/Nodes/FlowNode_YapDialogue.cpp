@@ -1305,10 +1305,7 @@ void UFlowNode_YapDialogue::InsertFragment(const FYapFragment& NewFragment, int3
 {
 	Fragments.Insert(NewFragment, InsertionIndex);
 
-	UpdateFragments(
-	{
-		UpdateFragmentIndices,
-	});
+	UpdateFragments( { UpdateFragmentIndices } );
 	
 	UpdateFragmentAudioIDs();
 }
@@ -1468,7 +1465,7 @@ void UFlowNode_YapDialogue::DeleteFragmentByIndex(int32 DeleteIndex)
 
 	Fragments.RemoveAt(DeleteIndex);
 
-	UpdateFragments( { UpdateFragmentIndices} );
+	UpdateFragments( { UpdateFragmentIndices } );
 
 	UpdateFragmentAudioIDs();
 }
@@ -1772,6 +1769,14 @@ void UFlowNode_YapDialogue::ForceReconstruction()
 void UFlowNode_YapDialogue::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
 	Super::PostEditChangeProperty(PropertyChangedEvent);
+
+	const FName FragmentsPropertyName = GET_MEMBER_NAME_CHECKED(ThisClass, Fragments);
+
+	if (PropertyChangedEvent.Property->GetFName() == FragmentsPropertyName)
+	{
+		OnReconstructionRequested.ExecuteIfBound();
+		UpdateFragmentAudioIDs();
+	}
 }
 #endif
 

@@ -256,8 +256,6 @@ protected:
 
 #if WITH_EDITOR
 private:
-	TOptional<bool> GetSkippableSetting() const;
-	
 	void InvalidateFragmentTags();
 
 	const TArray<UYapCondition*>& GetConditions() const { return Conditions; }
@@ -308,8 +306,6 @@ protected:
 	void AddRunningFragment(const FYapSpeechHandle& Handle, uint8 FragmentIndex);
 
 	void RemoveRunningFragment(const FYapSpeechHandle& Handle, uint8 FragmentIndex);
-
-	void OnConversationSpeech(FName Name);
 
 	FName InConversation;
 	
@@ -431,7 +427,7 @@ public:
 
 	void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 	
-	virtual void PostEditImport() override;
+	void PostEditImport() override;
 	
 	virtual bool CanRefreshContextPinsDuringLoad() const { return true; }
 	

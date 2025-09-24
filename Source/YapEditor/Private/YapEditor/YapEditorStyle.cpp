@@ -515,7 +515,7 @@ void FYapEditorStyle::Initialize_Internal()
 		.SetColorAndOpacity(FSlateColor::UseSubduedForeground())
 	);
 	
-	YAP_DEFINE_STYLE(FTextBlockStyle, TextBlockStyle_AudioID, GetParentStyle()->GetWidgetStyle<FTextBlockStyle>("BoldText"),
+	YAP_DEFINE_STYLE(FTextBlockStyle, TextBlockStyle_AudioID, GetParentStyle()->GetWidgetStyle<FTextBlockStyle>("NormalText"),
 		.SetFont(Font_AudioID)
 		.SetColorAndOpacity(FSlateColor::UseForeground())
 	);

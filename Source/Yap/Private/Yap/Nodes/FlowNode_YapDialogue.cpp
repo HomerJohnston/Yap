@@ -143,7 +143,7 @@ void UFlowNode_YapDialogue::OnAdvanceConversation(UObject* Instigator, FYapConve
 	
 	auto RunningFragmentsCopy = RunningFragments;
 
-	bool bForceAdvance = Fragments[FocusedFragmentIndex.GetValue()].IsAwaitingManualAdvance() || !SpeakingFragments.Contains(FocusedSpeechHandle) && FragmentsInPadding.Contains(FocusedSpeechHandle);
+	bool bForceAdvance = Fragments[FocusedFragmentIndex.GetValue()].IsAwaitingManualAdvance() || (!SpeakingFragments.Contains(FocusedSpeechHandle) && FragmentsInPadding.Contains(FocusedSpeechHandle));
 	
 	for (auto& [SpeechHandle, Index] : RunningFragmentsCopy)
 	{

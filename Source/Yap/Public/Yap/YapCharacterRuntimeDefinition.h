@@ -20,7 +20,7 @@ struct FYapCharacterRuntimeDefinition
 	FText Name;
 
 	UPROPERTY(EditAnywhere, Category = "Default", BlueprintReadWrite)
-	UTexture2D* DefaultPortrait;
+	TObjectPtr<UTexture2D> DefaultPortrait;
 
 	UPROPERTY(EditAnywhere, Category = "Default", BlueprintReadWrite)
 	FLinearColor Color;

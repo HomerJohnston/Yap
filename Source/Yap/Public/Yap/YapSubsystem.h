@@ -276,7 +276,7 @@ protected:
 	// TODO change this up, should instead use Flow asset instance + flow node instance + fragment FName 
 	/** Stores the tag of a fragment and the owning dialogue node where that fragment can be found */
 	UPROPERTY(Transient)
-	TMap<FGameplayTag, UFlowNode_YapDialogue*> TaggedFragments;
+	TMap<FGameplayTag, TObjectPtr<UFlowNode_YapDialogue>> TaggedFragments;
 
 	/** Stores overrides of bit replacements. Currently, can only store one at a time per fragment; new assignments simply replace the old one. */
 	UPROPERTY(Transient)

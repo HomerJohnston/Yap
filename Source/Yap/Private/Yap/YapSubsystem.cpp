@@ -186,18 +186,25 @@ void FYap__ActiveSpeechMap::RemoveSpeech(const FYapSpeechHandle& Handle)
 	FYap__ActiveSpeechContainer Container;
 
 	if (AllSpeech.RemoveAndCopyValue(Handle, Container))
-	{		
-		ContainersByOwner[Container.SpeechOwner].Handles.Remove(Handle);
-		ContainersBySpeakerID[Container.SpeakerID].Handles.Remove(Handle);
-		
-		if (ContainersByOwner[Container.SpeechOwner].Handles.Num() == 0)
+	{
+		if (not ContainersByOwner.IsEmpty() && ContainersByOwner.Contains(Container.SpeechOwner))
 		{
-			ContainersByOwner.Remove(Container.SpeechOwner);
+			ContainersByOwner[Container.SpeechOwner].Handles.Remove(Handle);
+		
+			if (ContainersByOwner[Container.SpeechOwner].Handles.Num() == 0)
+			{
+				ContainersByOwner.Remove(Container.SpeechOwner);
+			}
 		}
 
-		if (ContainersBySpeakerID[Container.SpeakerID].Handles.Num() == 0)
+		if (not ContainersBySpeakerID.IsEmpty() && ContainersBySpeakerID.Contains(Container.SpeakerID))
 		{
-			ContainersBySpeakerID.Remove(Container.SpeakerID);
+			ContainersBySpeakerID[Container.SpeakerID].Handles.Remove(Handle);
+
+			if (ContainersBySpeakerID[Container.SpeakerID].Handles.Num() == 0)
+			{
+				ContainersBySpeakerID.Remove(Container.SpeakerID);
+			}
 		}
 		
 		if (Container.ConversationHandle.IsValid())
@@ -544,7 +551,7 @@ void UYapSubsystem::RegisterTaggedFragment(const FGameplayTag& FragmentTag, UFlo
 
 FYapFragment* UYapSubsystem::FindTaggedFragment(const FGameplayTag& FragmentTag)
 {
-	if (UFlowNode_YapDialogue** DialoguePtr = TaggedFragments.Find(FragmentTag))
+	if (TObjectPtr<UFlowNode_YapDialogue>* DialoguePtr = TaggedFragments.Find(FragmentTag))
 	{
 		return (*DialoguePtr)->FindTaggedFragment(FragmentTag);
 	}
